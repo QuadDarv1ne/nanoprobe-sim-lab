@@ -142,7 +142,9 @@ class AIResourceOptimizer:
         cpu_percent = psutil.cpu_percent(interval=None)
         memory = psutil.virtual_memory()
         disk_usage = psutil.disk_usage('/').percent if hasattr(psutil, 'disk_usage') else 0
-        network_io = sum([conn.bytes_sent + conn.bytes_recv for conn in psutil.net_connections()]) / 1024 / 1024  # MB
+        # Get network I/O statistics instead of connection counts
+        net_io = psutil.net_io_counters()
+        network_io = (net_io.bytes_sent + net_io.bytes_recv) / 1024 / 1024  # MB
         active_processes = len(psutil.pids())
         threads_count = sum(p.num_threads() for p in psutil.process_iter())
         load_average = getattr(os, 'getloadavg', lambda: (0, 0, 0))()[0] if hasattr(os, 'getloadavg') else 0
