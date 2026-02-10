@@ -9,6 +9,7 @@
 
 import os
 import sys
+import atexit
 import subprocess
 import json
 from pathlib import Path
@@ -37,6 +38,9 @@ class ProjectManager:
             'surface_analyzer': self.config['components']['surface_analyzer'],
             'sstv_groundstation': self.config['components']['sstv_groundstation']
         }
+        
+        # Регистрируем автоматическую очистку кэша при завершении
+        atexit.register(self._auto_cleanup_on_exit)
     
     def load_config(self) -> Dict:
         """
@@ -236,10 +240,28 @@ if __name__ == "__main__":
             memory_result = cache_manager.optimize_memory_usage()
             print(f"Освобождено памяти: {memory_result['memory_freed_mb']} MB")
             
+            return True
+            
         except ImportError:
             print("Модуль cache_manager не найден")
+            return False
         except Exception as e:
             print(f"Ошибка при очистке кэша: {e}")
+            return False
+    
+    def _auto_cleanup_on_exit(self):
+        """Внутренняя функция автоматической очистки при завершении"""
+        print("\n" + "="*50)
+        print("Автоматическая очистка кэша через ProjectManager...")
+        try:
+            cleanup_success = self.clean_cache()
+            if cleanup_success:
+                print("✓ Автоматическая очистка кэша выполнена успешно")
+            else:
+                print("⚠ Автоматическая очистка кэша завершена с предупреждениями")
+        except Exception as e:
+            print(f"❌ Ошибка при автоматической очистке кэша: {e}")
+        print("="*50)
     
     def show_project_info(self):
         """Показывает информацию о проекте"""

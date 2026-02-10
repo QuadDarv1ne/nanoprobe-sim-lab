@@ -1,0 +1,178 @@
+### Заметки ###
+# Этот файл .gitignore подходит для проектов, содержащих код на Python и C++
+# Обновлён: 10.02.2026
+
+### Операционные системы ###
+# Файлы, создаваемые операционной системой
+.DS_Store           # macOS
+Thumbs.db           # Windows
+desktop.ini         # Windows
+*.swp               # Vim swap файлы
+*~                  # Резервные копии, создаваемые редакторами
+
+### IDE и редакторы ###
+# Visual Studio Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# PyCharm / IntelliJ IDEA
+.idea/
+*.iml
+
+# Sublime Text
+*.sublime-*
+sublime-*
+
+# Vim
+*.swp
+*.swo
+
+### Python ###
+# Виртуальные окружения
+venv/
+env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Кэш Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Дистрибуции и установщики
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+*.egg-info/
+pip-wheel-metadata/
+
+# Установленные пакеты
+*.manifest
+*.spec
+
+# PyInstaller
+*.exe
+
+# Единичные файлы
+.pytest_cache/
+.coverage
+.tox/
+.python-version
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+### C/C++ ###
+# Скомпилированные объектные файлы
+*.o
+*.obj
+*.ko
+
+# Исполняемые файлы
+*.exe
+*.out
+*.app
+
+# Библиотеки
+*.so
+*.dylib
+*.dll
+
+# Статические библиотеки
+*.a
+*.lib
+
+# Файлы отладки
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Прекомпилированные заголовки
+*.gch
+*.pch
+
+# Файлы сборки / Автогенерация
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+build/           # Папка для сборки CMake
+_build/          # Альтернативная папка сборки
+out/             # Папка для выходных файлов
+
+# Автогенерация (например, от Flex/Bison)
+*.output
+
+### Системы сборки ###
+# СMake
+compile_commands.json
+
+# qmake
+*.pro.user
+*.qmake.stash
+
+# Ninja
+.ninja_deps
+.ninja_log
+
+### Отладка и тестирование ###
+# gdb и отладчики
+core
+core.*
+*.stackdump
+
+# Выходные данные тестов
+*.gcda
+*.gcno
+
+### Данные и конфигурации ###
+# Файлы с чувствительными данными
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+secrets.ini
+config.ini
+credentials.json
+*.key
+*.pem
+
+# Файлы базы данных
+*.db
+*.sqlite
+*.sqlite3
+
+# Логи
+*.log
+logs/
+
+### Временные файлы ###
+# Временные файлы системы и редакторов
+*.tmp
+*.temp
+.cache/
+
+### Документация ###
+# Сгенерированная документация
+docs/_build/
+htmlcov/

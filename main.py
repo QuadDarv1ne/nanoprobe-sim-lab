@@ -8,6 +8,7 @@
 
 import sys
 import os
+import atexit
 from datetime import datetime
 from pathlib import Path
 
@@ -154,15 +155,37 @@ def clean_project_cache():
         
         print("Очистка кэша завершена успешно!")
         
+        return True
+        
     except ImportError:
         print("Модуль управления кэшем не найден")
         print("Установите необходимые зависимости или создайте модуль cache_manager")
+        return False
     except Exception as e:
         print(f"Ошибка при очистке кэша: {e}")
+        return False
+
+
+def auto_cleanup_on_exit():
+    """Автоматическая очистка кэша при завершении программы"""
+    print("\n" + "="*50)
+    print("Автоматическая очистка кэша при завершении...")
+    try:
+        cleanup_success = clean_project_cache()
+        if cleanup_success:
+            print("✓ Автоматическая очистка кэша выполнена успешно")
+        else:
+            print("⚠ Автоматическая очистка кэша завершена с предупреждениями")
+    except Exception as e:
+        print(f"❌ Ошибка при автоматической очистке кэша: {e}")
+    print("="*50)
 
 
 def main():
     """Главная функция программы"""
+    # Регистрируем функцию автоматической очистки
+    atexit.register(auto_cleanup_on_exit)
+    
     show_header()
     show_project_overview()
     
