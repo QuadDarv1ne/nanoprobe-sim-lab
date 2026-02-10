@@ -34,3 +34,4 @@ scipy>=1.7.0
 pytest>=6.0.0
 memory-profiler>=0.60.0
 objgraph>=3.5.0
+requests>=2.28.0

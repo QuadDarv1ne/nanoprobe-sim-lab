@@ -15,11 +15,15 @@ import json
 import psutil
 import gc
 
-from .performance_profiler import PerformanceProfiler
-from .resource_optimizer import ResourceManager
-from .advanced_logger_analyzer import AdvancedLoggerAnalyzer
-from .memory_tracker import MemoryTracker
-from .performance_benchmark import PerformanceBenchmarkSuite
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from utils.performance_profiler import PerformanceProfiler
+from utils.resource_optimizer import ResourceManager
+from utils.advanced_logger_analyzer import AdvancedLoggerAnalyzer
+from utils.memory_tracker import MemoryTracker
+from utils.performance_benchmark import PerformanceBenchmarkSuite
 
 
 class OptimizationOrchestrator:
