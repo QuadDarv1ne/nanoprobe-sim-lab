@@ -210,25 +210,25 @@ class WebDashboard:
                 })
             except Exception as e:
                 return jsonify({'success': False, 'error': str(e)}), 500
-        
-        def _get_cache_recommendations(self, stats: Dict[str, Any]) -> List[str]:
-            """Получает рекомендации по кэшу"""
-            recommendations = []
-            
-            if stats.get('total_cache_size_mb', 0) > 100:
-                recommendations.append("Рекомендуется очистить кэш для освобождения места")
-            
-            if stats.get('total_files', 0) > 1000:
-                recommendations.append("Слишком много файлов в кэше, рекомендуется очистка")
-            
-            if not stats.get('auto_cleanup_enabled', False):
-                recommendations.append("Рекомендуется включить автоматическую очистку кэша")
-            
-            if len(recommendations) == 0:
-                recommendations.append("Кэш находится в хорошем состоянии")
-            
-            return recommendations
     
+    def _get_cache_recommendations(self, stats: Dict[str, Any]) -> List[str]:
+        """Получает рекомендации по кэшу"""
+        recommendations = []
+        
+        if stats.get('total_cache_size_mb', 0) > 100:
+            recommendations.append("Рекомендуется очистить кэш для освобождения места")
+        
+        if stats.get('total_files', 0) > 1000:
+            recommendations.append("Слишком много файлов в кэше, рекомендуется очистка")
+        
+        if not stats.get('auto_cleanup_enabled', False):
+            recommendations.append("Рекомендуется включить автоматическую очистку кэша")
+        
+        if len(recommendations) == 0:
+            recommendations.append("Кэш находится в хорошем состоянии")
+        
+        return recommendations
+
     def _setup_socketio(self):
         """Настройка SocketIO для реального времени"""
         
@@ -248,7 +248,7 @@ class WebDashboard:
             """Обработка запроса на обновление данных"""
             status = self._get_realtime_status()
             emit('status_update', status)
-    
+
     def _get_project_info(self) -> Dict[str, Any]:
         """Получает информацию о проекте"""
         try:
