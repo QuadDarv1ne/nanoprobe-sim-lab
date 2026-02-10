@@ -35,7 +35,7 @@ def run_comprehensive_optimization():
     print("\n🔧 Инициализация инструментов оптимизации...")
     profiler = PerformanceProfiler(output_dir="reports/profiles")
     resource_mgr = ResourceManager()
-    logger_analyzer = AdvancedLoggerAnalyzer(output_dir="reports/logs")
+    logger_analyzer = AdvancedLoggerAnalyzer(log_directory="logs")
     memory_tracker = MemoryTracker(output_dir="reports/memory")
     benchmark_suite = PerformanceBenchmarkSuite(output_dir="reports/benchmarks")
     orchestrator = OptimizationOrchestrator(output_dir="reports/optimization")

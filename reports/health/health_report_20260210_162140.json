@@ -1,0 +1,242 @@
+{
+  "generation_time": "2026-02-10T16:21:40.761046",
+  "health_score": 42.53289473684211,
+  "metrics_count": 22,
+  "alerts_count": 4,
+  "resolved_alerts": 0,
+  "unresolved_alerts": 4,
+  "recent_metrics": [
+    {
+      "name": "memory_used_gb",
+      "value": 6.532840728759766,
+      "unit": "GB",
+      "severity": "info",
+      "timestamp": "2026-02-10T16:21:21.101370"
+    },
+    {
+      "name": "memory_available_gb",
+      "value": 8.708377838134766,
+      "unit": "GB",
+      "severity": "info",
+      "timestamp": "2026-02-10T16:21:21.101370"
+    },
+    {
+      "name": "disk_percent",
+      "value": 95.1,
+      "unit": "%",
+      "severity": "critical",
+      "timestamp": "2026-02-10T16:21:21.101370"
+    },
+    {
+      "name": "disk_used_gb",
+      "value": 277.7201805114746,
+      "unit": "GB",
+      "severity": "info",
+      "timestamp": "2026-02-10T16:21:21.101370"
+    },
+    {
+      "name": "disk_free_gb",
+      "value": 14.434112548828125,
+      "unit": "GB",
+      "severity": "info",
+      "timestamp": "2026-02-10T16:21:21.101370"
+    },
+    {
+      "name": "temperature_celsius",
+      "value": 0,
+      "unit": "°C",
+      "severity": "info",
+      "timestamp": "2026-02-10T16:21:21.101370"
+    },
+    {
+      "name": "process_count",
+      "value": 325,
+      "unit": "count",
+      "severity": "warning",
+      "timestamp": "2026-02-10T16:21:21.101370"
+    },
+    {
+      "name": "network_sent_bytes",
+      "value": 2124224718,
+      "unit": "bytes",
+      "severity": "info",
+      "timestamp": "2026-02-10T16:21:21.101370"
+    },
+    {
+      "name": "network_recv_bytes",
+      "value": 6594859437,
+      "unit": "bytes",
+      "severity": "info",
+      "timestamp": "2026-02-10T16:21:21.101370"
+    },
+    {
+      "name": "cpu_percent",
+      "value": 23.1,
+      "unit": "%",
+      "severity": "info",
+      "timestamp": "2026-02-10T16:21:27.113452"
+    },
+    {
+      "name": "memory_percent",
+      "value": 44.0,
+      "unit": "%",
+      "severity": "info",
+      "timestamp": "2026-02-10T16:21:27.113452"
+    },
+    {
+      "name": "memory_used_gb",
+      "value": 6.699680328369141,
+      "unit": "GB",
+      "severity": "info",
+      "timestamp": "2026-02-10T16:21:27.113452"
+    },
+    {
+      "name": "memory_available_gb",
+      "value": 8.54153823852539,
+      "unit": "GB",
+      "severity": "info",
+      "timestamp": "2026-02-10T16:21:27.113452"
+    },
+    {
+      "name": "disk_percent",
+      "value": 95.1,
+      "unit": "%",
+      "severity": "critical",
+      "timestamp": "2026-02-10T16:21:27.113452"
+    },
+    {
+      "name": "disk_used_gb",
+      "value": 277.7202453613281,
+      "unit": "GB",
+      "severity": "info",
+      "timestamp": "2026-02-10T16:21:27.113452"
+    },
+    {
+      "name": "disk_free_gb",
+      "value": 14.43404769897461,
+      "unit": "GB",
+      "severity": "info",
+      "timestamp": "2026-02-10T16:21:27.113452"
+    },
+    {
+      "name": "temperature_celsius",
+      "value": 0,
+      "unit": "°C",
+      "severity": "info",
+      "timestamp": "2026-02-10T16:21:27.113452"
+    },
+    {
+      "name": "process_count",
+      "value": 325,
+      "unit": "count",
+      "severity": "warning",
+      "timestamp": "2026-02-10T16:21:27.113452"
+    },
+    {
+      "name": "network_sent_bytes",
+      "value": 2126584880,
+      "unit": "bytes",
+      "severity": "info",
+      "timestamp": "2026-02-10T16:21:27.113452"
+    },
+    {
+      "name": "network_recv_bytes",
+      "value": 6595185991,
+      "unit": "bytes",
+      "severity": "info",
+      "timestamp": "2026-02-10T16:21:27.113452"
+    }
+  ],
+  "recent_alerts": [
+    {
+      "id": "disk_percent_20260210_162121",
+      "metric": "disk_percent",
+      "value": 95.1,
+      "threshold": 95,
+      "severity": "critical",
+      "message": "Метрика disk_percent превысила порог: 95.1 > 95",
+      "timestamp": "2026-02-10T16:21:21.101458",
+      "resolved": false
+    },
+    {
+      "id": "process_count_20260210_162121",
+      "metric": "process_count",
+      "value": 325,
+      "threshold": 200,
+      "severity": "warning",
+      "message": "Метрика process_count превысила порог: 325 > 200",
+      "timestamp": "2026-02-10T16:21:21.101481",
+      "resolved": false
+    },
+    {
+      "id": "disk_percent_20260210_162127",
+      "metric": "disk_percent",
+      "value": 95.1,
+      "threshold": 95,
+      "severity": "critical",
+      "message": "Метрика disk_percent превысила порог: 95.1 > 95",
+      "timestamp": "2026-02-10T16:21:27.113514",
+      "resolved": false
+    },
+    {
+      "id": "process_count_20260210_162127",
+      "metric": "process_count",
+      "value": 325,
+      "threshold": 200,
+      "severity": "warning",
+      "message": "Метрика process_count превысила порог: 325 > 200",
+      "timestamp": "2026-02-10T16:21:27.113529",
+      "resolved": false
+    }
+  ],
+  "current_status": {
+    "timestamp": "2026-02-10T16:21:40.761087",
+    "health_score": 42.53289473684211,
+    "current_metrics": {
+      "cpu_percent": 23.1,
+      "memory_percent": 44.0,
+      "memory_used_gb": 6.699680328369141,
+      "memory_available_gb": 8.54153823852539,
+      "disk_percent": 95.1,
+      "disk_used_gb": 277.7202453613281,
+      "disk_free_gb": 14.43404769897461,
+      "temperature_celsius": 0,
+      "process_count": 325,
+      "network_sent_bytes": 2126584880,
+      "network_recv_bytes": 6595185991,
+      "timestamp": "2026-02-10 16:21:27.113452"
+    },
+    "active_alerts": 4,
+    "total_alerts": 4,
+    "recent_alerts": [
+      "HealthAlert(alert_id='disk_percent_20260210_162121', metric_name='disk_percent', current_value=95.1, threshold_value=95, severity='critical', message='Метрика disk_percent превысила порог: 95.1 > 95', timestamp=datetime.datetime(2026, 2, 10, 16, 21, 21, 101458), resolved=False)",
+      "HealthAlert(alert_id='process_count_20260210_162121', metric_name='process_count', current_value=325, threshold_value=200, severity='warning', message='Метрика process_count превысила порог: 325 > 200', timestamp=datetime.datetime(2026, 2, 10, 16, 21, 21, 101481), resolved=False)",
+      "HealthAlert(alert_id='disk_percent_20260210_162127', metric_name='disk_percent', current_value=95.1, threshold_value=95, severity='critical', message='Метрика disk_percent превысила порог: 95.1 > 95', timestamp=datetime.datetime(2026, 2, 10, 16, 21, 27, 113514), resolved=False)",
+      "HealthAlert(alert_id='process_count_20260210_162127', metric_name='process_count', current_value=325, threshold_value=200, severity='warning', message='Метрика process_count превысила порог: 325 > 200', timestamp=datetime.datetime(2026, 2, 10, 16, 21, 27, 113529), resolved=False)"
+    ],
+    "system_info": {
+      "cpu_count": 16,
+      "cpu_freq": {
+        "current": 3201.0,
+        "min": 0.0,
+        "max": 3201.0
+      },
+      "memory_total_gb": 15.24,
+      "boot_time": "2026-02-10T09:13:00.214700",
+      "hostname": "MAIBENBEN-17",
+      "platform": "nt-win32"
+    }
+  },
+  "system_info": {
+    "cpu_count": 16,
+    "cpu_freq": {
+      "current": 3201.0,
+      "min": 0.0,
+      "max": 3201.0
+    },
+    "memory_total_gb": 15.24,
+    "boot_time": "2026-02-10T09:13:00.214700",
+    "hostname": "MAIBENBEN-17",
+    "platform": "nt-win32"
+  }
+}
