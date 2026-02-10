@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+#!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Модуль профилирования производительности для проекта Лаборатория моделирования нанозонда
@@ -174,6 +176,7 @@ class PerformanceProfiler:
 
         def wrapper(*args, **kwargs):
             # Запускаем трассировку памяти
+            """TODO: Add description"""
             tracemalloc.start()
             start_time = time.time()
             start_cpu = self.current_process.cpu_percent()
@@ -295,6 +298,7 @@ class PerformanceProfiler:
 
         @wraps(func)
         def wrapper(*args, **kwargs):
+            """TODO: Add description"""
             if memory_profiler is None:
                 print(f"\n=== Memory profiler not available for: {func.__name__} ===")
                 print("Install memory-profiler to enable memory profiling: pip install memory-profiler")
@@ -636,6 +640,7 @@ def main():
     print("\nПрофилирование блока кода...")
     code_block = """
 def test_function():
+    """TODO: Add description"""
     return sum(i**2 for i in range(100000))
 
 result = test_function()

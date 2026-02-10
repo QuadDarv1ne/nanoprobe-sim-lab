@@ -19,21 +19,27 @@ try:
 except ImportError:
     # Если основной модуль недоступен, создаем тестовые заглушки
     class ImageProcessor:
+        """TODO: Add description"""
         def __init__(self):
+            """TODO: Add description"""
             self.image = None
             self.processed_image = None
 
         def load_image(self, filepath):
+            """TODO: Add description"""
             return True
 
         def apply_noise_reduction(self, method="gaussian"):
+            """TODO: Add description"""
             return np.array([[1, 2], [3, 4]])
 
         def detect_edges(self, threshold1=100, threshold2=200):
+            """TODO: Add description"""
             return np.array([[0, 1], [1, 0]])
 
 
     def calculate_surface_roughness(image):
+        """TODO: Add description"""
         return 1.0
 
 class TestImageProcessor(unittest.TestCase):

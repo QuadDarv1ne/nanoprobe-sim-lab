@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+#!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Модуль тестирования производительности для проекта Лаборатория моделирования нанозонда
@@ -656,6 +658,7 @@ class PerformanceVerificationFramework:
     """TODO: Add description"""
 
             def baseline_operation():
+                """TODO: Add description"""
                 return sum(i**2 for i in range(10000))
 
             # Время до

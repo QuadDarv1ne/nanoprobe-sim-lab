@@ -37,22 +37,22 @@ class WebDashboard:
     Класс веб-панели управления проектом
     Предоставляет веб-интерфейс для управления всеми компонентами проекта
     """
-    
+
     def __init__(self, host: str = "127.0.0.1", port: int = 5000):
         """
         Инициализация веб-панели
-        
+
         Args:
             host: Хост сервера
             port: Порт сервера
         """
         self.host = host
         self.port = port
-        
+
         # Инициализация Flask приложения
         self.app = Flask(__name__)
         self.app.config['SECRET_KEY'] = 'nanoprobe_simulation_lab_secret_key'
-        
+
         # Инициализация SocketIO
         self.socketio = SocketIO(
             self.app,
@@ -60,7 +60,7 @@ class WebDashboard:
             ping_timeout=60,
             ping_interval=25
         )
-        
+
         # Инициализация служебных компонентов
         self.logger = Logger("WebDashboard")
         self.error_handler = ErrorHandler()
@@ -69,29 +69,29 @@ class WebDashboard:
         self.config_manager = ConfigManager()
         self.cache_manager = CacheManager()
         self.data_manager = DataManager()
-        
+
         # Регистрация маршрутов
         self._register_routes()
-        
+
         # Регистрация обработчиков SocketIO
         self._register_socket_handlers()
-        
+
         self.logger.log_system_event("Веб-панель инициализирована", "INFO")
-    
+
     def _register_routes(self):
         """Регистрация HTTP маршрутов"""
-        
+
         @self.app.route('/')
         def index():
             """Главная страница веб-панели"""
             return render_template('dashboard.html')
-        
+
         @self.app.route('/api/system_info')
         def api_system_info():
             """API для получения информации о системе"""
             try:
                 system_info = self.system_monitor.get_current_metrics()
-                
+
                 # Добавляем информацию о проекте
                 system_info["project_info"] = {
                     "name": "Nanoprobe Simulation Lab",
@@ -99,12 +99,12 @@ class WebDashboard:
                     "status": "running",
                     "uptime": self._get_uptime()
                 }
-                
+
                 return jsonify(system_info)
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка получения информации о системе: {e}")
                 return jsonify({"error": str(e)}), 500
-        
+
         @self.app.route('/api/performance_data')
         def api_performance_data():
             """API для получения данных о производительности"""
@@ -114,7 +114,7 @@ class WebDashboard:
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка получения данных о производительности: {e}")
                 return jsonify({"error": str(e)}), 500
-        
+
         @self.app.route('/api/component_status')
         def api_component_status():
             """API для получения статуса компонентов"""
@@ -130,7 +130,7 @@ class WebDashboard:
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка получения статуса компонентов: {e}")
                 return jsonify({"error": str(e)}), 500
-        
+
         @self.app.route('/api/logs')
         def api_logs():
             """API для получения логов"""
@@ -143,12 +143,12 @@ class WebDashboard:
                         recent_logs = lines[-50:]  # Последние 50 строк
                 else:
                     recent_logs = ["Лог-файл не найден"]
-                
+
                 return jsonify({"logs": recent_logs})
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка получения логов: {e}")
                 return jsonify({"error": str(e)}), 500
-        
+
         @self.app.route('/api/config', methods=['GET', 'POST'])
         def api_config():
             """API для управления конфигурацией"""
@@ -165,7 +165,7 @@ class WebDashboard:
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка управления конфигурацией: {e}")
                 return jsonify({"error": str(e)}), 500
-        
+
         @self.app.route('/api/cache_stats')
         def api_cache_stats():
             """API для получения статистики кэша"""
@@ -175,21 +175,21 @@ class WebDashboard:
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка получения статистики кэша: {e}")
                 return jsonify({"error": str(e)}), 500
-    
+
     def _register_socket_handlers(self):
         """Регистрация обработчиков SocketIO событий"""
-        
+
         @self.socketio.on('connect')
         def handle_connect():
             """Обработка подключения клиента"""
             self.logger.log_system_event("Клиент подключен к веб-панели", "INFO")
             emit('connection_response', {'data': 'Connected to Nanoprobe Simulation Lab Dashboard'})
-        
+
         @self.socketio.on('disconnect')
         def handle_disconnect():
             """Обработка отключения клиента"""
             self.logger.log_system_event("Клиент отключен от веб-панели", "INFO")
-        
+
         @self.socketio.on('request_system_update')
         def handle_system_update_request():
             """Обработка запроса на обновление информации о системе"""
@@ -204,7 +204,7 @@ class WebDashboard:
                 emit('system_update', system_info)
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка отправки обновления системы: {e}")
-        
+
         @self.socketio.on('request_performance_update')
         def handle_performance_update_request():
             """Обработка запроса на обновление информации о производительности"""
@@ -213,14 +213,14 @@ class WebDashboard:
                 emit('performance_update', performance_data)
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка отправки обновления производительности: {e}")
-        
+
         @self.socketio.on('execute_command')
         def handle_execute_command(data):
             """Обработка команды выполнения"""
             try:
                 command = data.get('command', '')
                 params = data.get('params', {})
-                
+
                 # Логика выполнения команд
                 if command == 'start_simulation':
                     result = self._execute_start_simulation(params)
@@ -232,26 +232,26 @@ class WebDashboard:
                     result = self._execute_cleanup_cache(params)
                 else:
                     result = {"status": "error", "message": f"Неизвестная команда: {command}"}
-                
+
                 emit('command_result', result)
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка выполнения команды: {e}")
                 emit('command_result', {"status": "error", "message": str(e)})
-    
+
     def _get_uptime(self) -> str:
         """Получение времени работы системы"""
         # В реальной реализации это будет вычисляться с момента запуска
         start_time = getattr(self, '_start_time', datetime.now())
         uptime = datetime.now() - start_time
         return str(uptime).split('.')[0]  # Убираем микросекунды
-    
+
     def _execute_start_simulation(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Выполнение команды запуска симуляции"""
         try:
             # Здесь будет логика запуска симуляции
             simulation_id = f"sim_{int(time.time())}"
             self.logger.log_system_event(f"Запуск симуляции: {simulation_id}", "INFO")
-            
+
             return {
                 "status": "success",
                 "message": f"Симуляция запущена: {simulation_id}",
@@ -260,13 +260,13 @@ class WebDashboard:
         except Exception as e:
             self.error_handler.log_error(f"Ошибка запуска симуляции: {e}")
             return {"status": "error", "message": str(e)}
-    
+
     def _execute_stop_simulation(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Выполнение команды остановки симуляции"""
         try:
             simulation_id = params.get('simulation_id', '')
             self.logger.log_system_event(f"Остановка симуляции: {simulation_id}", "INFO")
-            
+
             return {
                 "status": "success",
                 "message": f"Симуляция остановлена: {simulation_id}"
@@ -274,13 +274,13 @@ class WebDashboard:
         except Exception as e:
             self.error_handler.log_error(f"Ошибка остановки симуляции: {e}")
             return {"status": "error", "message": str(e)}
-    
+
     def _execute_analyze_image(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Выполнение команды анализа изображения"""
         try:
             image_path = params.get('image_path', '')
             self.logger.log_system_event(f"Анализ изображения: {image_path}", "INFO")
-            
+
             # Здесь будет логика анализа изображения
             return {
                 "status": "success",
@@ -290,15 +290,15 @@ class WebDashboard:
         except Exception as e:
             self.error_handler.log_error(f"Ошибка анализа изображения: {e}")
             return {"status": "error", "message": str(e)}
-    
+
     def _execute_cleanup_cache(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Выполнение команды очистки кэша"""
         try:
             force = params.get('force', False)
             self.logger.log_system_event("Запуск очистки кэша", "INFO")
-            
+
             cleanup_result = self.cache_manager.cleanup_cache(force=force)
-            
+
             return {
                 "status": "success",
                 "message": "Кэш очищен",
@@ -307,22 +307,22 @@ class WebDashboard:
         except Exception as e:
             self.error_handler.log_error(f"Ошибка очистки кэша: {e}")
             return {"status": "error", "message": str(e)}
-    
+
     def start_server(self, open_browser: bool = True):
         """
         Запуск веб-сервера
-        
+
         Args:
             open_browser: Открывать ли браузер автоматически
         """
         self._start_time = datetime.now()
         self.logger.log_system_event(f"Запуск веб-панели на http://{self.host}:{self.port}", "INFO")
-        
+
         print("="*60)
         print(f"Сервер запущен на http://{self.host}:{self.port}")
         print("Нажмите Ctrl+C для остановки сервера")
         print("="*60)
-        
+
         # Открываем браузер в отдельном потоке
         if open_browser:
             def open_browser_func():

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+#!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Мастер-скрипт комплексной оптимизации для проекта Лаборатория моделирования нанозонда

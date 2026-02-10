@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+#!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Менеджер проекта для Лаборатории моделирования нанозонда
@@ -191,6 +193,7 @@ from sstv_decoder import SSTVDecoder, detect_sstv_signal
     """TODO: Add description"""
 
 def main():
+    """TODO: Add description"""
     print("=== НАЗЕМНАЯ СТАНЦИЯ SSTV ===")
     print("Инициализация декодера SSTV...")
 

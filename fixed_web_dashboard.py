@@ -21,12 +21,12 @@ sys.path.insert(0, str(project_root))
 
 class FixedWebDashboardHandler(BaseHTTPRequestHandler):
     """Request handler for the fixed web dashboard"""
-    
+
     def do_GET(self):
         """Handle GET requests"""
         parsed_url = urlparse(self.path)
         path = parsed_url.path
-        
+
         # Serve static files or API endpoints
         if path == '/' or path == '/dashboard':
             self.serve_dashboard()
@@ -46,17 +46,17 @@ class FixedWebDashboardHandler(BaseHTTPRequestHandler):
             self.serve_static_file(path, 'image/jpeg')
         else:
             self.send_error(404, "File not found")
-    
+
     def do_POST(self):
         """Handle POST requests"""
         parsed_url = urlparse(self.path)
         path = parsed_url.path
-        
+
         if path.startswith('/api/actions/'):
             self.handle_api_action(path)
         else:
             self.send_error(404, "API endpoint not found")
-    
+
     def serve_dashboard(self):
         """Serve the main dashboard HTML"""
         # Read the dashboard template and serve it
@@ -65,7 +65,7 @@ class FixedWebDashboardHandler(BaseHTTPRequestHandler):
             if template_path.exists():
                 with open(template_path, 'r', encoding='utf-8') as f:
                     content = f.read()
-                
+
                 self.send_response(200)
                 self.send_header('Content-type', 'text/html; charset=utf-8')
                 self.end_headers()
@@ -76,7 +76,7 @@ class FixedWebDashboardHandler(BaseHTTPRequestHandler):
         except Exception as e:
             print(f"Error serving dashboard: {e}")
             self.serve_basic_dashboard()
-    
+
     def serve_enhanced_dashboard(self):
         """Serve the enhanced dashboard HTML"""
         try:
@@ -84,7 +84,7 @@ class FixedWebDashboardHandler(BaseHTTPRequestHandler):
             if template_path.exists():
                 with open(template_path, 'r', encoding='utf-8') as f:
                     content = f.read()
-                
+
                 self.send_response(200)
                 self.send_header('Content-type', 'text/html; charset=utf-8')
                 self.end_headers()
@@ -94,7 +94,7 @@ class FixedWebDashboardHandler(BaseHTTPRequestHandler):
         except Exception as e:
             print(f"Error serving enhanced dashboard: {e}")
             self.serve_basic_dashboard()
-    
+
     def serve_basic_dashboard(self):
         """Serve a basic dashboard in case templates are missing"""
         html_content = """
@@ -123,14 +123,14 @@ class FixedWebDashboardHandler(BaseHTTPRequestHandler):
             <h2>Веб-панель управления (Базовая версия)</h2>
             <p>Комплексное решение для моделирования сканирующей зондовой микроскопии и анализа поверхностей</p>
         </header>
-        
+
         <div class="status-card">
             <h3>Состояние системы</h3>
             <p><strong>Статус:</strong> <span class="status-active">✓ Активно</span></p>
             <p><strong>Версия:</strong> 1.0.0</p>
             <p><strong>Компоненты:</strong> 3 из 3 активны</p>
         </div>
-        
+
         <h3>Компоненты системы</h3>
         <div class="component-grid">
             <div class="component-card">
@@ -138,26 +138,26 @@ class FixedWebDashboardHandler(BaseHTTPRequestHandler):
                 <p><strong>Статус:</strong> <span class="status-active">✓ Готов</span></p>
                 <p>Симуляция аппаратного обеспечения сканирующей зондовой микроскопии</p>
             </div>
-            
+
             <div class="component-card">
                 <h4>Анализатор изображений</h4>
                 <p><strong>Статус:</strong> <span class="status-active">✓ Готов</span></p>
                 <p>Анализатор изображений поверхности на Python</p>
             </div>
-            
+
             <div class="component-card">
                 <h4>Наземная станция SSTV</h4>
                 <p><strong>Статус:</strong> <span class="status-active">✓ Готов</span></p>
                 <p>Наземная станция SSTV на Python/C++</p>
             </div>
         </div>
-        
+
         <div class="status-card">
             <h3>Системная информация</h3>
             <p>Веб-панель запущена и работает корректно</p>
             <p>Для доступа к полной функциональности используйте основной интерфейс</p>
         </div>
-        
+
         <footer>
             <p>Лаборатория моделирования нанозонда © 2026</p>
             <p>Школа программирования Maestro7IT</p>
@@ -166,23 +166,23 @@ class FixedWebDashboardHandler(BaseHTTPRequestHandler):
 </body>
 </html>
         """
-        
+
         self.send_response(200)
         self.send_header('Content-type', 'text/html; charset=utf-8')
         self.end_headers()
         self.wfile.write(html_content.encode('utf-8'))
-    
+
     def serve_html_file(self, path):
         """Serve HTML files from templates directory"""
         try:
             # Extract filename from path
             filename = os.path.basename(path)
             filepath = project_root / 'templates' / filename
-            
+
             if filepath.exists():
                 with open(filepath, 'r', encoding='utf-8') as f:
                     content = f.read()
-                
+
                 self.send_response(200)
                 self.send_header('Content-type', 'text/html; charset=utf-8')
                 self.end_headers()
@@ -192,21 +192,21 @@ class FixedWebDashboardHandler(BaseHTTPRequestHandler):
         except Exception as e:
             print(f"Error serving HTML file: {e}")
             self.send_error(500, "Internal server error")
-    
+
     def serve_static_file(self, path, content_type):
         """Serve static files like CSS, JS, images"""
         try:
             # Handle paths like /static/style.css
             filepath = project_root / path.lstrip('/')
-            
+
             # If file doesn't exist in root, try templates directory
             if not filepath.exists():
                 filepath = project_root / 'templates' / os.path.basename(path)
-            
+
             if filepath.exists():
                 with open(filepath, 'rb') as f:
                     content = f.read()
-                
+
                 self.send_response(200)
                 self.send_header('Content-type', content_type)
                 self.end_headers()
@@ -216,7 +216,7 @@ class FixedWebDashboardHandler(BaseHTTPRequestHandler):
         except Exception as e:
             print(f"Error serving static file: {e}")
             self.send_error(500, "Internal server error")
-    
+
     def handle_api_request(self, path, query_string):
         """Handle API requests"""
         try:
@@ -273,7 +273,7 @@ class FixedWebDashboardHandler(BaseHTTPRequestHandler):
                 # Parse query parameters
                 params = parse_qs(query_string)
                 limit = int(params.get('limit', [20])[0])
-                
+
                 logs = [
                     {"timestamp": "2026-02-10T22:15:00", "level": "INFO", "component": "system", "message": "Система запущена"},
                     {"timestamp": "2026-02-10T22:15:05", "level": "INFO", "component": "spm", "message": "SPM Simulator initialized"},
@@ -283,7 +283,7 @@ class FixedWebDashboardHandler(BaseHTTPRequestHandler):
                     {"timestamp": "2026-02-10T22:20:10", "level": "INFO", "component": "spm", "message": "Simulation started"},
                     {"timestamp": "2026-02-10T22:25:30", "level": "INFO", "component": "image", "message": "Image processing completed"}
                 ]
-                
+
                 # Return last 'limit' entries
                 result = logs[-limit:] if limit <= len(logs) else logs
                 self.send_json_response(result)
@@ -292,16 +292,16 @@ class FixedWebDashboardHandler(BaseHTTPRequestHandler):
         except Exception as e:
             print(f"Error handling API request: {e}")
             self.send_error(500, "Internal server error")
-    
+
     def handle_api_action(self, path):
         """Handle API actions like starting/stopping components"""
         try:
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
-            
+
             # Parse the action from the path
             action = path.split('/')[-1]
-            
+
             if action == 'start_component':
                 try:
                     data = json.loads(post_data.decode('utf-8'))
@@ -344,12 +344,12 @@ class FixedWebDashboardHandler(BaseHTTPRequestHandler):
                     "success": False,
                     "error": f"Unknown action: {action}"
                 }
-            
+
             self.send_json_response(response)
         except Exception as e:
             print(f"Error handling API action: {e}")
             self.send_error(500, "Internal server error")
-    
+
     def send_json_response(self, data):
         """Send JSON response"""
         self.send_response(200)
@@ -380,11 +380,11 @@ def main():
     print("Эта версия веб-панели не зависит от поврежденных пакетов")
     print("Использует встроенный HTTP-сервер Python")
     print("="*60)
-    
+
     # Run the server in a separate thread to allow graceful shutdown
     server_thread = threading.Thread(target=run_server, daemon=True)
     server_thread.start()
-    
+
     try:
         # Keep the main thread alive
         while server_thread.is_alive():

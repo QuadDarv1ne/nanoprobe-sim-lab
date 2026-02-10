@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+#!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Интерактивная панель управления проектом Лаборатория моделирования нанозонда
@@ -233,6 +235,7 @@ class NanoprobeDashboard:
     """TODO: Add description"""
 
         def worker():
+            """TODO: Add description"""
             try:
                 # Открываем диалог выбора файла
                 file_path = filedialog.askopenfilename(
@@ -268,6 +271,7 @@ class NanoprobeDashboard:
 
         """Запускает декодирование SSTV"""
         def worker():
+            """TODO: Add description"""
             try:
                 # Открываем диалог выбора файла
                 file_path = filedialog.askopenfilename(
@@ -303,6 +307,7 @@ class NanoprobeDashboard:
     def run_comprehensive_simulation(self):
         """Запускает комплексную симуляцию"""
         def worker():
+            """TODO: Add description"""
             try:
                 self.logger_manager.log_system_event("Запуск комплексной симуляции из GUI", "INFO")
 
@@ -324,6 +329,7 @@ class NanoprobeDashboard:
     def run_continuous_simulation(self):
         """Запускает непрерывную симуляцию"""
         def worker():
+            """TODO: Add description"""
             try:
                 self.logger_manager.log_system_event("Запуск непрерывной симуляции из GUI", "INFO")
 

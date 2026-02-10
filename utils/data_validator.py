@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+#!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Модуль валидации данных для проекта Лаборатория моделирования нанозонда
@@ -523,6 +525,7 @@ class DataValidator:
         suggestions = []
 
         def validate_recursive(data_item, schema_item, path=""):
+            """TODO: Add description"""
             current_path = path
 
             # Проверяем тип
@@ -581,8 +584,10 @@ def validate_data(validation_level: ValidationLevel = ValidationLevel.STANDARD):
     """
 
     def decorator(func):
+        """TODO: Add description"""
         @wraps(func)
         def wrapper(*args, **kwargs):
+            """TODO: Add description"""
             validator = DataValidator(validation_level)
 
             # Здесь мы могли бы добавить логику проверки входных данных
@@ -705,6 +710,7 @@ def main():
     @validate_data(ValidationLevel.STANDARD)
 
     def sample_data_processing():
+        """TODO: Add description"""
         return pd.DataFrame({'value': [1, 2, 3]})
 
     result = sample_data_processing()

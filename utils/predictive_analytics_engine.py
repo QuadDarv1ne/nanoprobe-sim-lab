@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+#!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Модуль предиктивной аналитики для проекта Лаборатория моделирования нанозонда
@@ -551,6 +553,7 @@ class PredictiveAnalyticsEngine:
     """TODO: Add description"""
 
         def prediction_loop():
+            """TODO: Add description"""
             while self.active:
                 try:
                     # Применяем рекомендации на основе прогнозов

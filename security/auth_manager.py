@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+#!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Модуль управления аутентификацией для проекта Лаборатория моделирования нанозонда
@@ -454,6 +456,7 @@ class AuthManager:
     """TODO: Add description"""
 
             def decorated_function(*args, **kwargs):
+                """TODO: Add description"""
                 token = None
 
                 # Проверяем токен в заголовке

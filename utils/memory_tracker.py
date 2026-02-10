@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+#!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Модуль отслеживания использования памяти для проекта Лаборатория моделирования нанозонда
@@ -547,6 +549,7 @@ class MemoryDecorator:
 
         def wrapper(*args, **kwargs):
             # Замеряем память до выполнения
+            """TODO: Add description"""
             before_memory = self.memory_tracker.get_current_memory_usage()
 
             # Выполняем функцию

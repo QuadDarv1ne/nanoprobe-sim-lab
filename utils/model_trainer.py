@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+#!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Модуль обучения моделей машинного обучения для проекта Лаборатория моделирования нанозонда
@@ -569,6 +571,7 @@ def model_training_pipeline(func):
     @wraps(func)
 
     def wrapper(*args, **kwargs):
+        """TODO: Add description"""
         trainer = ModelTrainer()
         print(f"Запуск пайплайна обучения модели: {func.__name__}")
 
@@ -675,6 +678,7 @@ def main():
 
     def sample_training_pipeline(trainer_instance):
         # Создаем простую модель
+        """TODO: Add description"""
         X_simple = np.random.randn(100, 2)
         y_simple = X_simple[:, 0] + X_simple[:, 1] + np.random.randn(100) * 0.1
 

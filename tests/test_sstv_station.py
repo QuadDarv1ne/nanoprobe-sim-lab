@@ -19,24 +19,30 @@ try:
 except ImportError:
     # Если основной модуль недоступен, создаем тестовые заглушки
     class SSTVDecoder:
+        """TODO: Add description"""
         def __init__(self):
+            """TODO: Add description"""
             self.decoded_image = None
             self.signal_data = None
 
         def decode_from_audio(self, audio_file):
+            """TODO: Add description"""
             from PIL import Image
             return Image.new('RGB', (320, 240), color='blue')
 
         def save_decoded_image(self, filepath):
+            """TODO: Add description"""
             return True
 
 
     def convert_audio_to_image(audio_data, sample_rate):
+        """TODO: Add description"""
         from PIL import Image
         return Image.new('RGB', (320, 240), color='red')
 
 
     def detect_sstv_signal(audio_data, sample_rate):
+        """TODO: Add description"""
         return True, 100.0
 
 class TestSSTVDecoder(unittest.TestCase):

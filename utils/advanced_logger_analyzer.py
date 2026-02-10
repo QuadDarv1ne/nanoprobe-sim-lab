@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+#!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Модуль продвинутого анализа логов для проекта Лаборатория моделирования нанозонда
@@ -538,6 +540,7 @@ class AdvancedLoggerAnalyzer:
     """TODO: Add description"""
 
         def monitor():
+            """TODO: Add description"""
             file_path = Path(log_file_path)
             if not file_path.exists():
                 print(f"Файл {log_file_path} не существует")
