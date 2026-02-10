@@ -12,6 +12,13 @@ import atexit
 from datetime import datetime
 from pathlib import Path
 
+# Add project root to Python path
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
+
+# Configuration paths
+CONFIG_PATH = project_root / "config" / "config.json"
+
 
 def show_header():
     """Отображает заголовок программы"""
@@ -50,13 +57,13 @@ def run_spm_simulator():
     print("Запуск симулятора СЗМ...")
     try:
         # Пытаемся запустить C++ версию
-        cpp_path = Path("cpp-spm-hardware-sim") / "build" / "spm-simulator"
+        cpp_path = project_root / "components" / "cpp-spm-hardware-sim" / "build" / "spm-simulator"
         if cpp_path.exists():
             os.system(str(cpp_path))
         else:
             print("C++ версия не найдена. Попробуйте Python-реализацию...")
             # Запускаем Python-реализацию
-            python_spm = Path("cpp-spm-hardware-sim") / "src" / "spm_simulator.py"
+            python_spm = project_root / "components" / "cpp-spm-hardware-sim" / "src" / "spm_simulator.py"
             if python_spm.exists():
                 os.system(f"{sys.executable} {python_spm}")
             else:
@@ -69,7 +76,7 @@ def run_surface_analyzer():
     """Запускает анализатор изображений"""
     print("Запуск анализатора изображений поверхности...")
     try:
-        analyzer_path = Path("py-surface-image-analyzer") / "src" / "main.py"
+        analyzer_path = project_root / "components" / "py-surface-image-analyzer" / "src" / "main.py"
         if analyzer_path.exists():
             os.system(f"{sys.executable} {analyzer_path}")
         else:
@@ -82,7 +89,7 @@ def run_sstv_groundstation():
     """Запускает наземную станцию SSTV"""
     print("Запуск наземной станции SSTV...")
     try:
-        station_path = Path("py-sstv-groundstation") / "src" / "main.py"
+        station_path = project_root / "components" / "py-sstv-groundstation" / "src" / "main.py"
         if station_path.exists():
             os.system(f"{sys.executable} {station_path}")
         else:
@@ -133,7 +140,7 @@ def clean_project_cache():
     print("Очистка кэша проекта...")
     try:
         from utils.cache_manager import CacheManager
-        cache_manager = CacheManager()
+        cache_manager = CacheManager(str(project_root))
         
         # Показываем текущую статистику
         stats = cache_manager.get_cache_statistics()
