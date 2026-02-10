@@ -18,7 +18,7 @@ void runSPMSimulator() {
     std::cout << "Имитация сканирования поверхности зондом..." << std::endl;
     std::cout << "Сбор топографических данных..." << std::endl;
     std::cout << "Генерация результатов сканирования..." << std::endl;
-    std::cout << "Симуляция завершена!" << std::endl;
+    std::cout << "Симуляция завершена" << std::endl;
 }
 
 // Placeholder for surface image analyzer functionality
@@ -30,7 +30,7 @@ void runSurfaceAnalyzer() {
     std::cout << "Анализ шероховатости поверхности..." << std::endl;
     std::cout << "Обнаружение дефектов и аномалий..." << std::endl;
     std::cout << "Генерация 3D-модели поверхности..." << std::endl;
-    std::cout << "Анализ завершен!" << std::endl;
+    std::cout << "Анализ завершен" << std::endl;
 }
 
 // Placeholder for SSTV ground station functionality
@@ -41,7 +41,7 @@ void runSSTVGroundStation() {
     std::cout << "Поиск сигнала спутника..." << std::endl;
     std::cout << "Декодирование SSTV-сигнала..." << std::endl;
     std::cout << "Сохранение изображения..." << std::endl;
-    std::cout << "Обработка завершена!" << std::endl;
+    std::cout << "Обработка завершена" << std::endl;
 }
 
 // Display main menu
@@ -110,7 +110,7 @@ int main() {
                 break;
             case 0:
                 std::cout << "\nСпасибо за использование Лаборатории моделирования нанозонда!" << std::endl;
-                std::cout << "До новых встреч!" << std::endl;
+                std::cout << "До новых встреч" << std::endl;
                 running = false;
                 break;
             default:
