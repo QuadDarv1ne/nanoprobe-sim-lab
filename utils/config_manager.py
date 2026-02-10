@@ -61,7 +61,7 @@ class ConfigManager:
         
         try:
             with open(self.config_file, 'r', encoding='utf-8') as f:
-                if self.config_file.endswith('.yaml') or self.config_file.endswith('.yml'):
+                if str(self.config_file).endswith('.yaml') or str(self.config_file).endswith('.yml'):
                     return yaml.safe_load(f)
                 else:
                     return json.load(f)

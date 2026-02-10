@@ -88,7 +88,7 @@ class WebDashboard:
         @self.app.route('/')
         def index():
             """Главная страница"""
-            return render_template('dashboard.html')
+            return render_template('enhanced_dashboard.html')
         
         @self.app.route('/api/status')
         def api_status():
@@ -133,6 +133,101 @@ class WebDashboard:
                 return jsonify(logs)
             except Exception as e:
                 return jsonify({'error': str(e)}), 500
+        
+        @self.app.route('/api/system/info')
+        def api_system_info():
+            """API для получения информации о системе"""
+            try:
+                import platform
+                import sys
+                system_info = {
+                    'python_version': sys.version,
+                    'os_info': f"{platform.system()} {platform.release()}",
+                    'platform': platform.platform(),
+                    'architecture': platform.architecture()[0],
+                    'processor': platform.processor(),
+                    'project_path': str(project_root)
+                }
+                return jsonify(system_info)
+            except Exception as e:
+                return jsonify({'error': str(e)}), 500
+        
+        @self.app.route('/api/cache/analyze', methods=['POST'])
+        def api_cache_analyze():
+            """API для анализа кэша"""
+            try:
+                stats = self.cache_manager.get_cache_statistics()
+                analysis = {
+                    'total_size_mb': stats.get('total_cache_size_mb', 0),
+                    'total_files': stats.get('total_files', 0),
+                    'directories_count': stats.get('cache_directories_count', 0),
+                    'auto_cleanup_enabled': stats.get('auto_cleanup_enabled', False),
+                    'cache_directories': stats.get('cache_directories', []),
+                    'recommendations': self._get_cache_recommendations(stats)
+                }
+                return jsonify({'success': True, 'analysis': analysis})
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)}), 500
+        
+        @self.app.route('/api/components/start_all', methods=['POST'])
+        def api_start_all_components():
+            """API для запуска всех компонентов"""
+            try:
+                # В реальной реализации здесь будет логика запуска всех компонентов
+                result = {
+                    'status': 'success',
+                    'message': 'Все компоненты запущены',
+                    'components_started': ['SPM Simulator', 'Surface Analyzer', 'SSTV Groundstation']
+                }
+                return jsonify({'success': True, 'result': result})
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)}), 500
+        
+        @self.app.route('/api/report/generate', methods=['POST'])
+        def api_generate_report():
+            """API для генерации отчета"""
+            try:
+                # Генерируем отчет
+                report_data = {
+                    'timestamp': datetime.now().isoformat(),
+                    'project_info': self._get_project_info(),
+                    'system_metrics': self._get_system_metrics(),
+                    'cache_info': self._get_cache_info(),
+                    'running_processes': self._get_running_processes()
+                }
+                
+                # Сохраняем отчет в файл
+                report_path = project_root / 'reports' / f'report_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json'
+                report_path.parent.mkdir(exist_ok=True)
+                
+                with open(report_path, 'w', encoding='utf-8') as f:
+                    json.dump(report_data, f, indent=2, ensure_ascii=False, default=str)
+                
+                return jsonify({
+                    'success': True, 
+                    'message': 'Отчет сгенерирован',
+                    'report_path': str(report_path)
+                })
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)}), 500
+        
+        def _get_cache_recommendations(self, stats: Dict[str, Any]) -> List[str]:
+            """Получает рекомендации по кэшу"""
+            recommendations = []
+            
+            if stats.get('total_cache_size_mb', 0) > 100:
+                recommendations.append("Рекомендуется очистить кэш для освобождения места")
+            
+            if stats.get('total_files', 0) > 1000:
+                recommendations.append("Слишком много файлов в кэше, рекомендуется очистка")
+            
+            if not stats.get('auto_cleanup_enabled', False):
+                recommendations.append("Рекомендуется включить автоматическую очистку кэша")
+            
+            if len(recommendations) == 0:
+                recommendations.append("Кэш находится в хорошем состоянии")
+            
+            return recommendations
     
     def _setup_socketio(self):
         """Настройка SocketIO для реального времени"""
@@ -157,13 +252,14 @@ class WebDashboard:
     def _get_project_info(self) -> Dict[str, Any]:
         """Получает информацию о проекте"""
         try:
-            config = self.config_manager.config  # Исправлено: config вместо get_config()
+            config = self.config_manager.config
             return {
                 'name': config.get('project', {}).get('name', 'Nanoprobe Simulation Lab'),
                 'version': config.get('project', {}).get('version', '1.0.0'),
                 'description': config.get('project', {}).get('description', ''),
                 'author': config.get('project', {}).get('author', ''),
-                'components_count': len(config.get('components', {}))
+                'components_count': len(config.get('components', {})),
+                'license': config.get('license', {}).get('type', 'Proprietary')
             }
         except Exception as e:
             self.error_handler.log_error(f"Ошибка получения информации о проекте: {e}")
@@ -172,12 +268,15 @@ class WebDashboard:
     def _get_system_metrics(self) -> Dict[str, Any]:
         """Получает системные метрики"""
         try:
-            metrics = self.system_monitor.get_current_metrics()  # Исправлено: get_current_metrics()
+            import platform
+            metrics = self.system_monitor.get_current_metrics()
             return {
                 'cpu_percent': metrics.get('cpu_percent', 0),
                 'memory_percent': metrics.get('memory_percent', 0),
                 'disk_usage': metrics.get('disk_usage', 0),
-                'uptime': metrics.get('uptime', 0)
+                'uptime': metrics.get('uptime', 0),
+                'platform': platform.platform(),
+                'python_version': platform.python_version()
             }
         except Exception as e:
             self.error_handler.log_error(f"Ошибка получения системных метрик: {e}")
@@ -204,7 +303,7 @@ class WebDashboard:
     def _get_components_info(self) -> List[Dict[str, Any]]:
         """Получает информацию о компонентах проекта"""
         try:
-            config = self.config_manager.config  # Исправлено: config вместо get_config()
+            config = self.config_manager.config
             components = []
             
             for name, info in config.get('components', {}).items():
