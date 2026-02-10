@@ -1,0 +1,15 @@
+[Unit]
+Description=Nanoprobe Simulation Lab Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=C:\Users\maksi\OneDrive\Documents\GitHub\nanoprobe-sim-lab
+Environment=PYTHONPATH=C:\Users\maksi\OneDrive\Documents\GitHub\nanoprobe-sim-lab
+ExecStart=C:\Users\maksi\AppData\Local\Programs\Python\Python314\python.exe C:\Users\maksi\OneDrive\Documents\GitHub\nanoprobe-sim-lab/start.py web
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

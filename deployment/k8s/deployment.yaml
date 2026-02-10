@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nanoprobe-lab
+  labels:
+    app: nanoprobe-lab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nanoprobe-lab
+  template:
+    metadata:
+      labels:
+        app: nanoprobe-lab
+    spec:
+      containers:
+      - name: nanoprobe-lab
+        image: nanoprobe-lab:latest
+        ports:
+        - containerPort: 5000
+        - containerPort: 8000
+        volumeMounts:
+        - name: data-volume
+          mountPath: /app/data
+        - name: logs-volume
+          mountPath: /app/logs
+        - name: output-volume
+          mountPath: /app/output
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: nanoprobe-data-pvc
+      - name: logs-volume
+        persistentVolumeClaim:
+          claimName: nanoprobe-logs-pvc
+      - name: output-volume
+        persistentVolumeClaim:
+          claimName: nanoprobe-output-pvc

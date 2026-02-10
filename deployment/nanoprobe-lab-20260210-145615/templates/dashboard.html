@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Веб-панель управления - Лаборатория моделирования нанозонда</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #34495e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header p {
+            opacity: 0.9;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--light-color);
+        }
+        
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        .card-icon {
+            font-size: 1.5rem;
+        }
+        
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+        }
+        
+        .metric-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-running {
+            background-color: var(--success-color);
+        }
+        
+        .status-stopped {
+            background-color: var(--danger-color);
+        }
+        
+        .status-warning {
+            background-color: var(--warning-color);
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin: 0.25rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: white;
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .component-list {
+            list-style: none;
+        }
+        
+        .component-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--light-color);
+        }
+        
+        .component-item:last-child {
+            border-bottom: none;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background-color: var(--light-color);
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success-color), var(--warning-color));
+            border-radius: 5px;
+            transition: width 0.3s ease;
+        }
+        
+        .log-container {
+            background-color: var(--dark-color);
+            color: white;
+            padding: 1rem;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .log-entry {
+            margin: 0.25rem 0;
+            padding: 0.25rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .log-timestamp {
+            color: #95a5a6;
+            margin-right: 1rem;
+        }
+        
+        .log-level {
+            display: inline-block;
+            padding: 0.1rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+        
+        .log-level-info { background-color: var(--secondary-color); }
+        .log-level-warning { background-color: var(--warning-color); }
+        .log-level-error { background-color: var(--danger-color); }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--light-color);
+        }
+        
+        .tab {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            border-bottom-color: var(--secondary-color);
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem;
+            border-radius: 5px;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification-success {
+            background-color: var(--success-color);
+        }
+        
+        .notification-error {
+            background-color: var(--danger-color);
+        }
+        
+        .notification-warning {
+            background-color: var(--warning-color);
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .header {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔬 Лаборатория моделирования нанозонда</h1>
+        <p>Веб-панель управления проектом</p>
+    </div>
+    
+    <div class="container">
+        <!-- Вкладки -->
+        <div class="tabs">
+            <div class="tab active" data-tab="overview">Обзор</div>
+            <div class="tab" data-tab="components">Компоненты</div>
+            <div class="tab" data-tab="analytics">Аналитика</div>
+            <div class="tab" data-tab="logs">Логи</div>
+            <div class="tab" data-tab="settings">Настройки</div>
+        </div>
+        
+        <!-- Обзор -->
+        <div class="tab-content active" id="overview">
+            <div class="dashboard-grid">
+                <!-- Статус проекта -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Статус проекта</div>
+                        <div class="card-icon">📊</div>
+                    </div>
+                    <div id="project-status">
+                        <div class="metric-value" id="project-name">Загрузка...</div>
+                        <div class="metric-label">Версия: <span id="project-version">-</span></div>
+                        <div class="metric-label">Компонентов: <span id="components-count">-</span></div>
+                    </div>
+                </div>
+                
+                <!-- Системные метрики -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Система</div>
+                        <div class="card-icon">💻</div>
+                    </div>
+                    <div>
+                        <div class="metric-label">CPU</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="cpu-progress" style="width: 0%"></div>
+                        </div>
+                        <div class="metric-value" id="cpu-value">0%</div>
+                        
+                        <div class="metric-label">Память</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="memory-progress" style="width: 0%"></div>
+                        </div>
+                        <div class="metric-value" id="memory-value">0%</div>
+                    </div>
+                </div>
+                
+                <!-- Кэш -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Кэш</div>
+                        <div class="card-icon">🗂️</div>
+                    </div>
+                    <div>
+                        <div class="metric-value" id="cache-size">0 MB</div>
+                        <div class="metric-label">Размер кэша</div>
+                        <div class="metric-value" id="cache-files">0</div>
+                        <div class="metric-label">Файлов</div>
+                        <button class="btn btn-warning" onclick="cleanCache()">Очистить кэш</button>
+                    </div>
+                </div>
+                
+                <!-- Запущенные процессы -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Процессы</div>
+                        <div class="card-icon">⚡</div>
+                    </div>
+                    <div id="running-processes">
+                        <div class="metric-label">Нет активных процессов</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Компоненты -->
+        <div class="tab-content" id="components">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Компоненты проекта</div>
+                    <div class="card-icon">⚙️</div>
+                </div>
+                <ul class="component-list" id="components-list">
+                    <li class="component-item">
+                        <div>Загрузка компонентов...</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Аналитика -->
+        <div class="tab-content" id="analytics">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Аналитика проекта</div>
+                    <div class="card-icon">📈</div>
+                </div>
+                <div>
+                    <canvas id="analytics-chart" height="100"></canvas>
+                    <button class="btn btn-primary" onclick="refreshAnalytics()">Обновить аналитику</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Логи -->
+        <div class="tab-content" id="logs">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Системные логи</div>
+                    <div class="card-icon">📝</div>
+                </div>
+                <div class="log-container" id="log-container">
+                    <div class="log-entry">Загрузка логов...</div>
+                </div>
+                <div style="margin-top: 1rem;">
+                    <button class="btn btn-primary" onclick="refreshLogs()">Обновить логи</button>
+                    <button class="btn btn-warning" onclick="clearLogs()">Очистить логи</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Настройки -->
+        <div class="tab-content" id="settings">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Настройки панели</div>
+                    <div class="card-icon">🔧</div>
+                </div>
+                <div>
+                    <div style="margin-bottom: 1rem;">
+                        <label>
+                            <input type="checkbox" id="auto-refresh" checked> 
+                            Автоматическое обновление данных
+                        </label>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label>Интервал обновления (сек): </label>
+                        <input type="number" id="refresh-interval" value="5" min="1" max="60" style="width: 80px;">
+                    </div>
+                    <button class="btn btn-success" onclick="saveSettings()">Сохранить настройки</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Уведомления -->
+    <div id="notification" class="notification"></div>
+    
+    <script>
+        // Глобальные переменные
+        let socket;
+        let refreshInterval;
+        let analyticsChart;
+        
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSocket();
+            loadDashboardData();
+            setupTabs();
+            setupAutoRefresh();
+            initializeAnalyticsChart();
+        });
+        
+        // Инициализация WebSocket соединения
+        function initializeSocket() {
+            socket = io();
+            
+            socket.on('connect', function() {
+                showNotification('Подключено к серверу', 'success');
+                socket.emit('request_update');
+            });
+            
+            socket.on('status_update', function(data) {
+                updateDashboard(data);
+            });
+            
+            socket.on('disconnect', function() {
+                showNotification('Потеряно соединение с сервером', 'error');
+            });
+        }
+        
+        // Загрузка данных дашборда
+        function loadDashboardData() {
+            fetch('/api/status')
+                .then(response => response.json())
+                .then(data => {
+                    updateDashboard(data);
+                })
+                .catch(error => {
+                    console.error('Ошибка загрузки данных:', error);
+                    showNotification('Ошибка загрузки данных', 'error');
+                });
+            
+            loadComponents();
+            loadLogs();
+        }
+        
+        // Обновление дашборда
+        function updateDashboard(data) {
+            if (data.project_info) {
+                document.getElementById('project-name').textContent = data.project_info.name;
+                document.getElementById('project-version').textContent = data.project_info.version;
+                document.getElementById('components-count').textContent = data.project_info.components_count;
+            }
+            
+            if (data.system_metrics) {
+                const cpuPercent = data.system_metrics.cpu_percent || 0;
+                const memoryPercent = data.system_metrics.memory_percent || 0;
+                
+                document.getElementById('cpu-progress').style.width = cpuPercent + '%';
+                document.getElementById('cpu-value').textContent = cpuPercent.toFixed(1) + '%';
+                
+                document.getElementById('memory-progress').style.width = memoryPercent + '%';
+                document.getElementById('memory-value').textContent = memoryPercent.toFixed(1) + '%';
+            }
+            
+            if (data.cache_info) {
+                document.getElementById('cache-size').textContent = (data.cache_info.total_size_mb || 0).toFixed(1) + ' MB';
+                document.getElementById('cache-files').textContent = data.cache_info.total_files || 0;
+            }
+            
+            if (data.running_processes) {
+                updateRunningProcesses(data.running_processes);
+            }
+        }
+        
+        // Обновление запущенных процессов
+        function updateRunningProcesses(processes) {
+            const container = document.getElementById('running-processes');
+            const processCount = Object.keys(processes).length;
+            
+            if (processCount === 0) {
+                container.innerHTML = '<div class="metric-label">Нет активных процессов</div>';
+            } else {
+                let html = '';
+                for (const [name, process] of Object.entries(processes)) {
+                    html += `
+                        <div class="component-item">
+                            <div>
+                                <span class="status-indicator status-running"></span>
+                                ${name}
+                            </div>
+                            <button class="btn btn-danger btn-sm" onclick="stopComponent('${name}')">Остановить</button>
+                        </div>
+                    `;
+                }
+                container.innerHTML = html;
+            }
+        }
+        
+        // Загрузка компонентов
+        function loadComponents() {
+            fetch('/api/components')
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('components-list');
+                    if (data.length === 0) {
+                        container.innerHTML = '<li class="component-item">Компоненты не найдены</li>';
+                        return;
+                    }
+                    
+                    let html = '';
+                    data.forEach(component => {
+                        html += `
+                            <li class="component-item">
+                                <div>
+                                    <strong>${component.name}</strong>
+                                    <div style="font-size: 0.9rem; color: #666;">${component.description}</div>
+                                    <div style="font-size: 0.8rem; color: #999;">${component.language} | ${component.path}</div>
+                                </div>
+                                <button class="btn btn-success btn-sm" onclick="startComponent('${component.name}')">Запустить</button>
+                            </li>
+                        `;
+                    });
+                    container.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Ошибка загрузки компонентов:', error);
+                });
+        }
+        
+        // Загрузка логов
+        function loadLogs() {
+            fetch('/api/logs?limit=20')
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('log-container');
+                    if (data.length === 0) {
+                        container.innerHTML = '<div class="log-entry">Логи пусты</div>';
+                        return;
+                    }
+                    
+                    let html = '';
+                    data.forEach(log => {
+                        const levelClass = `log-level-${log.level.toLowerCase()}`;
+                        html += `
+                            <div class="log-entry">
+                                <span class="log-timestamp">${new Date(log.timestamp).toLocaleTimeString()}</span>
+                                <span class="log-level ${levelClass}">${log.level}</span>
+                                <span>[${log.component}]</span>
+                                <span>${log.message}</span>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html;
+                    container.scrollTop = container.scrollHeight;
+                })
+                .catch(error => {
+                    console.error('Ошибка загрузки логов:', error);
+                });
+        }
+        
+        // Настройка вкладок
+        function setupTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabName = this.getAttribute('data-tab');
+                    
+                    // Убираем активный класс у всех вкладок и содержимого
+                    tabs.forEach(t => t.classList.remove('active'));
+                    contents.forEach(c => c.classList.remove('active'));
+                    
+                    // Добавляем активный класс текущей вкладке и содержимому
+                    this.classList.add('active');
+                    document.getElementById(tabName).classList.add('active');
+                });
+            });
+        }
+        
+        // Настройка автоматического обновления
+        function setupAutoRefresh() {
+            const checkbox = document.getElementById('auto-refresh');
+            const intervalInput = document.getElementById('refresh-interval');
+            
+            function updateRefresh() {
+                if (refreshInterval) {
+                    clearInterval(refreshInterval);
+                }
+                
+                if (checkbox.checked) {
+                    const interval = parseInt(intervalInput.value) * 1000;
+                    refreshInterval = setInterval(loadDashboardData, interval);
+                }
+            }
+            
+            checkbox.addEventListener('change', updateRefresh);
+            intervalInput.addEventListener('change', updateRefresh);
+            
+            // Начальное обновление
+            updateRefresh();
+        }
+        
+        // Инициализация графика аналитики
+        function initializeAnalyticsChart() {
+            const ctx = document.getElementById('analytics-chart').getContext('2d');
+            analyticsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Системная нагрузка',
+                        data: [],
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Обновление аналитики
+        function refreshAnalytics() {
+            fetch('/api/actions/get_analytics', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification(data.message, 'success');
+                        // Здесь можно обновить график аналитики
+                    } else {
+                        showNotification(data.error || 'Ошибка получения аналитики', 'error');
+                    }
+                })
+                .catch(error => {
+                    showNotification('Ошибка получения аналитики', 'error');
+                });
+        }
+        
+        // Обновление логов
+        function refreshLogs() {
+            loadLogs();
+            showNotification('Логи обновлены', 'success');
+        }
+        
+        // Очистка логов
+        function clearLogs() {
+            document.getElementById('log-container').innerHTML = '<div class="log-entry">Логи очищены</div>';
+            showNotification('Логи очищены', 'success');
+        }
+        
+        // Запуск компонента
+        function startComponent(componentName) {
+            fetch('/api/actions/start_component', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ component: componentName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    loadDashboardData();
+                } else {
+                    showNotification(data.error || 'Ошибка запуска компонента', 'error');
+                }
+            })
+            .catch(error => {
+                showNotification('Ошибка запуска компонента', 'error');
+            });
+        }
+        
+        // Остановка компонента
+        function stopComponent(componentName) {
+            fetch('/api/actions/stop_component', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ component: componentName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    loadDashboardData();
+                } else {
+                    showNotification(data.error || 'Ошибка остановки компонента', 'error');
+                }
+            })
+            .catch(error => {
+                showNotification('Ошибка остановки компонента', 'error');
+            });
+        }
+        
+        // Очистка кэша
+        function cleanCache() {
+            if (confirm('Вы уверены, что хотите очистить кэш?')) {
+                fetch('/api/actions/clean_cache', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification(data.message, 'success');
+                        loadDashboardData();
+                    } else {
+                        showNotification(data.error || 'Ошибка очистки кэша', 'error');
+                    }
+                })
+                .catch(error => {
+                    showNotification('Ошибка очистки кэша', 'error');
+                });
+            }
+        }
+        
+        // Сохранение настроек
+        function saveSettings() {
+            showNotification('Настройки сохранены', 'success');
+        }
+        
+        // Показ уведомлений
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification notification-${type} show`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

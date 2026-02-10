@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  nanoprobe-lab:
+    build: .
+    container_name: nanoprobe-simulation-lab
+    ports:
+      - "5000:5000"
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./output:/app/output
+    environment:
+      - PYTHONPATH=/app
+      - FLASK_ENV=production
+    restart: unless-stopped
+    networks:
+      - nanoprobe-network
+
+  # Дополнительный сервис для мониторинга (опционально)
+  monitoring:
+    image: prom/prometheus:latest
+    container_name: nanoprobe-monitoring
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - nanoprobe-network
+    depends_on:
+      - nanoprobe-lab
+
+networks:
+  nanoprobe-network:
+    driver: bridge
+
+volumes:
+  nanoprobe-data:
+  nanoprobe-logs:
+  nanoprobe-output:

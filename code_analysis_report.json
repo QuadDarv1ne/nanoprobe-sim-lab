@@ -1,0 +1,2164 @@
+{
+  "timestamp": "2026-02-10T14:55:42.552707",
+  "project_root": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab",
+  "summary": {
+    "total_files_analyzed": 40,
+    "total_issues": 255,
+    "issues_by_severity": {
+      "ERROR": 2,
+      "WARNING": 253,
+      "INFO": 0
+    },
+    "average_complexity": 36.98,
+    "average_maintainability_index": 39.9
+  },
+  "issues_by_type": {
+    "SECURITY": 5,
+    "BEST_PRACTICE": 200,
+    "PERFORMANCE": 29,
+    "COMPLEXITY": 1,
+    "NAMING_CONVENTION": 20
+  },
+  "files_with_issues": [
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\scripts\\install-poetry.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\deployment_manager.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_validator.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\main.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\simulator_orchestrator.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\web\\web_dashboard.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\tests\\test_image_analyzer.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\report_generator.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\dashboard.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_optimizer.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\api\\api_interface.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_integrity.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\test_framework.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\tests\\test_sstv_station.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\backup_manager.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\model_trainer.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_validator.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\cache_manager.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\machine_learning.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\performance_monitor.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\security\\data_encryption.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\components\\cpp-spm-hardware-sim\\src\\spm_simulator.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_manager.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\code_analyzer.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\error_handler.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\security\\auth_manager.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\tests\\test_spm_simulator.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\system_monitor.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_manager.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\tests\\run_all_tests.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\profiler.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\documentation_generator.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\start.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\project_manager.py",
+    "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\analytics.py"
+  ],
+  "detailed_issues": [
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\start.py",
+      "line": 1415,
+      "type": "SECURITY",
+      "severity": "WARNING",
+      "message": "Использование os.system() может быть небезопасным",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\api\\api_interface.py",
+      "line": 59,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (113 символов)",
+      "code_snippet": "        self.app.add_url_rule('/api/spm/create-surface', 'create_surface', self.create_surface, meth..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\api\\api_interface.py",
+      "line": 60,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (107 символов)",
+      "code_snippet": "        self.app.add_url_rule('/api/spm/scan-surface', 'scan_surface', self.scan_surface, methods=['..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\api\\api_interface.py",
+      "line": 61,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (111 символов)",
+      "code_snippet": "        self.app.add_url_rule('/api/spm/get-results', 'get_spm_results', self.get_spm_results, metho..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\api\\api_interface.py",
+      "line": 64,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (106 символов)",
+      "code_snippet": "        self.app.add_url_rule('/api/image/process', 'process_image', self.process_image, methods=['P..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\api\\api_interface.py",
+      "line": 65,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (106 символов)",
+      "code_snippet": "        self.app.add_url_rule('/api/image/analyze', 'analyze_image', self.analyze_image, methods=['P..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\api\\api_interface.py",
+      "line": 66,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (117 символов)",
+      "code_snippet": "        self.app.add_url_rule('/api/image/get-results', 'get_image_results', self.get_image_results,..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\api\\api_interface.py",
+      "line": 70,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (114 символов)",
+      "code_snippet": "        self.app.add_url_rule('/api/sstv/get-results', 'get_sstv_results', self.get_sstv_results, me..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\api\\api_interface.py",
+      "line": 73,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (115 символов)",
+      "code_snippet": "        self.app.add_url_rule('/api/simulation/start', 'start_simulation', self.start_simulation, me..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\api\\api_interface.py",
+      "line": 74,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (141 символов)",
+      "code_snippet": "        self.app.add_url_rule('/api/simulation/status/<simulation_id>', 'get_simulation_status', sel..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\api\\api_interface.py",
+      "line": 75,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (128 символов)",
+      "code_snippet": "        self.app.add_url_rule('/api/simulation/stop/<simulation_id>', 'stop_simulation', self.stop_s..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\api\\api_interface.py",
+      "line": 76,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (144 символов)",
+      "code_snippet": "        self.app.add_url_rule('/api/simulation/results/<simulation_id>', 'get_simulation_results', s..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\api\\api_interface.py",
+      "line": 80,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (116 символов)",
+      "code_snippet": "        self.app.add_url_rule('/api/data/download/<filename>', 'download_data', self.download_data, ..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\api\\api_interface.py",
+      "line": 84,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (107 символов)",
+      "code_snippet": "        self.app.add_url_rule('/api/system/info', 'get_system_info', self.get_system_info, methods=[..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\api\\api_interface.py",
+      "line": 85,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (113 символов)",
+      "code_snippet": "        self.app.add_url_rule('/api/system/status', 'get_system_status', self.get_system_status, met..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\api\\api_interface.py",
+      "line": 107,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (114 символов)",
+      "code_snippet": "            self.logger_manager.log_spm_event(f\"Создана поверхность {filename}, размер: {width}x{hei..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\api\\api_interface.py",
+      "line": 154,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (105 символов)",
+      "code_snippet": "            self.logger_manager.log_spm_event(f\"Выполнено сканирование поверхности {surface_id}\", \"I..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\api\\api_interface.py",
+      "line": 199,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (110 символов)",
+      "code_snippet": "            self.logger_manager.log_analyzer_event(f\"Обработано изображение с фильтром {filter_type}..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\api\\api_interface.py",
+      "line": 277,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (121 символов)",
+      "code_snippet": "            self.logger_manager.log_simulation_event(f\"Начата симуляция {simulation_id}, тип: {simul..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\api\\api_interface.py",
+      "line": 337,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (105 символов)",
+      "code_snippet": "            self.logger_manager.log_simulation_event(f\"Ошибка в симуляции {simulation_id}: {e}\", \"ER..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\api\\api_interface.py",
+      "line": 341,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (111 символов)",
+      "code_snippet": "    def _generate_simulation_results(self, simulation_type: str, parameters: Dict[str, Any]) -> Dict..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\api\\api_interface.py",
+      "line": 453,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (105 символов)",
+      "code_snippet": "                                'modified': datetime.fromtimestamp(file_path.stat().st_mtime).isofor..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\api\\api_interface.py",
+      "line": 503,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (101 символов)",
+      "code_snippet": "        active_count = len([s for s in self.active_simulations.values() if s['status'] == 'running']..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\api\\api_interface.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Возможна неэффективная конкатенация строк в цикле",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\scripts\\install-poetry.py",
+      "line": 865,
+      "type": "COMPLEXITY",
+      "severity": "WARNING",
+      "message": "Функция слишком длинная (54 строк)",
+      "code_snippet": "def main():"
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\scripts\\install-poetry.py",
+      "line": 1,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Слишком много импортов (24)",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\scripts\\install-poetry.py",
+      "line": 6,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (119 символов)",
+      "code_snippet": "    * Create a new virtual environment using the built-in venv module, or the virtualenv zipapp if v..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\scripts\\install-poetry.py",
+      "line": 13,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (111 символов)",
+      "code_snippet": "    * Install a `poetry` script into a platform-specific path (or `$POETRY_HOME/bin` if `$POETRY_HOM..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\scripts\\install-poetry.py",
+      "line": 16,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (114 символов)",
+      "code_snippet": "    * Attempt to inform the user if they need to add this bin directory to their `$PATH`, as well as..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\scripts\\install-poetry.py",
+      "line": 17,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (114 символов)",
+      "code_snippet": "    * Upon failure, write an error log to `poetry-installer-error-<hash>.log and restore any previou..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\scripts\\install-poetry.py",
+      "line": 19,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (119 символов)",
+      "code_snippet": "This script performs minimal magic, and should be relatively stable. However, it is optimized for in..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\scripts\\install-poetry.py",
+      "line": 20,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (119 символов)",
+      "code_snippet": "use and trivial pipelines. If you are considering using this script in production, you should consid..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\scripts\\install-poetry.py",
+      "line": 21,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (119 символов)",
+      "code_snippet": "installs, or use of pipx as alternatives to executing arbitrary, unversioned code from the internet...."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\scripts\\install-poetry.py",
+      "line": 278,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (131 символов)",
+      "code_snippet": "[Environment]::SetEnvironmentVariable(\"Path\", [Environment]::GetEnvironmentVariable(\"Path\", \"User\") ..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\scripts\\install-poetry.py",
+      "line": 284,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (125 символов)",
+      "code_snippet": "echo 'if (-not (Get-Command poetry -ErrorAction Ignore)) {{ $env:Path += \";{poetry_home_bin}\" }}' | ..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\scripts\\install-poetry.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Возможна неэффективная конкатенация строк в цикле",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\security\\auth_manager.py",
+      "line": 449,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (107 символов)",
+      "code_snippet": "                    return jsonify({'status': 'error', 'message': 'Токен аутентификации отсутствует'..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\security\\auth_manager.py",
+      "line": 453,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (102 символов)",
+      "code_snippet": "                    return jsonify({'status': 'error', 'message': 'Неверный или истекший токен'}), 4..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\security\\auth_manager.py",
+      "line": 458,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (104 символов)",
+      "code_snippet": "                        return jsonify({'status': 'error', 'message': 'Недостаточно прав доступа'}),..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\security\\data_encryption.py",
+      "line": 23,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (128 символов)",
+      "code_snippet": "    Обеспечивает шифрование и дешифрование чувствительных данных проекта с использованием современны..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\security\\data_encryption.py",
+      "line": 185,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (102 символов)",
+      "code_snippet": "    def store_secure_data(self, key: str, data: Union[str, dict, list], encrypt: bool = True) -> boo..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\security\\data_encryption.py",
+      "line": 218,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (103 символов)",
+      "code_snippet": "    def retrieve_secure_data(self, key: str, decrypt: bool = True) -> Optional[Union[str, dict, list..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\tests\\run_all_tests.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Возможна неэффективная конкатенация строк в цикле",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\tests\\test_image_analyzer.py",
+      "line": 42,
+      "type": "NAMING_CONVENTION",
+      "severity": "WARNING",
+      "message": "Функция 'setUp' не следует snake_case соглашению",
+      "code_snippet": "def setUp(self):"
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\tests\\test_spm_simulator.py",
+      "line": 22,
+      "type": "NAMING_CONVENTION",
+      "severity": "WARNING",
+      "message": "Функция 'setUp' не следует snake_case соглашению",
+      "code_snippet": "def setUp(self):"
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\tests\\test_spm_simulator.py",
+      "line": 57,
+      "type": "NAMING_CONVENTION",
+      "severity": "WARNING",
+      "message": "Функция 'setUp' не следует snake_case соглашению",
+      "code_snippet": "def setUp(self):"
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\tests\\test_spm_simulator.py",
+      "line": 98,
+      "type": "NAMING_CONVENTION",
+      "severity": "WARNING",
+      "message": "Функция 'setUp' не следует snake_case соглашению",
+      "code_snippet": "def setUp(self):"
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\tests\\test_sstv_station.py",
+      "line": 44,
+      "type": "NAMING_CONVENTION",
+      "severity": "WARNING",
+      "message": "Функция 'setUp' не следует snake_case соглашению",
+      "code_snippet": "def setUp(self):"
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\analytics.py",
+      "line": 145,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (113 символов)",
+      "code_snippet": "    def predict_surface_properties(self, features: np.ndarray, target_property: str = \"roughness\") -..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\analytics.py",
+      "line": 163,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (104 символов)",
+      "code_snippet": "        X_train, X_test, y_train, y_test = train_test_split(features, y, test_size=0.2, random_state..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\analytics.py",
+      "line": 212,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (104 символов)",
+      "code_snippet": "            \"contrast\": float(np.std(flat_data) / np.mean(flat_data)) if np.mean(flat_data) != 0 els..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\analytics.py",
+      "line": 216,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (111 символов)",
+      "code_snippet": "            \"correlation\": float(np.corrcoef(flat_data[:-1], flat_data[1:])[0, 1]) if len(flat_data)..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\analytics.py",
+      "line": 297,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (108 символов)",
+      "code_snippet": "    def analyze_signal_quality(self, signal_data: np.ndarray, sample_rate: int = 44100) -> Dict[str,..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\analytics.py",
+      "line": 328,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (103 символов)",
+      "code_snippet": "        noise_estimate = np.std(signal_data[:1000]) if len(signal_data) > 1000 else np.std(signal_da..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\analytics.py",
+      "line": 361,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (115 символов)",
+      "code_snippet": "    def evaluate_decoding_quality(self, original_image: np.ndarray, decoded_image: np.ndarray) -> Di..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\analytics.py",
+      "line": 452,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (110 символов)",
+      "code_snippet": "                report[\"surface_analysis\"] = self.surface_analytics.calculate_surface_properties(sur..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\analytics.py",
+      "line": 467,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (110 символов)",
+      "code_snippet": "                report[\"sstv_analysis\"] = self.sstv_analytics.analyze_signal_quality(signal_data, sa..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\analytics.py",
+      "line": 521,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (107 символов)",
+      "code_snippet": "        analysis_info = f\"Анализы выполнены: {', '.join(analytics_report.get('analyses_performed', [..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\analytics.py",
+      "line": 530,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (101 символов)",
+      "code_snippet": "    def save_analytics_report(self, report: Dict[str, Any], filename: str = \"analytics_report.json\")..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\analytics.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Возможна неэффективная конкатенация строк в цикле",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\analytics.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Частое использование len() может быть неэффективным",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\backup_manager.py",
+      "line": 251,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (107 символов)",
+      "code_snippet": "                self.logger_manager.log_system_event(f\"Резервная копия не найдена: {backup_name}\", \"..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\backup_manager.py",
+      "line": 258,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (111 символов)",
+      "code_snippet": "                self.logger_manager.log_system_event(f\"Файл резервной копии не найден: {backup_path}..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\backup_manager.py",
+      "line": 299,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (105 символов)",
+      "code_snippet": "            self.logger_manager.log_system_event(f\"Восстановлена резервная копия: {backup_name}\", \"I..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\backup_manager.py",
+      "line": 303,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (104 символов)",
+      "code_snippet": "            self.logger_manager.log_system_event(f\"Ошибка восстановления резервной копии: {e}\", \"ERR..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\backup_manager.py",
+      "line": 415,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (109 символов)",
+      "code_snippet": "                return False, f\"Несоответствие размера: ожидаемый {expected_size}, фактический {actu..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\backup_manager.py",
+      "line": 480,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (116 символов)",
+      "code_snippet": "            self.logger_manager.log_system_event(f\"Очистка старых резервных копий: удалено {deleted_..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\backup_manager.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Возможна неэффективная конкатенация строк в цикле",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\cache_manager.py",
+      "line": 22,
+      "type": "NAMING_CONVENTION",
+      "severity": "WARNING",
+      "message": "Класс 'class' не следует PascalCase соглашению",
+      "code_snippet": "@dataclass"
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\cache_manager.py",
+      "line": 268,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (107 символов)",
+      "code_snippet": "                            dirs.remove(dir_name)  # Удаляем из списка для предотвращения повторного..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\cache_manager.py",
+      "line": 435,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (106 символов)",
+      "code_snippet": "        print(f\"    * {info.path.name}: {info.file_count} файлов, {info.size_bytes / (1024*1024):.2f..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\cache_manager.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Возможна неэффективная конкатенация строк в цикле",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\code_analyzer.py",
+      "line": 17,
+      "type": "NAMING_CONVENTION",
+      "severity": "WARNING",
+      "message": "Класс 'import' не следует PascalCase соглашению",
+      "code_snippet": "from dataclasses import dataclass"
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\code_analyzer.py",
+      "line": 22,
+      "type": "NAMING_CONVENTION",
+      "severity": "WARNING",
+      "message": "Класс 'class' не следует PascalCase соглашению",
+      "code_snippet": "@dataclass"
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\code_analyzer.py",
+      "line": 34,
+      "type": "NAMING_CONVENTION",
+      "severity": "WARNING",
+      "message": "Класс 'class' не следует PascalCase соглашению",
+      "code_snippet": "@dataclass"
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\code_analyzer.py",
+      "line": 177,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (114 символов)",
+      "code_snippet": "                171 - 5.2 * (complexity / lines_of_code * 100) - 0.23 * (lines_of_code) - 16.2 * (co..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\code_analyzer.py",
+      "line": 304,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (135 символов)",
+      "code_snippet": "        import_lines = [line for line in content.split('\\n') if line.strip().startswith('import ') o..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\code_analyzer.py",
+      "line": 429,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (104 символов)",
+      "code_snippet": "        avg_complexity = sum(m.complexity for m in self.metrics) / total_files if total_files > 0 el..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\code_analyzer.py",
+      "line": 430,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (120 символов)",
+      "code_snippet": "        avg_maintainability = sum(m.maintainability_index for m in self.metrics) / total_files if to..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\code_analyzer.py",
+      "line": 13131,
+      "type": "SECURITY",
+      "severity": "ERROR",
+      "message": "Использование eval() может быть небезопасным",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\code_analyzer.py",
+      "line": 13523,
+      "type": "SECURITY",
+      "severity": "ERROR",
+      "message": "Использование exec() может быть небезопасным",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\code_analyzer.py",
+      "line": 13944,
+      "type": "SECURITY",
+      "severity": "WARNING",
+      "message": "Использование os.system() может быть небезопасным",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\code_analyzer.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Возможна неэффективная конкатенация строк в цикле",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\code_analyzer.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Частое использование len() может быть неэффективным",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_manager.py",
+      "line": 59,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (105 символов)",
+      "code_snippet": "            print(f\"Файл конфигурации {self.config_file} не найден. Создается стандартная конфигурац..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_manager.py",
+      "line": 98,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (108 символов)",
+      "code_snippet": "                \"description\": \"Комплекс инструментов для моделирования наноразмерных измерительных ..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_manager.py",
+      "line": 158,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (105 символов)",
+      "code_snippet": "                    \"Запрещено копирование, распространение и коммерческое использование без разреше..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_optimizer.py",
+      "line": 26,
+      "type": "NAMING_CONVENTION",
+      "severity": "WARNING",
+      "message": "Класс 'class' не следует PascalCase соглашению",
+      "code_snippet": "@dataclass"
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_optimizer.py",
+      "line": 83,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (104 символов)",
+      "code_snippet": "                self.original_config = {section: dict(config[section]) for section in config.section..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_optimizer.py",
+      "line": 93,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (112 символов)",
+      "code_snippet": "                        self.original_config = {section: dict(config[section]) for section in config..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_optimizer.py",
+      "line": 161,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (109 символов)",
+      "code_snippet": "                'disk_usage_percent': psutil.disk_usage('/').percent if hasattr(psutil, 'disk_usage'..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_optimizer.py",
+      "line": 162,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (112 символов)",
+      "code_snippet": "                'disk_free_gb': psutil.disk_usage('/').free / (1024**3) if hasattr(psutil, 'disk_usa..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_optimizer.py",
+      "line": 289,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (104 символов)",
+      "code_snippet": "            max_cache_size = int(metrics['memory_available_gb'] * 0.1 * 1000)  # 10% от доступной па..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_optimizer.py",
+      "line": 332,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (135 символов)",
+      "code_snippet": "                    if isinstance(perf_val, (int, float)) and isinstance(eff_val, (int, float)) and ..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_optimizer.py",
+      "line": 437,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (111 символов)",
+      "code_snippet": "    def optimize_multiple_configs(self, config_paths: List[str], strategy: str = \"balanced\") -> Dict..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_optimizer.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Возможна неэффективная конкатенация строк в цикле",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_validator.py",
+      "line": 33,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (102 символов)",
+      "code_snippet": "    def validate_json_config(self, config_path: str, schema: Optional[Dict] = None) -> Dict[str, Any..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_validator.py",
+      "line": 84,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (102 символов)",
+      "code_snippet": "    def validate_yaml_config(self, config_path: str, schema: Optional[Dict] = None) -> Dict[str, Any..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_validator.py",
+      "line": 213,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (111 символов)",
+      "code_snippet": "    def validate_config_against_schema(self, config: Dict[str, Any], schema: Dict[str, Any]) -> Dict..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_validator.py",
+      "line": 290,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (123 символов)",
+      "code_snippet": "        results['directories']['unexpected'] = [d for d in actual_dirs if d not in expected_dirs and..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_validator.py",
+      "line": 296,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (119 символов)",
+      "code_snippet": "        results['files']['unexpected'] = [f for f in actual_files if f not in expected_files and not..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_validator.py",
+      "line": 299,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (112 символов)",
+      "code_snippet": "        results['valid'] = len(results['directories']['missing']) == 0 and len(results['files']['mis..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_validator.py",
+      "line": 371,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (109 символов)",
+      "code_snippet": "    def generate_validation_report(self, validation_results: Dict[str, Any], output_path: str = None..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_validator.py",
+      "line": 496,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (104 символов)",
+      "code_snippet": "                'recommendation': 'Рассмотрите оптимизацию использования памяти и управление объекта..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_validator.py",
+      "line": 497,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (106 символов)",
+      "code_snippet": "                'details': f'Среднее использование памяти {avg_memory}% превышает рекомендуемый поро..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_validator.py",
+      "line": 513,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (102 символов)",
+      "code_snippet": "                'recommendation': 'Рассмотрите возможность параллелизации или оптимизации алгоритмов..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_validator.py",
+      "line": 514,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (110 символов)",
+      "code_snippet": "                'details': f'Время выполнения {execution_time} секунд превышает рекомендуемый порог ..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_validator.py",
+      "line": 524,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (113 символов)",
+      "code_snippet": "                'details': f'Средняя скорость записи на диск {avg_disk_write_rate / (1024*1024):.2f}..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_validator.py",
+      "line": 584,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (102 символов)",
+      "code_snippet": "                    'recommendation': f'Разделите функцию {func[\"function\"]} на более мелкие функции..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_validator.py",
+      "line": 585,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (119 символов)",
+      "code_snippet": "                    'details': f'Функция {func[\"function\"]} занимает {func[\"lines\"]} строк (рекоменд..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_validator.py",
+      "line": 597,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (134 символов)",
+      "code_snippet": "                if any(stripped_line.startswith(keyword) for keyword in ['if ', 'for ', 'while ', 'd..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_validator.py",
+      "line": 611,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (111 символов)",
+      "code_snippet": "                    'details': f'Найдена глубокая вложенность кода (максимальный отступ {max_indent}..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_validator.py",
+      "line": 624,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (114 символов)",
+      "code_snippet": "    def generate_optimization_report(self, recommendations: List[Dict[str, str]], output_path: str =..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_validator.py",
+      "line": 682,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (105 символов)",
+      "code_snippet": "    print(f\"✓ Валидация структуры проекта: {'Успешна' if project_validation['valid'] else 'С ошибкам..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_validator.py",
+      "line": 686,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (103 символов)",
+      "code_snippet": "    if not project_validation['directories']['missing'] and not project_validation['files']['missing..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_validator.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Возможна неэффективная конкатенация строк в цикле",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_validator.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Частое использование len() может быть неэффективным",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_integrity.py",
+      "line": 185,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (101 символов)",
+      "code_snippet": "            data_str = str(data.shape) + str(data.dtype) + str(data.flat[0] if data.size > 0 else \"\"..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_integrity.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Возможна неэффективная конкатенация строк в цикле",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_manager.py",
+      "line": 208,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (117 символов)",
+      "code_snippet": "    def save_simulation_metadata(self, metadata: Dict[str, Any], filename: str = \"simulation_metadat..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_manager.py",
+      "line": 232,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (111 символов)",
+      "code_snippet": "    def load_simulation_metadata(self, filename: str = \"simulation_metadata.json\") -> Optional[Dict[..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_manager.py",
+      "line": 354,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (104 символов)",
+      "code_snippet": "            print(f\"✓ Данные поверхности успешно сохранены и загружены. Размер: {loaded_surface.shap..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_manager.py",
+      "line": 368,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (121 символов)",
+      "code_snippet": "            print(f\"✓ Результаты анализа успешно сохранены и загружены. Качество: {loaded_results.ge..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_validator.py",
+      "line": 17,
+      "type": "NAMING_CONVENTION",
+      "severity": "WARNING",
+      "message": "Класс 'import' не следует PascalCase соглашению",
+      "code_snippet": "from dataclasses import dataclass"
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_validator.py",
+      "line": 32,
+      "type": "NAMING_CONVENTION",
+      "severity": "WARNING",
+      "message": "Класс 'class' не следует PascalCase соглашению",
+      "code_snippet": "@dataclass"
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_validator.py",
+      "line": 183,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (106 символов)",
+      "code_snippet": "    def validate_dataframe(self, df: pd.DataFrame, schema: Dict[str, Dict[str, Any]]) -> ValidationR..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_validator.py",
+      "line": 211,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (108 символов)",
+      "code_snippet": "                        if self.validation_level in [ValidationLevel.STRICT, ValidationLevel.COMPREH..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_validator.py",
+      "line": 212,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (141 символов)",
+      "code_snippet": "                            errors.append(f\"Неверный тип данных для столбца '{column}': ожидается {e..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_validator.py",
+      "line": 214,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (161 символов)",
+      "code_snippet": "                            warnings_list.append(f\"Потенциально неверный тип данных для столбца '{co..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_validator.py",
+      "line": 221,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (143 символов)",
+      "code_snippet": "                        errors.append(f\"Найдены значения вне диапазона [{min_val}, {max_val}] в стол..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_validator.py",
+      "line": 232,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (104 символов)",
+      "code_snippet": "                    if self.validation_level in [ValidationLevel.STRICT, ValidationLevel.COMPREHENSI..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_validator.py",
+      "line": 235,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (105 символов)",
+      "code_snippet": "                        warnings_list.append(f\"Найдены null значения в столбце '{column}': {null_cou..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_validator.py",
+      "line": 292,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (114 символов)",
+      "code_snippet": "                warnings_list.append(f\"Потенциально неверный тип данных: ожидается {dtype}, получено..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_validator.py",
+      "line": 322,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (108 символов)",
+      "code_snippet": "    def calculate_data_quality_score(self, data: Union[pd.DataFrame, np.ndarray, Dict]) -> Dict[str,..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_validator.py",
+      "line": 359,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (107 символов)",
+      "code_snippet": "            completeness = (total_elements - null_elements) / total_elements if total_elements > 0 e..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_validator.py",
+      "line": 401,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (123 символов)",
+      "code_snippet": "                'descriptive_stats': data.describe().to_dict() if len(data.select_dtypes(include=[np..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_validator.py",
+      "line": 436,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (101 символов)",
+      "code_snippet": "    def validate_file_integrity(self, file_path: str, expected_hash: str = None) -> ValidationResult..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_validator.py",
+      "line": 469,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (119 символов)",
+      "code_snippet": "                errors.append(f\"Хеш файла не совпадает: ожидается {expected_hash[:8]}..., получено {..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_validator.py",
+      "line": 516,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (124 символов)",
+      "code_snippet": "                    errors.append(f\"Неверный тип по пути {current_path}: ожидается {expected_type}, ..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_validator.py",
+      "line": 524,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (103 символов)",
+      "code_snippet": "                            errors.append(f\"Отсутствует обязательное поле: {current_path}.{req_field..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_validator.py",
+      "line": 532,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (107 символов)",
+      "code_snippet": "                    elif 'additionalProperties' in schema_item and not schema_item['additionalProper..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_validator.py",
+      "line": 533,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (103 символов)",
+      "code_snippet": "                        warnings_list.append(f\"Дополнительное поле не разрешено: {current_path}.{key..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_validator.py",
+      "line": 653,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (106 символов)",
+      "code_snippet": "    arr_result = validator.validate_numpy_array(arr, shape=(2, 3), dtype='float64', min_val=0, max_v..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_validator.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Возможна неэффективная конкатенация строк в цикле",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_validator.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Частое использование len() может быть неэффективным",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\deployment_manager.py",
+      "line": 29,
+      "type": "NAMING_CONVENTION",
+      "severity": "WARNING",
+      "message": "Класс 'class' не следует PascalCase соглашению",
+      "code_snippet": "@dataclass"
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\deployment_manager.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Возможна неэффективная конкатенация строк в цикле",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\documentation_generator.py",
+      "line": 20,
+      "type": "NAMING_CONVENTION",
+      "severity": "WARNING",
+      "message": "Класс 'class' не следует PascalCase соглашению",
+      "code_snippet": "@dataclass"
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\documentation_generator.py",
+      "line": 415,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (101 символов)",
+      "code_snippet": "            \".module { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }\"..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\documentation_generator.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Возможна неэффективная конкатенация строк в цикле",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\documentation_generator.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Частое использование len() может быть неэффективным",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\error_handler.py",
+      "line": 22,
+      "type": "NAMING_CONVENTION",
+      "severity": "WARNING",
+      "message": "Класс 'import' не следует PascalCase соглашению",
+      "code_snippet": "from dataclasses import dataclass"
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\error_handler.py",
+      "line": 35,
+      "type": "NAMING_CONVENTION",
+      "severity": "WARNING",
+      "message": "Класс 'class' не следует PascalCase соглашению",
+      "code_snippet": "@dataclass"
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\error_handler.py",
+      "line": 84,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (109 символов)",
+      "code_snippet": "                self.error_history = [ErrorInfo(**item) if isinstance(item, dict) else item for item..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\error_handler.py",
+      "line": 438,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (101 символов)",
+      "code_snippet": "                        f\"Ошибка при попытке {attempt + 1}/{max_retries} выполнения {func.__name__}\"..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\error_handler.py",
+      "line": 553,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (103 символов)",
+      "code_snippet": "    result = safe_executor.execute_with_timeout(slow_function, timeout=1.0, fallback_return=\"Таймаут..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\error_handler.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Возможна неэффективная конкатенация строк в цикле",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\machine_learning.py",
+      "line": 142,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (105 символов)",
+      "code_snippet": "        X_train, X_test, y_train, y_test = train_test_split(X, y_encoded, test_size=0.2, random_stat..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\machine_learning.py",
+      "line": 375,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (103 символов)",
+      "code_snippet": "    def prepare_signal_features(self, signal_data: np.ndarray, sample_rate: int = 44100) -> np.ndarr..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\machine_learning.py",
+      "line": 405,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (103 символов)",
+      "code_snippet": "        noise_estimate = np.std(signal_data[:1000]) if len(signal_data) > 1000 else np.std(signal_da..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\machine_learning.py",
+      "line": 436,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (105 символов)",
+      "code_snippet": "        X_train, X_test, y_train, y_test = train_test_split(X, y_quality, test_size=0.2, random_stat..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\machine_learning.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Частое использование len() может быть неэффективным",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\model_trainer.py",
+      "line": 24,
+      "type": "NAMING_CONVENTION",
+      "severity": "WARNING",
+      "message": "Класс 'from' не следует PascalCase соглашению",
+      "code_snippet": "from dataclasses import dataclass"
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\model_trainer.py",
+      "line": 32,
+      "type": "NAMING_CONVENTION",
+      "severity": "WARNING",
+      "message": "Класс 'class' не следует PascalCase соглашению",
+      "code_snippet": "@dataclass"
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\model_trainer.py",
+      "line": 1,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Слишком много импортов (23)",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\model_trainer.py",
+      "line": 70,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (105 символов)",
+      "code_snippet": "                    encode_labels: bool = True) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndar..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\model_trainer.py",
+      "line": 196,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (101 символов)",
+      "code_snippet": "                'classification_report': classification_report(y_test, predictions, output_dict=True..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\model_trainer.py",
+      "line": 593,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (112 символов)",
+      "code_snippet": "    reg_result = trainer.train_and_evaluate(X_reg, y_reg, model_type=\"random_forest\", problem_type=\"..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\model_trainer.py",
+      "line": 600,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (116 символов)",
+      "code_snippet": "    clf_result = trainer.train_and_evaluate(X_clf, y_clf, model_type=\"random_forest\", problem_type=\"..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\model_trainer.py",
+      "line": 615,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (108 символов)",
+      "code_snippet": "    print(f\"  - Лучшие параметры: {tuning_results['params'][np.argmax(tuning_results['mean_test_scor..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\model_trainer.py",
+      "line": 648,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (101 символов)",
+      "code_snippet": "    print(f\"  - График предсказанных vs фактических значений сохранен: {predictions_vs_actual_path}\"..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\model_trainer.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Возможна неэффективная конкатенация строк в цикле",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\model_trainer.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Частое использование len() может быть неэффективным",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\performance_monitor.py",
+      "line": 131,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (104 символов)",
+      "code_snippet": "            'disk_usage_percent': psutil.disk_usage('/').percent if hasattr(psutil, 'disk_usage') el..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\performance_monitor.py",
+      "line": 149,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (118 символов)",
+      "code_snippet": "            total_disk_read = self.metrics_history['disk_io'][-1]['read'] - self.metrics_history['di..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\performance_monitor.py",
+      "line": 150,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (121 символов)",
+      "code_snippet": "            total_disk_write = self.metrics_history['disk_io'][-1]['write'] - self.metrics_history['..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\performance_monitor.py",
+      "line": 151,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (123 символов)",
+      "code_snippet": "            total_net_sent = self.metrics_history['network_io'][-1]['sent'] - self.metrics_history['..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\performance_monitor.py",
+      "line": 152,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (123 символов)",
+      "code_snippet": "            total_net_recv = self.metrics_history['network_io'][-1]['recv'] - self.metrics_history['..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\performance_monitor.py",
+      "line": 154,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (155 символов)",
+      "code_snippet": "            duration = self.metrics_history['timestamps'][-1] - self.metrics_history['timestamps'][0..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\performance_monitor.py",
+      "line": 224,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (108 символов)",
+      "code_snippet": "        timestamps = [t - self.metrics_history['timestamps'][0] for t in self.metrics_history['times..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\performance_monitor.py",
+      "line": 308,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (107 символов)",
+      "code_snippet": "    def profile_simulation_stage(self, stage_name: str, func: Callable, *args, **kwargs) -> Dict[str..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\performance_monitor.py",
+      "line": 347,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (110 символов)",
+      "code_snippet": "        perf_metrics = self.performance_monitor.measure_function_performance(simulation_func, *args,..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\performance_monitor.py",
+      "line": 370,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (106 символов)",
+      "code_snippet": "                recommendations.append(\"Высокая загрузка CPU (>80%) - рассмотрите оптимизацию алгори..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\performance_monitor.py",
+      "line": 375,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (124 символов)",
+      "code_snippet": "                recommendations.append(\"Высокое использование памяти (>80%) - рассмотрите оптимизаци..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\performance_monitor.py",
+      "line": 380,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (124 символов)",
+      "code_snippet": "                recommendations.append(\"Длительное время выполнения (>60 сек) - рассмотрите параллел..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\performance_monitor.py",
+      "line": 446,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (105 символов)",
+      "code_snippet": "    print(f\"Средняя загрузка памяти: {perf_result['average_metrics'].get('avg_memory_percent', 'N/A'..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\profiler.py",
+      "line": 24,
+      "type": "NAMING_CONVENTION",
+      "severity": "WARNING",
+      "message": "Класс 'from' не следует PascalCase соглашению",
+      "code_snippet": "from dataclasses import dataclass"
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\profiler.py",
+      "line": 32,
+      "type": "NAMING_CONVENTION",
+      "severity": "WARNING",
+      "message": "Класс 'class' не следует PascalCase соглашению",
+      "code_snippet": "@dataclass"
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\profiler.py",
+      "line": 1,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Слишком много импортов (21)",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\profiler.py",
+      "line": 205,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (107 символов)",
+      "code_snippet": "    def benchmark_function(self, func: Callable, iterations: int = 100, *args, **kwargs) -> Dict[str..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\profiler.py",
+      "line": 405,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (106 символов)",
+      "code_snippet": "        return profile_result.get('result', None) if 'result' in profile_result else func(*args, **k..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\profiler.py",
+      "line": 438,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (114 символов)",
+      "code_snippet": "            return benchmark_result.get('result', None) if 'result' in benchmark_result else func(*a..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\report_generator.py",
+      "line": 539,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (117 символов)",
+      "code_snippet": "            {'timestamp': '2023-12-01 10:00:00', 'message': 'Начало симуляции', 'component': 'СЗМ', ..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\report_generator.py",
+      "line": 540,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (121 символов)",
+      "code_snippet": "            {'timestamp': '2023-12-01 10:00:05', 'message': 'Создание поверхности', 'component': 'СЗ..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\report_generator.py",
+      "line": 541,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (122 символов)",
+      "code_snippet": "            {'timestamp': '2023-12-01 10:00:15', 'message': 'Сканирование завершено', 'component': '..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\report_generator.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Возможна неэффективная конкатенация строк в цикле",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\simulator_orchestrator.py",
+      "line": 22,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (101 символов)",
+      "code_snippet": "from py_surface_image_analyzer.src.image_processor import ImageProcessor, calculate_surface_roughnes..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\simulator_orchestrator.py",
+      "line": 77,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (101 символов)",
+      "code_snippet": "            self.logger_manager.log_analyzer_event(f\"Ошибка инициализации анализатора: {e}\", \"ERROR\"..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\simulator_orchestrator.py",
+      "line": 144,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (110 символов)",
+      "code_snippet": "        self.logger_manager.log_spm_event(f\"Симуляция СЗМ завершена за {results['duration']:.2f} сек..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\simulator_orchestrator.py",
+      "line": 229,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (102 символов)",
+      "code_snippet": "    def coordinate_multi_component_simulation(self, surface_size: tuple = (50, 50)) -> Dict[str, Any..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\simulator_orchestrator.py",
+      "line": 272,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (117 символов)",
+      "code_snippet": "                                                f\"comprehensive_sim_{datetime.now().strftime('%Y%m%d..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\simulator_orchestrator.py",
+      "line": 284,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (117 символов)",
+      "code_snippet": "        self.logger_manager.log_simulation_event(f\"Начало непрерывной симуляции на {duration_minutes..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\simulator_orchestrator.py",
+      "line": 298,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (107 символов)",
+      "code_snippet": "                self.logger_manager.log_simulation_event(f\"Цикл симуляции #{cycle_count} завершен\", ..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\system_monitor.py",
+      "line": 107,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (106 символов)",
+      "code_snippet": "                    'uptime': (datetime.now() - self.start_time).total_seconds() if self.start_time ..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\system_monitor.py",
+      "line": 209,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (111 символов)",
+      "code_snippet": "            'monitoring_duration': (datetime.now() - self.start_time).total_seconds() if self.start_..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\system_monitor.py",
+      "line": 277,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (107 символов)",
+      "code_snippet": "        ttk.Label(metrics_frame, text=\"Здоровье системы:\").grid(row=1, column=0, sticky=tk.W, pady=(..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\system_monitor.py",
+      "line": 281,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (111 символов)",
+      "code_snippet": "        ttk.Label(metrics_frame, text=\"Статус:\").grid(row=1, column=2, sticky=tk.W, padx=(20, 0), pa..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\system_monitor.py",
+      "line": 290,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (120 символов)",
+      "code_snippet": "        self.fig, ((self.ax_cpu, self.ax_memory), (self.ax_disk, self.ax_network)) = plt.subplots(2,..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\system_monitor.py",
+      "line": 314,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (102 символов)",
+      "code_snippet": "        self.start_button = ttk.Button(control_frame, text=\"Запустить\", command=self.start_monitorin..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\system_monitor.py",
+      "line": 317,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (101 символов)",
+      "code_snippet": "        self.stop_button = ttk.Button(control_frame, text=\"Остановить\", command=self.stop_monitoring..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\system_monitor.py",
+      "line": 321,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (101 символов)",
+      "code_snippet": "        self.refresh_button = ttk.Button(control_frame, text=\"Обновить\", command=self.update_display..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\system_monitor.py",
+      "line": 324,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (106 символов)",
+      "code_snippet": "        self.report_button = ttk.Button(control_frame, text=\"Создать отчет\", command=self.generate_r..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\system_monitor.py",
+      "line": 393,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (107 символов)",
+      "code_snippet": "                self.ax_network.plot(network_times[:-1], sent_rates, 'c-', label='Отправлено', linew..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\system_monitor.py",
+      "line": 394,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (105 символов)",
+      "code_snippet": "                self.ax_network.plot(network_times[:-1], recv_rates, 'm-', label='Получено', linewid..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\system_monitor.py",
+      "line": 640,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (103 символов)",
+      "code_snippet": "    print(f\"✓ Здоровье системы: {system_health['health_level']} ({system_health['health_score']}/100..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\system_monitor.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Частое использование len() может быть неэффективным",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\test_framework.py",
+      "line": 1,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Слишком много импортов (21)",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\test_framework.py",
+      "line": 67,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (104 символов)",
+      "code_snippet": "        for submodule in ['cpp-spm-hardware-sim', 'py-surface-image-analyzer', 'py-sstv-groundstatio..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\test_framework.py",
+      "line": 120,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (104 символов)",
+      "code_snippet": "    def run_pytest(self, test_directory: str = \"tests\", coverage_report: bool = True) -> Dict[str, A..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\test_framework.py",
+      "line": 152,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (114 символов)",
+      "code_snippet": "    def measure_code_coverage(self, source_directory: str = \".\", test_directory: str = \"tests\") -> D..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\test_framework.py",
+      "line": 168,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (103 символов)",
+      "code_snippet": "        suite = loader.discover(start_dir=str(self.project_root / test_directory), pattern=\"test_*.p..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\test_framework.py",
+      "line": 194,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (108 символов)",
+      "code_snippet": "    def run_performance_tests(self, test_functions: List[Callable], iterations: int = 10) -> Dict[st..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\test_framework.py",
+      "line": 352,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (104 символов)",
+      "code_snippet": "                'message': 'Компонент анализатора изображений не найден или не может быть импортиров..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\test_framework.py",
+      "line": 528,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (103 символов)",
+      "code_snippet": "            results['overall_success'] &= unit_results['failures'] == 0 and unit_results['errors'] =..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\test_framework.py",
+      "line": 540,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (122 символов)",
+      "code_snippet": "            results['overall_success'] &= coverage_results.get('total_coverage_percent', 0) >= 70  #..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\test_framework.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Возможна неэффективная конкатенация строк в цикле",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\test_framework.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Частое использование len() может быть неэффективным",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\dashboard.py",
+      "line": 29,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (118 символов)",
+      "code_snippet": "    Предоставляет графический интерфейс для управления всеми компонентами проекта Лаборатории модели..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\dashboard.py",
+      "line": 167,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (103 символов)",
+      "code_snippet": "        self.output_dir_var = tk.StringVar(value=self.config_manager.get(\"paths.output_dir\", \"output..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\dashboard.py",
+      "line": 188,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (108 символов)",
+      "code_snippet": "- Анализатор изображений: {'Инициализирован' if self.orchestrator.image_processor else 'Не инициализ..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\dashboard.py",
+      "line": 209,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (122 символов)",
+      "code_snippet": "                messagebox.showinfo(\"Симуляция СЗМ\", f\"Симуляция завершена!\\nДлительность: {results[..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\dashboard.py",
+      "line": 238,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (132 символов)",
+      "code_snippet": "                    messagebox.showinfo(\"Анализ изображений\", f\"Анализ завершен!\\nШероховатость: {re..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\dashboard.py",
+      "line": 239,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (105 символов)",
+      "code_snippet": "                    self.logger_manager.log_analyzer_event(\"Анализ изображений завершен успешно\", \"I..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\dashboard.py",
+      "line": 241,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (110 символов)",
+      "code_snippet": "                    messagebox.showerror(\"Ошибка\", f\"Ошибка анализа: {results.get('error', 'Unknown ..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\dashboard.py",
+      "line": 271,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (102 символов)",
+      "code_snippet": "                    self.logger_manager.log_sstv_event(\"SSTV декодирование завершено успешно\", \"INFO..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\dashboard.py",
+      "line": 273,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (116 символов)",
+      "code_snippet": "                    messagebox.showerror(\"Ошибка\", f\"Ошибка декодирования: {results.get('error', 'Un..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\dashboard.py",
+      "line": 292,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (136 символов)",
+      "code_snippet": "                messagebox.showinfo(\"Комплексная симуляция\", f\"Симуляция завершена!\\nДлительность: {..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\dashboard.py",
+      "line": 293,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (107 символов)",
+      "code_snippet": "                self.logger_manager.log_simulation_event(\"Комплексная симуляция завершена успешно\", ..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\dashboard.py",
+      "line": 312,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (104 символов)",
+      "code_snippet": "                messagebox.showinfo(\"Непрерывная симуляция\", \"Непрерывная симуляция запущена (5 мину..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\dashboard.py",
+      "line": 383,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (108 символов)",
+      "code_snippet": "        self.logs_text.insert(tk.END, f\"Время обновления: {datetime.now().strftime('%Y-%m-%d %H:%M:%..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\main.py",
+      "line": 66,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (106 символов)",
+      "code_snippet": "            python_spm = project_root / \"components\" / \"cpp-spm-hardware-sim\" / \"src\" / \"spm_simulat..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\main.py",
+      "line": 79,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (101 символов)",
+      "code_snippet": "        analyzer_path = project_root / \"components\" / \"py-surface-image-analyzer\" / \"src\" / \"main.py..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\main.py",
+      "line": 1861,
+      "type": "SECURITY",
+      "severity": "WARNING",
+      "message": "Использование os.system() может быть небезопасным",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\project_manager.py",
+      "line": 81,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (107 символов)",
+      "code_snippet": "            spm_path = project_root / self.components['spm_simulator']['path'] / 'src' / 'spm_simula..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\project_manager.py",
+      "line": 97,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (107 символов)",
+      "code_snippet": "                print(\"Выполнение: cd cpp-spm-hardware-sim && mkdir build && cd build && cmake .. &&..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\project_manager.py",
+      "line": 101,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (102 символов)",
+      "code_snippet": "        analyzer_path = project_root / self.components['surface_analyzer']['path'] / 'src' / 'main.p..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\project_manager.py",
+      "line": 156,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (103 символов)",
+      "code_snippet": "        station_path = project_root / self.components['sstv_groundstation']['path'] / 'src' / 'main...."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\project_manager.py",
+      "line": 383,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (101 символов)",
+      "code_snippet": "            print(\"Доступные команды: spm-python, spm-cpp, analyzer, sstv, build, clean-cache, info\"..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\project_manager.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Возможна неэффективная конкатенация строк в цикле",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\web\\web_dashboard.py",
+      "line": 231,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (107 символов)",
+      "code_snippet": "                    return {'success': True, 'message': f'Компонент {component} запущен', 'result': ..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\web\\web_dashboard.py",
+      "line": 239,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (110 символов)",
+      "code_snippet": "                    return {'success': True, 'message': f'Компонент {component} остановлен', 'result..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\web\\web_dashboard.py",
+      "line": 373,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (103 символов)",
+      "code_snippet": "    parser.add_argument('--no-browser', action='store_true', help='Не открывать браузер автоматическ..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\web\\web_dashboard.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Возможна неэффективная конкатенация строк в цикле",
+      "code_snippet": ""
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\components\\cpp-spm-hardware-sim\\src\\spm_simulator.py",
+      "line": 47,
+      "type": "BEST_PRACTICE",
+      "severity": "WARNING",
+      "message": "Строка слишком длинная (123 символов)",
+      "code_snippet": "        self.height_map = (self.height_map - np.min(self.height_map)) / (np.max(self.height_map) - n..."
+    },
+    {
+      "file": "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\components\\cpp-spm-hardware-sim\\src\\spm_simulator.py",
+      "line": 1,
+      "type": "PERFORMANCE",
+      "severity": "WARNING",
+      "message": "Возможна неэффективная конкатенация строк в цикле",
+      "code_snippet": ""
+    }
+  ],
+  "metrics_summary": {
+    "total_lines_of_code": 14957,
+    "total_functions": 668,
+    "total_classes": 92,
+    "files_with_high_complexity": [
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\api\\api_interface.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\api\\data_exchange.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\scripts\\install-poetry.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\security\\auth_manager.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\security\\data_encryption.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\analytics.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\backup_manager.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\cache_manager.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\code_analyzer.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_manager.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_optimizer.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_validator.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_integrity.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_manager.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_validator.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\deployment_manager.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\documentation_generator.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\error_handler.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\machine_learning.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\model_trainer.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\performance_monitor.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\profiler.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\system_monitor.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\test_framework.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\visualizer.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\dashboard.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\main.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\project_manager.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\web\\web_dashboard.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\components\\cpp-spm-hardware-sim\\src\\spm_simulator.py"
+    ],
+    "files_with_low_maintainability": [
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\api\\api_interface.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\api\\data_exchange.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\scripts\\install-poetry.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\security\\auth_manager.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\security\\data_encryption.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\analytics.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\backup_manager.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\cache_manager.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\code_analyzer.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_optimizer.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\config_validator.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_integrity.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_manager.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\data_validator.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\deployment_manager.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\documentation_generator.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\error_handler.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\machine_learning.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\model_trainer.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\profiler.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\report_generator.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\system_monitor.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\utils\\test_framework.py",
+      "C:\\Users\\maksi\\OneDrive\\Documents\\GitHub\\nanoprobe-sim-lab\\src\\cli\\project_manager.py"
+    ]
+  }
+}

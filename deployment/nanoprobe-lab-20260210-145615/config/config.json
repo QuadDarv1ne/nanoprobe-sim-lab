@@ -1,0 +1,53 @@
+{
+    "project": {
+        "name": "Лаборатория моделирования нанозонда",
+        "version": "1.0.0",
+        "description": "Комплексный проект для моделирования сканирующей зондовой микроскопии и обработки изображений поверхности",
+        "author": "Школа программирования Maestro7IT",
+        "copyright": "Copyright (c) 2024 Dupley Maxim Igorevich"
+    },
+    "license": {
+        "type": "Проприетарная лицензия",
+        "file": "legal/LICENCE",
+        "owner": "Школа программирования Maestro7IT",
+        "reserved_rights": [
+            "Использование в образовательных целях",
+            "Использование в научных исследованиях",
+            "Использование в некоммерческих проектах",
+            "Модификация исходного кода",
+            "Распространение в неизменном виде"
+        ]
+    },
+    "components": {
+        "spm_simulator": {
+            "name": "Симулятор СЗМ",
+            "description": "Симулятор аппаратного обеспечения сканирующей зондовой микроскопии",
+            "path": "components/cpp-spm-hardware-sim",
+            "language": "C++/Python",
+            "entry_point": "src/spm_simulator.py"
+        },
+        "surface_analyzer": {
+            "name": "Анализатор изображений",
+            "description": "Анализатор изображений поверхности на Python",
+            "path": "components/py-surface-image-analyzer",
+            "language": "Python",
+            "entry_point": "src/main.py"
+        },
+        "sstv_groundstation": {
+            "name": "Наземная станция SSTV",
+            "description": "Наземная станция SSTV на Python/C++",
+            "path": "components/py-sstv-groundstation",
+            "language": "Python/C++",
+            "entry_point": "src/main.py"
+        }
+    },
+    "directories": {
+        "data": "data",
+        "output": "output",
+        "logs": "logs",
+        "templates": "templates",
+        "config": "config",
+        "utils": "utils",
+        "tests": "tests"
+    }
+}
