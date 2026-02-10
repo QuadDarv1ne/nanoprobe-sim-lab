@@ -1,66 +1,53 @@
 {
     "project": {
-        "name": "Nanoprobe Simulation Lab",
+        "name": "Лаборатория моделирования нанозонда",
         "version": "1.0.0",
-        "description": "Комплекс инструментов для моделирования наноразмерных измерительных систем и космических микроскопических систем",
+        "description": "Комплексный проект для моделирования сканирующей зондовой микроскопии и обработки изображений поверхности",
         "author": "Школа программирования Maestro7IT",
-        "copyright": "Copyright (c) 2026 Dupley Maxim Igorevich"
+        "copyright": "Copyright (c) 2024 Dupley Maxim Igorevich"
+    },
+    "license": {
+        "type": "Проприетарная лицензия",
+        "file": "legal/LICENCE",
+        "owner": "Школа программирования Maestro7IT",
+        "reserved_rights": [
+            "Использование в образовательных целях",
+            "Использование в научных исследованиях",
+            "Использование в некоммерческих проектах",
+            "Модификация исходного кода",
+            "Распространение в неизменном виде"
+        ]
     },
     "components": {
         "spm_simulator": {
-            "name": "C++ SPM Hardware Simulator",
-            "path": "./cpp-spm-hardware-sim",
-            "language": "C++",
-            "description": "Симулятор сканирующего зондового микроскопа"
+            "name": "Симулятор СЗМ",
+            "description": "Симулятор аппаратного обеспечения сканирующей зондовой микроскопии",
+            "path": "components/cpp-spm-hardware-sim",
+            "language": "C++/Python",
+            "entry_point": "src/spm_simulator.py"
         },
         "surface_analyzer": {
-            "name": "Python Surface Image Analyzer",
-            "path": "./py-surface-image-analyzer",
+            "name": "Анализатор изображений",
+            "description": "Анализатор изображений поверхности на Python",
+            "path": "components/py-surface-image-analyzer",
             "language": "Python",
-            "description": "Анализатор изображений поверхности"
+            "entry_point": "src/main.py"
         },
         "sstv_groundstation": {
-            "name": "Python/C++ SSTV Ground Station",
-            "path": "./py-sstv-groundstation",
+            "name": "Наземная станция SSTV",
+            "description": "Наземная станция SSTV на Python/C++",
+            "path": "components/py-sstv-groundstation",
             "language": "Python/C++",
-            "description": "Наземная станция для приема и декодирования SSTV-сигналов"
+            "entry_point": "src/main.py"
         }
     },
-    "license": {
-        "type": "All Rights Reserved",
-        "file": "LICENCE",
-        "owner": "Школа программирования Maestro7IT",
-        "reserved_rights": [
-            "Копирование",
-            "Использование",
-            "Изменение",
-            "Распространение",
-            "Коммерческое использование"
-        ],
-        "permissions": "Только с письменного разрешения владельца"
-    },
-    "requirements": {
-        "cpp": {
-            "compiler": "C++17 compatible compiler",
-            "build_system": "CMake 3.15+",
-            "libraries": []
-        },
-        "python": {
-            "version": "Python 3.8+",
-            "packages": [
-                "numpy",
-                "opencv-python",
-                "scikit-image",
-                "matplotlib",
-                "pysstv",
-                "rtlsdr",
-                "scipy",
-                "pandas"
-            ]
-        }
-    },
-    "launch_scripts": {
-        "windows": "run_project.bat",
-        "unix": "run_project.sh"
+    "directories": {
+        "data": "data",
+        "output": "output",
+        "logs": "logs",
+        "templates": "templates",
+        "config": "config",
+        "utils": "utils",
+        "tests": "tests"
     }
 }

@@ -15,6 +15,13 @@ import json
 from pathlib import Path
 from typing import Dict, List, Optional
 
+# Add project root to Python path
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
+
+# Configuration paths
+CONFIG_PATH = project_root / "config" / "config.json"
+
 
 class ProjectManager:
     """
@@ -22,13 +29,16 @@ class ProjectManager:
     Обеспечивает унифицированный интерфейс для всех компонентов проекта.
     """
     
-    def __init__(self, config_file: str = "config.json"):
+    def __init__(self, config_file: str = None):
         """
         Инициализирует менеджер проекта
         
         Args:
             config_file: Путь к файлу конфигурации проекта
         """
+        if config_file is None:
+            config_file = str(CONFIG_PATH)
+        
         self.config_file = config_file
         self.config = self.load_config()
         
@@ -68,7 +78,7 @@ class ProjectManager:
         """
         if use_python:
             # Запускаем Python-реализацию
-            spm_path = Path(self.components['spm_simulator']['path']) / 'src' / 'spm_simulator.py'
+            spm_path = project_root / self.components['spm_simulator']['path'] / 'src' / 'spm_simulator.py'
             if spm_path.exists():
                 print(f"Запуск симулятора СЗМ (Python-реализация): {spm_path}")
                 subprocess.run([sys.executable, str(spm_path)])
@@ -76,7 +86,7 @@ class ProjectManager:
                 print(f"Файл симулятора СЗМ не найден: {spm_path}")
         else:
             # Запускаем C++ версию (если она доступна)
-            build_dir = Path(self.components['spm_simulator']['path']) / 'build'
+            build_dir = project_root / self.components['spm_simulator']['path'] / 'build'
             binary_path = build_dir / 'spm-simulator'
             
             if binary_path.exists():
@@ -88,7 +98,7 @@ class ProjectManager:
     
     def run_surface_analyzer(self):
         """Запускает анализатор изображений поверхности"""
-        analyzer_path = Path(self.components['surface_analyzer']['path']) / 'src' / 'main.py'
+        analyzer_path = project_root / self.components['surface_analyzer']['path'] / 'src' / 'main.py'
         
         if analyzer_path.exists():
             print(f"Запуск анализатора изображений: {analyzer_path}")
@@ -100,7 +110,7 @@ class ProjectManager:
     
     def create_sample_analyzer(self):
         """Создает пример скрипта анализатора изображений"""
-        analyzer_path = Path(self.components['surface_analyzer']['path'])
+        analyzer_path = project_root / self.components['surface_analyzer']['path']
         main_py_path = analyzer_path / 'src' / 'main.py'
         
         sample_code = '''#!/usr/bin/env python3
@@ -143,7 +153,7 @@ if __name__ == "__main__":
     
     def run_sstv_station(self):
         """Запускает наземную станцию SSTV"""
-        station_path = Path(self.components['sstv_groundstation']['path']) / 'src' / 'main.py'
+        station_path = project_root / self.components['sstv_groundstation']['path'] / 'src' / 'main.py'
         
         if station_path.exists():
             print(f"Запуск наземной станции SSTV: {station_path}")
@@ -155,7 +165,7 @@ if __name__ == "__main__":
     
     def create_sample_sstv_station(self):
         """Создает пример скрипта наземной станции SSTV"""
-        station_path = Path(self.components['sstv_groundstation']['path'])
+        station_path = project_root / self.components['sstv_groundstation']['path']
         main_py_path = station_path / 'src' / 'main.py'
         
         sample_code = '''#!/usr/bin/env python3
@@ -201,7 +211,7 @@ if __name__ == "__main__":
         """Собирает C++ компоненты проекта"""
         print("Сборка C++ компонентов проекта...")
         
-        spm_path = Path(self.components['spm_simulator']['path'])
+        spm_path = project_root / self.components['spm_simulator']['path']
         build_dir = spm_path / 'build'
         
         # Создаем директорию сборки
@@ -222,7 +232,7 @@ if __name__ == "__main__":
         """Очищает кэш проекта"""
         try:
             from utils.cache_manager import CacheManager
-            cache_manager = CacheManager()
+            cache_manager = CacheManager(str(project_root))
             
             print("Очистка кэша проекта...")
             stats = cache_manager.get_cache_statistics()

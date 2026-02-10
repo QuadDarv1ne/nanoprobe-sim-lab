@@ -27,7 +27,25 @@ class ConfigManager:
         Args:
             config_file: Путь к файлу конфигурации
         """
-        self.config_file = config_file
+        # Определяем путь к конфигурационному файлу
+        if Path(config_file).is_absolute():
+            self.config_file = Path(config_file)
+        else:
+            # Ищем конфигурационный файл в стандартных местах
+            possible_paths = [
+                Path(config_file),
+                Path("config") / config_file,
+                Path(__file__).parent.parent / "config" / config_file
+            ]
+            
+            for path in possible_paths:
+                if path.exists():
+                    self.config_file = path
+                    break
+            else:
+                # Если файл не найден, используем первый вариант
+                self.config_file = possible_paths[0]
+        
         self.config = self.load_config()
     
     def load_config(self) -> Dict[str, Any]:

@@ -45,7 +45,7 @@ class CacheManager:
             config_file: Файл конфигурации кэша
         """
         self.project_root = Path(project_root).resolve()
-        self.config_file = self.project_root / config_file
+        self.config_file = self.project_root / "config" / config_file
         self.cache_config = self._load_config()
         self.cache_directories = self._get_cache_directories()
     

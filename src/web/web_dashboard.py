@@ -15,6 +15,10 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 
+# Add project root to Python path
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
+
 # Импорты Flask и связанных библиотек
 try:
     from flask import Flask, render_template, request, jsonify, redirect, url_for
@@ -33,6 +37,10 @@ from utils.system_monitor import SystemMonitor
 from utils.cache_manager import CacheManager
 from utils.error_handler import ErrorHandler
 
+# Configuration paths
+CONFIG_PATH = project_root / "config" / "config.json"
+TEMPLATES_PATH = project_root / "templates"
+
 
 class WebDashboard:
     """
@@ -50,16 +58,16 @@ class WebDashboard:
         """
         self.host = host
         self.port = port
-        self.app = Flask(__name__)
+        self.app = Flask(__name__, template_folder=str(TEMPLATES_PATH))
         self.socketio = SocketIO(self.app, cors_allowed_origins="*")
         
         # Инициализация компонентов проекта
-        self.config_manager = ConfigManager()
+        self.config_manager = ConfigManager(str(CONFIG_PATH))
         self.logger = setup_project_logging(self.config_manager)
         self.data_manager = DataManager()
         self.analytics = ProjectAnalytics()
         self.system_monitor = SystemMonitor()
-        self.cache_manager = CacheManager()
+        self.cache_manager = CacheManager(str(project_root))
         self.error_handler = ErrorHandler()
         
         # Состояние запущенных процессов
