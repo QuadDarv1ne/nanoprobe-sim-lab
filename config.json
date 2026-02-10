@@ -1,0 +1,66 @@
+{
+    "project": {
+        "name": "Nanoprobe Simulation Lab",
+        "version": "1.0.0",
+        "description": "Комплекс инструментов для моделирования наноразмерных измерительных систем и космических микроскопических систем",
+        "author": "Школа программирования Maestro7IT",
+        "copyright": "Copyright (c) 2026 Dupley Maxim Igorevich"
+    },
+    "components": {
+        "spm_simulator": {
+            "name": "C++ SPM Hardware Simulator",
+            "path": "./cpp-spm-hardware-sim",
+            "language": "C++",
+            "description": "Симулятор сканирующего зондового микроскопа"
+        },
+        "surface_analyzer": {
+            "name": "Python Surface Image Analyzer",
+            "path": "./py-surface-image-analyzer",
+            "language": "Python",
+            "description": "Анализатор изображений поверхности"
+        },
+        "sstv_groundstation": {
+            "name": "Python/C++ SSTV Ground Station",
+            "path": "./py-sstv-groundstation",
+            "language": "Python/C++",
+            "description": "Наземная станция для приема и декодирования SSTV-сигналов"
+        }
+    },
+    "license": {
+        "type": "All Rights Reserved",
+        "file": "LICENCE",
+        "owner": "Школа программирования Maestro7IT",
+        "reserved_rights": [
+            "Копирование",
+            "Использование",
+            "Изменение",
+            "Распространение",
+            "Коммерческое использование"
+        ],
+        "permissions": "Только с письменного разрешения владельца"
+    },
+    "requirements": {
+        "cpp": {
+            "compiler": "C++17 compatible compiler",
+            "build_system": "CMake 3.15+",
+            "libraries": []
+        },
+        "python": {
+            "version": "Python 3.8+",
+            "packages": [
+                "numpy",
+                "opencv-python",
+                "scikit-image",
+                "matplotlib",
+                "pysstv",
+                "rtlsdr",
+                "scipy",
+                "pandas"
+            ]
+        }
+    },
+    "launch_scripts": {
+        "windows": "run_project.bat",
+        "unix": "run_project.sh"
+    }
+}
