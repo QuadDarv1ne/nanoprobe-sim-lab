@@ -17,6 +17,10 @@ import gc
 import tracemalloc
 from dataclasses import dataclass
 
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from utils.performance_profiler import PerformanceProfiler
 from utils.resource_optimizer import ResourceManager
 from utils.advanced_logger_analyzer import AdvancedLoggerAnalyzer
