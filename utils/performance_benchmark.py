@@ -330,7 +330,7 @@ class PerformanceBenchmarkSuite:
         return memory_result
     
     def compare_algorithms(self, algorithms: Dict[str, Callable], 
-                          test_data: Any, iterations: int = 50) -> List[PerformanceComparison]:
+                          test_data: Any, iterations: int = 50, **kwargs) -> List[PerformanceComparison]:
         """
         Сравнивает производительность алгоритмов
         
@@ -349,10 +349,11 @@ class PerformanceBenchmarkSuite:
         for name, func in algorithms.items():
             # Выполняем бенчмарк для каждого алгоритма
             result = self.benchmark_function(
-                name=f"algorithm_{name}",
-                func=func,
+                f"algorithm_{name}",
+                func,
                 test_data,
-                iterations=iterations
+                iterations=iterations,
+                **kwargs
             )
             algorithm_results[name] = result
         
@@ -728,37 +729,37 @@ def main():
     # Выполняем бенчмарк для медленной функции
     print("\nБенчмарк медленной функции...")
     slow_result = benchmark_suite.benchmark_function(
-        name="slow_calculation",
-        func=slow_calculation,
-        iterations=50,
-        test_arg=10000
+        "slow_calculation",
+        slow_calculation,
+        10000,
+        iterations=50
     )
     print(f"Среднее время: {slow_result['timing_stats']['avg_seconds']:.6f} сек")
     
     # Выполняем бенчмарк для быстрой функции
     print("\nБенчмарк быстрой функции...")
     fast_result = benchmark_suite.benchmark_function(
-        name="fast_calculation",
-        func=fast_calculation,
-        iterations=50,
-        test_arg=10000
+        "fast_calculation",
+        fast_calculation,
+        10000,
+        iterations=50
     )
     print(f"Среднее время: {fast_result['timing_stats']['avg_seconds']:.6f} сек")
     
     # Бенчмарк использования памяти
     print("\nБенчмарк использования памяти...")
     memory_result = benchmark_suite.benchmark_memory_usage(
-        func=memory_intensive_operation,
-        test_arg=50000
+        memory_intensive_operation,
+        50000
     )
     print(f"Пик использования памяти: {memory_result['peak_memory_mb']:.2f} MB")
     
     # Бенчмарк параллельного выполнения
     print("\nБенчмарк параллельного выполнения...")
     parallel_result = benchmark_suite.benchmark_parallel_execution(
-        name="parallel_processing",
-        func=slow_calculation,
-        test_arg=5000,
+        "parallel_processing",
+        slow_calculation,
+        5000,
         thread_counts=[1, 2, 4],
         iterations_per_thread=10
     )

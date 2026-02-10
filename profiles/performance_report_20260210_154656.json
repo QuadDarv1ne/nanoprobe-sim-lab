@@ -1,0 +1,609 @@
+{
+  "timestamp": "2026-02-10T15:46:56.973691",
+  "total_metrics": 44,
+  "total_resource_samples": 25,
+  "benchmark_results": {
+    "example_heavy_function_benchmark": {
+      "function": "example_heavy_function",
+      "iterations": 10,
+      "warmup": 10,
+      "avg_time": 0.5948059900005319,
+      "min_time": 0.578807500001858,
+      "max_time": 0.6276529999995546,
+      "std_dev": 0.017078579012728346,
+      "total_time": 5.948059900005319
+    }
+  },
+  "metrics": [
+    {
+      "name": "example_heavy_function_execution_time",
+      "value": 0.660977840423584,
+      "unit": "seconds",
+      "timestamp": "2026-02-10T15:46:44.644323",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_memory_used",
+      "value": 0.0234375,
+      "unit": "MB",
+      "timestamp": "2026-02-10T15:46:44.644333",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_execution_time",
+      "value": 0.5880391597747803,
+      "unit": "seconds",
+      "timestamp": "2026-02-10T15:46:45.237219",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_memory_used",
+      "value": 0.03515625,
+      "unit": "MB",
+      "timestamp": "2026-02-10T15:46:45.237228",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_execution_time",
+      "value": 0.6013436317443848,
+      "unit": "seconds",
+      "timestamp": "2026-02-10T15:46:45.839021",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_memory_used",
+      "value": 0.0,
+      "unit": "MB",
+      "timestamp": "2026-02-10T15:46:45.839029",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_execution_time",
+      "value": 0.6160461902618408,
+      "unit": "seconds",
+      "timestamp": "2026-02-10T15:46:46.455590",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_memory_used",
+      "value": 0.0,
+      "unit": "MB",
+      "timestamp": "2026-02-10T15:46:46.455599",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_execution_time",
+      "value": 0.6037592887878418,
+      "unit": "seconds",
+      "timestamp": "2026-02-10T15:46:47.059841",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_memory_used",
+      "value": 0.0,
+      "unit": "MB",
+      "timestamp": "2026-02-10T15:46:47.059849",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_execution_time",
+      "value": 0.6063470840454102,
+      "unit": "seconds",
+      "timestamp": "2026-02-10T15:46:47.666606",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_memory_used",
+      "value": 0.0,
+      "unit": "MB",
+      "timestamp": "2026-02-10T15:46:47.666615",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_execution_time",
+      "value": 0.5749552249908447,
+      "unit": "seconds",
+      "timestamp": "2026-02-10T15:46:48.241970",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_memory_used",
+      "value": 0.0,
+      "unit": "MB",
+      "timestamp": "2026-02-10T15:46:48.241977",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_execution_time",
+      "value": 0.5850279331207275,
+      "unit": "seconds",
+      "timestamp": "2026-02-10T15:46:48.827423",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_memory_used",
+      "value": 0.0,
+      "unit": "MB",
+      "timestamp": "2026-02-10T15:46:48.827431",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_execution_time",
+      "value": 0.596301794052124,
+      "unit": "seconds",
+      "timestamp": "2026-02-10T15:46:49.424201",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_memory_used",
+      "value": 0.0,
+      "unit": "MB",
+      "timestamp": "2026-02-10T15:46:49.424207",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_execution_time",
+      "value": 0.597865104675293,
+      "unit": "seconds",
+      "timestamp": "2026-02-10T15:46:50.022476",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_memory_used",
+      "value": 0.0,
+      "unit": "MB",
+      "timestamp": "2026-02-10T15:46:50.022482",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_execution_time",
+      "value": 0.5813820362091064,
+      "unit": "seconds",
+      "timestamp": "2026-02-10T15:46:50.604294",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_memory_used",
+      "value": 0.0,
+      "unit": "MB",
+      "timestamp": "2026-02-10T15:46:50.604301",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_execution_time",
+      "value": 0.5777833461761475,
+      "unit": "seconds",
+      "timestamp": "2026-02-10T15:46:51.182506",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_memory_used",
+      "value": 0.0,
+      "unit": "MB",
+      "timestamp": "2026-02-10T15:46:51.182512",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_execution_time",
+      "value": 0.6272385120391846,
+      "unit": "seconds",
+      "timestamp": "2026-02-10T15:46:51.810788",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_memory_used",
+      "value": 0.0,
+      "unit": "MB",
+      "timestamp": "2026-02-10T15:46:51.810795",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_execution_time",
+      "value": 0.6264581680297852,
+      "unit": "seconds",
+      "timestamp": "2026-02-10T15:46:52.437643",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_memory_used",
+      "value": 0.0,
+      "unit": "MB",
+      "timestamp": "2026-02-10T15:46:52.437649",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_execution_time",
+      "value": 0.5984385013580322,
+      "unit": "seconds",
+      "timestamp": "2026-02-10T15:46:53.036502",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_memory_used",
+      "value": 0.0,
+      "unit": "MB",
+      "timestamp": "2026-02-10T15:46:53.036509",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_execution_time",
+      "value": 0.5906662940979004,
+      "unit": "seconds",
+      "timestamp": "2026-02-10T15:46:53.627921",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_memory_used",
+      "value": 0.0,
+      "unit": "MB",
+      "timestamp": "2026-02-10T15:46:53.627929",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_execution_time",
+      "value": 0.5829687118530273,
+      "unit": "seconds",
+      "timestamp": "2026-02-10T15:46:54.211427",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_memory_used",
+      "value": 0.0,
+      "unit": "MB",
+      "timestamp": "2026-02-10T15:46:54.211435",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_execution_time",
+      "value": 0.5851023197174072,
+      "unit": "seconds",
+      "timestamp": "2026-02-10T15:46:54.797033",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_memory_used",
+      "value": 0.0,
+      "unit": "MB",
+      "timestamp": "2026-02-10T15:46:54.797044",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_execution_time",
+      "value": 0.588679313659668,
+      "unit": "seconds",
+      "timestamp": "2026-02-10T15:46:55.386093",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_memory_used",
+      "value": 0.0,
+      "unit": "MB",
+      "timestamp": "2026-02-10T15:46:55.386100",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_execution_time",
+      "value": 0.5838751792907715,
+      "unit": "seconds",
+      "timestamp": "2026-02-10T15:46:55.970414",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_memory_used",
+      "value": 0.0,
+      "unit": "MB",
+      "timestamp": "2026-02-10T15:46:55.970420",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_execution_time",
+      "value": 0.5816650390625,
+      "unit": "seconds",
+      "timestamp": "2026-02-10T15:46:56.552451",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_memory_used",
+      "value": 0.00390625,
+      "unit": "MB",
+      "timestamp": "2026-02-10T15:46:56.552458",
+      "context": "Function: example_heavy_function"
+    },
+    {
+      "name": "example_heavy_function_avg_execution_time",
+      "value": 0.5948059900005319,
+      "unit": "seconds",
+      "timestamp": "2026-02-10T15:46:56.552726",
+      "context": "Benchmark: example_heavy_function"
+    },
+    {
+      "name": "test_code_block_execution_time",
+      "value": 0.01813960075378418,
+      "unit": "seconds",
+      "timestamp": "2026-02-10T15:46:56.571883",
+      "context": "Code block: test_code_block"
+    }
+  ],
+  "resource_usage": [
+    {
+      "cpu_percent": 0.0,
+      "memory_percent": 41.8,
+      "memory_mb": 6528.55859375,
+      "disk_io_read": 157563294208,
+      "disk_io_write": 249456263168,
+      "network_sent": 1895125140,
+      "network_recv": 6218354070,
+      "timestamp": "2026-02-10T15:46:43.983009"
+    },
+    {
+      "cpu_percent": 20.2,
+      "memory_percent": 42.0,
+      "memory_mb": 6562.20703125,
+      "disk_io_read": 157564097024,
+      "disk_io_write": 249459154944,
+      "network_sent": 1895125532,
+      "network_recv": 6218357870,
+      "timestamp": "2026-02-10T15:46:44.497687"
+    },
+    {
+      "cpu_percent": 20.1,
+      "memory_percent": 42.1,
+      "memory_mb": 6566.6875,
+      "disk_io_read": 157564097024,
+      "disk_io_write": 249459200000,
+      "network_sent": 1895126263,
+      "network_recv": 6218362270,
+      "timestamp": "2026-02-10T15:46:45.014753"
+    },
+    {
+      "cpu_percent": 22.5,
+      "memory_percent": 42.0,
+      "memory_mb": 6560.99609375,
+      "disk_io_read": 157564269056,
+      "disk_io_write": 249461514240,
+      "network_sent": 1895137392,
+      "network_recv": 6218363034,
+      "timestamp": "2026-02-10T15:46:45.528984"
+    },
+    {
+      "cpu_percent": 24.6,
+      "memory_percent": 42.1,
+      "memory_mb": 6572.1328125,
+      "disk_io_read": 157564965376,
+      "disk_io_write": 249461514240,
+      "network_sent": 1895138360,
+      "network_recv": 6218367804,
+      "timestamp": "2026-02-10T15:46:46.057663"
+    },
+    {
+      "cpu_percent": 24.2,
+      "memory_percent": 41.9,
+      "memory_mb": 6532.7734375,
+      "disk_io_read": 157565006336,
+      "disk_io_write": 249461522432,
+      "network_sent": 1895138725,
+      "network_recv": 6218368882,
+      "timestamp": "2026-02-10T15:46:46.571401"
+    },
+    {
+      "cpu_percent": 25.4,
+      "memory_percent": 41.8,
+      "memory_mb": 6530.19140625,
+      "disk_io_read": 157565006336,
+      "disk_io_write": 249461522432,
+      "network_sent": 1895138982,
+      "network_recv": 6218369318,
+      "timestamp": "2026-02-10T15:46:47.086485"
+    },
+    {
+      "cpu_percent": 22.9,
+      "memory_percent": 41.7,
+      "memory_mb": 6500.46875,
+      "disk_io_read": 157565006336,
+      "disk_io_write": 249461575680,
+      "network_sent": 1895142680,
+      "network_recv": 6218370580,
+      "timestamp": "2026-02-10T15:46:47.600291"
+    },
+    {
+      "cpu_percent": 16.7,
+      "memory_percent": 41.7,
+      "memory_mb": 6502.22265625,
+      "disk_io_read": 157565006336,
+      "disk_io_write": 249461579776,
+      "network_sent": 1895143732,
+      "network_recv": 6218378992,
+      "timestamp": "2026-02-10T15:46:48.127286"
+    },
+    {
+      "cpu_percent": 14.6,
+      "memory_percent": 40.8,
+      "memory_mb": 6367.2890625,
+      "disk_io_read": 157565035008,
+      "disk_io_write": 249461579776,
+      "network_sent": 1895145897,
+      "network_recv": 6218384724,
+      "timestamp": "2026-02-10T15:46:48.654063"
+    },
+    {
+      "cpu_percent": 16.1,
+      "memory_percent": 40.8,
+      "memory_mb": 6366.12890625,
+      "disk_io_read": 157565035008,
+      "disk_io_write": 249461641216,
+      "network_sent": 1895146527,
+      "network_recv": 6218385482,
+      "timestamp": "2026-02-10T15:46:49.182799"
+    },
+    {
+      "cpu_percent": 19.8,
+      "memory_percent": 40.8,
+      "memory_mb": 6370.52734375,
+      "disk_io_read": 157565035008,
+      "disk_io_write": 249461653504,
+      "network_sent": 1895147245,
+      "network_recv": 6218386250,
+      "timestamp": "2026-02-10T15:46:49.699289"
+    },
+    {
+      "cpu_percent": 15.4,
+      "memory_percent": 40.8,
+      "memory_mb": 6370.65234375,
+      "disk_io_read": 157565035008,
+      "disk_io_write": 249461653504,
+      "network_sent": 1895147905,
+      "network_recv": 6218387347,
+      "timestamp": "2026-02-10T15:46:50.225966"
+    },
+    {
+      "cpu_percent": 13.7,
+      "memory_percent": 40.8,
+      "memory_mb": 6362.71875,
+      "disk_io_read": 157565133312,
+      "disk_io_write": 249461678080,
+      "network_sent": 1895147946,
+      "network_recv": 6218387387,
+      "timestamp": "2026-02-10T15:46:50.740358"
+    },
+    {
+      "cpu_percent": 16.1,
+      "memory_percent": 40.8,
+      "memory_mb": 6364.68359375,
+      "disk_io_read": 157565145600,
+      "disk_io_write": 249461678080,
+      "network_sent": 1895150097,
+      "network_recv": 6218390356,
+      "timestamp": "2026-02-10T15:46:51.267185"
+    },
+    {
+      "cpu_percent": 19.1,
+      "memory_percent": 40.2,
+      "memory_mb": 6270.25390625,
+      "disk_io_read": 157565186560,
+      "disk_io_write": 249461678080,
+      "network_sent": 1895151259,
+      "network_recv": 6218394710,
+      "timestamp": "2026-02-10T15:46:51.781849"
+    },
+    {
+      "cpu_percent": 25.7,
+      "memory_percent": 40.2,
+      "memory_mb": 6271.296875,
+      "disk_io_read": 157565186560,
+      "disk_io_write": 249461940224,
+      "network_sent": 1895153461,
+      "network_recv": 6218403434,
+      "timestamp": "2026-02-10T15:46:52.296402"
+    },
+    {
+      "cpu_percent": 21.4,
+      "memory_percent": 40.2,
+      "memory_mb": 6271.3359375,
+      "disk_io_read": 157565260288,
+      "disk_io_write": 249461940224,
+      "network_sent": 1895157493,
+      "network_recv": 6218412812,
+      "timestamp": "2026-02-10T15:46:52.821382"
+    },
+    {
+      "cpu_percent": 18.7,
+      "memory_percent": 40.2,
+      "memory_mb": 6271.734375,
+      "disk_io_read": 157565284864,
+      "disk_io_write": 249461964800,
+      "network_sent": 1895158983,
+      "network_recv": 6218430656,
+      "timestamp": "2026-02-10T15:46:53.346327"
+    },
+    {
+      "cpu_percent": 16.3,
+      "memory_percent": 40.2,
+      "memory_mb": 6275.25390625,
+      "disk_io_read": 157565383168,
+      "disk_io_write": 249462181888,
+      "network_sent": 1895159999,
+      "network_recv": 6218435070,
+      "timestamp": "2026-02-10T15:46:53.862611"
+    },
+    {
+      "cpu_percent": 14.7,
+      "memory_percent": 40.2,
+      "memory_mb": 6275.27734375,
+      "disk_io_read": 157565407744,
+      "disk_io_write": 249462181888,
+      "network_sent": 1895160431,
+      "network_recv": 6218435778,
+      "timestamp": "2026-02-10T15:46:54.376282"
+    },
+    {
+      "cpu_percent": 20.7,
+      "memory_percent": 40.2,
+      "memory_mb": 6273.625,
+      "disk_io_read": 157565407744,
+      "disk_io_write": 249462267904,
+      "network_sent": 1895161428,
+      "network_recv": 6218441118,
+      "timestamp": "2026-02-10T15:46:54.904685"
+    },
+    {
+      "cpu_percent": 17.5,
+      "memory_percent": 40.3,
+      "memory_mb": 6289.9453125,
+      "disk_io_read": 157565407744,
+      "disk_io_write": 249462267904,
+      "network_sent": 1895162466,
+      "network_recv": 6218452036,
+      "timestamp": "2026-02-10T15:46:55.432401"
+    },
+    {
+      "cpu_percent": 15.5,
+      "memory_percent": 40.3,
+      "memory_mb": 6286.8828125,
+      "disk_io_read": 157565407744,
+      "disk_io_write": 249462267904,
+      "network_sent": 1895163495,
+      "network_recv": 6218455908,
+      "timestamp": "2026-02-10T15:46:55.959794"
+    },
+    {
+      "cpu_percent": 14.6,
+      "memory_percent": 40.3,
+      "memory_mb": 6287.390625,
+      "disk_io_read": 157565424128,
+      "disk_io_write": 249462378496,
+      "network_sent": 1895164405,
+      "network_recv": 6218460178,
+      "timestamp": "2026-02-10T15:46:56.472782"
+    }
+  ],
+  "aggregated_stats": {
+    "example_heavy_function_execution_time": {
+      "count": 21,
+      "avg": 0.5978533653985887,
+      "min": 0.5749552249908447,
+      "max": 0.660977840423584,
+      "sum": 12.554920673370361
+    },
+    "example_heavy_function_memory_used": {
+      "count": 21,
+      "avg": 0.002976190476190476,
+      "min": 0.0,
+      "max": 0.03515625,
+      "sum": 0.0625
+    },
+    "example_heavy_function_avg_execution_time": {
+      "count": 1,
+      "avg": 0.5948059900005319,
+      "min": 0.5948059900005319,
+      "max": 0.5948059900005319,
+      "sum": 0.5948059900005319
+    },
+    "test_code_block_execution_time": {
+      "count": 1,
+      "avg": 0.01813960075378418,
+      "min": 0.01813960075378418,
+      "max": 0.01813960075378418,
+      "sum": 0.01813960075378418
+    }
+  }
+}

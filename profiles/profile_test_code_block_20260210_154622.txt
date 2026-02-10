@@ -1,0 +1,16 @@
+         100010 function calls in 0.018 seconds
+
+   Ordered by: cumulative time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.018    0.018 {built-in method builtins.exec}
+        1    0.000    0.000    0.017    0.017 <string>:1(<module>)
+        1    0.000    0.000    0.017    0.017 <string>:2(test_function)
+        1    0.009    0.009    0.017    0.017 {built-in method builtins.sum}
+   100001    0.008    0.000    0.008    0.000 <string>:3(<genexpr>)
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+        1    0.000    0.000    0.000    0.000 {built-in method builtins.locals}
+        2    0.000    0.000    0.000    0.000 {built-in method time.time}
+        1    0.000    0.000    0.000    0.000 {built-in method builtins.globals}
+
+

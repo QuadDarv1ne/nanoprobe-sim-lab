@@ -23,7 +23,11 @@ import seaborn as sns
 import pandas as pd
 from dataclasses import dataclass
 from functools import wraps
-import memory_profiler
+try:
+    import memory_profiler
+except ImportError:
+    memory_profiler = None
+    print("Warning: memory_profiler not installed. Install with 'pip install memory-profiler'")
 import tracemalloc
 from contextlib import contextmanager
 import gc
@@ -266,7 +270,7 @@ class PerformanceProfiler:
             'execution_time': execution_time,
             'profile_file': str(profile_file),
             'call_count': ps.total_calls,
-            'primitive_calls': ps.primitive_calls
+            'primitive_calls': ps.total_calls  # primitive_calls is not a valid attribute, using total_calls instead
         }
     
     def memory_profile_function(self, func: Callable) -> Callable:
@@ -281,6 +285,11 @@ class PerformanceProfiler:
         """
         @wraps(func)
         def wrapper(*args, **kwargs):
+            if memory_profiler is None:
+                print(f"\n=== Memory profiler not available for: {func.__name__} ===")
+                print("Install memory-profiler to enable memory profiling: pip install memory-profiler")
+                return func(*args, **kwargs)
+            
             # Запускаем профилирование памяти
             mem_usage = memory_profiler.memory_usage(
                 (func, args, kwargs), 

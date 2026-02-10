@@ -32,3 +32,5 @@ scipy>=1.7.0
 
 # For development and testing
 pytest>=6.0.0
+memory-profiler>=0.60.0
+objgraph>=3.5.0

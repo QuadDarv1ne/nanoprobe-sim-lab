@@ -21,7 +21,11 @@ import seaborn as sns
 import pandas as pd
 from dataclasses import dataclass
 from functools import wraps
-import objgraph
+try:
+    import objgraph
+except ImportError:
+    objgraph = None
+    print("Warning: objgraph not installed. Install with 'pip install objgraph'")
 
 
 @dataclass
@@ -222,16 +226,16 @@ class MemoryTracker:
             leaks.append(leak)
         
         # Также проверяем с помощью objgraph
-        try:
-            # Получаем топ-10 типов объектов
-            obj_counts = objgraph.most_common_types(limit=10)
-            for obj_type, count in obj_counts:
-                # Здесь можно добавить логику для обнаружения роста конкретных типов объектов
-                # Пока просто добавляем как потенциальную информацию
-                pass
-        except ImportError:
-            # objgraph может не быть установлен
-            pass
+        if objgraph is not None:
+            try:
+                # Получаем топ-10 типов объектов
+                obj_counts = objgraph.most_common_types(limit=10)
+                for obj_type, count in obj_counts:
+                    # Здесь можно добавить логику для обнаружения роста конкретных типов объектов
+                    # Пока просто добавляем как потенциальную информацию
+                    pass
+            except Exception as e:
+                print(f"Ошибка при использовании objgraph: {e}")
         
         self.leak_detections.extend(leaks)
         return leaks
