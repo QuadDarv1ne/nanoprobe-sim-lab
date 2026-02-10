@@ -1,5 +1,6 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+#!/usr/bin/env python3
+
 """
 Main entry point for Nanoprobe Simulation Lab
 This script provides access to all project components through a unified interface.
@@ -35,9 +36,9 @@ def main():
     if len(sys.argv) < 2:
         show_help()
         return
-    
+
     command = sys.argv[1].lower()
-    
+
     if command == "cli":
         # Run main console
         cli_path = Path("src/cli/main.py")
@@ -45,7 +46,7 @@ def main():
             os.system(f"{sys.executable} {cli_path}")
         else:
             print("Файл main.py не найден")
-            
+
     elif command == "manager":
         # Run project manager
         manager_path = Path("src/cli/project_manager.py")
@@ -53,7 +54,7 @@ def main():
             os.system(f"{sys.executable} {manager_path}")
         else:
             print("Файл project_manager.py не найден")
-            
+
     elif command == "web":
         # Run web dashboard
         web_path = Path("src/web/web_dashboard.py")
@@ -61,13 +62,14 @@ def main():
             os.system(f"{sys.executable} {web_path}")
         else:
             print("Файл web_dashboard.py не найден")
-            
+
     elif command == "help":
         show_help()
-        
+
     else:
         print(f"Неизвестная команда: {command}")
         show_help()
 
 if __name__ == "__main__":
     main()
+

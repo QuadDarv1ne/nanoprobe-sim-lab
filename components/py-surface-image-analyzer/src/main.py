@@ -1,5 +1,6 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+#!/usr/bin/env python3
+
 """
 Пример скрипта для анализатора изображений поверхности
 """
@@ -10,24 +11,25 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from image_processor import ImageProcessor, calculate_surface_roughness
 
-
 def main():
+    """TODO: Add description"""
+
     print("=== АНАЛИЗАТОР ИЗОБРАЖЕНИЙ ПОВЕРХНОСТИ ===")
     print("Инициализация анализатора...")
-    
+
     processor = ImageProcessor()
-    
+
     # Здесь будет код для загрузки и анализа изображения
     print("Анализатор изображений готов к работе")
     print("Для использования загрузите изображение и примените фильтры")
-    
+
     # Пример использования
     # processor.load_image("sample_image.jpg")
     # filtered = processor.apply_noise_reduction("gaussian")
     # edges = processor.detect_edges()
-    
-    print("Пример анализа изображения завершен")
 
+    print("Пример анализа изображения завершен")
 
 if __name__ == "__main__":
     main()
+

@@ -1,5 +1,6 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+#!/usr/bin/env python3
+
 """
 Веб-панель управления для Лаборатории моделирования нанозонда
 Этот скрипт создает веб-интерфейс для управления всеми компонентами проекта.
@@ -41,17 +42,17 @@ from utils.error_handler import ErrorHandler
 CONFIG_PATH = project_root / "config" / "config.json"
 TEMPLATES_PATH = project_root / "templates"
 
-
 class WebDashboard:
     """
     Класс веб-панели управления
     Обеспечивает веб-интерфейс для управления проектом.
     """
-    
+
+
     def __init__(self, host: str = '127.0.0.1', port: int = 5000):
         """
         Инициализирует веб-панель
-        
+
         Args:
             host: Хост для запуска сервера
             port: Порт для запуска сервера
@@ -60,7 +61,7 @@ class WebDashboard:
         self.port = port
         self.app = Flask(__name__, template_folder=str(TEMPLATES_PATH))
         self.socketio = SocketIO(self.app, cors_allowed_origins="*")
-        
+
         # Инициализация компонентов проекта
         self.config_manager = ConfigManager(str(CONFIG_PATH))
         self.logger = setup_project_logging(self.config_manager)
@@ -69,27 +70,28 @@ class WebDashboard:
         self.system_monitor = SystemMonitor()
         self.cache_manager = CacheManager(str(project_root))
         self.error_handler = ErrorHandler()
-        
+
         # Состояние запущенных процессов
         self.running_processes = {}
-        
+
         # Регистрируем автоматическую очистку кэша при завершении
         atexit.register(self._auto_cleanup_on_exit)
-        
+
         # Настройка маршрутов
         self._setup_routes()
-        
+
         # Настройка SocketIO
         self._setup_socketio()
-    
+
+
     def _setup_routes(self):
         """Настройка маршрутов Flask"""
-        
+
         @self.app.route('/')
         def index():
             """Главная страница"""
             return render_template('dashboard.html')
-        
+
         @self.app.route('/api/status')
         def api_status():
             """API для получения статуса системы"""
@@ -104,7 +106,7 @@ class WebDashboard:
                 return jsonify(status)
             except Exception as e:
                 return jsonify({'error': str(e)}), 500
-        
+
         @self.app.route('/api/components')
         def api_components():
             """API для получения информации о компонентах"""
@@ -113,7 +115,7 @@ class WebDashboard:
                 return jsonify(components)
             except Exception as e:
                 return jsonify({'error': str(e)}), 500
-        
+
         @self.app.route('/api/actions/<action>', methods=['POST'])
         def api_actions(action):
             """API для выполнения действий"""
@@ -123,7 +125,7 @@ class WebDashboard:
                 return jsonify(result)
             except Exception as e:
                 return jsonify({'error': str(e)}), 500
-        
+
         @self.app.route('/api/logs')
         def api_logs():
             """API для получения логов"""
@@ -133,27 +135,29 @@ class WebDashboard:
                 return jsonify(logs)
             except Exception as e:
                 return jsonify({'error': str(e)}), 500
-    
+
+
     def _setup_socketio(self):
         """Настройка SocketIO для реального времени"""
-        
+
         @self.socketio.on('connect')
         def handle_connect():
             """Обработка подключения клиента"""
             print("Клиент подключен к веб-панели")
             emit('status_update', {'message': 'Подключено к серверу'})
-        
+
         @self.socketio.on('disconnect')
         def handle_disconnect():
             """Обработка отключения клиента"""
             print("Клиент отключен от веб-панели")
-        
+
         @self.socketio.on('request_update')
         def handle_update_request():
             """Обработка запроса на обновление данных"""
             status = self._get_realtime_status()
             emit('status_update', status)
-    
+
+
     def _get_project_info(self) -> Dict[str, Any]:
         """Получает информацию о проекте"""
         try:
@@ -168,7 +172,8 @@ class WebDashboard:
         except Exception as e:
             self.error_handler.log_error(f"Ошибка получения информации о проекте: {e}")
             return {'error': str(e)}
-    
+
+
     def _get_system_metrics(self) -> Dict[str, Any]:
         """Получает системные метрики"""
         try:
@@ -182,7 +187,8 @@ class WebDashboard:
         except Exception as e:
             self.error_handler.log_error(f"Ошибка получения системных метрик: {e}")
             return {'error': str(e)}
-    
+
+
     def _get_cache_info(self) -> Dict[str, Any]:
         """Получает информацию о кэше"""
         try:
@@ -196,17 +202,19 @@ class WebDashboard:
         except Exception as e:
             self.error_handler.log_error(f"Ошибка получения информации о кэше: {e}")
             return {'error': str(e)}
-    
+
+
     def _get_running_processes(self) -> Dict[str, Any]:
         """Получает информацию о запущенных процессах"""
         return self.running_processes
-    
+
+
     def _get_components_info(self) -> List[Dict[str, Any]]:
         """Получает информацию о компонентах проекта"""
         try:
             config = self.config_manager.config  # Исправлено: config вместо get_config()
             components = []
-            
+
             for name, info in config.get('components', {}).items():
                 components.append({
                     'name': info.get('name', name),
@@ -215,12 +223,13 @@ class WebDashboard:
                     'path': info.get('path', ''),
                     'status': 'available'  # В реальной реализации можно проверять доступность
                 })
-            
+
             return components
         except Exception as e:
             self.error_handler.log_error(f"Ошибка получения информации о компонентах: {e}")
             return []
-    
+
+
     def _execute_action(self, action: str, data: Dict[str, Any]) -> Dict[str, Any]:
         """Выполняет действие"""
         try:
@@ -231,7 +240,7 @@ class WebDashboard:
                     return {'success': True, 'message': f'Компонент {component} запущен', 'result': result}
                 else:
                     return {'success': False, 'error': 'Не указан компонент'}
-            
+
             elif action == 'stop_component':
                 component = data.get('component')
                 if component:
@@ -239,22 +248,23 @@ class WebDashboard:
                     return {'success': True, 'message': f'Компонент {component} остановлен', 'result': result}
                 else:
                     return {'success': False, 'error': 'Не указан компонент'}
-            
+
             elif action == 'clean_cache':
                 result = self.cache_manager.cleanup_cache()
                 return {'success': True, 'message': 'Кэш очищен', 'result': result}
-            
+
             elif action == 'get_analytics':
                 result = self.analytics.generate_project_report()
                 return {'success': True, 'message': 'Аналитика получена', 'result': result}
-            
+
             else:
                 return {'success': False, 'error': f'Неизвестное действие: {action}'}
-                
+
         except Exception as e:
             self.error_handler.log_error(f"Ошибка выполнения действия {action}: {e}")
             return {'success': False, 'error': str(e)}
-    
+
+
     def _start_component(self, component_name: str) -> Dict[str, Any]:
         """Запускает компонент"""
         # В реальной реализации здесь будет код запуска компонентов
@@ -263,10 +273,11 @@ class WebDashboard:
             'start_time': datetime.now().isoformat(),
             'pid': os.getpid()  # В реальности будет PID запущенного процесса
         }
-        
+
         self.logger.log_general_activity(f"Запуск компонента: {component_name}", "INFO")
         return {'status': 'started', 'component': component_name}
-    
+
+
     def _stop_component(self, component_name: str) -> Dict[str, Any]:
         """Останавливает компонент"""
         if component_name in self.running_processes:
@@ -275,7 +286,8 @@ class WebDashboard:
             return {'status': 'stopped', 'component': component_name}
         else:
             return {'status': 'not_running', 'component': component_name}
-    
+
+
     def _get_recent_logs(self, limit: int = 50) -> List[Dict[str, Any]]:
         """Получает последние записи логов"""
         # В реальной реализации будет чтение из файлов логов
@@ -287,7 +299,8 @@ class WebDashboard:
                 'message': 'Веб-панель запущена'
             }
         ][:limit]
-    
+
+
     def _get_realtime_status(self) -> Dict[str, Any]:
         """Получает статус в реальном времени"""
         return {
@@ -296,7 +309,8 @@ class WebDashboard:
             'running_processes': self._get_running_processes(),
             'timestamp': datetime.now().isoformat()
         }
-    
+
+
     def _auto_cleanup_on_exit(self):
         """Внутренняя функция автоматической очистки при завершении"""
         print("\n" + "="*50)
@@ -305,32 +319,33 @@ class WebDashboard:
             # Останавливаем SocketIO сервер корректно
             if hasattr(self, 'socketio'):
                 self.socketio.stop()
-            
+
             # Выполняем очистку кэша
             stats = self.cache_manager.get_cache_statistics()
             print(f"Текущий размер кэша: {stats['total_cache_size_mb']} MB")
-            
+
             result = self.cache_manager.auto_cleanup()
-            
+
             if "status" in result:
                 print(f"Статус: {result['status']}")
             else:
                 print(f"Удалено файлов: {result['deleted_files']}")
                 print(f"Освобождено места: {result['freed_space_mb']} MB")
-            
+
             # Оптимизация памяти
             memory_result = self.cache_manager.optimize_memory_usage()
             print(f"Освобождено памяти: {memory_result['memory_freed_mb']} MB")
-            
+
             print("✓ Автоматическая очистка кэша выполнена успешно")
         except Exception as e:
             print(f"❌ Ошибка при автоматической очистке кэша: {e}")
         print("="*50)
-    
+
+
     def start_server(self, open_browser: bool = True):
         """
         Запускает веб-сервер
-        
+
         Args:
             open_browser: Открыть браузер автоматически
         """
@@ -341,18 +356,20 @@ class WebDashboard:
         print(f"Сервер запущен на http://{self.host}:{self.port}")
         print("Нажмите Ctrl+C для остановки сервера")
         print("="*60)
-        
+
         # Открываем браузер в отдельном потоке
         if open_browser:
             def open_browser_func():
+    """TODO: Add description"""
+
                 import time
                 time.sleep(2)  # Ждем запуска сервера
                 webbrowser.open(f"http://{self.host}:{self.port}")
-            
+
             browser_thread = threading.Thread(target=open_browser_func)
             browser_thread.daemon = True
             browser_thread.start()
-        
+
         try:
             self.socketio.run(self.app, host=self.host, port=self.port, debug=False)
         except KeyboardInterrupt:
@@ -362,22 +379,21 @@ class WebDashboard:
             self.error_handler.log_error(f"Ошибка запуска веб-панели: {e}")
             print(f"Ошибка: {e}")
 
-
 def main():
     """Главная функция запуска веб-панели"""
     import argparse
-    
+
     parser = argparse.ArgumentParser(description='Веб-панель управления проектом')
     parser.add_argument('--host', default='127.0.0.1', help='Хост сервера')
     parser.add_argument('--port', type=int, default=5000, help='Порт сервера')
     parser.add_argument('--no-browser', action='store_true', help='Не открывать браузер автоматически')
-    
+
     args = parser.parse_args()
-    
+
     # Создаем и запускаем веб-панель
     dashboard = WebDashboard(host=args.host, port=args.port)
     dashboard.start_server(open_browser=not args.no_browser)
 
-
 if __name__ == "__main__":
     main()
+

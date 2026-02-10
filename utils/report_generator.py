@@ -1,8 +1,9 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+#!/usr/bin/env python3
+
 """
 Модуль генерации отчетов для проекта Лаборатория моделирования нанозонда
-Этот модуль предоставляет инструменты для создания 
+Этот модуль предоставляет инструменты для создания
 комплексных отчетов о симуляциях и анализах.
 """
 
@@ -17,24 +18,24 @@ from jinja2 import Template
 import pdfkit
 import html
 
-
 class ReportGenerator:
     """
     Класс для генерации отчетов
-    Создает комплексные отчеты о симуляциях, анализах и 
+    Создает комплексные отчеты о симуляциях, анализах и
     результатах работы всех компонентов проекта.
     """
-    
+
+
     def __init__(self, output_dir: str = "reports"):
         """
         Инициализирует генератор отчетов
-        
+
         Args:
             output_dir: Директория для сохранения отчетов
         """
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # HTML шаблон для отчета
         self.html_template = Template("""
 <!DOCTYPE html>
@@ -109,7 +110,7 @@ class ReportGenerator:
     <div class="container">
         <h1>{{ title }}</h1>
         <p><strong>Дата генерации:</strong> {{ timestamp }}</p>
-        
+
         {% if summary %}
         <h2>Общий обзор</h2>
         <div class="metrics-grid">
@@ -120,7 +121,7 @@ class ReportGenerator:
             {% endfor %}
         </div>
         {% endif %}
-        
+
         {% if surface_analysis %}
         <h2>Анализ поверхности</h2>
         <table>
@@ -136,7 +137,7 @@ class ReportGenerator:
             {% endfor %}
         </table>
         {% endif %}
-        
+
         {% if image_analysis %}
         <h2>Анализ изображений</h2>
         <table>
@@ -152,7 +153,7 @@ class ReportGenerator:
             {% endfor %}
         </table>
         {% endif %}
-        
+
         {% if sstv_analysis %}
         <h2>Анализ SSTV сигналов</h2>
         <table>
@@ -168,7 +169,7 @@ class ReportGenerator:
             {% endfor %}
         </table>
         {% endif %}
-        
+
         {% if charts %}
         <h2>Визуализации</h2>
         {% for chart_path in charts %}
@@ -177,7 +178,7 @@ class ReportGenerator:
         </div>
         {% endfor %}
         {% endif %}
-        
+
         {% if timeline %}
         <h2>Хронология событий</h2>
         <table>
@@ -197,7 +198,7 @@ class ReportGenerator:
             {% endfor %}
         </table>
         {% endif %}
-        
+
         <div class="footer">
             <p>Сгенерировано автоматически системой Лаборатории моделирования нанозонда</p>
             <p>© {{ year }} Школа программирования Maestro7IT. Все права защищены.</p>
@@ -206,24 +207,26 @@ class ReportGenerator:
 </body>
 </html>
         """)
-    
-    def generate_simulation_report(self, 
+
+    def generate_simulation_report(self,
+    """TODO: Add description"""
+
                                  simulation_data: Dict[str, Any],
                                  title: str = "Отчет о симуляции",
                                  include_charts: bool = True) -> str:
         """
         Генерирует отчет о симуляции
-        
+
         Args:
             simulation_data: Данные симуляции
             title: Заголовок отчета
             include_charts: Включать ли диаграммы
-            
+
         Returns:
             Путь к созданному отчету
         """
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        
+
         # Подготовка данных для шаблона
         template_data = {
             'title': title,
@@ -236,19 +239,19 @@ class ReportGenerator:
             'charts': simulation_data.get('charts', []),
             'timeline': simulation_data.get('timeline', [])
         }
-        
+
         # Генерация HTML
         html_content = self.html_template.render(**template_data)
-        
+
         # Сохранение отчета
         report_filename = f"simulation_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
         report_path = self.output_dir / report_filename
-        
+
         with open(report_path, 'w', encoding='utf-8') as f:
             f.write(html_content)
-        
+
         print(f"HTML отчет сохранен: {report_path}")
-        
+
         # Также создаем PDF версию
         pdf_filename = report_path.with_suffix('.pdf')
         try:
@@ -256,24 +259,26 @@ class ReportGenerator:
             print(f"PDF отчет сохранен: {pdf_filename}")
         except Exception as e:
             print(f"Ошибка создания PDF: {e}")
-        
+
         return str(report_path)
-    
-    def generate_analytics_report(self, 
+
+    """TODO: Add description"""
+
+    def generate_analytics_report(self,
                                 analytics_data: Dict[str, Any],
                                 title: str = "Аналитический отчет") -> str:
         """
         Генерирует аналитический отчет
-        
+
         Args:
             analytics_data: Данные аналитики
             title: Заголовок отчета
-            
+
         Returns:
             Путь к созданному отчету
         """
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        
+
         # Подготовка данных для шаблона
         template_data = {
             'title': title,
@@ -286,19 +291,19 @@ class ReportGenerator:
             'charts': analytics_data.get('charts', []),
             'timeline': analytics_data.get('timeline', [])
         }
-        
+
         # Генерация HTML
         html_content = self.html_template.render(**template_data)
-        
+
         # Сохранение отчета
         report_filename = f"analytics_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
         report_path = self.output_dir / report_filename
-        
+
         with open(report_path, 'w', encoding='utf-8') as f:
             f.write(html_content)
-        
+
         print(f"Аналитический отчет сохранен: {report_path}")
-        
+
         # Создаем PDF версию
         pdf_filename = report_path.with_suffix('.pdf')
         try:
@@ -306,24 +311,25 @@ class ReportGenerator:
             print(f"PDF аналитический отчет сохранен: {pdf_filename}")
         except Exception as e:
             print(f"Ошибка создания PDF: {e}")
-        
+
         return str(report_path)
-    
-    def generate_comparison_report(self, 
+    """TODO: Add description"""
+
+    def generate_comparison_report(self,
                                  reports_data: List[Dict[str, Any]],
                                  title: str = "Сравнительный отчет") -> str:
         """
         Генерирует сравнительный отчет
-        
+
         Args:
             reports_data: Список данных для сравнения
             title: Заголовок отчета
-            
+
         Returns:
             Путь к созданному отчету
         """
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        
+
         # Подготовка данных для сравнения
         comparison_data = {
             'title': title,
@@ -331,13 +337,13 @@ class ReportGenerator:
             'year': datetime.now().year,
             'comparisons': []
         }
-        
+
         for i, report in enumerate(reports_data):
             comparison_data['comparisons'].append({
                 'id': i + 1,
                 'data': report
             })
-        
+
         # Создание специального шаблона для сравнительного отчета
         comparison_template = Template("""
 <!DOCTYPE html>
@@ -402,11 +408,11 @@ class ReportGenerator:
     <div class="container">
         <h1>{{ title }}</h1>
         <p><strong>Дата генерации:</strong> {{ timestamp }}</p>
-        
+
         {% for comp in comparisons %}
         <div class="comparison-section">
             <h2>Сравнение #{{ comp.id }}</h2>
-            
+
             {% if comp.data.summary %}
             <h3>Общий обзор</h3>
             <table>
@@ -422,7 +428,7 @@ class ReportGenerator:
                 {% endfor %}
             </table>
             {% endif %}
-            
+
             {% if comp.data.surface_analysis %}
             <h3>Анализ поверхности</h3>
             <table>
@@ -440,7 +446,7 @@ class ReportGenerator:
             {% endif %}
         </div>
         {% endfor %}
-        
+
         <div class="footer">
             <p>Сгенерировано автоматически системой Лаборатории моделирования нанозонда</p>
             <p>© {{ year }} Школа программирования Maestro7IT. Все права защищены.</p>
@@ -449,18 +455,18 @@ class ReportGenerator:
 </body>
 </html>
         """)
-        
+
         html_content = comparison_template.render(**comparison_data)
-        
+
         # Сохранение отчета
         report_filename = f"comparison_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
         report_path = self.output_dir / report_filename
-        
+
         with open(report_path, 'w', encoding='utf-8') as f:
             f.write(html_content)
-        
+
         print(f"Сравнительный отчет сохранен: {report_path}")
-        
+
         # Создаем PDF версию
         pdf_filename = report_path.with_suffix('.pdf')
         try:
@@ -468,50 +474,50 @@ class ReportGenerator:
             print(f"PDF сравнительный отчет сохранен: {pdf_filename}")
         except Exception as e:
             print(f"Ошибка создания PDF: {e}")
-        
+
         return str(report_path)
-    
+
+
     def create_summary_statistics(self, data_list: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
         Создает сводную статистику из списка данных
-        
+
         Args:
             data_list: Список словарей с данными
-            
+
         Returns:
             Словарь с сводной статистикой
         """
         if not data_list:
             return {}
-        
+
         # Объединяем все ключи
         all_keys = set()
         for data in data_list:
             all_keys.update(data.keys())
-        
+
         summary = {}
         for key in all_keys:
             values = []
             for data in data_list:
                 if key in data and isinstance(data[key], (int, float)):
                     values.append(data[key])
-            
+
             if values:
                 summary[f"{key}_mean"] = round(sum(values) / len(values), 4)
                 summary[f"{key}_min"] = round(min(values), 4)
                 summary[f"{key}_max"] = round(max(values), 4)
                 summary[f"{key}_count"] = len(values)
-        
-        return summary
 
+        return summary
 
 def main():
     """Главная функция для демонстрации возможностей генератора отчетов"""
     print("=== ГЕНЕРАТОР ОТЧЕТОВ ПРОЕКТА ===")
-    
+
     # Создаем генератор отчетов
     report_gen = ReportGenerator()
-    
+
     # Создаем тестовые данные
     test_simulation_data = {
         'summary': {
@@ -541,27 +547,27 @@ def main():
             {'timestamp': '2023-12-01 10:00:15', 'message': 'Сканирование завершено', 'component': 'СЗМ', 'level': 'INFO'}
         ]
     }
-    
+
     # Генерируем отчет
     report_path = report_gen.generate_simulation_report(
         test_simulation_data,
         "Тестовый отчет о симуляции"
     )
-    
+
     print(f"✓ Отчет успешно сгенерирован: {report_path}")
-    
+
     # Создаем сводную статистику
     test_data_list = [
         {'metric1': 1.0, 'metric2': 2.0},
         {'metric1': 1.2, 'metric2': 2.1},
         {'metric1': 0.9, 'metric2': 1.9}
     ]
-    
+
     summary_stats = report_gen.create_summary_statistics(test_data_list)
     print(f"✓ Сводная статистика: {summary_stats}")
-    
-    print("Генератор отчетов успешно протестирован")
 
+    print("Генератор отчетов успешно протестирован")
 
 if __name__ == "__main__":
     main()
+

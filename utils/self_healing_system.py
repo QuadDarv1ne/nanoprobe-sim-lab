@@ -1,5 +1,6 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+#!/usr/bin/env python3
+
 """
 Модуль самоисцеляющейся системы для проекта Лаборатория моделирования нанозонда
 Этот модуль предоставляет систему автоматического обнаружения и восстановления
@@ -36,7 +37,6 @@ from utils.predictive_analytics_engine import PredictiveAnalyticsEngine
 from utils.automated_optimization_scheduler import AutomatedOptimizationScheduler
 from utils.ai_resource_optimizer import AIResourceOptimizer
 
-
 @dataclass
 class HealthIssue:
     """Проблема со здоровьем системы"""
@@ -49,7 +49,6 @@ class HealthIssue:
     resolved: bool = False
     resolution_time: Optional[datetime] = None
 
-
 @dataclass
 class RecoveryAction:
     """Действие по восстановлению"""
@@ -60,23 +59,23 @@ class RecoveryAction:
     success: bool
     details: Dict[str, Any]
 
-
 class SelfHealingSystem:
     """
     Класс самоисцеляющейся системы
     Обеспечивает автоматическое обнаружение и восстановление от проблем производительности.
     """
-    
+
+
     def __init__(self, output_dir: str = "self_healing"):
         """
         Инициализирует самоисцеляющуюся систему
-        
+
         Args:
             output_dir: Директория для сохранения логов и результатов
         """
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True)
-        
+
         # Инициализируем все инструменты оптимизации
         self.performance_profiler = PerformanceProfiler(output_dir="profiles")
         self.resource_manager = ResourceManager()
@@ -90,21 +89,21 @@ class SelfHealingSystem:
         self.predictive_engine = PredictiveAnalyticsEngine(output_dir="predictive_analytics")
         self.scheduler = AutomatedOptimizationScheduler(output_dir="automated_optimization")
         self.ai_optimizer = AIResourceOptimizer(output_dir="ai_optimization")
-        
+
         # Состояние системы
         self.detected_issues = []
         self.recovery_actions = []
         self.health_history = []
-        
+
         # Правила обнаружения проблем
         self.detection_rules = []
         self.recovery_strategies = {}
-        
+
         # Состояние
         self.active = False
         self.monitoring_thread = None
         self.healing_thread = None
-        
+
         # Пороги
         self.thresholds = {
             'cpu_percent': 90.0,
@@ -115,7 +114,7 @@ class SelfHealingSystem:
             'process_count': 500,
             'thread_count': 5000
         }
-        
+
         # Статистика
         self.stats = {
             'issues_detected': 0,
@@ -124,7 +123,7 @@ class SelfHealingSystem:
             'recovery_success': 0,
             'healing_cycles': 0
         }
-        
+
         # Настройка логирования
         self.logger = logging.getLogger('SelfHealingSystem')
         self.logger.setLevel(logging.INFO)
@@ -132,10 +131,11 @@ class SelfHealingSystem:
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         handler.setFormatter(formatter)
         self.logger.addHandler(handler)
-        
+
         # Инициализация стратегий восстановления
         self._initialize_recovery_strategies()
-    
+
+
     def _initialize_recovery_strategies(self):
         """Инициализирует стратегии восстановления"""
         self.recovery_strategies = {
@@ -165,12 +165,15 @@ class SelfHealingSystem:
                 self._optimize_network_buffers
             ]
         }
-    
-    def add_detection_rule(self, name: str, condition: Callable[[Dict[str, Any]], bool], 
+
+
+    def add_detection_rule(self, name: str, condition: Callable[[Dict[str, Any]], bool],
+    """TODO: Add description"""
+
                          issue_type: str, severity: str, description: str):
         """
         Добавляет правило обнаружения проблем
-        
+
         Args:
             name: Название правила
             condition: Функция условия (возвращает True если обнаружена проблема)
@@ -188,17 +191,18 @@ class SelfHealingSystem:
         }
         self.detection_rules.append(rule)
         self.logger.info(f"Добавлено правило обнаружения: {name}")
-    
+
+
     def detect_issues(self) -> List[HealthIssue]:
         """
         Обнаруживает проблемы в системе
-        
+
         Returns:
             Список обнаруженных проблем
         """
         current_metrics = self._get_system_metrics()
         detected_issues = []
-        
+
         # Проверяем встроенные пороги
         if current_metrics['cpu_percent'] > self.thresholds['cpu_percent']:
             issue = HealthIssue(
@@ -209,7 +213,7 @@ class SelfHealingSystem:
                 timestamp=datetime.now()
             )
             detected_issues.append(issue)
-        
+
         if current_metrics['memory_percent'] > self.thresholds['memory_percent']:
             issue = HealthIssue(
                 id=f"memory_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
@@ -219,7 +223,7 @@ class SelfHealingSystem:
                 timestamp=datetime.now()
             )
             detected_issues.append(issue)
-        
+
         if current_metrics['disk_usage'] > self.thresholds['disk_usage']:
             issue = HealthIssue(
                 id=f"disk_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
@@ -229,7 +233,7 @@ class SelfHealingSystem:
                 timestamp=datetime.now()
             )
             detected_issues.append(issue)
-        
+
         if current_metrics['active_processes'] > self.thresholds['process_count']:
             issue = HealthIssue(
                 id=f"process_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
@@ -239,7 +243,7 @@ class SelfHealingSystem:
                 timestamp=datetime.now()
             )
             detected_issues.append(issue)
-        
+
         # Проверяем пользовательские правила
         for rule in self.detection_rules:
             try:
@@ -254,31 +258,32 @@ class SelfHealingSystem:
                     detected_issues.append(issue)
             except Exception as e:
                 self.logger.error(f"Ошибка в правиле обнаружения {rule['name']}: {e}")
-        
+
         # Добавляем обнаруженные проблемы в историю
         for issue in detected_issues:
             self.detected_issues.append(issue)
             self.stats['issues_detected'] += 1
             self.logger.warning(f"Обнаружена проблема: {issue.description} (ID: {issue.id})")
-        
+
         return detected_issues
-    
+
+
     def _get_system_metrics(self) -> Dict[str, float]:
         """
         Получает метрики системы
-        
+
         Returns:
             Словарь с метриками системы
         """
         import psutil
-        
+
         cpu_percent = psutil.cpu_percent(interval=None)
         memory = psutil.virtual_memory()
         disk_usage = psutil.disk_usage('/').percent if hasattr(psutil, 'disk_usage') else 0
         active_processes = len(psutil.pids())
         threads_count = sum(p.num_threads() for p in psutil.process_iter())
         load_average = getattr(os, 'getloadavg', lambda: (0, 0, 0))()[0] if hasattr(os, 'getloadavg') else 0
-        
+
         return {
             'cpu_percent': cpu_percent,
             'memory_percent': memory.percent,
@@ -288,35 +293,36 @@ class SelfHealingSystem:
             'load_average': load_average,
             'timestamp': datetime.now()
         }
-    
+
+
     def apply_recovery_action(self, issue: HealthIssue) -> RecoveryAction:
         """
         Применяет действие по восстановлению для проблемы
-        
+
         Args:
             issue: Проблема, для которой нужно применить восстановление
-            
+
         Returns:
             Результат действия по восстановлению
         """
         self.stats['recovery_attempts'] += 1
         issue.recovery_attempts += 1
-        
+
         # Определяем стратегию восстановления
         recovery_strategy_key = f"{issue.component}_{'_'.join(issue.description.split()[:2]).lower()}"
-        
+
         if recovery_strategy_key not in self.recovery_strategies:
             # Используем обобщенную стратегию
             recovery_strategy_key = f"{issue.component}_issue"
-        
+
         if recovery_strategy_key not in self.recovery_strategies:
             recovery_strategy_key = "process_hang"  # Стратегия по умолчанию
-        
+
         # Применяем стратегии в порядке приоритета
         strategies = self.recovery_strategies[recovery_strategy_key]
         recovery_success = False
         action_details = {}
-        
+
         for strategy in strategies:
             try:
                 result = strategy(issue)
@@ -327,7 +333,7 @@ class SelfHealingSystem:
             except Exception as e:
                 self.logger.error(f"Ошибка в стратегии восстановления {strategy.__name__}: {e}")
                 continue
-        
+
         # Создаем действие по восстановлению
         recovery_action = RecoveryAction(
             issue_id=issue.id,
@@ -337,9 +343,9 @@ class SelfHealingSystem:
             success=recovery_success,
             details=action_details
         )
-        
+
         self.recovery_actions.append(recovery_action)
-        
+
         if recovery_success:
             self.stats['recovery_success'] += 1
             issue.resolved = True
@@ -347,9 +353,10 @@ class SelfHealingSystem:
             self.logger.info(f"Проблема {issue.id} решена")
         else:
             self.logger.warning(f"Не удалось решить проблему {issue.id}")
-        
+
         return recovery_action
-    
+
+
     def _reduce_cpu_priority(self, issue: HealthIssue) -> Dict[str, Any]:
         """Уменьшает приоритет CPU-интенсивных процессов"""
         try:
@@ -360,7 +367,7 @@ class SelfHealingSystem:
                         high_cpu_processes.append(proc)
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
-            
+
             # Уменьшаем приоритет самых активных процессов
             affected_processes = []
             for proc in sorted(high_cpu_processes, key=lambda p: p.info['cpu_percent'], reverse=True)[:3]:
@@ -369,7 +376,7 @@ class SelfHealingSystem:
                     affected_processes.append(proc.info['name'])
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
-            
+
             return {
                 'success': True,
                 'affected_processes': affected_processes,
@@ -382,7 +389,8 @@ class SelfHealingSystem:
                 'error': str(e),
                 'action': 'cpu_priority_reduction'
             }
-    
+
+
     def _force_garbage_collection(self, issue: HealthIssue) -> Dict[str, Any]:
         """Принудительно запускает сборку мусора"""
         try:
@@ -399,13 +407,14 @@ class SelfHealingSystem:
                 'error': str(e),
                 'action': 'garbage_collection'
             }
-    
+
+
     def _cleanup_temp_files(self, issue: HealthIssue) -> Dict[str, Any]:
         """Очищает временные файлы"""
         try:
             cleaned_dirs = []
             temp_dirs = ['/tmp', './temp', './cache']
-            
+
             for temp_dir in temp_dirs:
                 if os.path.exists(temp_dir):
                     for root, dirs, files in os.walk(temp_dir):
@@ -416,7 +425,7 @@ class SelfHealingSystem:
                             except:
                                 continue
                     cleaned_dirs.append(temp_dir)
-            
+
             return {
                 'success': True,
                 'cleaned_directories': cleaned_dirs,
@@ -429,7 +438,8 @@ class SelfHealingSystem:
                 'error': str(e),
                 'action': 'temp_cleanup'
             }
-    
+
+
     def _restart_hung_process(self, issue: HealthIssue) -> Dict[str, Any]:
         """Перезапускает зависший процесс"""
         try:
@@ -445,7 +455,8 @@ class SelfHealingSystem:
                 'error': str(e),
                 'action': 'process_restart'
             }
-        
+
+
     def _kill_stuck_process(self, issue: HealthIssue) -> Dict[str, Any]:
         """Убивает застрявший процесс"""
         try:
@@ -461,7 +472,8 @@ class SelfHealingSystem:
                 'error': str(e),
                 'action': 'process_kill'
             }
-    
+
+
     def _terminate_cpu_intensive_processes(self, issue: HealthIssue) -> Dict[str, Any]:
         """Завершает CPU-интенсивные процессы"""
         try:
@@ -473,7 +485,7 @@ class SelfHealingSystem:
                         killed_processes.append(proc.info['name'])
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
-            
+
             return {
                 'success': len(killed_processes) > 0,
                 'killed_processes': killed_processes,
@@ -486,7 +498,8 @@ class SelfHealingSystem:
                 'error': str(e),
                 'action': 'process_kill'
             }
-    
+
+
     def _terminate_memory_intensive_processes(self, issue: HealthIssue) -> Dict[str, Any]:
         """Завершает memory-интенсивные процессы"""
         try:
@@ -498,7 +511,7 @@ class SelfHealingSystem:
                         killed_processes.append(proc.info['name'])
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
-            
+
             return {
                 'success': len(killed_processes) > 0,
                 'killed_processes': killed_processes,
@@ -511,7 +524,8 @@ class SelfHealingSystem:
                 'error': str(e),
                 'action': 'memory_process_kill'
             }
-    
+
+
     def _optimize_memory_allocation(self, issue: HealthIssue) -> Dict[str, Any]:
         """Оптимизирует выделение памяти"""
         try:
@@ -529,7 +543,8 @@ class SelfHealingSystem:
                 'error': str(e),
                 'action': 'memory_optimization'
             }
-    
+
+
     def _optimize_cpu_scheduling(self, issue: HealthIssue) -> Dict[str, Any]:
         """Оптимизирует планирование CPU"""
         try:
@@ -547,7 +562,8 @@ class SelfHealingSystem:
                 'error': str(e),
                 'action': 'cpu_optimization'
             }
-    
+
+
     def _optimize_disk_space(self, issue: HealthIssue) -> Dict[str, Any]:
         """Оптимизирует место на диске"""
         try:
@@ -565,7 +581,8 @@ class SelfHealingSystem:
                 'error': str(e),
                 'action': 'disk_optimization'
             }
-    
+
+
     def _notify_admin(self, issue: HealthIssue) -> Dict[str, Any]:
         """Уведомляет администратора"""
         try:
@@ -581,7 +598,8 @@ class SelfHealingSystem:
                 'error': str(e),
                 'action': 'admin_notification'
             }
-        
+
+
     def _terminate_disk_intensive_processes(self, issue: HealthIssue) -> Dict[str, Any]:
         """Завершает disk-интенсивные процессы"""
         try:
@@ -600,7 +618,8 @@ class SelfHealingSystem:
                 'error': str(e),
                 'action': 'disk_process_kill'
             }
-        
+
+
     def _reset_network_connections(self, issue: HealthIssue) -> Dict[str, Any]:
         """Сбрасывает сетевые соединения"""
         try:
@@ -616,7 +635,8 @@ class SelfHealingSystem:
                 'error': str(e),
                 'action': 'network_reset'
             }
-        
+
+
     def _restart_network_services(self, issue: HealthIssue) -> Dict[str, Any]:
         """Перезапускает сетевые службы"""
         try:
@@ -632,7 +652,8 @@ class SelfHealingSystem:
                 'error': str(e),
                 'action': 'network_service_restart'
             }
-        
+
+
     def _optimize_network_buffers(self, issue: HealthIssue) -> Dict[str, Any]:
         """Оптимизирует сетевые буферы"""
         try:
@@ -648,27 +669,28 @@ class SelfHealingSystem:
                 'error': str(e),
                 'action': 'network_buffer_optimization'
             }
-    
+
+
     def run_self_healing_cycle(self) -> List[RecoveryAction]:
         """
         Выполняет цикл самоисцеления
-        
+
         Returns:
             Список выполненных действий по восстановлению
         """
         self.stats['healing_cycles'] += 1
-        
+
         # Обнаруживаем проблемы
         issues = self.detect_issues()
-        
+
         # Применяем восстановление к критическим проблемам
         recovery_actions = []
-        
+
         for issue in issues:
             if issue.severity in ['high', 'critical'] and not issue.resolved:
                 recovery_action = self.apply_recovery_action(issue)
                 recovery_actions.append(recovery_action)
-        
+
         # Применяем ИИ-оптимизацию для профилактики
         try:
             ai_results = self.ai_optimizer.run_ai_optimization_cycle()
@@ -676,21 +698,24 @@ class SelfHealingSystem:
                 self.logger.info(f"ИИ-оптимизация: {result.get('result', {}).get('details', 'Completed')}")
         except Exception as e:
             self.logger.error(f"Ошибка в ИИ-оптимизации: {e}")
-        
+
         return recovery_actions
-    
+
+
     def start_self_healing(self, interval: float = 30.0):
         """
         Запускает самоисцеляющуюся систему в фоновом режиме
-        
+
         Args:
             interval: Интервал между циклами самоисцеления (в секундах)
         """
         if self.active:
             return
-        
+
         self.active = True
-        
+
+    """TODO: Add description"""
+
         def healing_loop():
             while self.active:
                 try:
@@ -699,7 +724,8 @@ class SelfHealingSystem:
                 except Exception as e:
                     self.logger.error(f"Ошибка в цикле самоисцеления: {e}")
                     time.sleep(interval)
-        
+    """TODO: Add description"""
+
         def monitoring_loop():
             while self.active:
                 try:
@@ -707,17 +733,18 @@ class SelfHealingSystem:
                     time.sleep(60)  # Каждую минуту
                 except Exception as e:
                     self.logger.error(f"Ошибка в цикле мониторинга: {e}")
-        
+
         # Запускаем потоки
         self.healing_thread = threading.Thread(target=healing_loop, daemon=True)
         self.monitoring_thread = threading.Thread(target=monitoring_loop, daemon=True)
-        
+
         self.healing_thread.start()
         self.monitoring_thread.start()
-        
+
         print("🏥 Самоисцеляющаяся система запущена")
         self.logger.info("Самоисцеляющаяся система запущена")
-    
+
+
     def stop_self_healing(self):
         """Останавливает самоисцеляющуюся систему"""
         self.active = False
@@ -725,26 +752,27 @@ class SelfHealingSystem:
             self.healing_thread.join(timeout=2.0)
         if self.monitoring_thread:
             self.monitoring_thread.join(timeout=2.0)
-        
+
         print("🛑 Самоисцеляющаяся система остановлена")
         self.logger.info("Самоисцеляющаяся система остановлена")
-    
+
+
     def get_health_status(self) -> Dict[str, Any]:
         """
         Получает статус здоровья системы
-        
+
         Returns:
             Статус здоровья системы
         """
         current_metrics = self._get_system_metrics()
-        
+
         # Определяем общий статус здоровья
         overall_health = 'healthy'
         if current_metrics['cpu_percent'] > 80 or current_metrics['memory_percent'] > 85:
             overall_health = 'warning'
         if current_metrics['cpu_percent'] > 90 or current_metrics['memory_percent'] > 95:
             overall_health = 'critical'
-        
+
         return {
             'active': self.active,
             'overall_health': overall_health,
@@ -772,21 +800,22 @@ class SelfHealingSystem:
             ],
             'timestamp': datetime.now().isoformat()
         }
-    
+
+
     def generate_health_report(self, output_path: Optional[str] = None) -> str:
         """
         Генерирует отчет о здоровье системы
-        
+
         Args:
             output_path: Путь для сохранения отчета (опционально)
-            
+
         Returns:
             Путь к созданному отчету
         """
         if output_path is None:
             filename = f"health_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
             output_path = str(self.output_dir / filename)
-        
+
         report = {
             'metadata': {
                 'generated_at': datetime.now().isoformat(),
@@ -812,41 +841,43 @@ class SelfHealingSystem:
                 'failed_actions': len([a for a in self.recovery_actions if not a.success])
             }
         }
-        
+
         with open(output_path, 'w', encoding='utf-8') as f:
             json.dump(report, f, ensure_ascii=False, indent=2, default=str)
-        
+
         print(f"🏥 Отчет о здоровье системы сохранен: {output_path}")
         return output_path
-    
+
+
     def add_custom_recovery_strategy(self, issue_type: str, strategy_func: Callable):
         """
         Добавляет пользовательскую стратегию восстановления
-        
+
         Args:
             issue_type: Тип проблемы
             strategy_func: Функция стратегии восстановления
         """
         if issue_type not in self.recovery_strategies:
             self.recovery_strategies[issue_type] = []
-        
+
         self.recovery_strategies[issue_type].append(strategy_func)
         self.logger.info(f"Добавлена пользовательская стратегия для {issue_type}")
-
 
 def main():
     """Главная функция для демонстрации возможностей самоисцеляющейся системы"""
     print("=== САМОИСЦЕЛЯЮЩАЯСЯ СИСТЕМА ===")
     print("🏥 Инициализация самоисцеляющейся системы...")
-    
+
     # Создаем самоисцеляющуюся систему
     healing_system = SelfHealingSystem(output_dir="self_healing")
-    
+    """TODO: Add description"""
+
     # Добавляем пользовательское правило обнаружения
+
     def high_response_time_condition(metrics):
         # В реальной системе здесь будет проверка времени отклика
         return False  # Заглушка
-    
+
     healing_system.add_detection_rule(
         name="high_response_time",
         condition=high_response_time_condition,
@@ -854,32 +885,32 @@ def main():
         severity="medium",
         description="Высокое время отклика системы"
     )
-    
+
     print("✅ Самоисцеляющаяся система инициализирована")
-    
+
     # Получаем текущий статус
     print("\n📊 Получение статуса здоровья системы...")
     status = healing_system.get_health_status()
-    
+
     print(f"   Общий статус: {status['overall_health']}")
     print(f"   Активные проблемы: {status['open_issues']}")
     print(f"   Обнаружено проблем: {status['stats']['issues_detected']}")
     print(f"   Успешных восстановлений: {status['stats']['recovery_success']}")
-    
+
     # Показываем примеры проблем
     print(f"\n🔍 Примеры обнаруженных проблем:")
     for issue in status['recent_issues']:
         print(f"   • {issue['severity'].upper()}: {issue['description']}")
-    
+
     print(f"\n🔧 Доступные функции:")
     print("   • Обнаружение проблем: healing_system.detect_issues()")
     print("   • Статус: healing_system.get_health_status()")
     print("   • Отчеты: healing_system.generate_health_report()")
     print("   • Запуск: healing_system.start_self_healing()")
     print("   • Правила: healing_system.add_detection_rule()")
-    
-    print("\n🎉 Самоисцеляющаяся система готова к защите системы!")
 
+    print("\n🎉 Самоисцеляющаяся система готова к защите системы!")
 
 if __name__ == "__main__":
     main()
+
