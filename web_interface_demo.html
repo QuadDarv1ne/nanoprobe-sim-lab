@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лаборатория моделирования нанозонда - Веб-панель</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        header {
+            text-align: center;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        .status-card {
+            background-color: #e8f4fd;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .component-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .component-card {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            background-color: #fafafa;
+        }
+        .status-active {
+            color: green;
+            font-weight: bold;
+        }
+        .status-inactive {
+            color: red;
+            font-weight: bold;
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔬 Лаборатория моделирования нанозонда</h1>
+            <h2>Веб-панель управления</h2>
+            <p>Комплексное решение для моделирования сканирующей зондовой микроскопии и анализа поверхностей</p>
+        </header>
+        
+        <div class="status-card">
+            <h3>Состояние системы</h3>
+            <p><strong>Статус:</strong> <span class="status-active">✓ Активно</span></p>
+            <p><strong>Время работы:</strong> 00:05:23</p>
+            <p><strong>Версия:</strong> 1.0.0</p>
+        </div>
+        
+        <h3>Компоненты системы</h3>
+        <div class="component-grid">
+            <div class="component-card">
+                <h4>Симулятор СЗМ</h4>
+                <p><strong>Статус:</strong> <span class="status-active">✓ Готов</span></p>
+                <p>Симуляция аппаратного обеспечения сканирующей зондовой микроскопии</p>
+                <button onclick="alert('Запуск симулятора СЗМ')">Запустить</button>
+            </div>
+            
+            <div class="component-card">
+                <h4>Анализатор изображений</h4>
+                <p><strong>Статус:</strong> <span class="status-active">✓ Готов</span></p>
+                <p>Анализатор изображений поверхности на Python</p>
+                <button onclick="alert('Запуск анализатора изображений')">Запустить</button>
+            </div>
+            
+            <div class="component-card">
+                <h4>Наземная станция SSTV</h4>
+                <p><strong>Статус:</strong> <span class="status-active">✓ Готов</span></p>
+                <p>Наземная станция SSTV на Python/C++</p>
+                <button onclick="alert('Запуск наземной станции SSTV')">Запустить</button>
+            </div>
+        </div>
+        
+        <div class="status-card">
+            <h3>Ресурсы системы</h3>
+            <p><strong>CPU:</strong> 23%</p>
+            <p><strong>Память:</strong> 45%</p>
+            <p><strong>Диск:</strong> 67%</p>
+        </div>
+        
+        <footer>
+            <p>Лаборатория моделирования нанозонда © 2026</p>
+            <p>Школа программирования Maestro7IT</p>
+        </footer>
+    </div>
+    
+    <script>
+        console.log('Веб-панель нанозондовой лаборатории загружена');
+        document.title = 'Нанозондовая Лаборатория - Панель управления';
+    </script>
+</body>
+</html>

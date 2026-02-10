@@ -1,467 +1,332 @@
-# -*- coding: utf-8 -*-
 #!/usr/bin/env python3
-
+# -*- coding: utf-8 -*-
 """
-Веб-панель управления для Лаборатории моделирования нанозонда
-Этот скрипт создает веб-интерфейс для управления всеми компонентами проекта.
+Веб-панель управления проектом "Лаборатория моделирования нанозонда"
+Этот модуль предоставляет веб-интерфейс для управления всеми аспектами проекта,
+включая симулятор СЗМ, анализатор изображений и наземную станцию SSTV.
 """
 
 import os
 import sys
-import atexit
 import json
+import time
 import threading
 import webbrowser
-from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Any, Optional
+from pathlib import Path
 
-# Add project root to Python path
-project_root = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(project_root))
+from flask import Flask, render_template, request, jsonify, send_file
+from flask_socketio import SocketIO, emit
+import eventlet
 
-# Импорты Flask и связанных библиотек
-try:
-    from flask import Flask, render_template, request, jsonify, redirect, url_for
-    from flask_socketio import SocketIO, emit
-except ImportError:
-    print("Установите необходимые зависимости:")
-    print("pip install flask flask-socketio")
-    sys.exit(1)
+# Добавляем путь к utils для импорта служебных модулей
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-# Импорты из нашего проекта
-from utils.config_manager import ConfigManager
-from utils.logger import setup_project_logging
-from utils.data_manager import DataManager
-from utils.analytics import ProjectAnalytics
-from utils.system_monitor import SystemMonitor
-from utils.cache_manager import CacheManager
+from utils.logger import Logger
 from utils.error_handler import ErrorHandler
+from utils.performance_monitor import PerformanceMonitor
+from utils.system_monitor import SystemMonitor
+from utils.config_manager import ConfigManager
+from utils.cache_manager import CacheManager
+from utils.data_manager import DataManager
 
-# Configuration paths
-CONFIG_PATH = project_root / "config" / "config.json"
-TEMPLATES_PATH = project_root / "templates"
 
 class WebDashboard:
     """
-    Класс веб-панели управления
-    Обеспечивает веб-интерфейс для управления проектом.
+    Класс веб-панели управления проектом
+    Предоставляет веб-интерфейс для управления всеми компонентами проекта
     """
-
-
-    def __init__(self, host: str = '127.0.0.1', port: int = 5000):
+    
+    def __init__(self, host: str = "127.0.0.1", port: int = 5000):
         """
-        Инициализирует веб-панель
-
+        Инициализация веб-панели
+        
         Args:
-            host: Хост для запуска сервера
-            port: Порт для запуска сервера
+            host: Хост сервера
+            port: Порт сервера
         """
         self.host = host
         self.port = port
-        self.app = Flask(__name__, template_folder=str(TEMPLATES_PATH))
-        self.socketio = SocketIO(self.app, cors_allowed_origins="*")
-
-        # Инициализация компонентов проекта
-        self.config_manager = ConfigManager(str(CONFIG_PATH))
-        self.logger = setup_project_logging(self.config_manager)
-        self.data_manager = DataManager()
-        self.analytics = ProjectAnalytics()
-        self.system_monitor = SystemMonitor()
-        self.cache_manager = CacheManager(str(project_root))
+        
+        # Инициализация Flask приложения
+        self.app = Flask(__name__)
+        self.app.config['SECRET_KEY'] = 'nanoprobe_simulation_lab_secret_key'
+        
+        # Инициализация SocketIO
+        self.socketio = SocketIO(
+            self.app,
+            cors_allowed_origins="*",
+            ping_timeout=60,
+            ping_interval=25
+        )
+        
+        # Инициализация служебных компонентов
+        self.logger = Logger("WebDashboard")
         self.error_handler = ErrorHandler()
-
-        # Состояние запущенных процессов
-        self.running_processes = {}
-
-        # Регистрируем автоматическую очистку кэша при завершении
-        atexit.register(self._auto_cleanup_on_exit)
-
-        # Настройка маршрутов
-        self._setup_routes()
-
-        # Настройка SocketIO
-        self._setup_socketio()
-
-
-    def _setup_routes(self):
-        """Настройка маршрутов Flask"""
-
+        self.performance_monitor = PerformanceMonitor()
+        self.system_monitor = SystemMonitor()
+        self.config_manager = ConfigManager()
+        self.cache_manager = CacheManager()
+        self.data_manager = DataManager()
+        
+        # Регистрация маршрутов
+        self._register_routes()
+        
+        # Регистрация обработчиков SocketIO
+        self._register_socket_handlers()
+        
+        self.logger.log_system_event("Веб-панель инициализирована", "INFO")
+    
+    def _register_routes(self):
+        """Регистрация HTTP маршрутов"""
+        
         @self.app.route('/')
         def index():
-            """Главная страница"""
-            return render_template('enhanced_dashboard.html')
-
-        @self.app.route('/api/status')
-        def api_status():
-            """API для получения статуса системы"""
+            """Главная страница веб-панели"""
+            return render_template('dashboard.html')
+        
+        @self.app.route('/api/system_info')
+        def api_system_info():
+            """API для получения информации о системе"""
             try:
-                status = {
-                    'project_info': self._get_project_info(),
-                    'system_metrics': self._get_system_metrics(),
-                    'cache_info': self._get_cache_info(),
-                    'running_processes': self._get_running_processes(),
-                    'timestamp': datetime.now().isoformat()
+                system_info = self.system_monitor.get_current_metrics()
+                
+                # Добавляем информацию о проекте
+                system_info["project_info"] = {
+                    "name": "Nanoprobe Simulation Lab",
+                    "version": "1.0.0",
+                    "status": "running",
+                    "uptime": self._get_uptime()
                 }
-                return jsonify(status)
+                
+                return jsonify(system_info)
             except Exception as e:
-                return jsonify({'error': str(e)}), 500
-
-        @self.app.route('/api/components')
-        def api_components():
-            """API для получения информации о компонентах"""
+                self.error_handler.log_error(f"Ошибка получения информации о системе: {e}")
+                return jsonify({"error": str(e)}), 500
+        
+        @self.app.route('/api/performance_data')
+        def api_performance_data():
+            """API для получения данных о производительности"""
             try:
-                components = self._get_components_info()
-                return jsonify(components)
+                performance_data = self.performance_monitor.get_current_metrics()
+                return jsonify(performance_data)
             except Exception as e:
-                return jsonify({'error': str(e)}), 500
-
-        @self.app.route('/api/actions/<action>', methods=['POST'])
-        def api_actions(action):
-            """API для выполнения действий"""
+                self.error_handler.log_error(f"Ошибка получения данных о производительности: {e}")
+                return jsonify({"error": str(e)}), 500
+        
+        @self.app.route('/api/component_status')
+        def api_component_status():
+            """API для получения статуса компонентов"""
             try:
-                data = request.get_json() or {}
-                result = self._execute_action(action, data)
-                return jsonify(result)
+                # Здесь будет информация о статусе всех компонентов проекта
+                component_status = {
+                    "spm_simulator": {"status": "ready", "processes": 0},
+                    "image_analyzer": {"status": "ready", "processes": 0},
+                    "sstv_station": {"status": "ready", "processes": 0},
+                    "web_dashboard": {"status": "running", "processes": 1}
+                }
+                return jsonify(component_status)
             except Exception as e:
-                return jsonify({'error': str(e)}), 500
-
+                self.error_handler.log_error(f"Ошибка получения статуса компонентов: {e}")
+                return jsonify({"error": str(e)}), 500
+        
         @self.app.route('/api/logs')
         def api_logs():
             """API для получения логов"""
             try:
-                limit = int(request.args.get('limit', 50))
-                logs = self._get_recent_logs(limit)
-                return jsonify(logs)
+                # Получаем последние N записей из логов
+                log_file = "logs/web_dashboard.log"
+                if os.path.exists(log_file):
+                    with open(log_file, 'r', encoding='utf-8') as f:
+                        lines = f.readlines()
+                        recent_logs = lines[-50:]  # Последние 50 строк
+                else:
+                    recent_logs = ["Лог-файл не найден"]
+                
+                return jsonify({"logs": recent_logs})
             except Exception as e:
-                return jsonify({'error': str(e)}), 500
-
-        @self.app.route('/api/system/info')
-        def api_system_info():
-            """API для получения информации о системе"""
+                self.error_handler.log_error(f"Ошибка получения логов: {e}")
+                return jsonify({"error": str(e)}), 500
+        
+        @self.app.route('/api/config', methods=['GET', 'POST'])
+        def api_config():
+            """API для управления конфигурацией"""
             try:
-                import platform
-                import sys
-                system_info = {
-                    'python_version': sys.version,
-                    'os_info': f"{platform.system()} {platform.release()}",
-                    'platform': platform.platform(),
-                    'architecture': platform.architecture()[0],
-                    'processor': platform.processor(),
-                    'project_path': str(project_root)
-                }
-                return jsonify(system_info)
+                if request.method == 'GET':
+                    # Возвращаем текущую конфигурацию
+                    config = self.config_manager.get_config()
+                    return jsonify(config)
+                elif request.method == 'POST':
+                    # Обновляем конфигурацию
+                    new_config = request.json
+                    self.config_manager.update_config(new_config)
+                    return jsonify({"status": "success", "message": "Конфигурация обновлена"})
             except Exception as e:
-                return jsonify({'error': str(e)}), 500
-
-        @self.app.route('/api/cache/analyze', methods=['POST'])
-        def api_cache_analyze():
-            """API для анализа кэша"""
+                self.error_handler.log_error(f"Ошибка управления конфигурацией: {e}")
+                return jsonify({"error": str(e)}), 500
+        
+        @self.app.route('/api/cache_stats')
+        def api_cache_stats():
+            """API для получения статистики кэша"""
             try:
-                stats = self.cache_manager.get_cache_statistics()
-                analysis = {
-                    'total_size_mb': stats.get('total_cache_size_mb', 0),
-                    'total_files': stats.get('total_files', 0),
-                    'directories_count': stats.get('cache_directories_count', 0),
-                    'auto_cleanup_enabled': stats.get('auto_cleanup_enabled', False),
-                    'cache_directories': stats.get('cache_directories', []),
-                    'recommendations': self._get_cache_recommendations(stats)
-                }
-                return jsonify({'success': True, 'analysis': analysis})
+                cache_stats = self.cache_manager.get_cache_statistics()
+                return jsonify(cache_stats)
             except Exception as e:
-                return jsonify({'success': False, 'error': str(e)}), 500
-
-        @self.app.route('/api/components/start_all', methods=['POST'])
-        def api_start_all_components():
-            """API для запуска всех компонентов"""
-            try:
-                # В реальной реализации здесь будет логика запуска всех компонентов
-                result = {
-                    'status': 'success',
-                    'message': 'Все компоненты запущены',
-                    'components_started': ['SPM Simulator', 'Surface Analyzer', 'SSTV Groundstation']
-                }
-                return jsonify({'success': True, 'result': result})
-            except Exception as e:
-                return jsonify({'success': False, 'error': str(e)}), 500
-
-        @self.app.route('/api/report/generate', methods=['POST'])
-        def api_generate_report():
-            """API для генерации отчета"""
-            try:
-                # Генерируем отчет
-                report_data = {
-                    'timestamp': datetime.now().isoformat(),
-                    'project_info': self._get_project_info(),
-                    'system_metrics': self._get_system_metrics(),
-                    'cache_info': self._get_cache_info(),
-                    'running_processes': self._get_running_processes()
-                }
-
-                # Сохраняем отчет в файл
-                report_path = project_root / 'reports' / f'report_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json'
-                report_path.parent.mkdir(exist_ok=True)
-
-                with open(report_path, 'w', encoding='utf-8') as f:
-                    json.dump(report_data, f, indent=2, ensure_ascii=False, default=str)
-
-                return jsonify({
-                    'success': True,
-                    'message': 'Отчет сгенерирован',
-                    'report_path': str(report_path)
-                })
-            except Exception as e:
-                return jsonify({'success': False, 'error': str(e)}), 500
-
-
-    def _get_cache_recommendations(self, stats: Dict[str, Any]) -> List[str]:
-        """Получает рекомендации по кэшу"""
-        recommendations = []
-
-        if stats.get('total_cache_size_mb', 0) > 100:
-            recommendations.append("Рекомендуется очистить кэш для освобождения места")
-
-        if stats.get('total_files', 0) > 1000:
-            recommendations.append("Слишком много файлов в кэше, рекомендуется очистка")
-
-        if not stats.get('auto_cleanup_enabled', False):
-            recommendations.append("Рекомендуется включить автоматическую очистку кэша")
-
-        if len(recommendations) == 0:
-            recommendations.append("Кэш находится в хорошем состоянии")
-
-        return recommendations
-
-
-    def _setup_socketio(self):
-        """Настройка SocketIO для реального времени"""
-
+                self.error_handler.log_error(f"Ошибка получения статистики кэша: {e}")
+                return jsonify({"error": str(e)}), 500
+    
+    def _register_socket_handlers(self):
+        """Регистрация обработчиков SocketIO событий"""
+        
         @self.socketio.on('connect')
         def handle_connect():
             """Обработка подключения клиента"""
-            print("Клиент подключен к веб-панели")
-            emit('status_update', {'message': 'Подключено к серверу'})
-
+            self.logger.log_system_event("Клиент подключен к веб-панели", "INFO")
+            emit('connection_response', {'data': 'Connected to Nanoprobe Simulation Lab Dashboard'})
+        
         @self.socketio.on('disconnect')
         def handle_disconnect():
             """Обработка отключения клиента"""
-            print("Клиент отключен от веб-панели")
-
-        @self.socketio.on('request_update')
-        def handle_update_request():
-            """Обработка запроса на обновление данных"""
-            status = self._get_realtime_status()
-            emit('status_update', status)
-
-
-    def _get_project_info(self) -> Dict[str, Any]:
-        """Получает информацию о проекте"""
-        try:
-            config = self.config_manager.config
-            return {
-                'name': config.get('project', {}).get('name', 'Nanoprobe Simulation Lab'),
-                'version': config.get('project', {}).get('version', '1.0.0'),
-                'description': config.get('project', {}).get('description', ''),
-                'author': config.get('project', {}).get('author', ''),
-                'components_count': len(config.get('components', {})),
-                'license': config.get('license', {}).get('type', 'Proprietary')
-            }
-        except Exception as e:
-            self.error_handler.log_error(f"Ошибка получения информации о проекте: {e}")
-            return {'error': str(e)}
-
-
-    def _get_system_metrics(self) -> Dict[str, Any]:
-        """Получает системные метрики"""
-        try:
-            import platform
-            metrics = self.system_monitor.get_current_metrics()
-            return {
-                'cpu_percent': metrics.get('cpu_percent', 0),
-                'memory_percent': metrics.get('memory_percent', 0),
-                'disk_usage': metrics.get('disk_usage', 0),
-                'uptime': metrics.get('uptime', 0),
-                'platform': platform.platform(),
-                'python_version': platform.python_version()
-            }
-        except Exception as e:
-            self.error_handler.log_error(f"Ошибка получения системных метрик: {e}")
-            return {'error': str(e)}
-
-
-    def _get_cache_info(self) -> Dict[str, Any]:
-        """Получает информацию о кэше"""
-        try:
-            stats = self.cache_manager.get_cache_statistics()
-            return {
-                'total_size_mb': stats.get('total_cache_size_mb', 0),
-                'total_files': stats.get('total_files', 0),
-                'directories_count': stats.get('cache_directories_count', 0),
-                'auto_cleanup_enabled': stats.get('auto_cleanup_enabled', False)
-            }
-        except Exception as e:
-            self.error_handler.log_error(f"Ошибка получения информации о кэше: {e}")
-            return {'error': str(e)}
-
-
-    def _get_running_processes(self) -> Dict[str, Any]:
-        """Получает информацию о запущенных процессах"""
-        return self.running_processes
-
-
-    def _get_components_info(self) -> List[Dict[str, Any]]:
-        """Получает информацию о компонентах проекта"""
-        try:
-            config = self.config_manager.config
-            components = []
-
-            for name, info in config.get('components', {}).items():
-                components.append({
-                    'name': info.get('name', name),
-                    'description': info.get('description', ''),
-                    'language': info.get('language', ''),
-                    'path': info.get('path', ''),
-                    'status': 'available'  # В реальной реализации можно проверять доступность
-                })
-
-            return components
-        except Exception as e:
-            self.error_handler.log_error(f"Ошибка получения информации о компонентах: {e}")
-            return []
-
-
-    def _execute_action(self, action: str, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Выполняет действие"""
-        try:
-            if action == 'start_component':
-                component = data.get('component')
-                if component:
-                    result = self._start_component(component)
-                    return {'success': True, 'message': f'Компонент {component} запущен', 'result': result}
+            self.logger.log_system_event("Клиент отключен от веб-панели", "INFO")
+        
+        @self.socketio.on('request_system_update')
+        def handle_system_update_request():
+            """Обработка запроса на обновление информации о системе"""
+            try:
+                system_info = self.system_monitor.get_current_metrics()
+                system_info["project_info"] = {
+                    "name": "Nanoprobe Simulation Lab",
+                    "version": "1.0.0",
+                    "status": "running",
+                    "uptime": self._get_uptime()
+                }
+                emit('system_update', system_info)
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка отправки обновления системы: {e}")
+        
+        @self.socketio.on('request_performance_update')
+        def handle_performance_update_request():
+            """Обработка запроса на обновление информации о производительности"""
+            try:
+                performance_data = self.performance_monitor.get_current_metrics()
+                emit('performance_update', performance_data)
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка отправки обновления производительности: {e}")
+        
+        @self.socketio.on('execute_command')
+        def handle_execute_command(data):
+            """Обработка команды выполнения"""
+            try:
+                command = data.get('command', '')
+                params = data.get('params', {})
+                
+                # Логика выполнения команд
+                if command == 'start_simulation':
+                    result = self._execute_start_simulation(params)
+                elif command == 'stop_simulation':
+                    result = self._execute_stop_simulation(params)
+                elif command == 'analyze_image':
+                    result = self._execute_analyze_image(params)
+                elif command == 'cleanup_cache':
+                    result = self._execute_cleanup_cache(params)
                 else:
-                    return {'success': False, 'error': 'Не указан компонент'}
-
-            elif action == 'stop_component':
-                component = data.get('component')
-                if component:
-                    result = self._stop_component(component)
-                    return {'success': True, 'message': f'Компонент {component} остановлен', 'result': result}
-                else:
-                    return {'success': False, 'error': 'Не указан компонент'}
-
-            elif action == 'clean_cache':
-                result = self.cache_manager.cleanup_cache()
-                return {'success': True, 'message': 'Кэш очищен', 'result': result}
-
-            elif action == 'get_analytics':
-                result = self.analytics.generate_project_report()
-                return {'success': True, 'message': 'Аналитика получена', 'result': result}
-
-            else:
-                return {'success': False, 'error': f'Неизвестное действие: {action}'}
-
-        except Exception as e:
-            self.error_handler.log_error(f"Ошибка выполнения действия {action}: {e}")
-            return {'success': False, 'error': str(e)}
-
-
-    def _start_component(self, component_name: str) -> Dict[str, Any]:
-        """Запускает компонент"""
-        # В реальной реализации здесь будет код запуска компонентов
-        self.running_processes[component_name] = {
-            'status': 'running',
-            'start_time': datetime.now().isoformat(),
-            'pid': os.getpid()  # В реальности будет PID запущенного процесса
-        }
-
-        self.logger.log_general_activity(f"Запуск компонента: {component_name}", "INFO")
-        return {'status': 'started', 'component': component_name}
-
-
-    def _stop_component(self, component_name: str) -> Dict[str, Any]:
-        """Останавливает компонент"""
-        if component_name in self.running_processes:
-            del self.running_processes[component_name]
-            self.logger.log_general_activity(f"Остановка компонента: {component_name}", "INFO")
-            return {'status': 'stopped', 'component': component_name}
-        else:
-            return {'status': 'not_running', 'component': component_name}
-
-
-    def _get_recent_logs(self, limit: int = 50) -> List[Dict[str, Any]]:
-        """Получает последние записи логов"""
-        # В реальной реализации будет чтение из файлов логов
-        return [
-            {
-                'timestamp': datetime.now().isoformat(),
-                'level': 'INFO',
-                'component': 'WebDashboard',
-                'message': 'Веб-панель запущена'
-            }
-        ][:limit]
-
-
-    def _get_realtime_status(self) -> Dict[str, Any]:
-        """Получает статус в реальном времени"""
-        return {
-            'system_metrics': self._get_system_metrics(),
-            'cache_info': self._get_cache_info(),
-            'running_processes': self._get_running_processes(),
-            'timestamp': datetime.now().isoformat()
-        }
-
-
-    def _auto_cleanup_on_exit(self):
-        """Внутренняя функция автоматической очистки при завершении"""
-        print("\n" + "="*50)
-        print("Автоматическая очистка кэша через WebDashboard...")
+                    result = {"status": "error", "message": f"Неизвестная команда: {command}"}
+                
+                emit('command_result', result)
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка выполнения команды: {e}")
+                emit('command_result', {"status": "error", "message": str(e)})
+    
+    def _get_uptime(self) -> str:
+        """Получение времени работы системы"""
+        # В реальной реализации это будет вычисляться с момента запуска
+        start_time = getattr(self, '_start_time', datetime.now())
+        uptime = datetime.now() - start_time
+        return str(uptime).split('.')[0]  # Убираем микросекунды
+    
+    def _execute_start_simulation(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Выполнение команды запуска симуляции"""
         try:
-            # Останавливаем SocketIO сервер корректно
-            if hasattr(self, 'socketio'):
-                self.socketio.stop()
-
-            # Выполняем очистку кэша
-            stats = self.cache_manager.get_cache_statistics()
-            print(f"Текущий размер кэша: {stats['total_cache_size_mb']} MB")
-
-            result = self.cache_manager.auto_cleanup()
-
-            if "status" in result:
-                print(f"Статус: {result['status']}")
-            else:
-                print(f"Удалено файлов: {result['deleted_files']}")
-                print(f"Освобождено места: {result['freed_space_mb']} MB")
-
-            # Оптимизация памяти
-            memory_result = self.cache_manager.optimize_memory_usage()
-            print(f"Освобождено памяти: {memory_result['memory_freed_mb']} MB")
-
-            print("✓ Автоматическая очистка кэша выполнена успешно")
+            # Здесь будет логика запуска симуляции
+            simulation_id = f"sim_{int(time.time())}"
+            self.logger.log_system_event(f"Запуск симуляции: {simulation_id}", "INFO")
+            
+            return {
+                "status": "success",
+                "message": f"Симуляция запущена: {simulation_id}",
+                "simulation_id": simulation_id
+            }
         except Exception as e:
-            print(f"❌ Ошибка при автоматической очистке кэша: {e}")
-        print("="*50)
-
-
+            self.error_handler.log_error(f"Ошибка запуска симуляции: {e}")
+            return {"status": "error", "message": str(e)}
+    
+    def _execute_stop_simulation(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Выполнение команды остановки симуляции"""
+        try:
+            simulation_id = params.get('simulation_id', '')
+            self.logger.log_system_event(f"Остановка симуляции: {simulation_id}", "INFO")
+            
+            return {
+                "status": "success",
+                "message": f"Симуляция остановлена: {simulation_id}"
+            }
+        except Exception as e:
+            self.error_handler.log_error(f"Ошибка остановки симуляции: {e}")
+            return {"status": "error", "message": str(e)}
+    
+    def _execute_analyze_image(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Выполнение команды анализа изображения"""
+        try:
+            image_path = params.get('image_path', '')
+            self.logger.log_system_event(f"Анализ изображения: {image_path}", "INFO")
+            
+            # Здесь будет логика анализа изображения
+            return {
+                "status": "success",
+                "message": f"Изображение проанализировано: {image_path}",
+                "results": {"analysis_complete": True}
+            }
+        except Exception as e:
+            self.error_handler.log_error(f"Ошибка анализа изображения: {e}")
+            return {"status": "error", "message": str(e)}
+    
+    def _execute_cleanup_cache(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Выполнение команды очистки кэша"""
+        try:
+            force = params.get('force', False)
+            self.logger.log_system_event("Запуск очистки кэша", "INFO")
+            
+            cleanup_result = self.cache_manager.cleanup_cache(force=force)
+            
+            return {
+                "status": "success",
+                "message": "Кэш очищен",
+                "cleanup_result": cleanup_result
+            }
+        except Exception as e:
+            self.error_handler.log_error(f"Ошибка очистки кэша: {e}")
+            return {"status": "error", "message": str(e)}
+    
     def start_server(self, open_browser: bool = True):
         """
-        Запускает веб-сервер
-
+        Запуск веб-сервера
+        
         Args:
-            open_browser: Открыть браузер автоматически
+            open_browser: Открывать ли браузер автоматически
         """
-        print("="*60)
-        print("           ВЕБ-ПАНЕЛЬ УПРАВЛЕНИЯ")
-        print("    Лаборатория моделирования нанозонда")
+        self._start_time = datetime.now()
+        self.logger.log_system_event(f"Запуск веб-панели на http://{self.host}:{self.port}", "INFO")
+        
         print("="*60)
         print(f"Сервер запущен на http://{self.host}:{self.port}")
         print("Нажмите Ctrl+C для остановки сервера")
         print("="*60)
-
+        
         # Открываем браузер в отдельном потоке
         if open_browser:
             def open_browser_func():
-    """TODO: Add description"""
-
+                """Open browser in a separate thread"""
                 import time
                 time.sleep(2)  # Ждем запуска сервера
                 webbrowser.open(f"http://{self.host}:{self.port}")
@@ -479,6 +344,7 @@ class WebDashboard:
             self.error_handler.log_error(f"Ошибка запуска веб-панели: {e}")
             print(f"Ошибка: {e}")
 
+
 def main():
     """Главная функция запуска веб-панели"""
     import argparse
@@ -494,6 +360,6 @@ def main():
     dashboard = WebDashboard(host=args.host, port=args.port)
     dashboard.start_server(open_browser=not args.no_browser)
 
+
 if __name__ == "__main__":
     main()
-
