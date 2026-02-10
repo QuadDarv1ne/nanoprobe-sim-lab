@@ -214,11 +214,38 @@ if __name__ == "__main__":
             print(f"Ошибка при сборке C++ компонентов: {e}")
             print("Убедитесь, что у вас установлены cmake и компилятор C++")
     
+    def clean_cache(self):
+        """Очищает кэш проекта"""
+        try:
+            from utils.cache_manager import CacheManager
+            cache_manager = CacheManager()
+            
+            print("Очистка кэша проекта...")
+            stats = cache_manager.get_cache_statistics()
+            print(f"Текущий размер кэша: {stats['total_cache_size_mb']} MB")
+            
+            result = cache_manager.auto_cleanup()
+            
+            if "status" in result:
+                print(f"Результат: {result['status']}")
+            else:
+                print(f"Удалено файлов: {result['deleted_files']}")
+                print(f"Освобождено места: {result['freed_space_mb']} MB")
+            
+            # Оптимизация памяти
+            memory_result = cache_manager.optimize_memory_usage()
+            print(f"Освобождено памяти: {memory_result['memory_freed_mb']} MB")
+            
+        except ImportError:
+            print("Модуль cache_manager не найден")
+        except Exception as e:
+            print(f"Ошибка при очистке кэша: {e}")
+    
     def show_project_info(self):
         """Показывает информацию о проекте"""
         project_info = self.config.get('project', {})
         
-        print("\\n" + "="*60)
+        print("\n" + "="*60)
         print(f"ИНФОРМАЦИЯ О ПРОЕКТЕ: {project_info.get('name', 'Nanoprobe Simulation Lab')}")
         print("="*60)
         print(f"Версия: {project_info.get('version', '1.0.0')}")
@@ -226,13 +253,13 @@ if __name__ == "__main__":
         print(f"Автор: {project_info.get('author', 'Не указан')}")
         print(f"Авторские права: {project_info.get('copyright', 'Не указаны')}")
         
-        print("\\nКОМПОНЕНТЫ ПРОЕКТА:")
+        print("\nКОМПОНЕНТЫ ПРОЕКТА:")
         for name, info in self.components.items():
             print(f"  - {info['name']}: {info['description']}")
             print(f"    Путь: {info['path']}")
             print(f"    Язык: {info['language']}")
         
-        print("\\nЛИЦЕНЗИЯ:")
+        print("\nЛИЦЕНЗИЯ:")
         license_info = self.config.get('license', {})
         print(f"  Тип: {license_info.get('type', 'Не указана')}")
         print(f"  Файл: {license_info.get('file', 'Не указан')}")
@@ -248,7 +275,7 @@ if __name__ == "__main__":
     
     def show_menu(self):
         """Отображает главное меню проекта"""
-        print("\\n" + "="*50)
+        print("\n" + "="*50)
         print("    ЛАБОРАТОРИЯ МОДЕЛИРОВАНИЯ НАНОЗОНДА")
         print("         Менеджер проекта")
         print("="*50)
@@ -258,7 +285,8 @@ if __name__ == "__main__":
         print("  3. Запустить анализатор изображений")
         print("  4. Запустить наземную станцию SSTV")
         print("  5. Собрать C++ компоненты")
-        print("  6. Показать информацию о проекте")
+        print("  6. Очистить кэш проекта")
+        print("  7. Показать информацию о проекте")
         print("  0. Выход")
         print("="*50)
     
@@ -267,7 +295,7 @@ if __name__ == "__main__":
         while True:
             self.show_menu()
             try:
-                choice = input("\\nВыберите действие (0-6): ").strip()
+                choice = input("\nВыберите действие (0-7): ").strip()
                 
                 if choice == '1':
                     self.run_spm_simulator(use_python=True)
@@ -280,18 +308,20 @@ if __name__ == "__main__":
                 elif choice == '5':
                     self.build_cpp_components()
                 elif choice == '6':
+                    self.clean_cache()
+                elif choice == '7':
                     self.show_project_info()
                 elif choice == '0':
-                    print("\\nСпасибо за использование Лаборатории моделирования нанозонда!")
+                    print("\nСпасибо за использование Лаборатории моделирования нанозонда!")
                     break
                 else:
-                    print("\\nНеверный выбор. Пожалуйста, выберите от 0 до 6.")
+                    print("\nНеверный выбор. Пожалуйста, выберите от 0 до 7.")
                     
             except KeyboardInterrupt:
-                print("\\n\\nРабота программы прервана пользователем.")
+                print("\n\nРабота программы прервана пользователем.")
                 break
             except Exception as e:
-                print(f"\\nОшибка: {str(e)}")
+                print(f"\nОшибка: {str(e)}")
 
 
 def main():
@@ -312,11 +342,13 @@ def main():
             manager.run_sstv_station()
         elif command == 'build':
             manager.build_cpp_components()
+        elif command == 'clean-cache':
+            manager.clean_cache()
         elif command == 'info':
             manager.show_project_info()
         else:
             print(f"Неизвестная команда: {command}")
-            print("Доступные команды: spm-python, spm-cpp, analyzer, sstv, build, info")
+            print("Доступные команды: spm-python, spm-cpp, analyzer, sstv, build, clean-cache, info")
     else:
         # Запускаем интерактивный режим
         manager.run_interactive()

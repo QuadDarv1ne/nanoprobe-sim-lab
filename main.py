@@ -1,128 +1,175 @@
 #!/usr/bin/env python3
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Главный входной скрипт для Лаборатории моделирования нанозонда
-Этот скрипт демонстрирует интеграцию всех трех компонентов:
-1. Симулятор аппаратного обеспечения СЗМ на C++
-2. Анализатор изображений поверхности на Python
-3. Наземная станция SSTV на Python/C++
+Главная консольная утилита проекта Лаборатория моделирования нанозонда
+Этот скрипт предоставляет интерактивный интерфейс для запуска 
+всех компонентов проекта и управления ими.
 """
 
-import os
 import sys
-import argparse
+import os
 from datetime import datetime
+from pathlib import Path
 
-def print_welcome():
-    """Отображает приветственное сообщение и обзор проекта"""
-    print("=" * 80)
+
+def show_header():
+    """Отображает заголовок программы"""
+    print("="*80)
     print("           ЛАБОРАТОРИЯ МОДЕЛИРОВАНИЯ НАНОЗОНДА")
     print("        Nanoprobe Simulation Lab - Main Console")
-    print("=" * 80)
+    print("="*80)
     print(f"Время запуска: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print()
+
+
+def show_project_overview():
+    """Отображает обзор проекта"""
     print("Проект включает три взаимосвязанных модуля:")
     print("  1. Симулятор аппаратного обеспечения СЗМ на C++")
     print("  2. Анализатор изображений поверхности на Python")
     print("  3. Наземная станция SSTV на Python/C++")
     print()
 
+
 def show_menu():
-    """Отображает основные опции меню"""
+    """Отображает главное меню"""
     print("ДОСТУПНЫЕ ОПЕРАЦИИ:")
     print("  1. Запустить симулятор СЗМ (C++)")
     print("  2. Запустить анализатор изображений (Python)")
     print("  3. Запустить наземную станцию SSTV (Python/C++)")
     print("  4. Показать информацию о проекте")
     print("  5. Показать текущую лицензию")
+    print("  6. Очистить кэш проекта")
     print("  0. Выход")
     print()
 
+
 def run_spm_simulator():
-    """Запускает симулятор аппаратного обеспечения СЗМ на C++"""
-    print("\n--- ЗАПУСК СИМУЛЯТОРА СЗМ ---")
-    print("Для запуска симулятора СЗМ выполните следующие команды:")
-    print("  cd cpp-spm-hardware-sim")
-    print("  mkdir build && cd build")
-    print("  cmake .. && make")
-    print("  ./spm-simulator")
-    print("\nСимулятор позволяет:")
-    print("- Моделировать сканирование поверхности зондом")
-    print("- Генерировать топографические данные")
-    print("- Визуализировать результаты сканирования")
-    input("\nНажмите Enter для продолжения...")
+    """Запускает симулятор СЗМ"""
+    print("Запуск симулятора СЗМ...")
+    try:
+        # Пытаемся запустить C++ версию
+        cpp_path = Path("cpp-spm-hardware-sim") / "build" / "spm-simulator"
+        if cpp_path.exists():
+            os.system(str(cpp_path))
+        else:
+            print("C++ версия не найдена. Попробуйте Python-реализацию...")
+            # Запускаем Python-реализацию
+            python_spm = Path("cpp-spm-hardware-sim") / "src" / "spm_simulator.py"
+            if python_spm.exists():
+                os.system(f"{sys.executable} {python_spm}")
+            else:
+                print("Файлы симулятора СЗМ не найдены")
+    except Exception as e:
+        print(f"Ошибка при запуске симулятора СЗМ: {e}")
+
 
 def run_surface_analyzer():
-    """Запускает анализатор изображений поверхности на Python"""
-    print("\n--- ЗАПУСК АНАЛИЗАТОРА ИЗОБРАЖЕНИЙ ---")
-    print("Для запуска анализатора изображений выполните следующие команды:")
-    print("  cd py-surface-image-analyzer")
-    print("  pip install -r requirements.txt")
-    print("  python src/main.py")
-    print("\nАнализатор позволяет:")
-    print("- Загружать и обрабатывать изображения поверхности")
-    print("- Применять фильтры для улучшения качества изображения")
-    print("- Анализировать шероховатость и дефекты поверхности")
-    print("- Визуализировать 3D-модели поверхности")
-    input("\nНажмите Enter для продолжения...")
+    """Запускает анализатор изображений"""
+    print("Запуск анализатора изображений поверхности...")
+    try:
+        analyzer_path = Path("py-surface-image-analyzer") / "src" / "main.py"
+        if analyzer_path.exists():
+            os.system(f"{sys.executable} {analyzer_path}")
+        else:
+            print("Файл анализатора изображений не найден")
+    except Exception as e:
+        print(f"Ошибка при запуске анализатора изображений: {e}")
+
 
 def run_sstv_groundstation():
-    """Запускает наземную станцию SSTV на Python/C++"""
-    print("\n--- ЗАПУСК НАЗЕМНОЙ СТАНЦИИ SSTV ---")
-    print("Для запуска наземной станции SSTV выполните следующие команды:")
-    print("  cd py-sstv-groundstation")
-    print("  pip install -r requirements.txt")
-    print("  python src/main.py")
-    print("\nНаземная станция позволяет:")
-    print("- Принимать сигналы с реальных спутников")
-    print("- Декодировать SSTV-сигналы в изображения")
-    print("- Сохранять и анализировать полученные изображения")
-    input("\nНажмите Enter для продолжения...")
+    """Запускает наземную станцию SSTV"""
+    print("Запуск наземной станции SSTV...")
+    try:
+        station_path = Path("py-sstv-groundstation") / "src" / "main.py"
+        if station_path.exists():
+            os.system(f"{sys.executable} {station_path}")
+        else:
+            print("Файл наземной станции SSTV не найден")
+    except Exception as e:
+        print(f"Ошибка при запуске наземной станции SSTV: {e}")
+
 
 def show_project_info():
-    """Показывает подробную информацию о проекте"""
-    print("\n--- ИНФОРМАЦИЯ О ПРОЕКТЕ ---")
+    """Показывает информацию о проекте"""
+    print("ИНФОРМАЦИЯ О ПРОЕКТЕ:")
+    print("-" * 40)
     print("Название: Лаборатория моделирования нанозонда")
-    print("Описание: Комплекс инструментов для моделирования наноразмерных измерительных систем")
-    print("         и космических микроскопических систем.")
-    print()
-    print("Компоненты проекта:")
-    print("  1. Симулятор СЗМ на C++:")
-    print("     - Моделирует работу сканирующего зондового микроскопа")
-    print("     - Обеспечивает управление зондом и сбор топографических данных")
-    print()
-    print("  2. Анализатор изображений на Python:")
-    print("     - Обрабатывает и анализирует изображения поверхности")
-    print("     - Применяет фильтры и визуализирует 3D-модели")
-    print()
-    print("  3. Наземная станция SSTV на Python/C++:")
-    print("     - Принимает и декодирует сигналы со спутников")
-    print("     - Работает с реальными космическими данными")
-    print()
-    print("Цель проекта: Образовательные и исследовательские цели в нанотехнологиях")
-    print("               и радионауке.")
-    input("\nНажмите Enter для продолжения...")
+    print("Версия: 1.0.0")
+    print("Описание: Комплексный проект для моделирования")
+    print("          сканирующей зондовой микроскопии")
+    print("          и обработки изображений поверхности")
+    print("Автор: Школа программирования Maestro7IT")
+    print("Лицензия: Проприетарная (ограниченные права)")
+    print("-" * 40)
+
 
 def show_license():
-    """Показывает лицензию проекта"""
-    print("\n--- ЛИЦЕНЗИЯ НА ИСПОЛЬЗОВАНИЕ ПРОГРАММНОГО ОБЕСПЕЧЕНИЯ ---")
+    """Показывает информацию о лицензии"""
+    print("ИНФОРМАЦИЯ О ЛИЦЕНЗИИ:")
+    print("-" * 40)
+    print("Лицензия: Проприетарная лицензия")
+    print("Владелец: Школа программирования Maestro7IT")
+    print("Все права защищены")
+    print()
+    print("ОГРАНИЧЕННЫЕ ПРАВА:")
+    print("• Использование в образовательных целях")
+    print("• Использование в научных исследованиях")
+    print("• Использование в некоммерческих проектах")
+    print("• Модификация исходного кода")
+    print("• Распространение в неизменном виде")
+    print()
+    print("ЗАПРЕЩЕНО:")
+    print("• Коммерческое использование")
+    print("• Распространение с удалением авторских прав")
+    print("• Использование в военных целях")
+    print("• Использование в проектах с закрытым исходным кодом")
+    print("-" * 40)
+
+
+def clean_project_cache():
+    """Очищает кэш проекта"""
+    print("Очистка кэша проекта...")
     try:
-        with open('LICENCE', 'r', encoding='utf-8') as f:
-            print(f.read())
-    except FileNotFoundError:
-        print("Файл лицензии не найден.")
-    input("\nНажмите Enter для продолжения...")
+        from utils.cache_manager import CacheManager
+        cache_manager = CacheManager()
+        
+        # Показываем текущую статистику
+        stats = cache_manager.get_cache_statistics()
+        print(f"Текущий размер кэша: {stats['total_cache_size_mb']} MB")
+        print(f"Всего файлов в кэше: {stats['total_files']}")
+        
+        # Выполняем очистку
+        result = cache_manager.auto_cleanup()
+        
+        if "status" in result:
+            print(f"Статус: {result['status']}")
+        else:
+            print(f"Удалено файлов: {result['deleted_files']}")
+            print(f"Освобождено места: {result['freed_space_mb']} MB")
+        
+        # Оптимизация памяти
+        memory_result = cache_manager.optimize_memory_usage()
+        print(f"Освобождено памяти: {memory_result['memory_freed_mb']} MB")
+        
+        print("Очистка кэша завершена успешно!")
+        
+    except ImportError:
+        print("Модуль управления кэшем не найден")
+        print("Установите необходимые зависимости или создайте модуль cache_manager")
+    except Exception as e:
+        print(f"Ошибка при очистке кэша: {e}")
+
 
 def main():
-    """Главная функция для запуска консоли Лаборатории моделирования нанозонда"""
-    print_welcome()
+    """Главная функция программы"""
+    show_header()
+    show_project_overview()
     
     while True:
         show_menu()
-        
         try:
-            choice = input("Выберите действие (0-5): ").strip()
+            choice = input("Выберите действие (0-6): ").strip()
             
             if choice == '1':
                 run_spm_simulator()
@@ -134,19 +181,21 @@ def main():
                 show_project_info()
             elif choice == '5':
                 show_license()
+            elif choice == '6':
+                clean_project_cache()
             elif choice == '0':
                 print("\nСпасибо за использование Лаборатории моделирования нанозонда")
-                print("До новых встреч :MD")
+                print("До новых встреч :)")
                 break
             else:
-                print("\nНеверный выбор. Пожалуйста, выберите от 0 до 5.")
+                print("Неверный выбор. Пожалуйста, выберите от 0 до 6.")
                 
         except KeyboardInterrupt:
             print("\n\nРабота программы прервана пользователем.")
             break
         except Exception as e:
-            print(f"\nОшибка: {str(e)}")
-            continue
+            print(f"Произошла ошибка: {e}")
+
 
 if __name__ == "__main__":
     main()

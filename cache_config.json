@@ -1,0 +1,22 @@
+{
+  "cache_directories": [
+    "temp",
+    "cache",
+    ".cache",
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache",
+    "logs/cache",
+    "output/cache"
+  ],
+  "max_age_days": 7,
+  "max_size_mb": 100,
+  "auto_cleanup": true,
+  "cleanup_schedule": "daily",
+  "excluded_patterns": [
+    "*.py",
+    "*.json",
+    "*.txt",
+    "config.*"
+  ]
+}
