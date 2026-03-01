@@ -8,7 +8,6 @@
 """
 
 import json
-import yaml
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Union
 from datetime import datetime
@@ -73,58 +72,6 @@ class ConfigValidator:
                 'valid': False,
                 'config_path': config_path,
                 'errors': [f"JSON decode error: {str(e)}"],
-                'timestamp': datetime.now().isoformat()
-            }
-        except Exception as e:
-            return {
-                'valid': False,
-                'config_path': config_path,
-                'errors': [f"Validation error: {str(e)}"],
-                'timestamp': datetime.now().isoformat()
-            }
-
-
-    def validate_yaml_config(self, config_path: str, schema: Optional[Dict] = None) -> Dict[str, Any]:
-        """
-        Валидирует YAML конфигурационный файл
-
-        Args:
-            config_path: Путь к конфигурационному файлу
-            schema: JSON схема для валидации (если None, используется схема по умолчанию)
-
-        Returns:
-            Словарь с результатами валидации
-        """
-        try:
-            with open(config_path, 'r', encoding='utf-8') as f:
-                config = yaml.safe_load(f)
-
-            # Используем схему по умолчанию, если не предоставлена
-            if schema is None:
-                schema = self.get_default_config_schema()
-
-            # Создаем валидатор
-            validator = Draft7Validator(schema)
-
-            # Проверяем конфигурацию
-            errors = list(validator.iter_errors(config))
-            valid = len(errors) == 0
-
-            result = {
-                'valid': valid,
-                'config_path': config_path,
-                'errors': [str(error) for error in errors],
-                'config': config,
-                'timestamp': datetime.now().isoformat()
-            }
-
-            return result
-
-        except yaml.YAMLError as e:
-            return {
-                'valid': False,
-                'config_path': config_path,
-                'errors': [f"YAML parse error: {str(e)}"],
                 'timestamp': datetime.now().isoformat()
             }
         except Exception as e:

@@ -8,7 +8,6 @@
 """
 
 import json
-import yaml
 import toml
 from pathlib import Path
 from typing import Dict, Any, Optional, Union, List
@@ -72,9 +71,6 @@ class ConfigOptimizer:
             if self.config_path.suffix.lower() == '.json':
                 with open(self.config_path, 'r', encoding='utf-8') as f:
                     self.original_config = json.load(f)
-            elif self.config_path.suffix.lower() in ['.yml', '.yaml']:
-                with open(self.config_path, 'r', encoding='utf-8') as f:
-                    self.original_config = yaml.safe_load(f)
             elif self.config_path.suffix.lower() == '.toml':
                 with open(self.config_path, 'r', encoding='utf-8') as f:
                     self.original_config = toml.load(f)
@@ -83,7 +79,6 @@ class ConfigOptimizer:
                 config.read(self.config_path, encoding='utf-8')
                 self.original_config = {section: dict(config[section]) for section in config.sections()}
             else:
-                # Пытаемся определить формат по содержимому
                 with open(self.config_path, 'r', encoding='utf-8') as f:
                     content = f.read()
                     if content.strip().startswith('{'):
@@ -93,8 +88,8 @@ class ConfigOptimizer:
                         config.read_string(content)
                         self.original_config = {section: dict(config[section]) for section in config.sections()}
                     else:
-                        # Предполагаем YAML
-                        self.original_config = yaml.safe_load(content)
+                        print("Неподдерживаемый формат конфигурации")
+                        return False
 
             self.optimized_config = copy.deepcopy(self.original_config)
             return True
@@ -124,9 +119,6 @@ class ConfigOptimizer:
             if output_path.suffix.lower() == '.json':
                 with open(output_path, 'w', encoding='utf-8') as f:
                     json.dump(config, f, indent=2, ensure_ascii=False, default=str)
-            elif output_path.suffix.lower() in ['.yml', '.yaml']:
-                with open(output_path, 'w', encoding='utf-8') as f:
-                    yaml.dump(config, f, default_flow_style=False, allow_unicode=True)
             elif output_path.suffix.lower() == '.toml':
                 with open(output_path, 'w', encoding='utf-8') as f:
                     toml.dump(config, f)
@@ -137,7 +129,6 @@ class ConfigOptimizer:
                 with open(output_path, 'w', encoding='utf-8') as f:
                     config_parser.write(f)
             else:
-                # По умолчанию сохраняем как JSON
                 with open(output_path, 'w', encoding='utf-8') as f:
                     json.dump(config, f, indent=2, ensure_ascii=False, default=str)
 
