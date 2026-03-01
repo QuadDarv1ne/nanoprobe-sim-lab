@@ -1,0 +1,85 @@
+{
+  "project": {
+    "name": "Nanoprobe Simulation Lab",
+    "version": "1.0.0",
+    "description": "Комплекс инструментов для моделирования наноразмерных измерительных систем",
+    "author": "Школа программирования Maestro7IT",
+    "copyright": "все права защищены"
+  },
+  "components": {
+    "spm_simulator": {
+      "name": "Симулятор СЗМ",
+      "path": "cpp-spm-hardware-sim",
+      "language": "C++/Python",
+      "enabled": true,
+      "config": {
+        "surface_size": [
+          50,
+          50
+        ],
+        "probe_scan_speed": 0.1,
+        "output_format": "txt"
+      }
+    },
+    "surface_analyzer": {
+      "name": "Анализатор изображений",
+      "path": "py-surface-image-analyzer",
+      "language": "Python",
+      "enabled": true,
+      "config": {
+        "supported_formats": [
+          ".jpg",
+          ".png",
+          ".bmp"
+        ],
+        "default_filter": "gaussian",
+        "analysis_metrics": [
+          "roughness",
+          "defect_detection"
+        ]
+      }
+    },
+    "sstv_groundstation": {
+      "name": "Наземная станция SSTV",
+      "path": "py-sstv-groundstation",
+      "language": "Python/C++",
+      "enabled": true,
+      "config": {
+        "supported_modes": [
+          "MartinM1",
+          "ScottieS1"
+        ],
+        "sample_rate": 44100,
+        "frequency_range": [
+          144000000,
+          148000000
+        ]
+      }
+    }
+  },
+  "paths": {
+    "data_dir": "data",
+    "output_dir": "output",
+    "temp_dir": "temp",
+    "log_dir": "logs"
+  },
+  "simulation": {
+    "default_duration": 3600,
+    "real_time": true,
+    "save_results": true
+  },
+  "logging": {
+    "level": "INFO",
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    "file": "nanoprobe_simulation.log"
+  },
+  "license": {
+    "type": "All Rights Reserved",
+    "owner": "Школа программирования Maestro7IT",
+    "reserved_rights": [
+      "Использование материалов проекта возможно только с разрешения владельца",
+      "Запрещено копирование, распространение и коммерческое использование без разрешения",
+      "Все права на исходный код принадлежат Школе программирования Maestro7IT"
+    ]
+  }
+}
