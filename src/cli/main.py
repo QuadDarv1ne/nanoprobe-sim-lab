@@ -10,8 +10,10 @@
 import sys
 import os
 import atexit
+import subprocess
 from datetime import datetime
 from pathlib import Path
+from typing import Optional, Dict
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent.parent
@@ -19,6 +21,9 @@ sys.path.insert(0, str(project_root))
 
 # Configuration paths
 CONFIG_PATH = project_root / "config" / "config.json"
+
+# Активные процессы
+_active_processes: Dict[str, subprocess.Popen] = {}
 
 def show_header():
     """Отображает заголовок программы"""
@@ -49,48 +54,76 @@ def show_menu():
     print("  0. Выход")
     print()
 
-def run_spm_simulator():
+def run_spm_simulator() -> bool:
     """Запускает симулятор СЗМ"""
     print("Запуск симулятора СЗМ...")
     try:
-        # Пытаемся запустить C++ версию
         cpp_path = project_root / "components" / "cpp-spm-hardware-sim" / "build" / "spm-simulator"
+        python_spm = project_root / "components" / "cpp-spm-hardware-sim" / "src" / "spm_simulator.py"
+        
         if cpp_path.exists():
-            os.system(str(cpp_path))
+            print(f"Запуск C++ версии: {cpp_path}")
+            process = subprocess.Popen([str(cpp_path)], cwd=str(project_root))
+            _active_processes['spm'] = process
+            process.wait()
+            return True
+        elif python_spm.exists():
+            print(f"Запуск Python версии: {python_spm}")
+            process = subprocess.Popen(
+                [sys.executable, str(python_spm)],
+                cwd=str(project_root)
+            )
+            _active_processes['spm'] = process
+            process.wait()
+            return True
         else:
-            print("C++ версия не найдена. Попробуйте Python-реализацию...")
-            # Запускаем Python-реализацию
-            python_spm = project_root / "components" / "cpp-spm-hardware-sim" / "src" / "spm_simulator.py"
-            if python_spm.exists():
-                os.system(f"{sys.executable} {python_spm}")
-            else:
-                print("Файлы симулятора СЗМ не найдены")
+            print("Файлы симулятора СЗМ не найдены")
+            return False
     except Exception as e:
         print(f"Ошибка при запуске симулятора СЗМ: {e}")
+        return False
 
-def run_surface_analyzer():
+def run_surface_analyzer() -> bool:
     """Запускает анализатор изображений"""
     print("Запуск анализатора изображений поверхности...")
     try:
         analyzer_path = project_root / "components" / "py-surface-image-analyzer" / "src" / "main.py"
         if analyzer_path.exists():
-            os.system(f"{sys.executable} {analyzer_path}")
+            print(f"Запуск: {analyzer_path}")
+            process = subprocess.Popen(
+                [sys.executable, str(analyzer_path)],
+                cwd=str(project_root)
+            )
+            _active_processes['analyzer'] = process
+            process.wait()
+            return True
         else:
             print("Файл анализатора изображений не найден")
+            return False
     except Exception as e:
         print(f"Ошибка при запуске анализатора изображений: {e}")
+        return False
 
-def run_sstv_groundstation():
+def run_sstv_groundstation() -> bool:
     """Запускает наземную станцию SSTV"""
     print("Запуск наземной станции SSTV...")
     try:
         station_path = project_root / "components" / "py-sstv-groundstation" / "src" / "main.py"
         if station_path.exists():
-            os.system(f"{sys.executable} {station_path}")
+            print(f"Запуск: {station_path}")
+            process = subprocess.Popen(
+                [sys.executable, str(station_path)],
+                cwd=str(project_root)
+            )
+            _active_processes['sstv'] = process
+            process.wait()
+            return True
         else:
             print("Файл наземной станции SSTV не найден")
+            return False
     except Exception as e:
         print(f"Ошибка при запуске наземной станции SSTV: {e}")
+        return False
 
 def show_project_info():
     """Показывает информацию о проекте"""
@@ -127,19 +160,17 @@ def show_license():
     print("• Использование в проектах с закрытым исходным кодом")
     print("-" * 40)
 
-def clean_project_cache():
+def clean_project_cache() -> bool:
     """Очищает кэш проекта"""
     print("Очистка кэша проекта...")
     try:
         from utils.cache_manager import CacheManager
         cache_manager = CacheManager(str(project_root))
 
-        # Показываем текущую статистику
         stats = cache_manager.get_cache_statistics()
         print(f"Текущий размер кэша: {stats['total_cache_size_mb']} MB")
         print(f"Всего файлов в кэше: {stats['total_files']}")
 
-        # Выполняем очистку
         result = cache_manager.auto_cleanup()
 
         if "status" in result:
@@ -148,40 +179,68 @@ def clean_project_cache():
             print(f"Удалено файлов: {result['deleted_files']}")
             print(f"Освобождено места: {result['freed_space_mb']} MB")
 
-        # Оптимизация памяти
         memory_result = cache_manager.optimize_memory_usage()
         print(f"Освобождено памяти: {memory_result['memory_freed_mb']} MB")
-
         print("Очистка кэша завершена успешно!")
-
         return True
 
     except ImportError:
         print("Модуль управления кэшем не найден")
-        print("Установите необходимые зависимости или создайте модуль cache_manager")
         return False
     except Exception as e:
         print(f"Ошибка при очистке кэша: {e}")
         return False
 
+def _cleanup_processes():
+    """Очищает все активные процессы"""
+    for name, process in _active_processes.items():
+        try:
+            if process.poll() is None:
+                process.terminate()
+                process.wait(timeout=3)
+                print(f"✓ Процесс {name} остановлен")
+        except Exception:
+            try:
+                process.kill()
+                print(f"✓ Процесс {name} уничтожен")
+            except Exception:
+                pass
+    _active_processes.clear()
+
 def auto_cleanup_on_exit():
     """Автоматическая очистка кэша при завершении программы"""
     print("\n" + "="*50)
-    print("Автоматическая очистка кэша при завершении...")
+    print("Завершение работы...")
+    
+    # Останавливаем активные процессы
+    if _active_processes:
+        print("Остановка активных процессов...")
+        _cleanup_processes()
+    
+    # Очистка кэша
+    print("Автоматическая очистка кэша...")
     try:
         cleanup_success = clean_project_cache()
         if cleanup_success:
-            print("✓ Автоматическая очистка кэша выполнена успешно")
+            print("✓ Завершение работы выполнено успешно")
         else:
-            print("⚠ Автоматическая очистка кэша завершена с предупреждениями")
+            print("⚠ Завершение работы завершено с предупреждениями")
     except Exception as e:
-        print(f"❌ Ошибка при автоматической очистке кэша: {e}")
+        print(f"❌ Ошибка при завершении работы: {e}")
     print("="*50)
 
 def main():
     """Главная функция программы"""
-    # Регистрируем функцию автоматической очистки
     atexit.register(auto_cleanup_on_exit)
+
+    # Автоочистка кэша при старте
+    print("Инициализация проекта...")
+    try:
+        from utils.cache_manager import CacheManager
+        cache_manager = CacheManager(str(project_root))
+        cache_manager.auto_cleanup()
+    except Exception:
+        pass
 
     show_header()
     show_project_overview()
