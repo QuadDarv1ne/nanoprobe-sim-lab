@@ -12,6 +12,7 @@ import json
 import time
 import threading
 import webbrowser
+import subprocess
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 from pathlib import Path
@@ -22,6 +23,9 @@ import eventlet
 
 # Добавляем путь к utils для импорта служебных модулей
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+
+# Project root for component paths
+project_root = Path(__file__).parent.parent.parent
 
 from utils.logger import Logger
 from utils.error_handler import ErrorHandler
@@ -119,13 +123,38 @@ class WebDashboard:
         def api_component_status():
             """API для получения статуса компонентов"""
             try:
-                # Здесь будет информация о статусе всех компонентов проекта
-                component_status = {
-                    "spm_simulator": {"status": "ready", "processes": 0},
-                    "image_analyzer": {"status": "ready", "processes": 0},
-                    "sstv_station": {"status": "ready", "processes": 0},
-                    "web_dashboard": {"status": "running", "processes": 1}
+                component_status = {}
+                
+                # Проверяем SPM симулятор
+                spm_python = project_root / "components" / "cpp-spm-hardware-sim" / "src" / "spm_simulator.py"
+                spm_cpp = project_root / "components" / "cpp-spm-hardware-sim" / "build" / "spm-simulator"
+                spm_exists = spm_python.exists() or spm_cpp.exists()
+                component_status["spm_simulator"] = {
+                    "status": "ready" if spm_exists else "not_installed",
+                    "processes": 0,
+                    "python_available": spm_python.exists(),
+                    "cpp_available": spm_cpp.exists()
                 }
+                
+                # Проверяем анализатор изображений
+                analyzer_path = project_root / "components" / "py-surface-image-analyzer" / "src" / "main.py"
+                component_status["image_analyzer"] = {
+                    "status": "ready" if analyzer_path.exists() else "not_installed",
+                    "processes": 0
+                }
+                
+                # Проверяем SSTV станцию
+                sstv_path = project_root / "components" / "py-sstv-groundstation" / "src" / "main.py"
+                component_status["sstv_station"] = {
+                    "status": "ready" if sstv_path.exists() else "not_installed",
+                    "processes": 0
+                }
+                
+                component_status["web_dashboard"] = {
+                    "status": "running",
+                    "processes": 1
+                }
+                
                 return jsonify(component_status)
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка получения статуса компонентов: {e}")
@@ -248,14 +277,40 @@ class WebDashboard:
     def _execute_start_simulation(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Выполнение команды запуска симуляции"""
         try:
-            # Здесь будет логика запуска симуляции
+            # Проверяем доступность SPM симулятора
+            spm_python = project_root / "components" / "cpp-spm-hardware-sim" / "src" / "spm_simulator.py"
+            spm_cpp = project_root / "components" / "cpp-spm-hardware-sim" / "build" / "spm-simulator"
+            
+            if not spm_python.exists() and not spm_cpp.exists():
+                return {
+                    "status": "error",
+                    "message": "SPM симулятор не найден"
+                }
+            
             simulation_id = f"sim_{int(time.time())}"
             self.logger.log_system_event(f"Запуск симуляции: {simulation_id}", "INFO")
+            
+            # Запускаем симулятор в фоновом процессе
+            simulator_path = str(spm_cpp if spm_cpp.exists() else spm_python)
+            cmd = [sys.executable, simulator_path] if not spm_cpp.exists() else [str(spm_cpp)]
+            
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                cwd=str(project_root)
+            )
+            
+            # Сохраняем информацию о процессе
+            if not hasattr(self, '_active_processes'):
+                self._active_processes = {}
+            self._active_processes[simulation_id] = process
 
             return {
                 "status": "success",
                 "message": f"Симуляция запущена: {simulation_id}",
-                "simulation_id": simulation_id
+                "simulation_id": simulation_id,
+                "process_id": process.pid
             }
         except Exception as e:
             self.error_handler.log_error(f"Ошибка запуска симуляции: {e}")
@@ -265,6 +320,21 @@ class WebDashboard:
         """Выполнение команды остановки симуляции"""
         try:
             simulation_id = params.get('simulation_id', '')
+            
+            if not hasattr(self, '_active_processes') or simulation_id not in self._active_processes:
+                return {
+                    "status": "warning",
+                    "message": f"Симуляция {simulation_id} не найдена среди активных"
+                }
+            
+            process = self._active_processes[simulation_id]
+            process.terminate()
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                process.kill()
+            
+            del self._active_processes[simulation_id]
             self.logger.log_system_event(f"Остановка симуляции: {simulation_id}", "INFO")
 
             return {
@@ -315,7 +385,21 @@ class WebDashboard:
         Args:
             open_browser: Открывать ли браузер автоматически
         """
+        import socket
+        
         self._start_time = datetime.now()
+        
+        # Проверяем доступность порта
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            sock.bind((self.host, self.port))
+            sock.close()
+        except OSError as e:
+            self.logger.log_system_event(f"Порт {self.port} занят: {e}", "ERROR")
+            print(f"Ошибка: Порт {self.port} уже используется")
+            print("Попробуйте другой порт: python web_dashboard.py --port 5001")
+            return
+        
         self.logger.log_system_event(f"Запуск веб-панели на http://{self.host}:{self.port}", "INFO")
 
         print("="*60)
@@ -327,8 +411,7 @@ class WebDashboard:
         if open_browser:
             def open_browser_func():
                 """Open browser in a separate thread"""
-                import time
-                time.sleep(2)  # Ждем запуска сервера
+                time.sleep(2)
                 webbrowser.open(f"http://{self.host}:{self.port}")
 
             browser_thread = threading.Thread(target=open_browser_func)
@@ -339,10 +422,26 @@ class WebDashboard:
             self.socketio.run(self.app, host=self.host, port=self.port, debug=False)
         except KeyboardInterrupt:
             print("\nОстановка веб-панели...")
+            self._cleanup_processes()
             self.logger.log_system_event("Веб-панель остановлена", "INFO")
         except Exception as e:
             self.error_handler.log_error(f"Ошибка запуска веб-панели: {e}")
             print(f"Ошибка: {e}")
+    
+    def _cleanup_processes(self):
+        """Очищает все активные процессы при завершении"""
+        if hasattr(self, '_active_processes'):
+            for sim_id, process in self._active_processes.items():
+                try:
+                    if process.poll() is None:
+                        process.terminate()
+                        process.wait(timeout=3)
+                except Exception:
+                    try:
+                        process.kill()
+                    except Exception:
+                        pass
+            self._active_processes.clear()
 
 
 def main():
