@@ -18,6 +18,7 @@ psutil>=5.9.0
 
 # For validation
 jsonschema>=4.19.0
+toml>=0.10.0
 
 # For SSTV decoding (rtlsdr is optional, only needed if you have RTL-SDR hardware)
 pysstv>=0.2.0
