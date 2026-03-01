@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
-#!/usr/bin/env python3
-#!/usr/bin/env python3
 
 """
 Main entry point for Nanoprobe Simulation Lab
@@ -10,10 +8,12 @@ This script provides access to all project components through a unified interfac
 
 import sys
 import os
+import subprocess
 from pathlib import Path
 
 # Add src directory to Python path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
+
 
 def show_help():
     """Display help information"""
@@ -33,6 +33,23 @@ def show_help():
     print("  python start.py help    # Показать эту справку")
     print("="*60)
 
+
+def run_component(script_path: Path, description: str) -> None:
+    """Запуск компонента с обработкой ошибок"""
+    if not script_path.exists():
+        print(f"Файл {script_path} не найден")
+        return
+
+    try:
+        subprocess.run([sys.executable, str(script_path)], check=True)
+    except KeyboardInterrupt:
+        print(f"\n{description} остановлен пользователем")
+    except subprocess.CalledProcessError as e:
+        print(f"Ошибка при запуске {description}: {e}")
+    except Exception as e:
+        print(f"Неожиданная ошибка при запуске {description}: {e}")
+
+
 def main():
     """Main entry point"""
     if len(sys.argv) < 2:
@@ -42,35 +59,17 @@ def main():
     command = sys.argv[1].lower()
 
     if command == "cli":
-        # Run main console
-        cli_path = Path("src/cli/main.py")
-        if cli_path.exists():
-            os.system(f"{sys.executable} {cli_path}")
-        else:
-            print("Файл main.py не найден")
-
+        run_component(Path("src/cli/main.py"), "Консоль")
     elif command == "manager":
-        # Run project manager
-        manager_path = Path("src/cli/project_manager.py")
-        if manager_path.exists():
-            os.system(f"{sys.executable} {manager_path}")
-        else:
-            print("Файл project_manager.py не найден")
-
+        run_component(Path("src/cli/project_manager.py"), "Менеджер проекта")
     elif command == "web":
-        # Run web dashboard
-        web_path = Path("src/web/web_dashboard.py")
-        if web_path.exists():
-            os.system(f"{sys.executable} {web_path}")
-        else:
-            print("Файл web_dashboard.py не найден")
-
+        run_component(Path("src/web/web_dashboard.py"), "Веб-панель")
     elif command == "help":
         show_help()
-
     else:
         print(f"Неизвестная команда: {command}")
         show_help()
+
 
 if __name__ == "__main__":
     main()

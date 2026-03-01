@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
-#!/usr/bin/env python3
-#!/usr/bin/env python3
 
 """
 Модуль обработки ошибок для проекта Лаборатория моделирования нанозонда
@@ -118,8 +116,6 @@ class ErrorHandler:
             print(f"Ошибка сохранения истории ошибок: {e}")
 
     def log_error(self,
-    """TODO: Add description"""
-
                   message: str,
                   exception: Exception = None,
                   component: str = "Unknown",
@@ -169,8 +165,6 @@ class ErrorHandler:
 
         return error_info
 
-    """TODO: Add description"""
-
     def handle_exception(self,
                         func: Callable,
                         component: str = "Unknown",
@@ -188,11 +182,9 @@ class ErrorHandler:
         Returns:
             Обернутая функция с обработкой исключений
         """
-    """TODO: Add description"""
 
         @wraps(func)
         def wrapper(*args, **kwargs):
-            """TODO: Add description"""
             try:
                 return func(*args, **kwargs)
             except Exception as e:
@@ -419,8 +411,6 @@ class SafeExecutor:
         Args:
             error_handler: Обработчик ошибок
         """
-    """TODO: Add description"""
-
         self.error_handler = error_handler
 
     def execute_with_retry(self,
@@ -460,8 +450,6 @@ class SafeExecutor:
                         f"Ошибка при попытке {attempt + 1}/{max_retries} выполнения {func.__name__}",
                         e,
                         component,
-    """TODO: Add description"""
-
                         ErrorSeverity.WARNING
                     )
 
@@ -478,13 +466,11 @@ class SafeExecutor:
             timeout: Таймаут в секундах
             fallback_return: Значение по умолчанию при таймауте
             component: Компонент для логирования
-    """TODO: Add description"""
 
         Returns:
             Результат выполнения функции или fallback_return при таймауте
         """
         def target(queue_obj):
-            """TODO: Add description"""
             try:
                 result = func()
                 queue_obj.put(('success', result))
@@ -540,20 +526,15 @@ def main():
             user_context={"operation": "division", "operands": [10, 0]}
         )
         print(f"✓ Ошибка залогирована: {error_info.message}")
-    """TODO: Add description"""
 
     # Демонстрация декоратора обработки исключений
     print("\nТестирование декоратора обработки исключений...")
 
     @error_handler.handle_exception(component="TestFunction", fallback_return="default_value")
-
     def test_function():
-        """TODO: Add description"""
         raise ValueError("Тестовая ошибка в функции")
 
     result = test_function()
-    """TODO: Add description"""
-
     print(f"✓ Функция вернула: {result} (ожидаем значение по умолчанию)")
 
     # Тестирование безопасного исполнителя с повторными попытками
@@ -562,7 +543,6 @@ def main():
     counter = 0
 
     def flaky_function():
-        """TODO: Add description"""
         nonlocal counter
         counter += 1
         if counter < 3:
@@ -571,8 +551,6 @@ def main():
 
     try:
         result = safe_executor.execute_with_retry(flaky_function, max_retries=5, retry_delay=0.1)
-    """TODO: Add description"""
-
         print(f"✓ Функция выполнена успешно после {counter} попыток: {result}")
     except Exception as e:
         print(f"✗ Ошибка выполнения: {e}")
@@ -580,9 +558,7 @@ def main():
     # Тестирование безопасного исполнителя с таймаутом
     print("\nТестирование безопасного исполнителя с таймаутом...")
 
-
     def slow_function():
-        """TODO: Add description"""
         time.sleep(2)
         return "Медленный результат"
 

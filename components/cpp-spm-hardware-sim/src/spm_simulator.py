@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
-#!/usr/bin/env python3
-#!/usr/bin/env python3
 
 """
 Модуль симулятора сканирующего зондового микроскопа (СЗМ)
@@ -30,9 +28,9 @@ class SurfaceModel:
             width: Ширина поверхности
             height: Высота поверхности
         """
-        self.width = width
-        self.height = height
-        self.height_map = np.zeros((height, width))
+        self.width = max(width, 10)  # Минимальный размер 10
+        self.height = max(height, 10)
+        self.height_map = np.zeros((self.height, self.width))
         self.generate_surface()
 
 
@@ -53,6 +51,9 @@ class SurfaceModel:
 
     def _add_craters(self, num_craters: int = 3):
         """Добавляет искусственные кратеры на поверхность"""
+        if self.width < 10 or self.height < 10:
+            return  # Пропускаем для маленьких поверхностей
+        
         for _ in range(num_craters):
             center_x = random.randint(5, self.width - 5)
             center_y = random.randint(5, self.height - 5)
@@ -68,6 +69,9 @@ class SurfaceModel:
 
     def _add_mountains(self, num_mountains: int = 2):
         """Добавляет искусственные горы на поверхность"""
+        if self.width < 10 or self.height < 10:
+            return  # Пропускаем для маленьких поверхностей
+        
         for _ in range(num_mountains):
             center_x = random.randint(5, self.width - 5)
             center_y = random.randint(5, self.height - 5)

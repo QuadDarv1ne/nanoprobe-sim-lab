@@ -5,36 +5,47 @@
 """
 
 import sys
+import os
 from pathlib import Path
 
 # Добавляем путь к проекту
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
+# Добавляем пути к компонентам
+spm_path = project_root / "components" / "cpp-spm-hardware-sim" / "src"
+analyzer_path = project_root / "components" / "py-surface-image-analyzer" / "src"
+sys.path.insert(0, str(spm_path))
+sys.path.insert(0, str(analyzer_path))
+
+# Фиксим кодировку для Windows
+if sys.platform == 'win32':
+    os.system('chcp 65001 >nul')
+
 print("Тестирование проекта Nanoprobe Simulation Lab...")
 
 try:
     # Тестируем основной CLI
     from src.cli.main import main as cli_main
-    print("✅ Импорт src.cli.main успешен")
+    print("[OK] Импорт src.cli.main успешен")
 
     # Тестируем менеджер проекта
     from src.cli.project_manager import ProjectManager
-    print("✅ Импорт src.cli.project_manager успешен")
+    print("[OK] Импорт src.cli.project_manager успешен")
 
     # Тестируем симулятор СЗМ
-    from components.cpp_spm_hardware_sim.src.spm_simulator import SurfaceModel, ProbeModel, SPMController
-    print("✅ Импорт компонентов симулятора СЗМ успешен")
+    from spm_simulator import SurfaceModel, ProbeModel, SPMController
+    print("[OK] Импорт компонентов симулятора СЗМ успешен")
 
     # Тестируем процессор изображений
-    from components.py_surface_image_analyzer.src.image_processor import ImageProcessor, calculate_surface_roughness
-    print("✅ Импорт компонентов обработчика изображений успешен")
+    from image_processor import ImageProcessor, calculate_surface_roughness
+    print("[OK] Импорт компонентов обработчика изображений успешен")
 
     # Тестируем утилиты
     from utils.system_monitor import SystemMonitor
     from utils.cache_manager import CacheManager
     from utils.config_manager import ConfigManager
-    print("✅ Импорт утилит проекта успешен")
+    print("[OK] Импорт утилит проекта успешен")
 
     # Создаем простой тест
     print("\n--- Создание тестовой поверхности ---")
@@ -56,16 +67,22 @@ try:
 
     print("\n--- Тестирование монитора системы ---")
     monitor = SystemMonitor()
+    monitor.start_monitoring()
+    import time
+    time.sleep(0.5)  # Ждем сбора метрик
     metrics = monitor.get_current_metrics()
-    print(f"Метрики системы получены: CPU {metrics['cpu_percent']}%, Memory {metrics['memory_percent']}%")
+    monitor.stop_monitoring()
+    cpu = metrics.get('cpu_percent', 'N/A')
+    mem = metrics.get('memory_percent', 'N/A')
+    print(f"Метрики системы получены: CPU {cpu}%, Memory {mem}%")
 
-    print("\n🎉 Все компоненты проекта работают корректно!")
+    print("\nВсе компоненты проекта работают корректно!")
     print("Проект готов к использованию.")
 
 except ImportError as e:
-    print(f"❌ Ошибка импорта: {e}")
+    print(f"[ERROR] Ошибка импорта: {e}")
 except Exception as e:
-    print(f"❌ Ошибка выполнения: {e}")
+    print(f"[ERROR] Ошибка выполнения: {e}")
     import traceback
     traceback.print_exc()
 

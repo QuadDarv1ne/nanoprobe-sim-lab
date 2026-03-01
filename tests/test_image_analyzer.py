@@ -31,6 +31,8 @@ except ImportError:
 
         def apply_noise_reduction(self, method="gaussian"):
             """TODO: Add description"""
+            if method == "invalid":
+                return None
             return np.array([[1, 2], [3, 4]])
 
         def detect_edges(self, threshold1=100, threshold2=200):

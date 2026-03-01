@@ -9,10 +9,15 @@ import os
 import sys
 import json
 import subprocess
+import io
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Any, Tuple
 import importlib.util
+
+# Исправление кодировки для Windows
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 
 class ProjectValidator:
@@ -37,7 +42,10 @@ class ProjectValidator:
             "message": message
         }
         self.log_messages.append(log_entry)
-        print(f"[{level}] {timestamp}: {message}")
+        # Замена Unicode символов на ASCII аналоги для Windows
+        safe_message = message.replace('✓', '[OK]').replace('✗', '[ERR]').replace(
+            '⚠', '[WARN]').replace('🎉', '[DONE]').replace('❌', '[FAIL]')
+        print(f"[{level}] {timestamp}: {safe_message}")
 
     def check_project_structure(self) -> Dict[str, Any]:
         """Проверка структуры проекта"""

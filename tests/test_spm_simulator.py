@@ -9,9 +9,12 @@ import unittest
 import numpy as np
 import sys
 import os
+from pathlib import Path
 
 # Добавляем путь к исходному коду
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../cpp-spm-hardware-sim/src'))
+project_root = Path(__file__).parent.parent
+spm_path = project_root / "components" / "cpp-spm-hardware-sim" / "src"
+sys.path.insert(0, str(spm_path))
 
 from spm_simulator import SurfaceModel, ProbeModel, SPMController
 
@@ -91,7 +94,7 @@ class TestProbeModel(unittest.TestCase):
 
     def test_adjust_to_surface(self):
         """Тестирует адаптацию зонда к поверхности"""
-        surface = SurfaceModel(5, 5)
+        surface = SurfaceModel(10, 10)  # Минимальный размер 10x10
         initial_z = self.probe.z
         adjusted_z = self.probe.adjust_to_surface(surface)
 
@@ -106,17 +109,17 @@ class TestSPMController(unittest.TestCase):
     def setUp(self):
         """Подготовка тестового окружения"""
         self.controller = SPMController()
-        self.surface = SurfaceModel(5, 5)
+        self.surface = SurfaceModel(10, 10)  # Минимальный размер 10x10
         self.controller.set_surface(self.surface)
 
 
     def test_set_surface(self):
         """Тестирует установку поверхности"""
         self.assertIsNotNone(self.controller.surface)
-        self.assertEqual(self.controller.surface.width, 5)
-        self.assertEqual(self.controller.surface.height, 5)
+        self.assertEqual(self.controller.surface.width, 10)  # Минимальный размер 10
+        self.assertEqual(self.controller.surface.height, 10)
         self.assertIsNotNone(self.controller.scan_data)
-        self.assertEqual(self.controller.scan_data.shape, (5, 5))
+        self.assertEqual(self.controller.scan_data.shape, (10, 10))
 
 
     def test_scan_surface(self):

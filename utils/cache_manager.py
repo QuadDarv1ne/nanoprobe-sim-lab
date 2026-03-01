@@ -9,19 +9,28 @@
 import os
 import shutil
 import time
-from pathlib import Path
-from typing import Dict, List, Optional, Union
-from datetime import datetime, timedelta
-import json
-import tempfile
 import gc
-import psutil
+import tempfile
+import json
+from pathlib import Path
+from typing import Dict, List, Optional, Union, Any
+from datetime import datetime, timedelta
 from dataclasses import dataclass
+
+import psutil
 
 
 @dataclass
 class CacheInfo:
-    """Информация о кэше"""
+    """Информация о кэше.
+
+    Attributes:
+        path: Путь к кэшу.
+        size_bytes: Размер в байтах.
+        file_count: Количество файлов.
+        last_accessed: Время последнего доступа.
+        cache_type: Тип кэша.
+    """
     path: Path
     size_bytes: int
     file_count: int
@@ -31,32 +40,40 @@ class CacheInfo:
 
 class CacheManager:
     """
-    Класс менеджера кэша
-    Обеспечивает автоматическую очистку и
-    управление кэшем проекта.
+    Класс менеджера кэша.
+
+    Обеспечивает автоматическую очистку и управление кэшем проекта.
+
+    Example:
+        >>> cache_mgr = CacheManager()
+        >>> cache_mgr.auto_cleanup()
     """
 
-    def __init__(self, project_root: str = ".", config_file: str = "cache_config.json"):
+    def __init__(
+        self,
+        project_root: str = ".",
+        config_file: str = "cache_config.json"
+    ) -> None:
         """
-        Инициализирует менеджер кэша
+        Инициализирует менеджер кэша.
 
         Args:
-            project_root: Корневая директория проекта
-            config_file: Файл конфигурации кэша
+            project_root: Корневая директория проекта.
+            config_file: Файл конфигурации кэша.
         """
-        self.project_root = Path(project_root).resolve()
-        self.config_file = self.project_root / "config" / config_file
-        self.cache_config = self._load_config()
-        self.cache_directories = self._get_cache_directories()
+        self.project_root: Path = Path(project_root).resolve()
+        self.config_file: Path = self.project_root / "config" / config_file
+        self.cache_config: Dict[str, Any] = self._load_config()
+        self.cache_directories: List[Path] = self._get_cache_directories()
 
-    def _load_config(self) -> Dict:
+    def _load_config(self) -> Dict[str, Any]:
         """
-        Загружает конфигурацию кэша
+        Загружает конфигурацию кэша.
 
         Returns:
-            Словарь с конфигурацией кэша
+            Словарь с конфигурацией кэша.
         """
-        default_config = {
+        default_config: Dict[str, Any] = {
             "cache_directories": [
                 "temp",
                 "cache",

@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
-#!/usr/bin/env python3
-#!/usr/bin/env python3
 
 """
 Модуль управления конфигурацией для проекта Лаборатория моделирования нанозонда
@@ -12,30 +10,43 @@
 import json
 import yaml
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List, Union
 import os
+
 
 class ConfigManager:
     """
-    Класс для управления конфигурацией проекта
+    Класс для управления конфигурацией проекта.
+
     Обеспечивает централизованное хранение и доступ к параметрам конфигурации
     для всех компонентов проекта.
+
+    Attributes:
+        config_file: Путь к файлу конфигурации.
+        config: Словарь с параметрами конфигурации.
+
+    Example:
+        >>> config_mgr = ConfigManager()
+        >>> config = config_mgr.get_config()
+        >>> config_mgr.update_config({"debug": True})
     """
 
-
-    def __init__(self, config_file: str = "config.json"):
+    def __init__(self, config_file: str = "config.json") -> None:
         """
-        Инициализирует менеджер конфигурации
+        Инициализирует менеджер конфигурации.
 
         Args:
-            config_file: Путь к файлу конфигурации
+            config_file: Путь к файлу конфигурации.
         """
+        self.config_file: Path
+        self.config: Dict[str, Any]
+
         # Определяем путь к конфигурационному файлу
         if Path(config_file).is_absolute():
             self.config_file = Path(config_file)
         else:
             # Ищем конфигурационный файл в стандартных местах
-            possible_paths = [
+            possible_paths: List[Path] = [
                 Path(config_file),
                 Path("config") / config_file,
                 Path(__file__).parent.parent / "config" / config_file
@@ -51,13 +62,12 @@ class ConfigManager:
 
         self.config = self.load_config()
 
-
     def load_config(self) -> Dict[str, Any]:
         """
-        Загружает конфигурацию из файла
+        Загружает конфигурацию из файла.
 
         Returns:
-            Словарь с параметрами конфигурации
+            Словарь с параметрами конфигурации.
         """
         if not os.path.exists(self.config_file):
             print(f"Файл конфигурации {self.config_file} не найден. Создается стандартная конфигурация.")
@@ -66,20 +76,24 @@ class ConfigManager:
         try:
             with open(self.config_file, 'r', encoding='utf-8') as f:
                 if str(self.config_file).endswith('.yaml') or str(self.config_file).endswith('.yml'):
-                    return yaml.safe_load(f)
+                    data = yaml.safe_load(f)
+                    return data if isinstance(data, dict) else {}
                 else:
-                    return json.load(f)
-        except Exception as e:
+                    data = json.load(f)
+                    return data if isinstance(data, dict) else {}
+        except (json.JSONDecodeError, yaml.YAMLError) as e:
             print(f"Ошибка при загрузке конфигурации: {e}")
             return self.get_default_config()
-
+        except Exception as e:
+            print(f"Неожиданная ошибка при загрузке конфигурации: {e}")
+            return self.get_default_config()
 
     def save_config(self) -> bool:
         """
-        Сохраняет текущую конфигурацию в файл
+        Сохраняет текущую конфигурацию в файл.
 
         Returns:
-            bool: True если успешно сохранено, иначе False
+            True если сохранение успешно, иначе False.
         """
         try:
             with open(self.config_file, 'w', encoding='utf-8') as f:
