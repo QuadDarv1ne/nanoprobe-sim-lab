@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
-#!/usr/bin/env python3
-#!/usr/bin/env python3
 
 """
 Модуль мониторинга производительности для проекта Лаборатория моделирования нанозонда
@@ -12,7 +10,6 @@
 import time
 import psutil
 import threading
-import matplotlib.pyplot as plt
 from datetime import datetime
 from typing import Dict, List, Callable, Any, Optional
 from pathlib import Path
@@ -227,6 +224,8 @@ class PerformanceMonitor:
         Args:
             output_path: Путь для сохранения графика (опционально)
         """
+        import matplotlib.pyplot as plt
+        
         if not self.metrics_history['timestamps']:
             print("Нет данных для визуализации")
             return
