@@ -8,7 +8,6 @@
 """
 
 import json
-import yaml
 from pathlib import Path
 from typing import Dict, Any, Optional, List, Union
 import os
@@ -75,13 +74,9 @@ class ConfigManager:
 
         try:
             with open(self.config_file, 'r', encoding='utf-8') as f:
-                if str(self.config_file).endswith('.yaml') or str(self.config_file).endswith('.yml'):
-                    data = yaml.safe_load(f)
-                    return data if isinstance(data, dict) else {}
-                else:
-                    data = json.load(f)
-                    return data if isinstance(data, dict) else {}
-        except (json.JSONDecodeError, yaml.YAMLError) as e:
+                data = json.load(f)
+                return data if isinstance(data, dict) else {}
+        except json.JSONDecodeError as e:
             print(f"Ошибка при загрузке конфигурации: {e}")
             return self.get_default_config()
         except Exception as e:
