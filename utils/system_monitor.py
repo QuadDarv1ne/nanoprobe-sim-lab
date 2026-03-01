@@ -14,16 +14,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Any, Optional
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-from matplotlib.animation import FuncAnimation
-import numpy as np
 from collections import deque
-import tkinter as tk
-from tkinter import ttk, scrolledtext
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-import plotly.offline as pyo
 
 class SystemMonitor:
     """
@@ -258,6 +249,12 @@ class MonitoringDashboard:
 
     def create_gui(self):
         """Создает графический интерфейс панели мониторинга"""
+        import tkinter as tk
+        from tkinter import ttk, scrolledtext
+        from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+        from matplotlib.animation import FuncAnimation
+        import matplotlib.pyplot as plt
+        
         self.root = tk.Tk()
         self.root.title("Панель мониторинга системы - Лаборатория моделирования нанозонда")
         self.root.geometry("1200x800")
