@@ -320,33 +320,38 @@ class SPMController:
 
 def main():
     """Главная функция для демонстрации работы симулятора СЗМ"""
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='Симулятор СЗМ')
+    parser.add_argument('--size', '-s', type=int, default=30, help='Размер поверхности (по умолчанию: 30)')
+    parser.add_argument('--output', '-o', type=str, default='scan_results.txt', help='Файл для результатов')
+    parser.add_argument('--no-visualize', action='store_true', help='Отключить визуализацию')
+    
+    args = parser.parse_args()
+    
     print("=" * 50)
     print("    СИМУЛЯТОР АППАРАТНОГО ОБЕСПЕЧЕНИЯ СЗМ (Python)")
     print("         (Scanning Probe Microscope Simulator)")
     print("=" * 50)
 
-    # Создаем модель поверхности 30x30
-    surface = SurfaceModel(30, 30)
+    size = max(args.size, 10)
+    surface = SurfaceModel(size, size)
     print(f"Создана модель поверхности размером {surface.width}x{surface.height}")
 
-    # Сохраняем модель поверхности
     surface.save_to_file("surface_model_python.txt")
 
-    # Визуализируем модель поверхности
-    surface.visualize("Модель поверхности для сканирования")
+    if not args.no_visualize:
+        surface.visualize("Модель поверхности для сканирования")
 
-    # Создаем контроллер СЗМ и устанавливаем поверхность
     controller = SPMController()
     controller.set_surface(surface)
-
-    # Выполняем сканирование
     controller.scan_surface()
 
-    # Сохраняем результаты сканирования
-    controller.save_scan_results("scan_results_python.txt")
+    controller.save_scan_results(args.output)
+    print(f"Результаты сохранены в: {args.output}")
 
-    # Визуализируем результаты сканирования
-    controller.visualize_scan_results("Результаты сканирования СЗМ")
+    if not args.no_visualize:
+        controller.visualize_scan_results("Результаты сканирования СЗМ")
 
     print("Симуляция завершена. Результаты сохранены.")
 
