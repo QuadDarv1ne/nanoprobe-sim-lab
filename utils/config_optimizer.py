@@ -14,7 +14,6 @@ from typing import Dict, Any, Optional, Union, List
 from datetime import datetime
 import copy
 import math
-import numpy as np
 from dataclasses import dataclass, asdict
 import configparser
 import threading
