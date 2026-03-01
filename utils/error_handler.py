@@ -21,7 +21,6 @@ import queue
 import time
 from enum import Enum
 from dataclasses import dataclass
-import pickle
 
 class ErrorSeverity(Enum):
     """Перечисление уровней важности ошибок"""
