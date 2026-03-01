@@ -15,7 +15,6 @@ import shutil
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 from datetime import datetime
-import yaml
 from dataclasses import dataclass, asdict
 
 # Опциональный импорт Docker
