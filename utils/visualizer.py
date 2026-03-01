@@ -35,7 +35,6 @@ class SurfaceVisualizer:
 
 
     def plot_surface_2d(self, surface_data: np.ndarray, title: str = "Поверхность 2D",
-    """TODO: Add description"""
 
                        save_path: Optional[str] = None) -> plt.Figure:
         """
@@ -64,7 +63,6 @@ class SurfaceVisualizer:
 
         return fig
 
-    """TODO: Add description"""
 
 
     def plot_surface_3d(self, surface_data: np.ndarray, title: str = "Поверхность 3D",
@@ -98,7 +96,6 @@ class SurfaceVisualizer:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
 
         return fig
-    """TODO: Add description"""
 
 
     def animate_scan_process(self, scan_data_list: list, title: str = "Процесс сканирования",
@@ -121,13 +118,11 @@ class SurfaceVisualizer:
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
 
-    """TODO: Add description"""
 
         cbar = plt.colorbar(im, ax=ax, label='Высота')
 
         def update(frame):
-            """TODO: Add description"""
-            im.set_array(scan_data_list[frame])
+                    im.set_array(scan_data_list[frame])
             ax.set_title(f'{title} - Шаг {frame + 1}')
             return [im]
 
@@ -153,7 +148,6 @@ class ImageAnalyzerVisualizer:
 
         Args:
             figsize: Размер фигуры для отображения
-    """TODO: Add description"""
 
         """
         self.figsize = figsize
@@ -187,7 +181,6 @@ class ImageAnalyzerVisualizer:
         ax2.axis('off')
 
         if save_path:
-    """TODO: Add description"""
 
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
 
@@ -221,7 +214,6 @@ class ImageAnalyzerVisualizer:
         ax2.set_xlabel('Интенсивность')
         ax2.set_ylabel('Частота')
 
-    """TODO: Add description"""
 
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
@@ -270,7 +262,6 @@ class SSTVVisualizer:
     def __init__(self, figsize: Tuple[int, int] = (12, 8)):
         """
         Инициализирует визуализатор SSTV
-    """TODO: Add description"""
 
         Args:
             figsize: Размер фигура для отображения
@@ -299,7 +290,6 @@ class SSTVVisualizer:
             ax.imshow(image_data, cmap='gray')
 
         ax.set_title(title)
-    """TODO: Add description"""
 
         ax.axis('off')
 
@@ -350,7 +340,6 @@ class ProjectVisualizer:
     Центральный класс визуализации проекта
     Объединяет все визуализаторы и предоставляет единый интерфейс
     для визуализации данных из всех компонентов проекта.
-    """TODO: Add description"""
 
     """
 

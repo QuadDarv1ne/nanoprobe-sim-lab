@@ -89,7 +89,6 @@ class DocumentationGenerator:
 
 
     def extract_docstrings(self, include_patterns: List[str] = None,
-    """TODO: Add description"""
 
                           exclude_patterns: List[str] = None) -> List[DocItem]:
         """
@@ -193,7 +192,6 @@ class DocumentationGenerator:
             decorators=decorators
         ))
 
-    """TODO: Add description"""
 
 
     def _extract_function_doc(self, node: ast.FunctionDef, file_path: Path,

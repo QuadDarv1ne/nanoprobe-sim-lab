@@ -209,7 +209,6 @@ class NanoprobeDashboard:
     def run_spm_simulation(self):
         """Запускает симуляцию СЗМ"""
         def worker():
-    """TODO: Add description"""
 
             try:
                 self.logger_manager.log_system_event("Запуск СЗМ симуляции из GUI", "INFO")
@@ -232,10 +231,8 @@ class NanoprobeDashboard:
 
     def run_image_analysis(self):
         """Запускает анализ изображений"""
-    """TODO: Add description"""
 
         def worker():
-            """TODO: Add description"""
             try:
                 # Открываем диалог выбора файла
                 file_path = filedialog.askopenfilename(
@@ -267,11 +264,8 @@ class NanoprobeDashboard:
 
 
     def run_sstv_decoding(self):
-    """TODO: Add description"""
-
         """Запускает декодирование SSTV"""
         def worker():
-            """TODO: Add description"""
             try:
                 # Открываем диалог выбора файла
                 file_path = filedialog.askopenfilename(
@@ -301,13 +295,11 @@ class NanoprobeDashboard:
 
         threading.Thread(target=worker, daemon=True).start()
 
-    """TODO: Add description"""
 
 
     def run_comprehensive_simulation(self):
         """Запускает комплексную симуляцию"""
         def worker():
-            """TODO: Add description"""
             try:
                 self.logger_manager.log_system_event("Запуск комплексной симуляции из GUI", "INFO")
 
@@ -323,13 +315,11 @@ class NanoprobeDashboard:
                 self.update_status_info()
 
         threading.Thread(target=worker, daemon=True).start()
-    """TODO: Add description"""
 
 
     def run_continuous_simulation(self):
         """Запускает непрерывную симуляцию"""
         def worker():
-            """TODO: Add description"""
             try:
                 self.logger_manager.log_system_event("Запуск непрерывной симуляции из GUI", "INFO")
 

@@ -65,7 +65,6 @@ class ModelTrainer:
         self.feature_names = None
 
     def prepare_data(self,
-    """TODO: Add description"""
 
                     X: Union[np.ndarray, pd.DataFrame],
                     y: Union[np.ndarray, pd.Series],
@@ -109,7 +108,6 @@ class ModelTrainer:
 
         return X_train, X_test, y_train, y_test
 
-    """TODO: Add description"""
 
     def train_regression_model(self,
                              X_train: np.ndarray,
@@ -137,7 +135,6 @@ class ModelTrainer:
 
         model.fit(X_train, y_train)
         return model
-    """TODO: Add description"""
 
     def train_classification_model(self,
                                  X_train: np.ndarray,
@@ -166,7 +163,6 @@ class ModelTrainer:
             raise ValueError(f"Неизвестный тип модели: {model_type}")
 
         model.fit(X_train, y_train)
-    """TODO: Add description"""
 
         return model
 
@@ -204,7 +200,6 @@ class ModelTrainer:
                 'accuracy': accuracy,
                 'classification_report': classification_report(y_test, predictions, output_dict=True)
             }
-    """TODO: Add description"""
 
         return metrics
 
@@ -263,7 +258,6 @@ class ModelTrainer:
             len(np.unique(y_train)) <= min(len(y_train), 20) else 'r2', n_jobs=-1
         )
 
-    """TODO: Add description"""
 
         grid_search.fit(X_train, y_train)
 
@@ -386,7 +380,6 @@ class ModelTrainer:
         # Загружаем метаданные
         metadata = None
         if metadata_path.exists():
-    """TODO: Add description"""
 
             with open(metadata_path, 'r', encoding='utf-8') as f:
                 metadata = json.load(f)
@@ -439,7 +432,6 @@ class ModelTrainer:
             'cv_scores': scores.tolist(),
             'mean_cv_score': scores.mean(),
             'std_cv_score': scores.std(),
-    """TODO: Add description"""
 
             'min_cv_score': scores.min(),
             'max_cv_score': scores.max()
@@ -490,7 +482,6 @@ class ModelTrainer:
             plt.savefig(output_path, dpi=300, bbox_inches='tight')
         else:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    """TODO: Add description"""
 
             output_path = self.output_dir / f"feature_importance_{timestamp}.png"
             plt.savefig(output_path, dpi=300, bbox_inches='tight')
@@ -559,7 +550,6 @@ class ModelTrainer:
 
         return str(output_path)
 
-    """TODO: Add description"""
 
 def model_training_pipeline(func):
     """
@@ -571,8 +561,7 @@ def model_training_pipeline(func):
     @wraps(func)
 
     def wrapper(*args, **kwargs):
-        """TODO: Add description"""
-        trainer = ModelTrainer()
+            trainer = ModelTrainer()
         print(f"Запуск пайплайна обучения модели: {func.__name__}")
 
         # Выполняем функцию
@@ -664,7 +653,6 @@ def main():
     print(f"  - График важности признаков сохранен: {importance_plot_path}")
 
     print("\nСоздание графика предсказанных vs фактических значений...")
-    """TODO: Add description"""
 
     predictions_vs_actual_path = trainer.plot_predictions_vs_actual(
         y_reg[:100], reg_result.predictions[:100]
@@ -678,8 +666,7 @@ def main():
 
     def sample_training_pipeline(trainer_instance):
         # Создаем простую модель
-        """TODO: Add description"""
-        X_simple = np.random.randn(100, 2)
+            X_simple = np.random.randn(100, 2)
         y_simple = X_simple[:, 0] + X_simple[:, 1] + np.random.randn(100) * 0.1
 
         result = trainer_instance.train_and_evaluate(

@@ -400,7 +400,6 @@ class SystemHealthMonitor:
         self.active = True
 
         def monitor():
-    """TODO: Add description"""
 
             while self.active:
                 try:
@@ -618,12 +617,10 @@ def main():
     print(f"✓ Директория вывода: {health_monitor.output_dir}")
 
     # Добавляем обработчик оповещений
-    """TODO: Add description"""
 
 
     def alert_handler(alert):
-        """TODO: Add description"""
-        print(f"🚨 ОПОВЕЩЕНИЕ: {alert.message} (Уровень: {alert.severity})")
+            print(f"🚨 ОПОВЕЩЕНИЕ: {alert.message} (Уровень: {alert.severity})")
 
     health_monitor.add_alert_handler(alert_handler)
 

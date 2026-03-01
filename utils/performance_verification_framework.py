@@ -222,7 +222,6 @@ class PerformanceVerificationFramework:
     def _benchmark_cpu_intensive_task(self) -> Dict[str, Any]:
         """Бенчмарк CPU-интенсивной задачи"""
         def cpu_intensive_task():
-    """TODO: Add description"""
 
             result = 0
             for i in range(100000):
@@ -655,11 +654,9 @@ class PerformanceVerificationFramework:
         # Тест 3: Проверка производительности после оптимизации
         try:
             # Сравниваем время выполнения базовой операции до и после "оптимизации"
-    """TODO: Add description"""
 
             def baseline_operation():
-                """TODO: Add description"""
-                return sum(i**2 for i in range(10000))
+                            return sum(i**2 for i in range(10000))
 
             # Время до
             start = time.time()

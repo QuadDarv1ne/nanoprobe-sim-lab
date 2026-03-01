@@ -120,7 +120,6 @@ class AutomatedOptimizationScheduler:
 
 
     def add_auto_rule(self, name: str, condition: Callable[[Dict[str, Any]], bool],
-    """TODO: Add description"""
 
                      optimization_func: Callable[[], Dict[str, Any]],
                      priority: int = 3, description: str = ""):
@@ -145,7 +144,6 @@ class AutomatedOptimizationScheduler:
         self.auto_rules.append(rule)
         self.logger.info(f"Добавлено автоправило: {name}")
 
-    """TODO: Add description"""
 
 
     def create_optimization_job(self, name: str, optimization_type: str,
@@ -329,11 +327,9 @@ class AutomatedOptimizationScheduler:
             return
 
         self.running = True
-    """TODO: Add description"""
 
         def scheduler_loop():
-            """TODO: Add description"""
-            while self.running:
+                    while self.running:
                 try:
                     self.run_scheduler_cycle()
                     self.stats['optimization_cycles'] += 1
@@ -360,83 +356,67 @@ class AutomatedOptimizationScheduler:
 
 
     def setup_default_rules(self):
-    """TODO: Add description"""
 
         """Настройка стандартных правил автоматической оптимизации"""
         # Правило 1: Высокая загрузка CPU -> оптимизация CPU
-    """TODO: Add description"""
 
         def cpu_high_condition(metrics):
-            """TODO: Add description"""
-            return metrics.get('cpu_percent', 0) > 80
+                    return metrics.get('cpu_percent', 0) > 80
 
         def cpu_optimization():
-            """TODO: Add description"""
-            return self.resource_manager.optimize_cpu_usage()
+                    return self.resource_manager.optimize_cpu_usage()
 
         self.add_auto_rule(
             name="high_cpu_optimization",
             condition=cpu_high_condition,
             optimization_func=cpu_optimization,
             priority=5,
-    """TODO: Add description"""
 
             description="Оптимизация CPU при высокой загрузке (>80%)"
         )
-    """TODO: Add description"""
 
         # Правило 2: Высокое использование памяти -> оптимизация памяти
         def memory_high_condition(metrics):
-            """TODO: Add description"""
-            return metrics.get('memory_percent', 0) > 85
+                    return metrics.get('memory_percent', 0) > 85
 
         def memory_optimization():
-            """TODO: Add description"""
-            return self.memory_tracker.perform_memory_optimization()
+                    return self.memory_tracker.perform_memory_optimization()
 
         self.add_auto_rule(
             name="high_memory_optimization",
             condition=memory_high_condition,
-    """TODO: Add description"""
 
             optimization_func=memory_optimization,
             priority=5,
-    """TODO: Add description"""
 
             description="Оптимизация памяти при высоком использовании (>85%)"
         )
 
         # Правило 3: Низкая эффективность ресурсов -> комплексная оптимизация
         def low_efficiency_condition(metrics):
-            """TODO: Add description"""
-            return metrics.get('resource_efficiency', 100) < 70
+                    return metrics.get('resource_efficiency', 100) < 70
 
         def efficiency_optimization():
-            """TODO: Add description"""
-            return self.orchestrator.start_comprehensive_optimization(['core_utils'])
+                    return self.orchestrator.start_comprehensive_optimization(['core_utils'])
 
         self.add_auto_rule(
-    """TODO: Add description"""
 
             name="low_efficiency_optimization",
             condition=low_efficiency_condition,
             optimization_func=efficiency_optimization,
             priority=4,
-    """TODO: Add description"""
 
             description="Комплексная оптимизация при низкой эффективности (<70%)"
         )
 
         # Правило 4: Подозрительная активность -> профилирование
         def suspicious_activity_condition(metrics):
-            """TODO: Add description"""
-            return (metrics.get('cpu_percent', 0) > 90 or
+                    return (metrics.get('cpu_percent', 0) > 90 or
                    metrics.get('memory_percent', 0) > 95 or
                    metrics.get('active_processes', 0) > 200)  # Подозрительное количество процессов
 
         def diagnostic_optimization():
-            """TODO: Add description"""
-            return self.performance_profiler.profile_function(lambda: print("Diagnostic scan"))()
+                    return self.performance_profiler.profile_function(lambda: print("Diagnostic scan"))()
 
         self.add_auto_rule(
             name="suspicious_activity_monitoring",
@@ -562,7 +542,6 @@ class AutomatedOptimizationScheduler:
             trigger_condition='predicted',
             trigger_value=prediction_result.get('predicted_value', 0)
         )
-    """TODO: Add description"""
 
         # Планируем выполнение
         self.schedule_job(job)
@@ -575,8 +554,7 @@ class AutomatedOptimizationScheduler:
         Интегрирует планировщик с предиктивным движком
         """
         def predictive_monitoring():
-            """TODO: Add description"""
-            while self.running:
+                    while self.running:
                 try:
                     # Получаем предиктивные инсайты
                     insights = self.predictive_engine.get_predictive_insights()

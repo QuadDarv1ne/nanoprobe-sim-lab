@@ -97,7 +97,6 @@ class PerformanceAnalyticsDashboard:
         self.refresh_interval = interval
 
         def analytics_monitor():
-    """TODO: Add description"""
 
             while self.active:
                 try:

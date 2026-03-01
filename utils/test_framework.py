@@ -248,8 +248,7 @@ class TestFramework:
             Результаты стресс-теста
         """
         def worker():
-            """TODO: Add description"""
-            start_time = time.time()
+                    start_time = time.time()
             iterations = 0
 
             while time.time() - start_time < duration:

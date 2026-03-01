@@ -61,7 +61,6 @@ class DataValidator:
 
 
     def add_validation_rule(self, field_name: str, validator_func: Callable,
-    """TODO: Add description"""
 
                           error_message: str = None, warning: bool = False):
         """
@@ -82,7 +81,6 @@ class DataValidator:
             'warning': warning
         })
 
-    """TODO: Add description"""
 
 
     def validate_numeric_field(self, value: Any, min_val: float = None,
@@ -115,7 +113,6 @@ class DataValidator:
 
         except (ValueError, TypeError):
             return False
-    """TODO: Add description"""
 
 
     def validate_string_field(self, value: Any, min_length: int = 1,
@@ -152,7 +149,6 @@ class DataValidator:
         if allowed_values and value not in allowed_values:
             return False
 
-    """TODO: Add description"""
 
         return True
 
@@ -269,7 +265,6 @@ class DataValidator:
                 'total_rows': len(df),
                 'total_columns': len(df.columns),
                 'validation_level': self.validation_level.name
-    """TODO: Add description"""
 
             }
         )
@@ -389,7 +384,6 @@ class DataValidator:
             'completeness': completeness,
             'uniqueness': uniqueness,
             'validity': validity,
-    """TODO: Add description"""
 
             'overall_score': overall_score,
             'total_items': total_items if 'total_items' in locals() else 1
@@ -517,7 +511,6 @@ class DataValidator:
 
         Returns:
             Результат валидации
-    """TODO: Add description"""
 
         """
         errors = []
@@ -525,8 +518,7 @@ class DataValidator:
         suggestions = []
 
         def validate_recursive(data_item, schema_item, path=""):
-            """TODO: Add description"""
-            current_path = path
+                    current_path = path
 
             # Проверяем тип
             if 'type' in schema_item:
@@ -572,10 +564,8 @@ class DataValidator:
         )
 
 def validate_data(validation_level: ValidationLevel = ValidationLevel.STANDARD):
-    """TODO: Add description"""
 
     """
-    """TODO: Add description"""
 
     Декоратор для валидации данных
 
@@ -584,11 +574,9 @@ def validate_data(validation_level: ValidationLevel = ValidationLevel.STANDARD):
     """
 
     def decorator(func):
-        """TODO: Add description"""
-        @wraps(func)
+            @wraps(func)
         def wrapper(*args, **kwargs):
-            """TODO: Add description"""
-            validator = DataValidator(validation_level)
+                    validator = DataValidator(validation_level)
 
             # Здесь мы могли бы добавить логику проверки входных данных
             # в зависимости от сигнатуры функции
@@ -698,7 +686,6 @@ def main():
     print(f"  - Отчет сохранен: {report_path}")
 
     # Проверяем целостность файла
-    """TODO: Add description"""
 
     print("\nПроверка целостности файла отчета...")
     file_result = validator.validate_file_integrity(report_path)
@@ -710,8 +697,7 @@ def main():
     @validate_data(ValidationLevel.STANDARD)
 
     def sample_data_processing():
-        """TODO: Add description"""
-        return pd.DataFrame({'value': [1, 2, 3]})
+            return pd.DataFrame({'value': [1, 2, 3]})
 
     result = sample_data_processing()
     print(f"  - Функция с декоратором выполнена успешно: {type(result).__name__}")

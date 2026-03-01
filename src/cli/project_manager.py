@@ -132,7 +132,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from image_processor import ImageProcessor, calculate_surface_roughness
 
 def main():
-    """TODO: Add description"""
 
     print("=== АНАЛИЗАТОР ИЗОБРАЖЕНИЙ ПОВЕРХНОСТИ ===")
     print("Инициализация анализатора...")
@@ -190,10 +189,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from sstv_decoder import SSTVDecoder, detect_sstv_signal
 
-    """TODO: Add description"""
 
 def main():
-    """TODO: Add description"""
     print("=== НАЗЕМНАЯ СТАНЦИЯ SSTV ===")
     print("Инициализация декодера SSTV...")
 

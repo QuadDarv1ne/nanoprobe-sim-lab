@@ -1,0 +1,46 @@
+{
+  "app": {
+    "name": "Nanoprobe Simulation Lab",
+    "version": "1.0.0",
+    "debug": false,
+    "log_level": "INFO"
+  },
+  "web_dashboard": {
+    "host": "127.0.0.1",
+    "port": 5000,
+    "auto_open_browser": true
+  },
+  "cache": {
+    "enabled": true,
+    "max_size_mb": 100,
+    "max_age_days": 7,
+    "auto_cleanup": true,
+    "cleanup_schedule": "daily"
+  },
+  "components": {
+    "spm_simulator": {
+      "enabled": true,
+      "cpp_path": "components/cpp-spm-hardware-sim/build/spm-simulator",
+      "python_path": "components/cpp-spm-hardware-sim/src/spm_simulator.py"
+    },
+    "image_analyzer": {
+      "enabled": true,
+      "path": "components/py-surface-image-analyzer/src/main.py"
+    },
+    "sstv_station": {
+      "enabled": true,
+      "path": "components/py-sstv-groundstation/src/main.py"
+    }
+  },
+  "logging": {
+    "format": "[%(levelname)s] %(asctime)s: %(message)s",
+    "date_format": "%Y-%m-%d %H:%M:%S",
+    "file": "logs/app.log"
+  },
+  "performance": {
+    "monitoring_enabled": true,
+    "metrics_interval_seconds": 5,
+    "alert_cpu_threshold": 80,
+    "alert_memory_threshold": 85
+  }
+}

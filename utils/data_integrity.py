@@ -346,7 +346,6 @@ class IntegrityReportGenerator:
 
 
     def generate_integrity_report(self, check_results: Dict[str, any],
-    """TODO: Add description"""
 
                                output_path: str = None) -> str:
         """

@@ -211,7 +211,6 @@ class ReportGenerator:
         """)
 
     def generate_simulation_report(self,
-    """TODO: Add description"""
 
                                  simulation_data: Dict[str, Any],
                                  title: str = "Отчет о симуляции",
@@ -264,7 +263,6 @@ class ReportGenerator:
 
         return str(report_path)
 
-    """TODO: Add description"""
 
     def generate_analytics_report(self,
                                 analytics_data: Dict[str, Any],
@@ -315,7 +313,6 @@ class ReportGenerator:
             print(f"Ошибка создания PDF: {e}")
 
         return str(report_path)
-    """TODO: Add description"""
 
     def generate_comparison_report(self,
                                  reports_data: List[Dict[str, Any]],

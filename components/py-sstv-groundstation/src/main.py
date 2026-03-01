@@ -14,7 +14,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from sstv_decoder import SSTVDecoder, detect_sstv_signal
 
 def main():
-    """TODO: Add description"""
 
     print("=== НАЗЕМНАЯ СТАНЦИЯ SSTV ===")
     print("Инициализация декодера SSTV...")

@@ -192,7 +192,6 @@ class AdvancedLoggerAnalyzer:
 
 
     def filter_logs(self, level: str = None, component: str = None,
-    """TODO: Add description"""
 
                    start_time: datetime = None, end_time: datetime = None,
                    search_term: str = None) -> List[LogEntry]:
@@ -471,7 +470,6 @@ class AdvancedLoggerAnalyzer:
 
         return output_path
 
-    """TODO: Add description"""
 
 
     def export_filtered_logs(self, logs: List[LogEntry], output_path: str,
@@ -537,11 +535,9 @@ class AdvancedLoggerAnalyzer:
             return
 
         self.real_time_monitoring = True
-    """TODO: Add description"""
 
         def monitor():
-            """TODO: Add description"""
-            file_path = Path(log_file_path)
+                    file_path = Path(log_file_path)
             if not file_path.exists():
                 print(f"Файл {log_file_path} не существует")
                 return

@@ -68,7 +68,6 @@ class ResourceManager:
 
 
     def set_resource_limits(self, cpu_percent: float = None, memory_mb: float = None,
-    """TODO: Add description"""
 
                           disk_io_priority: int = None, network_priority: int = None):
         """
@@ -281,11 +280,9 @@ class ResourceManager:
 
         self.monitoring = True
 
-    """TODO: Add description"""
 
         def monitor():
-            """TODO: Add description"""
-            while self.monitoring:
+                    while self.monitoring:
                 try:
                     # Получаем текущие ресурсы
                     resources = self.get_current_resources()
@@ -450,7 +447,6 @@ class AdaptiveResourceOptimizer:
             'efficiency': {'cpu_priority': 3, 'memory_priority': 3, 'efficiency': 0.9},
             'balanced': {'cpu_priority': 2, 'memory_priority': 2, 'efficiency': 0.6}
         }
-    """TODO: Add description"""
 
 
     def set_performance_goals(self, response_time_ms: float = None,
@@ -579,13 +575,11 @@ class AdaptiveResourceOptimizer:
         Запускает адаптивную оптимизацию
 
         Args:
-    """TODO: Add description"""
 
             interval: Интервал между адаптациями (в секундах)
         """
         def adaptive_loop():
-            """TODO: Add description"""
-            while True:
+                    while True:
                 try:
                     self.adapt_resources()
                     time.sleep(interval)

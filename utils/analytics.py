@@ -442,7 +442,6 @@ class ProjectAnalytics:
 
 
     def generate_comprehensive_report(self, surface_data: Optional[np.ndarray] = None,
-    """TODO: Add description"""
 
                                    image_data: Optional[np.ndarray] = None,
                                    signal_data: Optional[np.ndarray] = None,
@@ -491,7 +490,6 @@ class ProjectAnalytics:
 
         return report
 
-    """TODO: Add description"""
 
 
     def visualize_analytics(self, analytics_report: Dict[str, Any],

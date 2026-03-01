@@ -1,0 +1,9 @@
+{
+  "cache_directories": ["temp", "cache", "__pycache__"],
+  "max_age_days": 7,
+  "max_size_mb": 100,
+  "auto_cleanup": true,
+  "cleanup_schedule": "daily",
+  "exclude_patterns": ["*.git", "*.venv", "*node_modules"],
+  "cleanup_on_exit": true
+}

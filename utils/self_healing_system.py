@@ -170,7 +170,6 @@ class SelfHealingSystem:
 
 
     def add_detection_rule(self, name: str, condition: Callable[[Dict[str, Any]], bool],
-    """TODO: Add description"""
 
                          issue_type: str, severity: str, description: str):
         """
@@ -716,22 +715,18 @@ class SelfHealingSystem:
 
         self.active = True
 
-    """TODO: Add description"""
 
         def healing_loop():
-            """TODO: Add description"""
-            while self.active:
+                    while self.active:
                 try:
                     self.run_self_healing_cycle()
                     time.sleep(interval)
                 except Exception as e:
                     self.logger.error(f"Ошибка в цикле самоисцеления: {e}")
                     time.sleep(interval)
-    """TODO: Add description"""
 
         def monitoring_loop():
-            """TODO: Add description"""
-            while self.active:
+                    while self.active:
                 try:
                     # Периодическая проверка здоровья системы
                     time.sleep(60)  # Каждую минуту
@@ -874,14 +869,12 @@ def main():
 
     # Создаем самоисцеляющуюся систему
     healing_system = SelfHealingSystem(output_dir="self_healing")
-    """TODO: Add description"""
 
     # Добавляем пользовательское правило обнаружения
 
     def high_response_time_condition(metrics):
         # В реальной системе здесь будет проверка времени отклика
-        """TODO: Add description"""
-        return False  # Заглушка
+            return False  # Заглушка
 
     healing_system.add_detection_rule(
         name="high_response_time",

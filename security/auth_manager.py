@@ -450,14 +450,11 @@ class AuthManager:
             action: Действие для проверки прав
         """
         def decorator(f):
-    """TODO: Add description"""
 
             @wraps(f)
-    """TODO: Add description"""
 
             def decorated_function(*args, **kwargs):
-                """TODO: Add description"""
-                token = None
+                            token = None
 
                 # Проверяем токен в заголовке
                 if 'Authorization' in request.headers:

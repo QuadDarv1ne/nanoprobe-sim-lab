@@ -77,7 +77,6 @@ class BackupManager:
 
 
     def create_backup(self, backup_name: str = None, include_outputs: bool = True,
-    """TODO: Add description"""
 
                      compress: bool = True, encrypt: bool = False,
                      encryption_key: bytes = None) -> Optional[str]:
@@ -243,7 +242,6 @@ class BackupManager:
             self.logger_manager.log_system_event(f"Ошибка шифрования файла: {e}", "ERROR")
             return False
 
-    """TODO: Add description"""
 
 
     def restore_backup(self, backup_name: str, restore_path: str = None,

@@ -542,7 +542,6 @@ class AIResourceOptimizer:
 
 
     def learn_from_optimization(self, state_before: ResourceState,
-    """TODO: Add description"""
 
                                state_after: ResourceState,
                                recommendation: OptimizationRecommendation,
@@ -682,22 +681,18 @@ class AIResourceOptimizer:
 
         self.active = True
 
-    """TODO: Add description"""
 
         def ai_optimization_loop():
-            """TODO: Add description"""
-            while self.active:
+                    while self.active:
                 try:
                     self.run_ai_optimization_cycle()
                     time.sleep(interval)
                 except Exception as e:
                     print(f"Ошибка в ИИ-оптимизации: {e}")
                     time.sleep(interval)
-    """TODO: Add description"""
 
         def learning_loop():
-            """TODO: Add description"""
-            while self.active:
+                    while self.active:
                 try:
                     # Периодическое обновление модели
                     time.sleep(300)  # Каждые 5 минут

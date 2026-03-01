@@ -135,7 +135,6 @@ class OptimizationOrchestrator:
 
         # Простой тест производительности для демонстрации
         def dummy_test():
-    """TODO: Add description"""
 
             result = 0
             for i in range(10000):

@@ -14,7 +14,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from image_processor import ImageProcessor, calculate_surface_roughness
 
 def main():
-    """TODO: Add description"""
 
     print("=== АНАЛИЗАТОР ИЗОБРАЖЕНИЙ ПОВЕРХНОСТИ ===")
     print("Инициализация анализатора...")

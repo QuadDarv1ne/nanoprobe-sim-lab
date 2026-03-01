@@ -83,7 +83,6 @@ class PerformanceBenchmarkSuite:
 
 
     def measure_performance(self, func: Callable, *args,
-    """TODO: Add description"""
 
                           iterations: int = 10, warmup: int = 2,
                           **kwargs) -> List[BenchmarkResult]:
@@ -143,7 +142,6 @@ class PerformanceBenchmarkSuite:
 
         return results
 
-    """TODO: Add description"""
 
 
     def benchmark_function(self, name: str, func: Callable, *args,
@@ -247,7 +245,6 @@ class PerformanceBenchmarkSuite:
         self.results.append(benchmark_result)
 
         return result
-    """TODO: Add description"""
 
 
     def benchmark_parallel_execution(self, name: str, func: Callable, *args,
@@ -337,7 +334,6 @@ class PerformanceBenchmarkSuite:
             'timestamp': datetime.now().isoformat()
         }
 
-    """TODO: Add description"""
 
         return memory_result
 
@@ -424,13 +420,11 @@ class PerformanceBenchmarkSuite:
         """
         if self.monitoring:
             return
-    """TODO: Add description"""
 
         self.monitoring = True
 
         def monitor():
-            """TODO: Add description"""
-            while self.monitoring:
+                    while self.monitoring:
                 try:
                     # Замеряем системные показатели
                     cpu_percent = psutil.cpu_percent()
@@ -689,7 +683,6 @@ class BenchmarkDecorator:
             iterations: Количество итераций
             warmup: Количество прогревочных итераций
 
-    """TODO: Add description"""
 
         Returns:
             Обернутая функция
@@ -697,8 +690,7 @@ class BenchmarkDecorator:
         @wraps(func)
         def wrapper(*args, **kwargs):
             # Выполняем бенчмарк
-            """TODO: Add description"""
-            result = self.benchmark_suite.benchmark_function(
+                    result = self.benchmark_suite.benchmark_function(
                 name=f"decorated_{func.__name__}",
                 func=func,
                 *args,
@@ -831,7 +823,6 @@ def main():
     for rec in recommendations:
         print(f"  - {rec}")
 
-    """TODO: Add description"""
 
     # Пример использования декоратора
     print("\nПример использования декоратора бенчмарка...")
@@ -840,8 +831,7 @@ def main():
     @benchmark_decorator
 
     def decorated_function(x):
-        """TODO: Add description"""
-        return x ** 2
+            return x ** 2
 
     result = decorated_function(100)
     print(f"Результат функции: {result}")

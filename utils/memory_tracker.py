@@ -135,7 +135,6 @@ class MemoryTracker:
         self.tracking = True
 
         def track():
-    """TODO: Add description"""
 
             while self.tracking:
                 try:
@@ -545,12 +544,10 @@ class MemoryDecorator:
             Обернутая функция
         """
         @wraps(func)
-    """TODO: Add description"""
 
         def wrapper(*args, **kwargs):
             # Замеряем память до выполнения
-            """TODO: Add description"""
-            before_memory = self.memory_tracker.get_current_memory_usage()
+                    before_memory = self.memory_tracker.get_current_memory_usage()
 
             # Выполняем функцию
             result = func(*args, **kwargs)

@@ -526,7 +526,6 @@ class PredictiveAnalyticsEngine:
         self.active = True
 
         def data_collection_loop():
-    """TODO: Add description"""
 
             while self.active:
                 try:
@@ -550,11 +549,9 @@ class PredictiveAnalyticsEngine:
                     print(f"Ошибка в цикле сбора данных: {e}")
                     time.sleep(collection_interval)
 
-    """TODO: Add description"""
 
         def prediction_loop():
-            """TODO: Add description"""
-            while self.active:
+                    while self.active:
                 try:
                     # Применяем рекомендации на основе прогнозов
                     recommendations = self.auto_apply_recommendations()

@@ -330,13 +330,10 @@ class RealTimeDashboard:
     def start_server(self):
         """Запускает веб-сервер дашборда"""
         class DashboardHandler(BaseHTTPRequestHandler):
-    """TODO: Add description"""
 
-    """TODO: Add description"""
 
             def do_GET(self):
-                """TODO: Add description"""
-                if self.path == '/' or self.path == '/dashboard':
+                            if self.path == '/' or self.path == '/dashboard':
                     self.send_response(200)
                     self.send_header('Content-type', 'text/html')
                     self.end_headers()
@@ -372,12 +369,10 @@ class RealTimeDashboard:
                     else:
                         self.send_response(404)
                         self.end_headers()
-    """TODO: Add description"""
 
             def log_message(self, format, *args):
                 # Подавляем стандартные логи сервера
-                """TODO: Add description"""
-                pass
+                            pass
 
         # Создаем сервер
         Handler = DashboardHandler
@@ -407,13 +402,11 @@ class RealTimeDashboard:
         if self.is_running:
             return
 
-    """TODO: Add description"""
 
         self.is_running = True
 
         def monitor():
-            """TODO: Add description"""
-            while self.is_running:
+                    while self.is_running:
                 try:
                     self.collect_realtime_metrics()
                     time.sleep(interval)

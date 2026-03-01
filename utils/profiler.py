@@ -79,7 +79,6 @@ class Profiler:
         self.cpu_monitoring = True
 
         def monitor():
-    """TODO: Add description"""
 
             while self.cpu_monitoring:
                 self.monitoring_data['timestamps'].append(datetime.now())
@@ -187,11 +186,9 @@ class Profiler:
             Словарь с результатами построчного профилирования
         """
         # Создаем временную функцию для профилирования
-    """TODO: Add description"""
 
         def temp_func():
-            """TODO: Add description"""
-            return func(*args, **kwargs)
+                    return func(*args, **kwargs)
 
         # Используем line_profiler
         profiler = line_profiler.LineProfiler()
@@ -277,7 +274,6 @@ class Profiler:
         }
 
         return system_info
-    """TODO: Add description"""
 
 
     def generate_performance_report(self, profile_data: Dict[str, Any],
@@ -335,7 +331,6 @@ class Profiler:
         if 'call_count' in profile_data:
             summary['function_calls'] = profile_data['call_count']
 
-    """TODO: Add description"""
 
         return summary
 
@@ -404,15 +399,13 @@ def profile_performance(func: Callable) -> Callable:
         func: Функция для профилирования
 
     Returns:
-    """TODO: Add description"""
 
         Обернутая функция с профилированием
     """
     @wraps(func)
 
     def wrapper(*args, **kwargs):
-        """TODO: Add description"""
-        profiler = Profiler()
+            profiler = Profiler()
 
         print(f"Начинаем профилирование функции {func.__name__}...")
 
@@ -435,20 +428,16 @@ def benchmark_function(iterations: int = 100):
 
     Args:
         iterations: Количество итераций для бенчмаркинга
-    """TODO: Add description"""
 
-    """TODO: Add description"""
 
     Returns:
         Декоратор для бенчмаркинга
     """
 
     def decorator(func: Callable) -> Callable:
-        """TODO: Add description"""
-        @wraps(func)
+            @wraps(func)
         def wrapper(*args, **kwargs):
-            """TODO: Add description"""
-            profiler = Profiler()
+                    profiler = Profiler()
 
             print(f"Запускаем бенчмарк функции {func.__name__} ({iterations} итераций)...")
 
@@ -559,7 +548,6 @@ def main():
     # Создаем визуализацию
     print("\nСоздание визуализации производительности...")
     chart_path = profiler.visualize_performance_data(benchmark_result)
-    """TODO: Add description"""
 
     print(f"  - График сохранен: {chart_path}")
 
@@ -569,10 +557,8 @@ def main():
     @profile_performance
 
     def decorated_function():
-        """TODO: Add description"""
-        time.sleep(0.1)  # Имитация работы
+            time.sleep(0.1)  # Имитация работы
         return "Результат функции"
-    """TODO: Add description"""
 
     result = decorated_function()
 
@@ -582,8 +568,7 @@ def main():
     @benchmark_function(iterations=5)
 
     def benchmarked_function():
-        """TODO: Add description"""
-        return sum(i**2 for i in range(1000))
+            return sum(i**2 for i in range(1000))
 
     result = benchmarked_function()
 

@@ -121,7 +121,6 @@ class OptimizationLogger:
 
 
     def log(self, component: OptimizationComponent, level: LogLevel, message: str,
-    """TODO: Add description"""
 
             details: Dict[str, Any] = None, exception: Exception = None):
         """
@@ -164,34 +163,29 @@ class OptimizationLogger:
             if len(self.log_buffer) > self.max_buffer_size:
                 self.log_buffer.pop(0)
 
-    """TODO: Add description"""
 
 
     def debug(self, component: OptimizationComponent, message: str,
               details: Dict[str, Any] = None):
         """Логирует отладочное сообщение"""
         self.log(component, LogLevel.DEBUG, message, details)
-    """TODO: Add description"""
 
 
     def info(self, component: OptimizationComponent, message: str,
              details: Dict[str, Any] = None):
         """Логирует информационное сообщение"""
-    """TODO: Add description"""
 
         self.log(component, LogLevel.INFO, message, details)
 
 
     def warning(self, component: OptimizationComponent, message: str,
                 details: Dict[str, Any] = None):
-    """TODO: Add description"""
 
         """Логирует предупреждение"""
         self.log(component, LogLevel.WARNING, message, details)
 
 
     def error(self, component: OptimizationComponent, message: str,
-    """TODO: Add description"""
 
               details: Dict[str, Any] = None, exception: Exception = None):
         """Логирует ошибку"""

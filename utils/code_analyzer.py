@@ -77,7 +77,6 @@ class CodeAnalyzer:
 
 
     def analyze_project(self, include_patterns: List[str] = None,
-    """TODO: Add description"""
 
                        exclude_patterns: List[str] = None) -> Dict[str, Any]:
         """

@@ -75,7 +75,6 @@ class DeploymentManager:
 
 
     def create_virtual_environment(self, env_name: str = "venv",
-    """TODO: Add description"""
 
                                  python_version: str = "3.9") -> bool:
         """
@@ -232,7 +231,6 @@ volumes:
         print(f"✓ docker-compose.yml сгенерирован: {output_path}")
         return output_path
 
-    """TODO: Add description"""
 
 
     def build_docker_image(self, image_name: str = "nanoprobe-lab",
@@ -273,7 +271,6 @@ volumes:
         except Exception as e:
             print(f"❌ Неожиданная ошибка: {e}")
             return False
-    """TODO: Add description"""
 
 
     def run_container(self, image_name: str = "nanoprobe-lab",
@@ -334,7 +331,6 @@ volumes:
             return False
         except Exception as e:
             print(f"❌ Неожиданная ошибка: {e}")
-    """TODO: Add description"""
 
             return False
 

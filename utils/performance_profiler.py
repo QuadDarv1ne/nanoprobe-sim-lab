@@ -106,7 +106,6 @@ class PerformanceProfiler:
         self.cpu_monitoring = True
 
         def monitor():
-    """TODO: Add description"""
 
             while self.cpu_monitoring:
                 try:
@@ -172,12 +171,10 @@ class PerformanceProfiler:
             Профилированная функция
         """
         @wraps(func)
-    """TODO: Add description"""
 
         def wrapper(*args, **kwargs):
             # Запускаем трассировку памяти
-            """TODO: Add description"""
-            tracemalloc.start()
+                    tracemalloc.start()
             start_time = time.time()
             start_cpu = self.current_process.cpu_percent()
             start_memory = self.current_process.memory_info().rss / (1024 * 1024)  # MB
@@ -294,12 +291,10 @@ class PerformanceProfiler:
         Returns:
             Профилированная функция
         """
-    """TODO: Add description"""
 
         @wraps(func)
         def wrapper(*args, **kwargs):
-            """TODO: Add description"""
-            if memory_profiler is None:
+                    if memory_profiler is None:
                 print(f"\n=== Memory profiler not available for: {func.__name__} ===")
                 print("Install memory-profiler to enable memory profiling: pip install memory-profiler")
                 return func(*args, **kwargs)
@@ -635,12 +630,10 @@ def main():
     print(f"Среднее время выполнения: {benchmark_result['avg_time']:.6f} сек")
 
     # Пример профилирования блока кода
-    """TODO: Add description"""
 
     print("\nПрофилирование блока кода...")
     code_block = """
 def test_function():
-    """TODO: Add description"""
     return sum(i**2 for i in range(100000))
 
 result = test_function()
