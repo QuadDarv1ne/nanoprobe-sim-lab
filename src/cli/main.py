@@ -1,19 +1,18 @@
 # -*- coding: utf-8 -*-
-#!/usr/bin/env python3
+# vim: filetype=python
 
 """
-Главная консольная утилита проекта Лаборатория моделирования нанозонда
+Главная консольная утилита проекта Лаборатория моделирования нанозонда.
+
 Этот скрипт предоставляет интерактивный интерфейс для запуска
 всех компонентов проекта и управления ими.
 """
 
 import sys
-import os
 import atexit
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Dict
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent.parent
@@ -23,27 +22,30 @@ sys.path.insert(0, str(project_root))
 CONFIG_PATH = project_root / "config" / "config.json"
 
 # Активные процессы
-_active_processes: Dict[str, subprocess.Popen] = {}
+_active_processes = {}
+
 
 def show_header():
-    """Отображает заголовок программы"""
-    print("="*80)
+    """Отображает заголовок программы."""
+    print("=" * 80)
     print("           ЛАБОРАТОРИЯ МОДЕЛИРОВАНИЯ НАНОЗОНДА")
     print("        Nanoprobe Simulation Lab - Main Console")
-    print("="*80)
+    print("=" * 80)
     print(f"Время запуска: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print()
 
+
 def show_project_overview():
-    """Отображает обзор проекта"""
+    """Отображает обзор проекта."""
     print("Проект включает три взаимосвязанных модуля:")
     print("  1. Симулятор аппаратного обеспечения СЗМ на C++")
     print("  2. Анализатор изображений поверхности на Python")
     print("  3. Наземная станция SSTV на Python/C++")
     print()
 
+
 def show_menu():
-    """Отображает главное меню"""
+    """Отображает главное меню."""
     print("ДОСТУПНЫЕ ОПЕРАЦИИ:")
     print("  1. Запустить симулятор СЗМ (C++)")
     print("  2. Запустить анализатор изображений (Python)")
@@ -54,13 +56,18 @@ def show_menu():
     print("  0. Выход")
     print()
 
+
 def run_spm_simulator() -> bool:
-    """Запускает симулятор СЗМ"""
+    """Запускает симулятор СЗМ."""
     print("Запуск симулятора СЗМ...")
     try:
-        cpp_path = project_root / "components" / "cpp-spm-hardware-sim" / "build" / "spm-simulator"
-        python_spm = project_root / "components" / "cpp-spm-hardware-sim" / "src" / "spm_simulator.py"
-        
+        cpp_build = project_root / "components" / "cpp-spm-hardware-sim" / "build"
+        cpp_path = cpp_build / "spm-simulator"
+        python_spm = (
+            project_root / "components" / "cpp-spm-hardware-sim" / "src"
+            / "spm_simulator.py"
+        )
+
         if cpp_path.exists():
             print(f"Запуск C++ версии: {cpp_path}")
             process = subprocess.Popen([str(cpp_path)], cwd=str(project_root))
@@ -83,11 +90,15 @@ def run_spm_simulator() -> bool:
         print(f"Ошибка при запуске симулятора СЗМ: {e}")
         return False
 
+
 def run_surface_analyzer() -> bool:
-    """Запускает анализатор изображений"""
+    """Запускает анализатор изображений."""
     print("Запуск анализатора изображений поверхности...")
     try:
-        analyzer_path = project_root / "components" / "py-surface-image-analyzer" / "src" / "main.py"
+        analyzer_path = (
+            project_root / "components" / "py-surface-image-analyzer" / "src"
+            / "main.py"
+        )
         if analyzer_path.exists():
             print(f"Запуск: {analyzer_path}")
             process = subprocess.Popen(
@@ -104,8 +115,9 @@ def run_surface_analyzer() -> bool:
         print(f"Ошибка при запуске анализатора изображений: {e}")
         return False
 
+
 def run_sstv_groundstation() -> bool:
-    """Запускает наземную станцию SSTV"""
+    """Запускает наземную станцию SSTV."""
     print("Запуск наземной станции SSTV...")
     try:
         station_path = project_root / "components" / "py-sstv-groundstation" / "src" / "main.py"
@@ -125,8 +137,9 @@ def run_sstv_groundstation() -> bool:
         print(f"Ошибка при запуске наземной станции SSTV: {e}")
         return False
 
+
 def show_project_info():
-    """Показывает информацию о проекте"""
+    """Показывает информацию о проекте."""
     print("ИНФОРМАЦИЯ О ПРОЕКТЕ:")
     print("-" * 40)
     print("Название: Лаборатория моделирования нанозонда")
@@ -138,8 +151,9 @@ def show_project_info():
     print("Лицензия: Проприетарная (ограниченные права)")
     print("-" * 40)
 
+
 def show_license():
-    """Показывает информацию о лицензии"""
+    """Показывает информацию о лицензии."""
     print("ИНФОРМАЦИЯ О ЛИЦЕНЗИИ:")
     print("-" * 40)
     print("Лицензия: Проприетарная лицензия")
@@ -160,8 +174,9 @@ def show_license():
     print("• Использование в проектах с закрытым исходным кодом")
     print("-" * 40)
 
+
 def clean_project_cache() -> bool:
-    """Очищает кэш проекта"""
+    """Очищает кэш проекта."""
     print("Очистка кэша проекта...")
     try:
         from utils.cache_manager import CacheManager
@@ -191,8 +206,9 @@ def clean_project_cache() -> bool:
         print(f"Ошибка при очистке кэша: {e}")
         return False
 
+
 def _cleanup_processes():
-    """Очищает все активные процессы"""
+    """Очищает все активные процессы."""
     for name, process in _active_processes.items():
         try:
             if process.poll() is None:
@@ -207,17 +223,16 @@ def _cleanup_processes():
                 pass
     _active_processes.clear()
 
+
 def auto_cleanup_on_exit():
-    """Автоматическая очистка кэша при завершении программы"""
-    print("\n" + "="*50)
+    """Автоматическая очистка кэша при завершении программы."""
+    print("\n" + "=" * 50)
     print("Завершение работы...")
-    
-    # Останавливаем активные процессы
+
     if _active_processes:
         print("Остановка активных процессов...")
         _cleanup_processes()
-    
-    # Очистка кэша
+
     print("Автоматическая очистка кэша...")
     try:
         cleanup_success = clean_project_cache()
@@ -227,13 +242,13 @@ def auto_cleanup_on_exit():
             print("⚠ Завершение работы завершено с предупреждениями")
     except Exception as e:
         print(f"❌ Ошибка при завершении работы: {e}")
-    print("="*50)
+    print("=" * 50)
+
 
 def main():
-    """Главная функция программы"""
+    """Главная функция программы."""
     atexit.register(auto_cleanup_on_exit)
 
-    # Автоочистка кэша при старте
     print("Инициализация проекта...")
     try:
         from utils.cache_manager import CacheManager
@@ -275,6 +290,6 @@ def main():
         except Exception as e:
             print(f"Произошла ошибка: {e}")
 
+
 if __name__ == "__main__":
     main()
-
