@@ -11,12 +11,18 @@ import time
 import threading
 import queue
 import sys
+import socket
+import os
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Callable
 from datetime import datetime
 import json
 import psutil
 import requests
+from dataclasses import dataclass
 
 
 @dataclass
@@ -473,7 +479,7 @@ class SystemHealthMonitor:
                 "hostname": socket.gethostname(),
                 "platform": f"{os.name}-{sys.platform}",
             }
-        except:
+        except Exception:
             return {"info": "Could not retrieve system info"}
 
     def generate_health_report(self, output_path: str = None) -> str:

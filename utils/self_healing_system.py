@@ -419,7 +419,7 @@ class SelfHealingSystem:
                             file_path = os.path.join(root, file)
                             try:
                                 os.remove(file_path)
-                            except:
+                            except Exception:
                                 continue
                     cleaned_dirs.append(temp_dir)
 
@@ -816,11 +816,11 @@ def main():
     print(f"   Успешных восстановлений: {status['stats']['recovery_success']}")
 
     # Показываем примеры проблем
-    print(f"\n🔍 Примеры обнаруженных проблем:")
+    print("\n🔍 Примеры обнаруженных проблем:")
     for issue in status["recent_issues"]:
         print(f"   • {issue['severity'].upper()}: {issue['description']}")
 
-    print(f"\n🔧 Доступные функции:")
+    print("\n🔧 Доступные функции:")
     print("   • Обнаружение проблем: healing_system.detect_issues()")
     print("   • Статус: healing_system.get_health_status()")
     print("   • Отчеты: healing_system.generate_health_report()")

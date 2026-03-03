@@ -625,7 +625,7 @@ def main():
 
     # Получаем текущие ресурсы
     current_resources = resource_manager.get_current_resources()
-    print(f"✓ Текущее использование ресурсов получено")
+    print("✓ Текущее использование ресурсов получено")
     print(f"  CPU: {current_resources.get('cpu_percent', 0):.2f}%")
     print(f"  Память: {current_resources.get('memory_rss_mb', 0):.2f} MB")
 
@@ -675,7 +675,7 @@ def main():
 
     # Получаем отчет об адаптации
     adaptation_report = adaptive_optimizer.get_adaptation_report()
-    print(f"✓ Отчет об адаптации получен")
+    print("✓ Отчет об адаптации получен")
     print(f"  Текущая стратегия: {adaptation_report['current_strategy']}")
     print(f"  История адаптаций: {adaptation_report['adaptation_history_count']}")
 

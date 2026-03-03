@@ -9,7 +9,7 @@
 
 import time
 import threading
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import numpy as np
 import queue
 from datetime import datetime
