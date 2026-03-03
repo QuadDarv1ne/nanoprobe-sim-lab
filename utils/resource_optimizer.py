@@ -190,7 +190,7 @@ class ResourceManager:
             original_memory = current_memory
 
             # Вызываем garbage collector
-            collected = gc.collect()
+            gc.collect()
 
             # Ждем немного и проверяем результат
             time.sleep(0.1)

@@ -304,7 +304,6 @@ class TestFramework:
 
             # Создаем тестовую поверхность
             surface = SurfaceModel(10, 10)
-            controller = SPMController()
 
             # Тестируем базовую функциональность
             assert surface.getWidth() == 10

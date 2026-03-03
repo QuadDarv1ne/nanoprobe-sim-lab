@@ -193,7 +193,7 @@ class ErrorHandler:
             try:
                 return func(*args, **kwargs)
             except Exception as e:
-                error_info = self.log_error(
+                self.log_error(
                     f"Ошибка в функции {func.__name__}",
                     e,
                     component,

@@ -585,7 +585,7 @@ class PredictiveAnalyticsEngine:
             while self.active:
                 try:
                     # Применяем рекомендации на основе прогнозов
-                    recommendations = self.auto_apply_recommendations()
+                    self.auto_apply_recommendations()
 
                     time.sleep(prediction_interval)
                 except Exception as e:

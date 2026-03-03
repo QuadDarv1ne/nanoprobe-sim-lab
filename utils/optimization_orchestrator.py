@@ -141,7 +141,7 @@ class OptimizationOrchestrator:
         profile_result = self.performance_profiler.benchmark_function(dummy_test, iterations=10)
 
         # Оптимизируем
-        optimized_result = self.performance_profiler.profile_function(dummy_test)()
+        self.performance_profiler.profile_function(dummy_test)()
 
         return {
             "benchmark_result": profile_result,

@@ -106,7 +106,6 @@ class PerformanceBenchmarkSuite:
 
             # Замеряем память до
             memory_before = self.current_process.memory_info().rss / (1024 * 1024)
-            cpu_before = self.current_process.cpu_percent()
 
             # Замеряем время выполнения
             start_time = time.perf_counter()
@@ -167,13 +166,12 @@ class PerformanceBenchmarkSuite:
         for _ in range(iterations):
             gc.collect()
 
-            # Замеряем память и CPU до
+            # Замеряем память до
             memory_before = self.current_process.memory_info().rss / (1024 * 1024)
-            cpu_before = self.current_process.cpu_percent()
 
             # Выполняем функцию
             start_time = time.perf_counter()
-            result_value = func(*args, **kwargs)
+            func(*args, **kwargs)
             end_time = time.perf_counter()
 
             # Замеряем после
@@ -311,7 +309,7 @@ class PerformanceBenchmarkSuite:
         tracemalloc.start()
 
         # Выполняем функцию
-        result = func(*args, **kwargs)
+        func(*args, **kwargs)
 
         # Получаем статистику
         current, peak = tracemalloc.get_traced_memory()

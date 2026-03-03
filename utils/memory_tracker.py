@@ -657,7 +657,7 @@ def main():
     memory_tracker.start_trace_malloc()
 
     # Делаем что-то, что выделяет память
-    large_list = [i**2 for i in range(50000)]
+    [i**2 for i in range(50000)]
 
     # Получаем статистику трассировки
     trace_stats = memory_tracker.get_trace_malloc_stats(limit=5)

@@ -305,7 +305,7 @@ class SimulationOrchestrator:
         while time.time() < end_time and self.simulation_running:
             try:
                 # Выполняем цикл симуляции
-                cycle_results = self.coordinate_multi_component_simulation()
+                self.coordinate_multi_component_simulation()
 
                 cycle_count += 1
                 self.logger_manager.log_simulation_event(
@@ -377,7 +377,7 @@ def main():
 
     # Тестируем создание поверхности
     try:
-        surface = orchestrator.create_simulation_surface((20, 20))
+        orchestrator.create_simulation_surface((20, 20))
         print("✓ Поверхность успешно создана")
     except Exception as e:
         print(f"✗ Ошибка создания поверхности: {e}")

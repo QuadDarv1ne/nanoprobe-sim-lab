@@ -122,7 +122,7 @@ class SurfaceVisualizer:
         ax.set_xlabel("X")
         ax.set_ylabel("Y")
 
-        cbar = plt.colorbar(im, ax=ax, label="Высота")
+        plt.colorbar(im, ax=ax, label="Высота")
 
         def update(frame):
             im.set_array(scan_data_list[frame])

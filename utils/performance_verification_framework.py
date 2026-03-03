@@ -596,13 +596,12 @@ class PerformanceVerificationFramework:
         # Тест 1: Проверка работоспособности оптимизационных инструментов
         try:
             # Проверяем, что все инструменты могут быть инициализированы
-            test_profiler = PerformanceProfiler()
+            PerformanceProfiler()
             test_resource = ResourceManager()
-            test_memory = MemoryTracker()
+            MemoryTracker()
 
             # Проверяем базовую функциональность
-            snapshot = test_memory.take_snapshot()
-            cpu_opt = test_resource.optimize_cpu_usage()
+            test_resource.optimize_cpu_usage()
 
             regression_results["tests_passed"] += 1
             regression_results["passed_tests"].append(

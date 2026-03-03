@@ -546,7 +546,6 @@ class OptimizationAdvisor:
 
             # Проверяем глубину вложенности (слишком много if/for/while)
             nesting_levels = []
-            current_nesting = 0
 
             for i, line in enumerate(code_lines, 1):
                 stripped_line = line.lstrip()

@@ -108,7 +108,7 @@ class Profiler:
         profiler.enable()
 
         try:
-            result = func(*args, **kwargs)
+            func(*args, **kwargs)
         finally:
             profiler.disable()
             end_time = time.time()
@@ -220,7 +220,7 @@ class Profiler:
 
         for i in range(iterations):
             start_time = time.perf_counter()
-            result = func(*args, **kwargs)
+            func(*args, **kwargs)
             end_time = time.perf_counter()
             times.append(end_time - start_time)
 
@@ -468,8 +468,6 @@ def performance_monitor(name: str = "Operation"):
     Args:
         name: Название операции для мониторинга
     """
-    profiler = Profiler()
-
     start_time = time.time()
     tracemalloc.start()
 
@@ -489,7 +487,7 @@ def performance_monitor(name: str = "Operation"):
         print(f"Пиковое использование памяти: {peak / (1024*1024):.2f} MB")
 
         # Сохраняем метрики
-        metric = PerformanceMetric(
+        PerformanceMetric(
             name=f"{name}_execution_time",
             value=execution_time,
             unit="seconds",
@@ -563,7 +561,7 @@ def main():
         time.sleep(0.1)  # Имитация работы
         return "Результат функции"
 
-    result = decorated_function()
+    decorated_function()
 
     # Демонстрируем декоратор бенчмаркинга
     print("\nДемонстрация декоратора бенчмаркинга...")
@@ -572,13 +570,13 @@ def main():
     def benchmarked_function():
         return sum(i**2 for i in range(1000))
 
-    result = benchmarked_function()
+    benchmarked_function()
 
     # Демонстрируем контекстный менеджер
     print("\nДемонстрация контекстного менеджера производительности...")
     with performance_monitor("Тестовая операция"):
         time.sleep(0.05)  # Имитация работы
-        result = sum(i**3 for i in range(1000))
+        sum(i**3 for i in range(1000))
 
     print("\nПрофилировщик производительности успешно протестирован")
     print("\nДоступные функции:")

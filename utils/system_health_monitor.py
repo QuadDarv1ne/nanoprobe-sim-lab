@@ -422,7 +422,7 @@ class SystemHealthMonitor:
                                 self.metrics.append(metric_obj)
 
                         # Проверяем на наличие оповещений
-                        alerts = self.check_for_alerts(metrics)
+                        self.check_for_alerts(metrics)
 
                         # Обновляем оценку здоровья
                         self.calculate_health_score()

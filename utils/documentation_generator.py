@@ -360,7 +360,6 @@ class DocumentationGenerator:
             if func_items:
                 md_content.append("### Functions\n")
                 for func in func_items:
-                    func_type = "Method" if func.type == "method" else "Function"
                     md_content.append(f"#### {func.name}\n")
                     if func.decorators:
                         for dec in func.decorators:

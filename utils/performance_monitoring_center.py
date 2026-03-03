@@ -513,7 +513,6 @@ class PerformanceMonitoringCenter:
             alert_categories = [
                 alert.category for alert in self.alerts_history[-50:]
             ]  # Последние 50
-            alert_severities = [alert.severity for alert in self.alerts_history[-50:]]
 
             if alert_categories:
                 # Категории оповещений
