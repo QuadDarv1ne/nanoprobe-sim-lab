@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Модуль тестирования производительности для проекта Лаборатория моделирования нанозонда
@@ -219,6 +220,7 @@ class PerformanceVerificationFramework:
         """Бенчмарк CPU-интенсивной задачи"""
 
         def cpu_intensive_task():
+            """TODO: Add description"""
             result = 0
             for i in range(100000):
                 result += i**2
@@ -663,6 +665,7 @@ class PerformanceVerificationFramework:
             # Сравниваем время выполнения базовой операции до и после "оптимизации"
 
             def baseline_operation():
+                """TODO: Add description"""
                 return sum(i**2 for i in range(10000))
 
             # Время до

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Модуль оптимизации ресурсов для проекта Лаборатория моделирования нанозонда
@@ -287,6 +288,7 @@ class ResourceManager:
         self.monitoring = True
 
         def monitor():
+            """TODO: Add description"""
             while self.monitoring:
                 try:
                     # Получаем текущие ресурсы
@@ -582,6 +584,7 @@ class AdaptiveResourceOptimizer:
         """
 
         def adaptive_loop():
+            """TODO: Add description"""
             while True:
                 try:
                     self.adapt_resources()

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Модуль самоисцеляющейся системы для проекта Лаборатория моделирования нанозонда
@@ -640,6 +641,7 @@ class SelfHealingSystem:
         self.active = True
 
         def healing_loop():
+            """TODO: Add description"""
             while self.active:
                 try:
                     self.run_self_healing_cycle()
@@ -649,6 +651,7 @@ class SelfHealingSystem:
                     time.sleep(interval)
 
         def monitoring_loop():
+            """TODO: Add description"""
             while self.active:
                 try:
                     # Периодическая проверка здоровья системы
@@ -794,6 +797,7 @@ def main():
 
     def high_response_time_condition(metrics):
         # В реальной системе здесь будет проверка времени отклика
+        """TODO: Add description"""
         return False  # Заглушка
 
     healing_system.add_detection_rule(

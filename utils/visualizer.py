@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Модуль визуализации для проекта Лаборатория моделирования нанозонда
@@ -125,6 +126,7 @@ class SurfaceVisualizer:
         plt.colorbar(im, ax=ax, label="Высота")
 
         def update(frame):
+            """TODO: Add description"""
             im.set_array(scan_data_list[frame])
             ax.set_title(f"{title} - Шаг {frame + 1}")
             return [im]

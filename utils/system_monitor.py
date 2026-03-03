@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Модуль мониторинга системы для проекта Лаборатория моделирования нанозонда
@@ -11,10 +12,15 @@ import psutil
 import time
 import threading
 import json
+import tkinter as tk
+from tkinter import ttk, scrolledtext
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Any
 from collections import deque
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.animation import FuncAnimation
+import matplotlib.pyplot as plt
 
 
 class SystemMonitor:
@@ -247,12 +253,6 @@ class MonitoringDashboard:
 
     def create_gui(self):
         """Создает графический интерфейс панели мониторинга"""
-        import tkinter as tk
-        from tkinter import ttk, scrolledtext
-        from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-        from matplotlib.animation import FuncAnimation
-        import matplotlib.pyplot as plt
-
         self.root = tk.Tk()
         self.root.title("Панель мониторинга системы - Лаборатория моделирования нанозонда")
         self.root.geometry("1200x800")

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Модуль предиктивной аналитики для проекта Лаборатория моделирования нанозонда
@@ -559,6 +560,7 @@ class PredictiveAnalyticsEngine:
         self.active = True
 
         def data_collection_loop():
+            """TODO: Add description"""
             while self.active:
                 try:
                     # Собираем текущие метрики
@@ -582,6 +584,7 @@ class PredictiveAnalyticsEngine:
                     time.sleep(collection_interval)
 
         def prediction_loop():
+            """TODO: Add description"""
             while self.active:
                 try:
                     # Применяем рекомендации на основе прогнозов

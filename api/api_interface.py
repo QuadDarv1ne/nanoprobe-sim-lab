@@ -2,6 +2,7 @@
 #!/usr/bin/env python3
 #!/usr/bin/env python3
 #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 API интерфейс для проекта Лаборатория моделирования нанозонда

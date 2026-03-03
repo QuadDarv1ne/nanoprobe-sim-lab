@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Модуль бенчмаркинга производительности для проекта Лаборатория моделирования нанозонда
@@ -407,6 +408,7 @@ class PerformanceBenchmarkSuite:
         self.monitoring = True
 
         def monitor():
+            """TODO: Add description"""
             while self.monitoring:
                 try:
                     # Замеряем системные показатели
@@ -695,6 +697,7 @@ class BenchmarkDecorator:
         @wraps(func)
         def wrapper(*args, **kwargs):
             # Выполняем бенчмарк
+            """TODO: Add description"""
             result = self.benchmark_suite.benchmark_function(
                 name=f"decorated_{func.__name__}",
                 func=func,
@@ -825,6 +828,7 @@ def main():
 
     @benchmark_decorator
     def decorated_function(x):
+        """TODO: Add description"""
         return x**2
 
     result = decorated_function(100)

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Модуль обработки ошибок для проекта Лаборатория моделирования нанозонда
@@ -190,6 +191,7 @@ class ErrorHandler:
 
         @wraps(func)
         def wrapper(*args, **kwargs):
+            """TODO: Add description"""
             try:
                 return func(*args, **kwargs)
             except Exception as e:
@@ -471,6 +473,7 @@ class SafeExecutor:
         """
 
         def target(queue_obj):
+            """TODO: Add description"""
             try:
                 result = func()
                 queue_obj.put(("success", result))
@@ -533,6 +536,7 @@ def main():
 
     @error_handler.handle_exception(component="TestFunction", fallback_return="default_value")
     def test_function():
+        """TODO: Add description"""
         raise ValueError("Тестовая ошибка в функции")
 
     result = test_function()
@@ -544,6 +548,7 @@ def main():
     counter = 0
 
     def flaky_function():
+        """TODO: Add description"""
         nonlocal counter
         counter += 1
         if counter < 3:
@@ -560,6 +565,7 @@ def main():
     print("\nТестирование безопасного исполнителя с таймаутом...")
 
     def slow_function():
+        """TODO: Add description"""
         time.sleep(2)
         return "Медленный результат"
 

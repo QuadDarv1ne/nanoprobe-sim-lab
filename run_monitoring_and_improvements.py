@@ -2,6 +2,7 @@
 #!/usr/bin/env python3
 #!/usr/bin/env python3
 #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Основной скрипт запуска проекта с мониторингом и улучшениями

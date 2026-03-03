@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Модуль профилирования производительности для проекта Лаборатория моделирования нанозонда
@@ -74,6 +75,7 @@ class Profiler:
         self.cpu_monitoring = True
 
         def monitor():
+            """TODO: Add description"""
             while self.cpu_monitoring:
                 self.monitoring_data["timestamps"].append(datetime.now())
                 self.monitoring_data["cpu_percent"].append(psutil.cpu_percent())
@@ -180,6 +182,7 @@ class Profiler:
         # Создаем временную функцию для профилирования
 
         def temp_func():
+            """TODO: Add description"""
             return func(*args, **kwargs)
 
         # Используем line_profiler
@@ -399,6 +402,7 @@ def profile_performance(func: Callable) -> Callable:
 
     @wraps(func)
     def wrapper(*args, **kwargs):
+        """TODO: Add description"""
         profiler = Profiler()
 
         print(f"Начинаем профилирование функции {func.__name__}...")
@@ -434,8 +438,10 @@ def benchmark_function(iterations: int = 100):
     """
 
     def decorator(func: Callable) -> Callable:
+        """TODO: Add description"""
         @wraps(func)
         def wrapper(*args, **kwargs):
+            """TODO: Add description"""
             profiler = Profiler()
 
             print(f"Запускаем бенчмарк функции {func.__name__} ({iterations} итераций)...")
@@ -560,6 +566,7 @@ def main():
 
     @profile_performance
     def decorated_function():
+        """TODO: Add description"""
         time.sleep(0.1)  # Имитация работы
         return "Результат функции"
 
@@ -570,6 +577,7 @@ def main():
 
     @benchmark_function(iterations=5)
     def benchmarked_function():
+        """TODO: Add description"""
         return sum(i**2 for i in range(1000))
 
     benchmarked_function()

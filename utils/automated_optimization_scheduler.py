@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Модуль автоматического планировщика оптимизации для проекта Лаборатория моделирования нанозонда
@@ -335,6 +336,7 @@ class AutomatedOptimizationScheduler:
         self.running = True
 
         def scheduler_loop():
+            """TODO: Add description"""
             while self.running:
                 try:
                     self.run_scheduler_cycle()
@@ -364,9 +366,11 @@ class AutomatedOptimizationScheduler:
         # Правило 1: Высокая загрузка CPU -> оптимизация CPU
 
         def cpu_high_condition(metrics):
+            """TODO: Add description"""
             return metrics.get("cpu_percent", 0) > 80
 
         def cpu_optimization():
+            """TODO: Add description"""
             return self.resource_manager.optimize_cpu_usage()
 
         self.add_auto_rule(
@@ -379,9 +383,11 @@ class AutomatedOptimizationScheduler:
 
         # Правило 2: Высокое использование памяти -> оптимизация памяти
         def memory_high_condition(metrics):
+            """TODO: Add description"""
             return metrics.get("memory_percent", 0) > 85
 
         def memory_optimization():
+            """TODO: Add description"""
             return self.memory_tracker.perform_memory_optimization()
 
         self.add_auto_rule(
@@ -394,9 +400,11 @@ class AutomatedOptimizationScheduler:
 
         # Правило 3: Низкая эффективность ресурсов -> комплексная оптимизация
         def low_efficiency_condition(metrics):
+            """TODO: Add description"""
             return metrics.get("resource_efficiency", 100) < 70
 
         def efficiency_optimization():
+            """TODO: Add description"""
             return self.orchestrator.start_comprehensive_optimization(["core_utils"])
 
         self.add_auto_rule(
@@ -409,6 +417,7 @@ class AutomatedOptimizationScheduler:
 
         # Правило 4: Подозрительная активность -> профилирование
         def suspicious_activity_condition(metrics):
+            """TODO: Add description"""
             return (
                 metrics.get("cpu_percent", 0) > 90
                 or metrics.get("memory_percent", 0) > 95
@@ -416,6 +425,7 @@ class AutomatedOptimizationScheduler:
             )  # Подозрительное количество процессов
 
         def diagnostic_optimization():
+            """TODO: Add description"""
             return self.performance_profiler.profile_function(lambda: print("Diagnostic scan"))()
 
         self.add_auto_rule(
@@ -555,6 +565,7 @@ class AutomatedOptimizationScheduler:
         """
 
         def predictive_monitoring():
+            """TODO: Add description"""
             while self.running:
                 try:
                     # Получаем предиктивные инсайты

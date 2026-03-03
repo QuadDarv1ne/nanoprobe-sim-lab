@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Модуль ИИ-оптимизатора ресурсов для проекта Лаборатория моделирования нанозонда
@@ -687,6 +688,7 @@ class AIResourceOptimizer:
         self.active = True
 
         def ai_optimization_loop():
+            """TODO: Add description"""
             while self.active:
                 try:
                     self.run_ai_optimization_cycle()
@@ -696,6 +698,7 @@ class AIResourceOptimizer:
                     time.sleep(interval)
 
         def learning_loop():
+            """TODO: Add description"""
             while self.active:
                 try:
                     # Периодическое обновление модели

@@ -2,6 +2,7 @@
 #!/usr/bin/env python3
 #!/usr/bin/env python3
 #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Исправленный скрипт мониторинга ошибок и улучшения проекта Nanoprobe Simulation Lab

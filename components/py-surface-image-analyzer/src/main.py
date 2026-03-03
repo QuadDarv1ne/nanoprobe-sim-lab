@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Анализатор изображений поверхности
@@ -17,6 +18,7 @@ from image_processor import ImageProcessor, calculate_surface_roughness
 
 
 def main():
+    """TODO: Add description"""
     parser = argparse.ArgumentParser(description="Анализатор изображений поверхности")
     parser.add_argument("--image", "-i", type=str, help="Путь к изображению")
     parser.add_argument(

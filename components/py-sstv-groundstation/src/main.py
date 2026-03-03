@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Наземная станция SSTV
@@ -17,6 +18,7 @@ from sstv_decoder import SSTVDecoder, detect_sstv_signal
 
 
 def main():
+    """TODO: Add description"""
     parser = argparse.ArgumentParser(description="Наземная станция SSTV")
     parser.add_argument("--audio", "-a", type=str, help="Путь к аудиофайлу")
     parser.add_argument(

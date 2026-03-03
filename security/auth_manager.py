@@ -2,6 +2,7 @@
 #!/usr/bin/env python3
 #!/usr/bin/env python3
 #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Модуль управления аутентификацией для проекта Лаборатория моделирования нанозонда
@@ -451,10 +452,11 @@ class AuthManager:
         """
         def decorator(f):
 
+            """TODO: Add description"""
             @wraps(f)
-
             def decorated_function(*args, **kwargs):
-                            token = None
+                """TODO: Add description"""
+                token = None
 
                 # Проверяем токен в заголовке
                 if 'Authorization' in request.headers:

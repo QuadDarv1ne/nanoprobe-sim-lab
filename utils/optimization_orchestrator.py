@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Модуль оркестратора оптимизации для проекта Лаборатория моделирования нанозонда
@@ -132,6 +133,7 @@ class OptimizationOrchestrator:
 
         # Простой тест производительности для демонстрации
         def dummy_test():
+            """TODO: Add description"""
             result = 0
             for i in range(10000):
                 result += i**2

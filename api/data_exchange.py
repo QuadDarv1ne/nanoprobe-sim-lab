@@ -2,6 +2,7 @@
 #!/usr/bin/env python3
 #!/usr/bin/env python3
 #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Модуль форматов обмена данными для проекта Лаборатория моделирования нанозонда

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Модуль центра мониторинга производительности для проекта Лаборатория моделирования нанозонда
@@ -346,6 +347,7 @@ class PerformanceMonitoringCenter:
         self.monitoring_active = True
 
         def monitor():
+            """TODO: Add description"""
             while self.monitoring_active:
                 try:
                     self.collect_and_process_metrics()

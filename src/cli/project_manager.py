@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 # vim: filetype=python
 
 """
@@ -128,6 +129,7 @@ from image_processor import ImageProcessor, calculate_surface_roughness
 
 
 def main():
+    """TODO: Add description"""
     print("=== АНАЛИЗАТОР ИЗОБРАЖЕНИЙ ПОВЕРХНОСТИ ===")
     print("Инициализация анализатора...")
 
@@ -174,6 +176,7 @@ from sstv_decoder import SSTVDecoder, detect_sstv_signal
 
 
 def main():
+    """TODO: Add description"""
     print("=== НАЗЕМНАЯ СТАНЦИЯ SSTV ===")
     print("Инициализация декодера SSTV...")
 

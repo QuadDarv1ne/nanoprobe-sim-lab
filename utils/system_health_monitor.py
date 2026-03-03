@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Модуль мониторинга здоровья системы для проекта Лаборатория моделирования нанозонда
@@ -388,6 +389,7 @@ class SystemHealthMonitor:
         self.active = True
 
         def monitor():
+            """TODO: Add description"""
             while self.active:
                 try:
                     # Получаем текущие метрики
@@ -636,6 +638,7 @@ def main():
     # Добавляем обработчик оповещений
 
     def alert_handler(alert):
+        """TODO: Add description"""
         print(f"🚨 ОПОВЕЩЕНИЕ: {alert.message} (Уровень: {alert.severity})")
 
     health_monitor.add_alert_handler(alert_handler)

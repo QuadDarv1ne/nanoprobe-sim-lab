@@ -24,14 +24,14 @@ class TestCacheManager(unittest.TestCase):
         self.temp_dir = tempfile.mkdtemp()
         self.cache_dir = Path(self.temp_dir) / "cache"
         self.cache_dir.mkdir()
-        
+
         self.config = {
             "cache_directories": ["cache"],
             "max_age_days": 7,
             "max_size_mb": 100,
             "auto_cleanup": True
         }
-        
+
         config_file = Path(self.temp_dir) / "config" / "cache_config.json"
         config_file.parent.mkdir()
         import json
@@ -52,21 +52,21 @@ class TestCacheManager(unittest.TestCase):
     def test_get_cache_statistics(self):
         """Тестирует получение статистики кэша"""
         cache_mgr = CacheManager(project_root=self.temp_dir)
-        
+
         stats = cache_mgr.get_cache_statistics()
         self.assertIsInstance(stats, dict)
 
     def test_cleanup_cache(self):
         """Тестирует очистку кэша"""
         cache_mgr = CacheManager(project_root=self.temp_dir)
-        
+
         result = cache_mgr.cleanup_cache()
         self.assertIsInstance(result, dict)
 
     def test_auto_cleanup(self):
         """Тестирует автоматическую очистку"""
         cache_mgr = CacheManager(project_root=self.temp_dir)
-        
+
         result = cache_mgr.auto_cleanup()
         self.assertIsInstance(result, dict)
 
@@ -90,7 +90,7 @@ class TestCacheInfo(unittest.TestCase):
     def test_cache_info_creation(self):
         """Тестирует создание CacheInfo"""
         from datetime import datetime
-        
+
         info = CacheInfo(
             path=Path("/test/cache"),
             size_bytes=1024,
@@ -98,7 +98,7 @@ class TestCacheInfo(unittest.TestCase):
             last_accessed=datetime.now(),
             cache_type="temp"
         )
-        
+
         self.assertEqual(info.size_bytes, 1024)
         self.assertEqual(info.file_count, 10)
         self.assertEqual(info.cache_type, "temp")

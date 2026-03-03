@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 """
 Модуль аналитики производительности для проекта Лаборатория моделирования нанозонда
@@ -95,6 +96,7 @@ class PerformanceAnalyticsDashboard:
         self.refresh_interval = interval
 
         def analytics_monitor():
+            """TODO: Add description"""
             while self.active:
                 try:
                     # Собираем аналитику

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 # vim: filetype=python
 
 """
@@ -210,6 +211,7 @@ class NanoprobeDashboard:
         """Запускает симуляцию СЗМ."""
 
         def worker():
+            """TODO: Add description"""
             try:
                 self.logger_manager.log_system_event("Запуск СЗМ симуляции из GUI", "INFO")
 
@@ -234,6 +236,7 @@ class NanoprobeDashboard:
         """Запускает анализ изображений."""
 
         def worker():
+            """TODO: Add description"""
             try:
                 file_path = filedialog.askopenfilename(
                     title="Выберите изображение для анализа",
@@ -273,6 +276,7 @@ class NanoprobeDashboard:
         """Запускает декодирование SSTV."""
 
         def worker():
+            """TODO: Add description"""
             try:
                 file_path = filedialog.askopenfilename(
                     title="Выберите аудиофайл SSTV",
@@ -309,6 +313,7 @@ class NanoprobeDashboard:
         """Запускает комплексную симуляцию."""
 
         def worker():
+            """TODO: Add description"""
             try:
                 self.logger_manager.log_system_event("Запуск комплексной симуляции из GUI", "INFO")
 
@@ -334,6 +339,7 @@ class NanoprobeDashboard:
         """Запускает непрерывную симуляцию."""
 
         def worker():
+            """TODO: Add description"""
             try:
                 self.logger_manager.log_system_event("Запуск непрерывной симуляции из GUI", "INFO")
 
