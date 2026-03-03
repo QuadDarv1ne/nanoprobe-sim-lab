@@ -22,17 +22,21 @@ import time
 from enum import Enum
 from dataclasses import dataclass
 
+
 class ErrorSeverity(Enum):
     """Перечисление уровней важности ошибок"""
+
     DEBUG = 10
     INFO = 20
     WARNING = 30
     ERROR = 40
     CRITICAL = 50
 
+
 @dataclass
 class ErrorInfo:
     """Информация об ошибке"""
+
     timestamp: datetime
     severity: ErrorSeverity
     message: str
@@ -42,13 +46,13 @@ class ErrorInfo:
     component: str
     user_context: Optional[Dict[str, Any]] = None
 
+
 class ErrorHandler:
     """
     Класс обработки ошибок
     Обеспечивает централизованную обработку,
     логирование и восстановление после ошибок.
     """
-
 
     def __init__(self, log_file: str = "error_log.json", max_log_size: int = 1000):
         """
@@ -68,58 +72,60 @@ class ErrorHandler:
         if not self.log_file.exists():
             self.log_file.parent.mkdir(parents=True, exist_ok=True)
             self.log_file.touch()
-            with open(self.log_file, 'w', encoding='utf-8') as f:
+            with open(self.log_file, "w", encoding="utf-8") as f:
                 json.dump([], f, ensure_ascii=False, default=str)
 
         # Загружаем историю ошибок
         self.load_error_history()
 
-
     def load_error_history(self):
         """Загружает историю ошибок из файла"""
         try:
-            with open(self.log_file, 'r', encoding='utf-8') as f:
+            with open(self.log_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                self.error_history = [ErrorInfo(**item) if isinstance(item, dict) else item for item in data]
+                self.error_history = [
+                    ErrorInfo(**item) if isinstance(item, dict) else item for item in data
+                ]
         except Exception:
             self.error_history = []
-
 
     def save_error_history(self):
         """Сохраняет историю ошибок в файл"""
         try:
             # Сохраняем только последние max_log_size ошибок
-            recent_errors = self.error_history[-self.max_log_size:]
+            recent_errors = self.error_history[-self.max_log_size :]
 
             # Преобразуем объекты ErrorInfo в словари
             serializable_errors = []
             for error in recent_errors:
                 if isinstance(error, ErrorInfo):
                     serializable_error = {
-                        'timestamp': error.timestamp.isoformat(),
-                        'severity': error.severity.name,
-                        'message': error.message,
-                        'exception_type': error.exception_type,
-                        'exception_message': error.exception_message,
-                        'traceback_info': error.traceback_info,
-                        'component': error.component,
-                        'user_context': error.user_context
+                        "timestamp": error.timestamp.isoformat(),
+                        "severity": error.severity.name,
+                        "message": error.message,
+                        "exception_type": error.exception_type,
+                        "exception_message": error.exception_message,
+                        "traceback_info": error.traceback_info,
+                        "component": error.component,
+                        "user_context": error.user_context,
                     }
                     serializable_errors.append(serializable_error)
                 else:
                     serializable_errors.append(error)
 
-            with open(self.log_file, 'w', encoding='utf-8') as f:
+            with open(self.log_file, "w", encoding="utf-8") as f:
                 json.dump(serializable_errors, f, ensure_ascii=False, default=str)
         except Exception as e:
             print(f"Ошибка сохранения истории ошибок: {e}")
 
-    def log_error(self,
-                  message: str,
-                  exception: Exception = None,
-                  component: str = "Unknown",
-                  severity: ErrorSeverity = ErrorSeverity.ERROR,
-                  user_context: Optional[Dict[str, Any]] = None) -> ErrorInfo:
+    def log_error(
+        self,
+        message: str,
+        exception: Exception = None,
+        component: str = "Unknown",
+        severity: ErrorSeverity = ErrorSeverity.ERROR,
+        user_context: Optional[Dict[str, Any]] = None,
+    ) -> ErrorInfo:
         """
         Логирует ошибку
 
@@ -152,7 +158,7 @@ class ErrorHandler:
             exception_message=exception_message,
             traceback_info=traceback_info,
             component=component,
-            user_context=user_context
+            user_context=user_context,
         )
 
         with self.lock:
@@ -164,11 +170,13 @@ class ErrorHandler:
 
         return error_info
 
-    def handle_exception(self,
-                        func: Callable,
-                        component: str = "Unknown",
-                        fallback_return: Any = None,
-                        suppress_exception: bool = False) -> Callable:
+    def handle_exception(
+        self,
+        func: Callable,
+        component: str = "Unknown",
+        fallback_return: Any = None,
+        suppress_exception: bool = False,
+    ) -> Callable:
         """
         Декоратор для обработки исключений в функциях
 
@@ -192,15 +200,15 @@ class ErrorHandler:
                     e,
                     component,
                     ErrorSeverity.ERROR,
-                    user_context={'function_args': str(args), 'function_kwargs': str(kwargs)}
+                    user_context={"function_args": str(args), "function_kwargs": str(kwargs)},
                 )
 
                 if suppress_exception:
                     return fallback_return
                 else:
                     raise e
-        return wrapper
 
+        return wrapper
 
     def get_recent_errors(self, count: int = 10) -> list:
         """
@@ -215,7 +223,6 @@ class ErrorHandler:
         with self.lock:
             return self.error_history[-count:]
 
-
     def get_errors_by_severity(self, severity: ErrorSeverity) -> list:
         """
         Возвращает ошибки по уровню важности
@@ -228,7 +235,6 @@ class ErrorHandler:
         """
         with self.lock:
             return [error for error in self.error_history if error.severity == severity]
-
 
     def get_errors_by_component(self, component: str) -> list:
         """
@@ -243,13 +249,11 @@ class ErrorHandler:
         with self.lock:
             return [error for error in self.error_history if error.component == component]
 
-
     def clear_error_history(self):
         """Очищает историю ошибок"""
         with self.lock:
             self.error_history.clear()
             self.save_error_history()
-
 
     def export_error_report(self, output_path: str = None) -> str:
         """
@@ -266,26 +270,29 @@ class ErrorHandler:
             output_path = f"error_report_{timestamp}.json"
 
         report = {
-            'export_timestamp': datetime.now().isoformat(),
-            'total_errors': len(self.error_history),
-            'errors': []
+            "export_timestamp": datetime.now().isoformat(),
+            "total_errors": len(self.error_history),
+            "errors": [],
         }
 
         for error in self.error_history:
-            report['errors'].append({
-                'timestamp': error.timestamp.isoformat(),
-                'severity': error.severity.name,
-                'message': error.message,
-                'exception_type': error.exception_type,
-                'exception_message': error.exception_message,
-                'component': error.component,
-                'has_user_context': error.user_context is not None
-            })
+            report["errors"].append(
+                {
+                    "timestamp": error.timestamp.isoformat(),
+                    "severity": error.severity.name,
+                    "message": error.message,
+                    "exception_type": error.exception_type,
+                    "exception_message": error.exception_message,
+                    "component": error.component,
+                    "has_user_context": error.user_context is not None,
+                }
+            )
 
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(report, f, indent=2, ensure_ascii=False, default=str)
 
         return output_path
+
 
 class RecoveryManager:
     """
@@ -293,7 +300,6 @@ class RecoveryManager:
     Обеспечивает восстановление после ошибок
     и управление состоянием системы.
     """
-
 
     def __init__(self, error_handler: ErrorHandler):
         """
@@ -307,7 +313,6 @@ class RecoveryManager:
         self.recovery_strategies = {}
         self.lock = threading.Lock()
 
-
     def create_state_backup(self, state_id: str, state_data: Any):
         """
         Создает резервную копию состояния
@@ -317,11 +322,7 @@ class RecoveryManager:
             state_data: Данные состояния
         """
         with self.lock:
-            self.state_backups[state_id] = {
-                'timestamp': datetime.now(),
-                'data': state_data
-            }
-
+            self.state_backups[state_id] = {"timestamp": datetime.now(), "data": state_data}
 
     def restore_state(self, state_id: str) -> Optional[Any]:
         """
@@ -335,9 +336,8 @@ class RecoveryManager:
         """
         with self.lock:
             if state_id in self.state_backups:
-                return self.state_backups[state_id]['data']
+                return self.state_backups[state_id]["data"]
             return None
-
 
     def register_recovery_strategy(self, error_type: str, strategy: Callable):
         """
@@ -349,7 +349,6 @@ class RecoveryManager:
         """
         with self.lock:
             self.recovery_strategies[error_type] = strategy
-
 
     def attempt_recovery(self, error_info: ErrorInfo) -> bool:
         """
@@ -371,11 +370,10 @@ class RecoveryManager:
                         f"Ошибка при попытке восстановления после {error_info.exception_type}",
                         e,
                         "RecoveryManager",
-                        ErrorSeverity.WARNING
+                        ErrorSeverity.WARNING,
                     )
                     return False
             return False
-
 
     def cleanup_old_backups(self, retention_hours: int = 24):
         """
@@ -389,11 +387,12 @@ class RecoveryManager:
             old_backups = []
 
             for state_id, backup in self.state_backups.items():
-                if backup['timestamp'].timestamp() < cutoff_time:
+                if backup["timestamp"].timestamp() < cutoff_time:
                     old_backups.append(state_id)
 
             for state_id in old_backups:
                 del self.state_backups[state_id]
+
 
 class SafeExecutor:
     """
@@ -401,7 +400,6 @@ class SafeExecutor:
     Обеспечивает безопасное выполнение кода
     с перехватом и обработкой исключений.
     """
-
 
     def __init__(self, error_handler: ErrorHandler):
         """
@@ -412,11 +410,13 @@ class SafeExecutor:
         """
         self.error_handler = error_handler
 
-    def execute_with_retry(self,
-                          func: Callable,
-                          max_retries: int = 3,
-                          retry_delay: float = 1.0,
-                          component: str = "SafeExecutor") -> Any:
+    def execute_with_retry(
+        self,
+        func: Callable,
+        max_retries: int = 3,
+        retry_delay: float = 1.0,
+        component: str = "SafeExecutor",
+    ) -> Any:
         """
         Выполняет функцию с повторными попытками при ошибках
 
@@ -439,7 +439,7 @@ class SafeExecutor:
                         f"Ошибка после {max_retries} попыток выполнения {func.__name__}",
                         e,
                         component,
-                        ErrorSeverity.ERROR
+                        ErrorSeverity.ERROR,
                     )
                     raise e
                 else:
@@ -449,14 +449,16 @@ class SafeExecutor:
                         f"Ошибка при попытке {attempt + 1}/{max_retries} выполнения {func.__name__}",
                         e,
                         component,
-                        ErrorSeverity.WARNING
+                        ErrorSeverity.WARNING,
                     )
 
-    def execute_with_timeout(self,
-                           func: Callable,
-                           timeout: float,
-                           fallback_return: Any = None,
-                           component: str = "SafeExecutor") -> Any:
+    def execute_with_timeout(
+        self,
+        func: Callable,
+        timeout: float,
+        fallback_return: Any = None,
+        component: str = "SafeExecutor",
+    ) -> Any:
         """
         Выполняет функцию с таймаутом
 
@@ -469,12 +471,13 @@ class SafeExecutor:
         Returns:
             Результат выполнения функции или fallback_return при таймауте
         """
+
         def target(queue_obj):
             try:
                 result = func()
-                queue_obj.put(('success', result))
+                queue_obj.put(("success", result))
             except Exception as e:
-                queue_obj.put(('error', e))
+                queue_obj.put(("error", e))
 
         q = queue.Queue()
         thread = threading.Thread(target=target, args=(q,))
@@ -487,17 +490,18 @@ class SafeExecutor:
             self.error_handler.log_error(
                 f"Таймаут выполнения функции {func.__name__} (>{timeout}s)",
                 component=component,
-                severity=ErrorSeverity.WARNING
+                severity=ErrorSeverity.WARNING,
             )
             return fallback_return
         else:
             try:
                 status, result = q.get_nowait()
-                if status == 'error':
+                if status == "error":
                     raise result
                 return result
             except queue.Empty:
                 return fallback_return
+
 
 def main():
     """Главная функция для демонстрации возможностей обработчика ошибок"""
@@ -522,7 +526,7 @@ def main():
             e,
             "TestComponent",
             ErrorSeverity.ERROR,
-            user_context={"operation": "division", "operands": [10, 0]}
+            user_context={"operation": "division", "operands": [10, 0]},
         )
         print(f"✓ Ошибка залогирована: {error_info.message}")
 
@@ -561,7 +565,9 @@ def main():
         time.sleep(2)
         return "Медленный результат"
 
-    result = safe_executor.execute_with_timeout(slow_function, timeout=1.0, fallback_return="Таймаут!")
+    result = safe_executor.execute_with_timeout(
+        slow_function, timeout=1.0, fallback_return="Таймаут!"
+    )
     print(f"✓ Результат с таймаутом: {result}")
 
     # Тестирование восстановления состояния
@@ -594,6 +600,6 @@ def main():
     print("- Восстановление состояния: create_state_backup(), restore_state()")
     print("- Отчеты об ошибках: export_error_report()")
 
+
 if __name__ == "__main__":
     main()
-

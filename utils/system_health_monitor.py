@@ -25,9 +25,11 @@ import requests
 import socket
 import os
 
+
 @dataclass
 class HealthMetric:
     """Метрика здоровья системы"""
+
     name: str
     value: float
     unit: str
@@ -37,9 +39,11 @@ class HealthMetric:
     threshold_low: Optional[float] = None
     threshold_high: Optional[float] = None
 
+
 @dataclass
 class HealthAlert:
     """Оповещение о здоровье системы"""
+
     alert_id: str
     metric_name: str
     current_value: float
@@ -49,13 +53,13 @@ class HealthAlert:
     timestamp: datetime
     resolved: bool = False
 
+
 class SystemHealthMonitor:
     """
     Класс мониторинга здоровья системы
     Обеспечивает постоянный мониторинг состояния системы,
     обнаружение аномалий и отправку уведомлений.
     """
-
 
     def __init__(self, output_dir: str = "health_reports"):
         """
@@ -76,12 +80,12 @@ class SystemHealthMonitor:
 
         # Пороговые значения по умолчанию
         self.thresholds = {
-            'cpu_percent': {'warning': 70, 'error': 85, 'critical': 95},
-            'memory_percent': {'warning': 75, 'error': 85, 'critical': 95},
-            'disk_percent': {'warning': 80, 'error': 90, 'critical': 95},
-            'temperature': {'warning': 70, 'error': 80, 'critical': 90},  # Celsius
-            'process_count': {'warning': 200, 'error': 500, 'critical': 1000},
-            'network_latency_ms': {'warning': 100, 'error': 500, 'critical': 1000}
+            "cpu_percent": {"warning": 70, "error": 85, "critical": 95},
+            "memory_percent": {"warning": 75, "error": 85, "critical": 95},
+            "disk_percent": {"warning": 80, "error": 90, "critical": 95},
+            "temperature": {"warning": 70, "error": 80, "critical": 90},  # Celsius
+            "process_count": {"warning": 200, "error": 500, "critical": 1000},
+            "network_latency_ms": {"warning": 100, "error": 500, "critical": 1000},
         }
 
         # Текущие значения метрик
@@ -90,7 +94,6 @@ class SystemHealthMonitor:
 
         # Очередь для обработки оповещений
         self.alert_queue = queue.Queue()
-
 
     def add_alert_handler(self, handler: Callable[[HealthAlert], None]):
         """
@@ -101,7 +104,6 @@ class SystemHealthMonitor:
         """
         self.alert_handlers.append(handler)
 
-
     def add_notification_channel(self, channel: str, config: Dict[str, Any]):
         """
         Добавляет канал уведомлений
@@ -110,18 +112,14 @@ class SystemHealthMonitor:
             channel: Тип канала ('email', 'webhook', 'console')
             config: Конфигурация канала
         """
-        self.notification_channels.append({
-            'type': channel,
-            'config': config
-        })
-
+        self.notification_channels.append({"type": channel, "config": config})
 
     def get_system_metrics(self) -> Dict[str, float]:
         """Получает текущие системные метрики"""
         try:
             cpu_percent = psutil.cpu_percent(interval=1)
             memory = psutil.virtual_memory()
-            disk = psutil.disk_usage('/')
+            disk = psutil.disk_usage("/")
             temperature = 0  # Будет получено ниже, если возможно
 
             # Попытка получить температуру
@@ -129,12 +127,12 @@ class SystemHealthMonitor:
                 temps = psutil.sensors_temperatures()
                 if temps:
                     # Берем температуру CPU, если доступна
-                    if 'coretemp' in temps:
-                        temp_sensors = temps['coretemp']
+                    if "coretemp" in temps:
+                        temp_sensors = temps["coretemp"]
                         if temp_sensors:
                             temperature = temp_sensors[0].current
-                    elif 'cpu_thermal' in temps:
-                        temp_sensors = temps['cpu_thermal']
+                    elif "cpu_thermal" in temps:
+                        temp_sensors = temps["cpu_thermal"]
                         if temp_sensors:
                             temperature = temp_sensors[0].current
                     else:
@@ -156,23 +154,22 @@ class SystemHealthMonitor:
             network_recv = network_io.bytes_recv if network_io else 0
 
             return {
-                'cpu_percent': cpu_percent,
-                'memory_percent': memory.percent,
-                'memory_used_gb': memory.used / (1024**3),
-                'memory_available_gb': memory.available / (1024**3),
-                'disk_percent': disk.percent if disk else 0,
-                'disk_used_gb': disk.used / (1024**3) if disk else 0,
-                'disk_free_gb': disk.free / (1024**3) if disk else 0,
-                'temperature_celsius': temperature,
-                'process_count': process_count,
-                'network_sent_bytes': network_sent,
-                'network_recv_bytes': network_recv,
-                'timestamp': datetime.now()
+                "cpu_percent": cpu_percent,
+                "memory_percent": memory.percent,
+                "memory_used_gb": memory.used / (1024**3),
+                "memory_available_gb": memory.available / (1024**3),
+                "disk_percent": disk.percent if disk else 0,
+                "disk_used_gb": disk.used / (1024**3) if disk else 0,
+                "disk_free_gb": disk.free / (1024**3) if disk else 0,
+                "temperature_celsius": temperature,
+                "process_count": process_count,
+                "network_sent_bytes": network_sent,
+                "network_recv_bytes": network_recv,
+                "timestamp": datetime.now(),
             }
         except Exception as e:
             print(f"Ошибка получения метрик системы: {e}")
             return {}
-
 
     def evaluate_metric_severity(self, metric_name: str, value: float) -> str:
         """
@@ -186,19 +183,18 @@ class SystemHealthMonitor:
             Уровень серьезности ('info', 'warning', 'error', 'critical')
         """
         if metric_name not in self.thresholds:
-            return 'info'
+            return "info"
 
         thresholds = self.thresholds[metric_name]
 
-        if value <= thresholds['warning']:
-            return 'info'
-        elif value <= thresholds['error']:
-            return 'warning'
-        elif value <= thresholds['critical']:
-            return 'error'
+        if value <= thresholds["warning"]:
+            return "info"
+        elif value <= thresholds["error"]:
+            return "warning"
+        elif value <= thresholds["critical"]:
+            return "error"
         else:
-            return 'critical'
-
+            return "critical"
 
     def check_for_alerts(self, metrics: Dict[str, float]) -> List[HealthAlert]:
         """
@@ -216,15 +212,15 @@ class SystemHealthMonitor:
             if isinstance(value, (int, float)) and metric_name in self.thresholds:
                 severity = self.evaluate_metric_severity(metric_name, value)
 
-                if severity in ['warning', 'error', 'critical']:
+                if severity in ["warning", "error", "critical"]:
                     # Определяем пороговое значение для данного уровня серьезности
                     thresholds = self.thresholds[metric_name]
-                    if severity == 'warning':
-                        threshold_val = thresholds['warning']
-                    elif severity == 'error':
-                        threshold_val = thresholds['error']
+                    if severity == "warning":
+                        threshold_val = thresholds["warning"]
+                    elif severity == "error":
+                        threshold_val = thresholds["error"]
                     else:  # critical
-                        threshold_val = thresholds['critical']
+                        threshold_val = thresholds["critical"]
 
                     alert = HealthAlert(
                         alert_id=f"{metric_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
@@ -233,7 +229,7 @@ class SystemHealthMonitor:
                         threshold_value=threshold_val,
                         severity=severity,
                         message=f"Метрика {metric_name} превысила порог: {value} > {threshold_val}",
-                        timestamp=datetime.now()
+                        timestamp=datetime.now(),
                     )
 
                     alerts.append(alert)
@@ -242,7 +238,6 @@ class SystemHealthMonitor:
                     self.alert_queue.put(alert)
 
         return alerts
-
 
     def process_alerts(self):
         """Обрабатывает оповещения из очереди"""
@@ -266,28 +261,26 @@ class SystemHealthMonitor:
             except queue.Empty:
                 break
 
-
     def send_notifications(self, alert: HealthAlert):
         """Отправляет уведомления об оповещении"""
         for channel in self.notification_channels:
             try:
-                if channel['type'] == 'email':
-                    self._send_email_notification(alert, channel['config'])
-                elif channel['type'] == 'webhook':
-                    self._send_webhook_notification(alert, channel['config'])
-                elif channel['type'] == 'console':
+                if channel["type"] == "email":
+                    self._send_email_notification(alert, channel["config"])
+                elif channel["type"] == "webhook":
+                    self._send_webhook_notification(alert, channel["config"])
+                elif channel["type"] == "console":
                     self._send_console_notification(alert)
             except Exception as e:
                 print(f"Ошибка отправки уведомления через {channel['type']}: {e}")
-
 
     def _send_email_notification(self, alert: HealthAlert, config: Dict[str, Any]):
         """Отправляет уведомление по email"""
         try:
             msg = MIMEMultipart()
-            msg['From'] = config.get('from_email', '')
-            msg['To'] = ', '.join(config.get('to_emails', []))
-            msg['Subject'] = f"[{alert.severity.upper()}] Системное оповещение: {alert.metric_name}"
+            msg["From"] = config.get("from_email", "")
+            msg["To"] = ", ".join(config.get("to_emails", []))
+            msg["Subject"] = f"[{alert.severity.upper()}] Системное оповещение: {alert.metric_name}"
 
             body = f"""
 Системное оповещение:
@@ -299,43 +292,42 @@ class SystemHealthMonitor:
 - Сообщение: {alert.message}
 """
 
-            msg.attach(MIMEText(body, 'plain', 'utf-8'))
+            msg.attach(MIMEText(body, "plain", "utf-8"))
 
-            server = smtplib.SMTP(config.get('smtp_server', 'localhost'), config.get('smtp_port', 587))
+            server = smtplib.SMTP(
+                config.get("smtp_server", "localhost"), config.get("smtp_port", 587)
+            )
             server.starttls()
-            server.login(config.get('username', ''), config.get('password', ''))
+            server.login(config.get("username", ""), config.get("password", ""))
             text = msg.as_string()
-            server.sendmail(msg['From'], config.get('to_emails', []), text)
+            server.sendmail(msg["From"], config.get("to_emails", []), text)
             server.quit()
 
         except Exception as e:
             print(f"Ошибка отправки email уведомления: {e}")
 
-
     def _send_webhook_notification(self, alert: HealthAlert, config: Dict[str, Any]):
         """Отправляет уведомление через webhook"""
         try:
             payload = {
-                'alert_id': alert.alert_id,
-                'metric_name': alert.metric_name,
-                'current_value': alert.current_value,
-                'threshold_value': alert.threshold_value,
-                'severity': alert.severity,
-                'message': alert.message,
-                'timestamp': alert.timestamp.isoformat()
+                "alert_id": alert.alert_id,
+                "metric_name": alert.metric_name,
+                "current_value": alert.current_value,
+                "threshold_value": alert.threshold_value,
+                "severity": alert.severity,
+                "message": alert.message,
+                "timestamp": alert.timestamp.isoformat(),
             }
 
-            response = requests.post(config.get('url', ''), json=payload)
+            response = requests.post(config.get("url", ""), json=payload)
             response.raise_for_status()
 
         except Exception as e:
             print(f"Ошибка отправки webhook уведомления: {e}")
 
-
     def _send_console_notification(self, alert: HealthAlert):
         """Отправляет уведомление в консоль"""
         print(f"[{alert.severity.upper()}] {alert.message} (Value: {alert.current_value})")
-
 
     def calculate_health_score(self) -> float:
         """
@@ -351,11 +343,11 @@ class SystemHealthMonitor:
 
         # Рассчитываем вклад каждой метрики в общую оценку
         weights = {
-            'cpu_percent': 0.25,
-            'memory_percent': 0.25,
-            'disk_percent': 0.20,
-            'temperature_celsius': 0.15,
-            'process_count': 0.15
+            "cpu_percent": 0.25,
+            "memory_percent": 0.25,
+            "disk_percent": 0.20,
+            "temperature_celsius": 0.15,
+            "process_count": 0.15,
         }
 
         score = 0.0
@@ -367,7 +359,7 @@ class SystemHealthMonitor:
 
                 # Нормализуем значение (чем меньше, тем лучше здоровье)
                 if metric_name in self.thresholds:
-                    max_threshold = self.thresholds[metric_name]['critical']
+                    max_threshold = self.thresholds[metric_name]["critical"]
                     normalized = min(100, (value / max_threshold) * 100)
                     # Чем выше нормализованное значение, тем хуже здоровье
                     metric_score = max(0, 100 - normalized)
@@ -384,7 +376,6 @@ class SystemHealthMonitor:
         self.health_score = 100 - score
         return max(0, min(100, self.health_score))
 
-
     def start_monitoring(self, interval: float = 30.0):
         """
         Запускает мониторинг здоровья системы
@@ -398,7 +389,6 @@ class SystemHealthMonitor:
         self.active = True
 
         def monitor():
-
             while self.active:
                 try:
                     # Получаем текущие метрики
@@ -416,18 +406,24 @@ class SystemHealthMonitor:
                                 metric_obj = HealthMetric(
                                     name=metric_name,
                                     value=value,
-                                    unit='%' if 'percent' in metric_name else
-                                         'GB' if 'gb' in metric_name else
-                                         '°C' if 'temperature' in metric_name else
-                                         'count' if 'count' in metric_name else
-                                         'bytes' if 'bytes' in metric_name else
-                                         'ms' if 'latency' in metric_name else
-                                         'unknown',
-                                    timestamp=metrics.get('timestamp', datetime.now()),
+                                    unit="%"
+                                    if "percent" in metric_name
+                                    else "GB"
+                                    if "gb" in metric_name
+                                    else "°C"
+                                    if "temperature" in metric_name
+                                    else "count"
+                                    if "count" in metric_name
+                                    else "bytes"
+                                    if "bytes" in metric_name
+                                    else "ms"
+                                    if "latency" in metric_name
+                                    else "unknown",
+                                    timestamp=metrics.get("timestamp", datetime.now()),
                                     severity=severity,
-                                    source='system_monitor',
-                                    threshold_low=thresholds.get('warning'),
-                                    threshold_high=thresholds.get('critical')
+                                    source="system_monitor",
+                                    threshold_low=thresholds.get("warning"),
+                                    threshold_high=thresholds.get("critical"),
                                 )
 
                                 self.metrics.append(metric_obj)
@@ -450,13 +446,11 @@ class SystemHealthMonitor:
         self.monitoring_thread = threading.Thread(target=monitor, daemon=True)
         self.monitoring_thread.start()
 
-
     def stop_monitoring(self):
         """Останавливает мониторинг здоровья системы"""
         self.active = False
         if self.monitoring_thread:
             self.monitoring_thread.join(timeout=5)
-
 
     def get_current_health_status(self) -> Dict[str, Any]:
         """
@@ -466,30 +460,28 @@ class SystemHealthMonitor:
             Словарь с текущим статусом
         """
         return {
-            'timestamp': datetime.now().isoformat(),
-            'health_score': self.health_score,
-            'current_metrics': self.current_metrics,
-            'active_alerts': len([a for a in self.alerts if not a.resolved]),
-            'total_alerts': len(self.alerts),
-            'recent_alerts': [a for a in self.alerts[-5:] if not a.resolved],
-            'system_info': self._get_system_info()
+            "timestamp": datetime.now().isoformat(),
+            "health_score": self.health_score,
+            "current_metrics": self.current_metrics,
+            "active_alerts": len([a for a in self.alerts if not a.resolved]),
+            "total_alerts": len(self.alerts),
+            "recent_alerts": [a for a in self.alerts[-5:] if not a.resolved],
+            "system_info": self._get_system_info(),
         }
-
 
     def _get_system_info(self) -> Dict[str, Any]:
         """Получает информацию о системе"""
         try:
             return {
-                'cpu_count': psutil.cpu_count(logical=True),
-                'cpu_freq': psutil.cpu_freq()._asdict() if psutil.cpu_freq() else {},
-                'memory_total_gb': round(psutil.virtual_memory().total / (1024**3), 2),
-                'boot_time': datetime.fromtimestamp(psutil.boot_time()).isoformat(),
-                'hostname': socket.gethostname(),
-                'platform': f"{os.name}-{sys.platform}"
+                "cpu_count": psutil.cpu_count(logical=True),
+                "cpu_freq": psutil.cpu_freq()._asdict() if psutil.cpu_freq() else {},
+                "memory_total_gb": round(psutil.virtual_memory().total / (1024**3), 2),
+                "boot_time": datetime.fromtimestamp(psutil.boot_time()).isoformat(),
+                "hostname": socket.gethostname(),
+                "platform": f"{os.name}-{sys.platform}",
             }
         except:
-            return {'info': 'Could not retrieve system info'}
-
+            return {"info": "Could not retrieve system info"}
 
     def generate_health_report(self, output_path: str = None) -> str:
         """
@@ -502,47 +494,48 @@ class SystemHealthMonitor:
             Путь к сохраненному отчету
         """
         if output_path is None:
-            output_path = str(self.output_dir / f"health_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
+            output_path = str(
+                self.output_dir / f"health_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            )
 
         report = {
-            'generation_time': datetime.now().isoformat(),
-            'health_score': self.health_score,
-            'metrics_count': len(self.metrics),
-            'alerts_count': len(self.alerts),
-            'resolved_alerts': len([a for a in self.alerts if a.resolved]),
-            'unresolved_alerts': len([a for a in self.alerts if not a.resolved]),
-            'recent_metrics': [
+            "generation_time": datetime.now().isoformat(),
+            "health_score": self.health_score,
+            "metrics_count": len(self.metrics),
+            "alerts_count": len(self.alerts),
+            "resolved_alerts": len([a for a in self.alerts if a.resolved]),
+            "unresolved_alerts": len([a for a in self.alerts if not a.resolved]),
+            "recent_metrics": [
                 {
-                    'name': m.name,
-                    'value': m.value,
-                    'unit': m.unit,
-                    'severity': m.severity,
-                    'timestamp': m.timestamp.isoformat()
+                    "name": m.name,
+                    "value": m.value,
+                    "unit": m.unit,
+                    "severity": m.severity,
+                    "timestamp": m.timestamp.isoformat(),
                 }
                 for m in self.metrics[-20:]  # Последние 20 метрик
             ],
-            'recent_alerts': [
+            "recent_alerts": [
                 {
-                    'id': a.alert_id,
-                    'metric': a.metric_name,
-                    'value': a.current_value,
-                    'threshold': a.threshold_value,
-                    'severity': a.severity,
-                    'message': a.message,
-                    'timestamp': a.timestamp.isoformat(),
-                    'resolved': a.resolved
+                    "id": a.alert_id,
+                    "metric": a.metric_name,
+                    "value": a.current_value,
+                    "threshold": a.threshold_value,
+                    "severity": a.severity,
+                    "message": a.message,
+                    "timestamp": a.timestamp.isoformat(),
+                    "resolved": a.resolved,
                 }
                 for a in self.alerts[-10:]  # Последние 10 оповещений
             ],
-            'current_status': self.get_current_health_status(),
-            'system_info': self._get_system_info()
+            "current_status": self.get_current_health_status(),
+            "system_info": self._get_system_info(),
         }
 
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(report, f, indent=2, ensure_ascii=False, default=str)
 
         return output_path
-
 
     def get_health_recommendations(self) -> List[str]:
         """
@@ -559,50 +552,77 @@ class SystemHealthMonitor:
         metrics = self.current_metrics
 
         # Рекомендации по CPU
-        cpu_usage = metrics.get('cpu_percent', 0)
+        cpu_usage = metrics.get("cpu_percent", 0)
         if cpu_usage > 80:
-            recommendations.append("Высокая загрузка CPU (>80%). Рассмотрите оптимизацию процессов или масштабирование.")
+            recommendations.append(
+                "Высокая загрузка CPU (>80%). Рассмотрите оптимизацию процессов или масштабирование."
+            )
         elif cpu_usage > 60:
-            recommendations.append("Загрузка CPU выше нормы (>60%). Следите за производительностью.")
+            recommendations.append(
+                "Загрузка CPU выше нормы (>60%). Следите за производительностью."
+            )
 
         # Рекомендации по памяти
-        memory_usage = metrics.get('memory_percent', 0)
+        memory_usage = metrics.get("memory_percent", 0)
         if memory_usage > 85:
-            recommendations.append("Высокое использование памяти (>85%). Рассмотрите очистку кэша или увеличение объема памяти.")
+            recommendations.append(
+                "Высокое использование памяти (>85%). Рассмотрите очистку кэша или увеличение объема памяти."
+            )
         elif memory_usage > 70:
-            recommendations.append("Использование памяти выше нормы (>70%). Следите за утечками памяти.")
+            recommendations.append(
+                "Использование памяти выше нормы (>70%). Следите за утечками памяти."
+            )
 
         # Рекомендации по диску
-        disk_usage = metrics.get('disk_percent', 0)
+        disk_usage = metrics.get("disk_percent", 0)
         if disk_usage > 90:
-            recommendations.append("Критическое использование диска (>90%). Освободите место на диске срочно.")
+            recommendations.append(
+                "Критическое использование диска (>90%). Освободите место на диске срочно."
+            )
         elif disk_usage > 80:
-            recommendations.append("Высокое использование диска (>80%). Рассмотрите очистку старых файлов.")
+            recommendations.append(
+                "Высокое использование диска (>80%). Рассмотрите очистку старых файлов."
+            )
 
         # Рекомендации по температуре
-        temp = metrics.get('temperature_celsius', 0)
+        temp = metrics.get("temperature_celsius", 0)
         if temp > 80:
-            recommendations.append("Высокая температура системы (>80°C). Проверьте систему охлаждения.")
+            recommendations.append(
+                "Высокая температура системы (>80°C). Проверьте систему охлаждения."
+            )
         elif temp > 70:
-            recommendations.append("Температура системы выше нормы (>70°C). Следите за охлаждением.")
+            recommendations.append(
+                "Температура системы выше нормы (>70°C). Следите за охлаждением."
+            )
 
         # Рекомендации по процессам
-        proc_count = metrics.get('process_count', 0)
+        proc_count = metrics.get("process_count", 0)
         if proc_count > 500:
-            recommendations.append("Очень большое количество процессов (>500). Проверьте систему на наличие лишних процессов.")
+            recommendations.append(
+                "Очень большое количество процессов (>500). Проверьте систему на наличие лишних процессов."
+            )
         elif proc_count > 300:
-            recommendations.append("Высокое количество процессов (>300). Рассмотрите оптимизацию запущенных служб.")
+            recommendations.append(
+                "Высокое количество процессов (>300). Рассмотрите оптимизацию запущенных служб."
+            )
 
         # Рекомендации на основе оценки здоровья
         if self.health_score < 60:
-            recommendations.append("Общее здоровье системы низкое (<60). Требуется комплексная диагностика и оптимизация.")
+            recommendations.append(
+                "Общее здоровье системы низкое (<60). Требуется комплексная диагностика и оптимизация."
+            )
         elif self.health_score < 80:
-            recommendations.append("Общее здоровье системы ниже среднего (<80). Рассмотрите профилактические меры.")
+            recommendations.append(
+                "Общее здоровье системы ниже среднего (<80). Рассмотрите профилактические меры."
+            )
 
         if not recommendations:
-            recommendations.append("Система работает в нормальном режиме. Здоровье системы хорошее.")
+            recommendations.append(
+                "Система работает в нормальном режиме. Здоровье системы хорошее."
+            )
 
         return recommendations
+
 
 def main():
     """Главная функция для демонстрации возможностей монитора здоровья"""
@@ -616,14 +636,13 @@ def main():
 
     # Добавляем обработчик оповещений
 
-
     def alert_handler(alert):
-            print(f"🚨 ОПОВЕЩЕНИЕ: {alert.message} (Уровень: {alert.severity})")
+        print(f"🚨 ОПОВЕЩЕНИЕ: {alert.message} (Уровень: {alert.severity})")
 
     health_monitor.add_alert_handler(alert_handler)
 
     # Добавляем консольный канал уведомлений
-    health_monitor.add_notification_channel('console', {})
+    health_monitor.add_notification_channel("console", {})
 
     # Запускаем мониторинг
     print("\nЗапуск мониторинга здоровья системы...")
@@ -665,6 +684,6 @@ def main():
     print("- Обработчики оповещений: health_monitor.add_alert_handler()")
     print("- Каналы уведомлений: health_monitor.add_notification_channel()")
 
+
 if __name__ == "__main__":
     main()
-

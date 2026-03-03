@@ -21,9 +21,11 @@ import time
 import psutil
 import gc
 
+
 @dataclass
 class OptimizationParams:
     """Параметры оптимизации"""
+
     cpu_threshold: float = 80.0
     memory_threshold: float = 80.0
     disk_threshold: float = 80.0
@@ -33,13 +35,13 @@ class OptimizationParams:
     timeout: int = 30
     retry_attempts: int = 3
 
+
 class ConfigOptimizer:
     """
     Класс оптимизатора конфигурации
     Обеспечивает оптимизацию параметров конфигурации
     на основе текущего состояния системы.
     """
-
 
     def __init__(self, config_path: str = "config.json"):
         """
@@ -58,7 +60,6 @@ class ConfigOptimizer:
         # Загружаем исходную конфигурацию
         self.load_config()
 
-
     def load_config(self) -> bool:
         """
         Загружает конфигурацию из файла
@@ -67,25 +68,29 @@ class ConfigOptimizer:
             True если загрузка успешна, иначе False
         """
         try:
-            if self.config_path.suffix.lower() == '.json':
-                with open(self.config_path, 'r', encoding='utf-8') as f:
+            if self.config_path.suffix.lower() == ".json":
+                with open(self.config_path, "r", encoding="utf-8") as f:
                     self.original_config = json.load(f)
-            elif self.config_path.suffix.lower() == '.toml':
-                with open(self.config_path, 'r', encoding='utf-8') as f:
+            elif self.config_path.suffix.lower() == ".toml":
+                with open(self.config_path, "r", encoding="utf-8") as f:
                     self.original_config = toml.load(f)
-            elif self.config_path.suffix.lower() == '.ini':
+            elif self.config_path.suffix.lower() == ".ini":
                 config = configparser.ConfigParser()
-                config.read(self.config_path, encoding='utf-8')
-                self.original_config = {section: dict(config[section]) for section in config.sections()}
+                config.read(self.config_path, encoding="utf-8")
+                self.original_config = {
+                    section: dict(config[section]) for section in config.sections()
+                }
             else:
-                with open(self.config_path, 'r', encoding='utf-8') as f:
+                with open(self.config_path, "r", encoding="utf-8") as f:
                     content = f.read()
-                    if content.strip().startswith('{'):
+                    if content.strip().startswith("{"):
                         self.original_config = json.loads(content)
-                    elif content.strip().startswith('['):
+                    elif content.strip().startswith("["):
                         config = configparser.ConfigParser()
                         config.read_string(content)
-                        self.original_config = {section: dict(config[section]) for section in config.sections()}
+                        self.original_config = {
+                            section: dict(config[section]) for section in config.sections()
+                        }
                     else:
                         print("Неподдерживаемый формат конфигурации")
                         return False
@@ -96,7 +101,6 @@ class ConfigOptimizer:
         except Exception as e:
             print(f"Ошибка загрузки конфигурации: {e}")
             return False
-
 
     def save_config(self, config: Dict[str, Any], output_path: str = None) -> bool:
         """
@@ -115,20 +119,20 @@ class ConfigOptimizer:
         try:
             output_path = Path(output_path)
 
-            if output_path.suffix.lower() == '.json':
-                with open(output_path, 'w', encoding='utf-8') as f:
+            if output_path.suffix.lower() == ".json":
+                with open(output_path, "w", encoding="utf-8") as f:
                     json.dump(config, f, indent=2, ensure_ascii=False, default=str)
-            elif output_path.suffix.lower() == '.toml':
-                with open(output_path, 'w', encoding='utf-8') as f:
+            elif output_path.suffix.lower() == ".toml":
+                with open(output_path, "w", encoding="utf-8") as f:
                     toml.dump(config, f)
-            elif output_path.suffix.lower() == '.ini':
+            elif output_path.suffix.lower() == ".ini":
                 config_parser = configparser.ConfigParser()
                 for section, section_data in config.items():
                     config_parser[section] = section_data
-                with open(output_path, 'w', encoding='utf-8') as f:
+                with open(output_path, "w", encoding="utf-8") as f:
                     config_parser.write(f)
             else:
-                with open(output_path, 'w', encoding='utf-8') as f:
+                with open(output_path, "w", encoding="utf-8") as f:
                     json.dump(config, f, indent=2, ensure_ascii=False, default=str)
 
             return True
@@ -136,7 +140,6 @@ class ConfigOptimizer:
         except Exception as e:
             print(f"Ошибка сохранения конфигурации: {e}")
             return False
-
 
     def collect_system_metrics(self) -> Dict[str, Any]:
         """
@@ -147,22 +150,25 @@ class ConfigOptimizer:
         """
         with self.lock:
             metrics = {
-                'timestamp': datetime.now().isoformat(),
-                'cpu_percent': psutil.cpu_percent(interval=1),
-                'memory_percent': psutil.virtual_memory().percent,
-                'memory_available_gb': psutil.virtual_memory().available / (1024**3),
-                'disk_usage_percent': psutil.disk_usage('/').percent if hasattr(psutil, 'disk_usage') else 0,
-                'disk_free_gb': psutil.disk_usage('/').free / (1024**3) if hasattr(psutil, 'disk_usage') else 0,
-                'process_count': len(psutil.pids()),
-                'thread_count': threading.active_count(),
-                'cpu_count_logical': psutil.cpu_count(logical=True),
-                'cpu_count_physical': psutil.cpu_count(logical=False),
-                'memory_total_gb': psutil.virtual_memory().total / (1024**3)
+                "timestamp": datetime.now().isoformat(),
+                "cpu_percent": psutil.cpu_percent(interval=1),
+                "memory_percent": psutil.virtual_memory().percent,
+                "memory_available_gb": psutil.virtual_memory().available / (1024**3),
+                "disk_usage_percent": psutil.disk_usage("/").percent
+                if hasattr(psutil, "disk_usage")
+                else 0,
+                "disk_free_gb": psutil.disk_usage("/").free / (1024**3)
+                if hasattr(psutil, "disk_usage")
+                else 0,
+                "process_count": len(psutil.pids()),
+                "thread_count": threading.active_count(),
+                "cpu_count_logical": psutil.cpu_count(logical=True),
+                "cpu_count_physical": psutil.cpu_count(logical=False),
+                "memory_total_gb": psutil.virtual_memory().total / (1024**3),
             }
 
             self.system_metrics = metrics
             return metrics
-
 
     def optimize_for_performance(self) -> Dict[str, Any]:
         """
@@ -177,51 +183,50 @@ class ConfigOptimizer:
         metrics = self.collect_system_metrics()
 
         # Оптимизация на основе доступных ресурсов
-        available_memory_gb = metrics['memory_available_gb']
-        cpu_count = metrics['cpu_count_logical']
+        available_memory_gb = metrics["memory_available_gb"]
+        cpu_count = metrics["cpu_count_logical"]
 
         # Оптимизация количества потоков
-        if 'threads' in optimized:
+        if "threads" in optimized:
             max_threads = min(cpu_count, self.optimization_params.max_threads)
             if available_memory_gb > 4:  # Если доступно больше 4GB RAM
-                optimized['threads'] = max_threads
+                optimized["threads"] = max_threads
             else:
-                optimized['threads'] = max(1, max_threads // 2)
+                optimized["threads"] = max(1, max_threads // 2)
 
         # Оптимизация размера батча
-        if 'batch_size' in optimized:
+        if "batch_size" in optimized:
             if available_memory_gb > 8:
-                optimized['batch_size'] = min(1000, self.optimization_params.batch_size * 2)
+                optimized["batch_size"] = min(1000, self.optimization_params.batch_size * 2)
             elif available_memory_gb > 4:
-                optimized['batch_size'] = self.optimization_params.batch_size
+                optimized["batch_size"] = self.optimization_params.batch_size
             else:
-                optimized['batch_size'] = max(10, self.optimization_params.batch_size // 2)
+                optimized["batch_size"] = max(10, self.optimization_params.batch_size // 2)
 
         # Оптимизация размера кэша
-        if 'cache_size' in optimized:
+        if "cache_size" in optimized:
             if available_memory_gb > 8:
-                optimized['cache_size'] = min(10000, self.optimization_params.cache_size * 5)
+                optimized["cache_size"] = min(10000, self.optimization_params.cache_size * 5)
             elif available_memory_gb > 4:
-                optimized['cache_size'] = min(5000, self.optimization_params.cache_size * 2)
+                optimized["cache_size"] = min(5000, self.optimization_params.cache_size * 2)
             else:
-                optimized['cache_size'] = self.optimization_params.cache_size
+                optimized["cache_size"] = self.optimization_params.cache_size
 
         # Оптимизация таймаутов
-        if 'timeout' in optimized:
-            if metrics['cpu_percent'] > self.optimization_params.cpu_threshold:
-                optimized['timeout'] = max(60, self.optimization_params.timeout * 2)
+        if "timeout" in optimized:
+            if metrics["cpu_percent"] > self.optimization_params.cpu_threshold:
+                optimized["timeout"] = max(60, self.optimization_params.timeout * 2)
             else:
-                optimized['timeout'] = self.optimization_params.timeout
+                optimized["timeout"] = self.optimization_params.timeout
 
         # Оптимизация попыток повтора
-        if 'retry_attempts' in optimized:
-            if metrics['memory_percent'] > self.optimization_params.memory_threshold:
-                optimized['retry_attempts'] = max(1, self.optimization_params.retry_attempts - 1)
+        if "retry_attempts" in optimized:
+            if metrics["memory_percent"] > self.optimization_params.memory_threshold:
+                optimized["retry_attempts"] = max(1, self.optimization_params.retry_attempts - 1)
             else:
-                optimized['retry_attempts'] = self.optimization_params.retry_attempts
+                optimized["retry_attempts"] = self.optimization_params.retry_attempts
 
         return optimized
-
 
     def optimize_for_resource_efficiency(self) -> Dict[str, Any]:
         """
@@ -236,27 +241,26 @@ class ConfigOptimizer:
         metrics = self.collect_system_metrics()
 
         # Уменьшаем использование ресурсов если нагрузка высока
-        if metrics['cpu_percent'] > self.optimization_params.cpu_threshold:
-            if 'threads' in optimized:
-                optimized['threads'] = max(1, optimized['threads'] // 2)
+        if metrics["cpu_percent"] > self.optimization_params.cpu_threshold:
+            if "threads" in optimized:
+                optimized["threads"] = max(1, optimized["threads"] // 2)
 
-        if metrics['memory_percent'] > self.optimization_params.memory_threshold:
-            if 'cache_size' in optimized:
-                optimized['cache_size'] = max(100, optimized['cache_size'] // 2)
+        if metrics["memory_percent"] > self.optimization_params.memory_threshold:
+            if "cache_size" in optimized:
+                optimized["cache_size"] = max(100, optimized["cache_size"] // 2)
 
-            if 'batch_size' in optimized:
-                optimized['batch_size'] = max(10, optimized['batch_size'] // 2)
+            if "batch_size" in optimized:
+                optimized["batch_size"] = max(10, optimized["batch_size"] // 2)
 
-        if metrics['disk_usage_percent'] > self.optimization_params.disk_threshold:
+        if metrics["disk_usage_percent"] > self.optimization_params.disk_threshold:
             # Уменьшаем размер временных файлов и кэшей
-            if 'temp_file_size_limit' in optimized:
-                optimized['temp_file_size_limit'] = min(
-                    optimized['temp_file_size_limit'],
-                    metrics['disk_free_gb'] * 0.1  # 10% от свободного места
+            if "temp_file_size_limit" in optimized:
+                optimized["temp_file_size_limit"] = min(
+                    optimized["temp_file_size_limit"],
+                    metrics["disk_free_gb"] * 0.1,  # 10% от свободного места
                 )
 
         return optimized
-
 
     def optimize_for_stability(self) -> Dict[str, Any]:
         """
@@ -271,29 +275,30 @@ class ConfigOptimizer:
         metrics = self.collect_system_metrics()
 
         # Увеличиваем таймауты и попытки для стабильности
-        if 'timeout' in optimized:
-            optimized['timeout'] = max(optimized['timeout'], 60)
+        if "timeout" in optimized:
+            optimized["timeout"] = max(optimized["timeout"], 60)
 
-        if 'retry_attempts' in optimized:
-            optimized['retry_attempts'] = max(optimized['retry_attempts'], 3)
+        if "retry_attempts" in optimized:
+            optimized["retry_attempts"] = max(optimized["retry_attempts"], 3)
 
         # Ограничиваем использование ресурсов для стабильности
-        if 'threads' in optimized:
-            optimized['threads'] = min(optimized['threads'], metrics['cpu_count_logical'])
+        if "threads" in optimized:
+            optimized["threads"] = min(optimized["threads"], metrics["cpu_count_logical"])
 
-        if 'cache_size' in optimized:
-            max_cache_size = int(metrics['memory_available_gb'] * 0.1 * 1000)  # 10% от доступной памяти
-            optimized['cache_size'] = min(optimized['cache_size'], max_cache_size)
+        if "cache_size" in optimized:
+            max_cache_size = int(
+                metrics["memory_available_gb"] * 0.1 * 1000
+            )  # 10% от доступной памяти
+            optimized["cache_size"] = min(optimized["cache_size"], max_cache_size)
 
         # Добавляем параметры стабильности
-        if 'gc_threshold' not in optimized:
-            optimized['gc_threshold'] = [700, 10, 10]  # Уровни сборки мусора
+        if "gc_threshold" not in optimized:
+            optimized["gc_threshold"] = [700, 10, 10]  # Уровни сборки мусора
 
-        if 'connection_pool_size' not in optimized:
-            optimized['connection_pool_size'] = 5  # Ограничение пула соединений
+        if "connection_pool_size" not in optimized:
+            optimized["connection_pool_size"] = 5  # Ограничение пула соединений
 
         return optimized
-
 
     def optimize_config(self, strategy: str = "balanced") -> Dict[str, Any]:
         """
@@ -326,7 +331,11 @@ class ConfigOptimizer:
                     eff_val = eff_config[key]
                     stab_val = stab_config[key]
 
-                    if isinstance(perf_val, (int, float)) and isinstance(eff_val, (int, float)) and isinstance(stab_val, (int, float)):
+                    if (
+                        isinstance(perf_val, (int, float))
+                        and isinstance(eff_val, (int, float))
+                        and isinstance(stab_val, (int, float))
+                    ):
                         # Среднее из трех значений
                         avg_val = (perf_val + eff_val + stab_val) / 3
                         optimized[key] = int(avg_val) if isinstance(perf_val, int) else avg_val
@@ -344,7 +353,6 @@ class ConfigOptimizer:
 
         self.optimized_config = optimized
         return optimized
-
 
     def apply_optimization(self, strategy: str = "balanced", save_to_file: bool = True) -> bool:
         """
@@ -370,7 +378,6 @@ class ConfigOptimizer:
             print(f"Ошибка применения оптимизации: {e}")
             return False
 
-
     def get_optimization_report(self) -> Dict[str, Any]:
         """
         Генерирует отчет об оптимизации
@@ -380,34 +387,25 @@ class ConfigOptimizer:
         """
         changes = {}
         for key in set(self.original_config.keys()) | set(self.optimized_config.keys()):
-            orig_val = self.original_config.get(key, 'NOT_FOUND')
-            opt_val = self.optimized_config.get(key, 'NOT_FOUND')
+            orig_val = self.original_config.get(key, "NOT_FOUND")
+            opt_val = self.optimized_config.get(key, "NOT_FOUND")
 
             if orig_val != opt_val:
-                changes[key] = {
-                    'original': orig_val,
-                    'optimized': opt_val,
-                    'changed': True
-                }
+                changes[key] = {"original": orig_val, "optimized": opt_val, "changed": True}
             else:
-                changes[key] = {
-                    'original': orig_val,
-                    'optimized': opt_val,
-                    'changed': False
-                }
+                changes[key] = {"original": orig_val, "optimized": opt_val, "changed": False}
 
         report = {
-            'timestamp': datetime.now().isoformat(),
-            'original_config_path': str(self.config_path),
-            'changes_made': len([c for c in changes.values() if c['changed']]),
-            'total_parameters': len(changes),
-            'system_metrics': self.system_metrics,
-            'optimization_params': asdict(self.optimization_params),
-            'parameter_changes': changes
+            "timestamp": datetime.now().isoformat(),
+            "original_config_path": str(self.config_path),
+            "changes_made": len([c for c in changes.values() if c["changed"]]),
+            "total_parameters": len(changes),
+            "system_metrics": self.system_metrics,
+            "optimization_params": asdict(self.optimization_params),
+            "parameter_changes": changes,
         }
 
         return report
-
 
     def auto_optimize(self, strategy: str = "balanced") -> Dict[str, Any]:
         """
@@ -429,13 +427,14 @@ class ConfigOptimizer:
             return self.get_optimization_report()
         else:
             return {
-                'success': False,
-                'error': 'Failed to apply optimization',
-                'timestamp': datetime.now().isoformat()
+                "success": False,
+                "error": "Failed to apply optimization",
+                "timestamp": datetime.now().isoformat(),
             }
 
-
-    def optimize_multiple_configs(self, config_paths: List[str], strategy: str = "balanced") -> Dict[str, Any]:
+    def optimize_multiple_configs(
+        self, config_paths: List[str], strategy: str = "balanced"
+    ) -> Dict[str, Any]:
         """
         Оптимизирует несколько конфигурационных файлов
 
@@ -460,12 +459,13 @@ class ConfigOptimizer:
 
             except Exception as e:
                 results[config_path] = {
-                    'success': False,
-                    'error': str(e),
-                    'timestamp': datetime.now().isoformat()
+                    "success": False,
+                    "error": str(e),
+                    "timestamp": datetime.now().isoformat(),
                 }
 
         return results
+
 
 class AdaptiveConfigManager:
     """
@@ -473,7 +473,6 @@ class AdaptiveConfigManager:
     Обеспечивает динамическую адаптацию параметров
     конфигурации в зависимости от условий выполнения.
     """
-
 
     def __init__(self, base_config_path: str = "config.json"):
         """
@@ -489,7 +488,6 @@ class AdaptiveConfigManager:
         self.monitoring_thread = None
         self.adaptation_callback = None
 
-
     def start_adaptive_monitoring(self, interval: float = 60.0, strategy: str = "balanced"):
         """
         Запускает адаптивный мониторинг и оптимизацию
@@ -503,19 +501,15 @@ class AdaptiveConfigManager:
 
         self.is_monitoring = True
         self.monitoring_thread = threading.Thread(
-            target=self._monitoring_loop,
-            args=(interval, strategy),
-            daemon=True
+            target=self._monitoring_loop, args=(interval, strategy), daemon=True
         )
         self.monitoring_thread.start()
-
 
     def stop_adaptive_monitoring(self):
         """Останавливает адаптивный мониторинг"""
         self.is_monitoring = False
         if self.monitoring_thread:
             self.monitoring_thread.join(timeout=2.0)
-
 
     def _monitoring_loop(self, interval: float, strategy: str):
         """
@@ -533,11 +527,13 @@ class AdaptiveConfigManager:
                     report = self.optimizer.auto_optimize(strategy)
 
                     # Сохраняем в историю
-                    self.adaptation_history.append({
-                        'timestamp': datetime.now().isoformat(),
-                        'report': report,
-                        'trigger': 'adaptive_monitoring'
-                    })
+                    self.adaptation_history.append(
+                        {
+                            "timestamp": datetime.now().isoformat(),
+                            "report": report,
+                            "trigger": "adaptive_monitoring",
+                        }
+                    )
 
                     # Вызываем callback если установлен
                     if self.adaptation_callback:
@@ -548,7 +544,6 @@ class AdaptiveConfigManager:
             except Exception as e:
                 print(f"Ошибка в цикле адаптивного мониторинга: {e}")
                 time.sleep(interval)
-
 
     def should_adapt(self) -> bool:
         """
@@ -561,11 +556,10 @@ class AdaptiveConfigManager:
 
         # Адаптируем если хотя бы один показатель превышает порог
         return (
-            metrics['cpu_percent'] > self.optimizer.optimization_params.cpu_threshold or
-            metrics['memory_percent'] > self.optimizer.optimization_params.memory_threshold or
-            metrics['disk_usage_percent'] > self.optimizer.optimization_params.disk_threshold
+            metrics["cpu_percent"] > self.optimizer.optimization_params.cpu_threshold
+            or metrics["memory_percent"] > self.optimizer.optimization_params.memory_threshold
+            or metrics["disk_usage_percent"] > self.optimizer.optimization_params.disk_threshold
         )
-
 
     def set_adaptation_callback(self, callback: callable):
         """
@@ -576,7 +570,6 @@ class AdaptiveConfigManager:
         """
         self.adaptation_callback = callback
 
-
     def get_adaptation_history(self) -> List[Dict[str, Any]]:
         """
         Возвращает историю адаптаций
@@ -586,10 +579,10 @@ class AdaptiveConfigManager:
         """
         return self.adaptation_history.copy()
 
-
     def clear_adaptation_history(self):
         """Очищает историю адаптаций"""
         self.adaptation_history.clear()
+
 
 def main():
     """Главная функция для демонстрации возможностей оптимизатора конфигурации"""
@@ -620,10 +613,10 @@ def main():
         print(f"  - Параметров изменено: {report['changes_made']}")
         print(f"  - Всего параметров: {report['total_parameters']}")
 
-        if report['changes_made'] > 0:
+        if report["changes_made"] > 0:
             print("  - Измененные параметры:")
-            for param, change in report['parameter_changes'].items():
-                if change['changed']:
+            for param, change in report["parameter_changes"].items():
+                if change["changed"]:
                     print(f"    * {param}: {change['original']} → {change['optimized']}")
 
     # Создаем адаптивный менеджер
@@ -647,6 +640,6 @@ def main():
     print("- Отчет об оптимизации: get_optimization_report()")
     print("- Оптимизация нескольких файлов: optimize_multiple_configs()")
 
+
 if __name__ == "__main__":
     main()
-

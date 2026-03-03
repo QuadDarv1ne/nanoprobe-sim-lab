@@ -22,15 +22,18 @@ import seaborn as sns
 import pandas as pd
 from dataclasses import dataclass
 from functools import wraps
+
 try:
     import objgraph
 except ImportError:
     objgraph = None
     print("Warning: objgraph not installed. Install with 'pip install objgraph'")
 
+
 @dataclass
 class MemorySnapshot:
     """Снимок памяти"""
+
     timestamp: datetime
     rss_mb: float
     vms_mb: float
@@ -43,9 +46,11 @@ class MemorySnapshot:
     heap_size: Optional[float] = None
     heap_usage: Optional[float] = None
 
+
 @dataclass
 class MemoryLeakDetection:
     """Обнаружение утечки памяти"""
+
     object_type: str
     growth_rate: float  # Объектов в секунду
     current_count: int
@@ -53,12 +58,12 @@ class MemoryLeakDetection:
     duration_seconds: int
     severity: str  # low, medium, high, critical
 
+
 class MemoryTracker:
     """
     Класс отслеживания памяти
     Обеспечивает мониторинг, анализ и обнаружение утечек памяти.
     """
-
 
     def __init__(self, output_dir: str = "memory_logs"):
         """
@@ -77,13 +82,12 @@ class MemoryTracker:
         self.tracemalloc_enabled = False
         self.current_process = psutil.Process()
         self.monitoring_history = {
-            'timestamps': [],
-            'rss_mb': [],
-            'vms_mb': [],
-            'percent': [],
-            'gc_collections': []
+            "timestamps": [],
+            "rss_mb": [],
+            "vms_mb": [],
+            "percent": [],
+            "gc_collections": [],
         }
-
 
     def take_snapshot(self) -> MemorySnapshot:
         """
@@ -98,11 +102,11 @@ class MemoryTracker:
         # Конвертируем байты в мегабайты
         rss_mb = memory_info.rss / (1024 * 1024)
         vms_mb = memory_info.vms / (1024 * 1024)
-        shared_mb = getattr(memory_info, 'shared', 0) / (1024 * 1024)
-        text_mb = getattr(memory_info, 'text', 0) / (1024 * 1024)
-        lib_mb = getattr(memory_info, 'lib', 0) / (1024 * 1024)
-        data_mb = getattr(memory_info, 'data', 0) / (1024 * 1024)
-        dirty_mb = getattr(memory_info, 'dirty', 0) / (1024 * 1024)
+        shared_mb = getattr(memory_info, "shared", 0) / (1024 * 1024)
+        text_mb = getattr(memory_info, "text", 0) / (1024 * 1024)
+        lib_mb = getattr(memory_info, "lib", 0) / (1024 * 1024)
+        data_mb = getattr(memory_info, "data", 0) / (1024 * 1024)
+        dirty_mb = getattr(memory_info, "dirty", 0) / (1024 * 1024)
 
         snapshot = MemorySnapshot(
             timestamp=datetime.now(),
@@ -113,12 +117,11 @@ class MemoryTracker:
             text_mb=text_mb,
             lib_mb=lib_mb,
             data_mb=data_mb,
-            dirty_mb=dirty_mb
+            dirty_mb=dirty_mb,
         )
 
         self.snapshots.append(snapshot)
         return snapshot
-
 
     def start_tracking(self, interval: float = 1.0):
         """
@@ -133,17 +136,16 @@ class MemoryTracker:
         self.tracking = True
 
         def track():
-
             while self.tracking:
                 try:
                     snapshot = self.take_snapshot()
 
                     # Сохраняем в историю для мониторинга
-                    self.monitoring_history['timestamps'].append(snapshot.timestamp)
-                    self.monitoring_history['rss_mb'].append(snapshot.rss_mb)
-                    self.monitoring_history['vms_mb'].append(snapshot.vms_mb)
-                    self.monitoring_history['percent'].append(snapshot.percent)
-                    self.monitoring_history['gc_collections'].append(gc.get_count())
+                    self.monitoring_history["timestamps"].append(snapshot.timestamp)
+                    self.monitoring_history["rss_mb"].append(snapshot.rss_mb)
+                    self.monitoring_history["vms_mb"].append(snapshot.vms_mb)
+                    self.monitoring_history["percent"].append(snapshot.percent)
+                    self.monitoring_history["gc_collections"].append(gc.get_count())
 
                     time.sleep(interval)
 
@@ -154,19 +156,16 @@ class MemoryTracker:
         self.tracking_thread = threading.Thread(target=track, daemon=True)
         self.tracking_thread.start()
 
-
     def stop_tracking(self):
         """Останавливает отслеживание памяти"""
         self.tracking = False
         if self.tracking_thread:
             self.tracking_thread.join(timeout=2)
 
-
     def set_baseline(self):
         """Устанавливает базовую линию для сравнения"""
         self.baseline_snapshots = self.snapshots.copy()
         print(f"✓ Базовая линия установлена на основе {len(self.baseline_snapshots)} снимков")
-
 
     def get_current_memory_usage(self) -> Dict[str, float]:
         """
@@ -177,13 +176,14 @@ class MemoryTracker:
         """
         memory_info = self.current_process.memory_info()
         return {
-            'rss_mb': memory_info.rss / (1024 * 1024),
-            'vms_mb': memory_info.vms / (1024 * 1024),
-            'percent': self.current_process.memory_percent(),
-            'num_threads': self.current_process.num_threads(),
-            'num_fds': self.current_process.num_fds() if hasattr(self.current_process, 'num_fds') else 0
+            "rss_mb": memory_info.rss / (1024 * 1024),
+            "vms_mb": memory_info.vms / (1024 * 1024),
+            "percent": self.current_process.memory_percent(),
+            "num_threads": self.current_process.num_threads(),
+            "num_fds": self.current_process.num_fds()
+            if hasattr(self.current_process, "num_fds")
+            else 0,
         }
-
 
     def detect_memory_leaks(self, threshold_growth: float = 1.0) -> List[MemoryLeakDetection]:
         """
@@ -227,7 +227,7 @@ class MemoryTracker:
                 current_count=int(recent_snapshots[-1].rss_mb),
                 baseline_count=int(recent_snapshots[0].rss_mb),
                 duration_seconds=int(time_diff),
-                severity=severity
+                severity=severity,
             )
             leaks.append(leak)
 
@@ -246,7 +246,6 @@ class MemoryTracker:
         self.leak_detections.extend(leaks)
         return leaks
 
-
     def trigger_garbage_collection(self) -> Dict[str, int]:
         """
         Вызывает сборку мусора и возвращает статистику
@@ -254,17 +253,16 @@ class MemoryTracker:
         Returns:
             Статистика сборки мусора
         """
-        before_memory = self.get_current_memory_usage()['rss_mb']
+        before_memory = self.get_current_memory_usage()["rss_mb"]
         collected = gc.collect()
-        after_memory = self.get_current_memory_usage()['rss_mb']
+        after_memory = self.get_current_memory_usage()["rss_mb"]
 
         return {
-            'collected_objects': collected,
-            'memory_freed_mb': before_memory - after_memory,
-            'before_collection_mb': before_memory,
-            'after_collection_mb': after_memory
+            "collected_objects": collected,
+            "memory_freed_mb": before_memory - after_memory,
+            "before_collection_mb": before_memory,
+            "after_collection_mb": after_memory,
         }
-
 
     def start_trace_malloc(self):
         """Начинает трассировку выделения памяти"""
@@ -273,14 +271,12 @@ class MemoryTracker:
             self.tracemalloc_enabled = True
             print("✓ Трассировка выделения памяти запущена")
 
-
     def stop_trace_malloc(self):
         """Останавливает трассировку выделения памяти"""
         if self.tracemalloc_enabled:
             tracemalloc.stop()
             self.tracemalloc_enabled = False
             print("✓ Трассировка выделения памяти остановлена")
-
 
     def get_trace_malloc_stats(self, limit: int = 10) -> List[Dict[str, Any]]:
         """
@@ -297,21 +293,22 @@ class MemoryTracker:
 
         try:
             snapshot = tracemalloc.take_snapshot()
-            top_stats = snapshot.statistics('lineno')
+            top_stats = snapshot.statistics("lineno")
 
             result = []
             for stat in top_stats[:limit]:
-                result.append({
-                    'filename': stat.traceback.format()[0] if stat.traceback else 'Unknown',
-                    'size_mb': stat.size / (1024 * 1024),
-                    'count': stat.count
-                })
+                result.append(
+                    {
+                        "filename": stat.traceback.format()[0] if stat.traceback else "Unknown",
+                        "size_mb": stat.size / (1024 * 1024),
+                        "count": stat.count,
+                    }
+                )
 
             return result
         except Exception as e:
             print(f"Ошибка получения статистики трассировки: {e}")
             return []
-
 
     def analyze_memory_usage(self) -> Dict[str, Any]:
         """
@@ -328,31 +325,33 @@ class MemoryTracker:
         percent_values = [s.percent for s in self.snapshots]
 
         analysis = {
-            'time_range': {
-                'start': self.snapshots[0].timestamp.isoformat(),
-                'end': self.snapshots[-1].timestamp.isoformat(),
-                'duration_minutes': (self.snapshots[-1].timestamp - self.snapshots[0].timestamp).total_seconds() / 60
+            "time_range": {
+                "start": self.snapshots[0].timestamp.isoformat(),
+                "end": self.snapshots[-1].timestamp.isoformat(),
+                "duration_minutes": (
+                    self.snapshots[-1].timestamp - self.snapshots[0].timestamp
+                ).total_seconds()
+                / 60,
             },
-            'rss_stats': {
-                'min_mb': min(rss_values),
-                'max_mb': max(rss_values),
-                'avg_mb': sum(rss_values) / len(rss_values),
-                'current_mb': rss_values[-1],
-                'growth_mb': rss_values[-1] - rss_values[0] if len(rss_values) > 1 else 0
+            "rss_stats": {
+                "min_mb": min(rss_values),
+                "max_mb": max(rss_values),
+                "avg_mb": sum(rss_values) / len(rss_values),
+                "current_mb": rss_values[-1],
+                "growth_mb": rss_values[-1] - rss_values[0] if len(rss_values) > 1 else 0,
             },
-            'percent_stats': {
-                'min_percent': min(percent_values),
-                'max_percent': max(percent_values),
-                'avg_percent': sum(percent_values) / len(percent_values),
-                'current_percent': percent_values[-1]
+            "percent_stats": {
+                "min_percent": min(percent_values),
+                "max_percent": max(percent_values),
+                "avg_percent": sum(percent_values) / len(percent_values),
+                "current_percent": percent_values[-1],
             },
-            'total_snapshots': len(self.snapshots),
-            'leak_detections': len(self.leak_detections),
-            'baseline_comparison': self.compare_with_baseline()
+            "total_snapshots": len(self.snapshots),
+            "leak_detections": len(self.leak_detections),
+            "baseline_comparison": self.compare_with_baseline(),
         }
 
         return analysis
-
 
     def compare_with_baseline(self) -> Dict[str, float]:
         """
@@ -368,12 +367,13 @@ class MemoryTracker:
         current_avg = sum(s.rss_mb for s in self.snapshots[-10:]) / min(len(self.snapshots), 10)
 
         return {
-            'baseline_avg_mb': baseline_avg,
-            'current_avg_mb': current_avg,
-            'difference_mb': current_avg - baseline_avg,
-            'difference_percent': ((current_avg - baseline_avg) / baseline_avg) * 100 if baseline_avg > 0 else 0
+            "baseline_avg_mb": baseline_avg,
+            "current_avg_mb": current_avg,
+            "difference_mb": current_avg - baseline_avg,
+            "difference_percent": ((current_avg - baseline_avg) / baseline_avg) * 100
+            if baseline_avg > 0
+            else 0,
         }
-
 
     def visualize_memory_usage(self, output_path: str = None) -> str:
         """
@@ -385,56 +385,87 @@ class MemoryTracker:
         Returns:
             Путь к сохраненной визуализации
         """
-        if not self.monitoring_history['timestamps']:
+        if not self.monitoring_history["timestamps"]:
             print("Нет данных для визуализации")
             return ""
 
         if output_path is None:
-            output_path = str(self.output_dir / f"memory_usage_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png")
+            output_path = str(
+                self.output_dir / f"memory_usage_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+            )
 
         fig, axes = plt.subplots(2, 2, figsize=(15, 10))
-        fig.suptitle('Анализ использования памяти', fontsize=16)
+        fig.suptitle("Анализ использования памяти", fontsize=16)
 
-        timestamps = self.monitoring_history['timestamps']
+        timestamps = self.monitoring_history["timestamps"]
 
         # RSS память
-        axes[0, 0].plot(timestamps, self.monitoring_history['rss_mb'], label='RSS (Resident Set Size)', color='blue')
-        axes[0, 0].set_title('Использование RSS памяти')
-        axes[0, 0].set_ylabel('MB')
+        axes[0, 0].plot(
+            timestamps,
+            self.monitoring_history["rss_mb"],
+            label="RSS (Resident Set Size)",
+            color="blue",
+        )
+        axes[0, 0].set_title("Использование RSS памяти")
+        axes[0, 0].set_ylabel("MB")
         axes[0, 0].grid(True)
-        axes[0, 0].tick_params(axis='x', rotation=45)
+        axes[0, 0].tick_params(axis="x", rotation=45)
 
         # VMS память
-        axes[0, 1].plot(timestamps, self.monitoring_history['vms_mb'], label='VMS (Virtual Memory Size)', color='red')
-        axes[0, 1].set_title('Использование VMS памяти')
-        axes[0, 1].set_ylabel('MB')
+        axes[0, 1].plot(
+            timestamps,
+            self.monitoring_history["vms_mb"],
+            label="VMS (Virtual Memory Size)",
+            color="red",
+        )
+        axes[0, 1].set_title("Использование VMS памяти")
+        axes[0, 1].set_ylabel("MB")
         axes[0, 1].grid(True)
-        axes[0, 1].tick_params(axis='x', rotation=45)
+        axes[0, 1].tick_params(axis="x", rotation=45)
 
         # Процент использования
-        axes[1, 0].plot(timestamps, self.monitoring_history['percent'], label='Процент использования', color='green')
-        axes[1, 0].set_title('Процент использования памяти')
-        axes[1, 0].set_ylabel('Процент')
+        axes[1, 0].plot(
+            timestamps,
+            self.monitoring_history["percent"],
+            label="Процент использования",
+            color="green",
+        )
+        axes[1, 0].set_title("Процент использования памяти")
+        axes[1, 0].set_ylabel("Процент")
         axes[1, 0].grid(True)
-        axes[1, 0].tick_params(axis='x', rotation=45)
+        axes[1, 0].tick_params(axis="x", rotation=45)
 
         # Сборка мусора
-        gc_counts = self.monitoring_history['gc_collections']
+        gc_counts = self.monitoring_history["gc_collections"]
         if gc_counts:
-            axes[1, 1].plot(range(len(gc_counts)), [counts[0] for counts in gc_counts], label='Generation 0', color='purple')
-            axes[1, 1].plot(range(len(gc_counts)), [counts[1] for counts in gc_counts], label='Generation 1', color='orange')
-            axes[1, 1].plot(range(len(gc_counts)), [counts[2] for counts in gc_counts], label='Generation 2', color='brown')
-            axes[1, 1].set_title('Счетчики сборки мусора')
-            axes[1, 1].set_ylabel('Объектов')
+            axes[1, 1].plot(
+                range(len(gc_counts)),
+                [counts[0] for counts in gc_counts],
+                label="Generation 0",
+                color="purple",
+            )
+            axes[1, 1].plot(
+                range(len(gc_counts)),
+                [counts[1] for counts in gc_counts],
+                label="Generation 1",
+                color="orange",
+            )
+            axes[1, 1].plot(
+                range(len(gc_counts)),
+                [counts[2] for counts in gc_counts],
+                label="Generation 2",
+                color="brown",
+            )
+            axes[1, 1].set_title("Счетчики сборки мусора")
+            axes[1, 1].set_ylabel("Объектов")
             axes[1, 1].legend()
             axes[1, 1].grid(True)
 
         plt.tight_layout()
-        plt.savefig(output_path, dpi=300, bbox_inches='tight')
+        plt.savefig(output_path, dpi=300, bbox_inches="tight")
         plt.close()
 
         return output_path
-
 
     def save_memory_report(self, output_path: str = None) -> str:
         """
@@ -447,33 +478,34 @@ class MemoryTracker:
             Путь к сохраненному отчету
         """
         if output_path is None:
-            output_path = str(self.output_dir / f"memory_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
+            output_path = str(
+                self.output_dir / f"memory_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            )
 
         analysis = self.analyze_memory_usage()
 
         report = {
-            'timestamp': datetime.now().isoformat(),
-            'analysis': analysis,
-            'snapshots_count': len(self.snapshots),
-            'leak_detections_count': len(self.leak_detections),
-            'leak_detections': [
+            "timestamp": datetime.now().isoformat(),
+            "analysis": analysis,
+            "snapshots_count": len(self.snapshots),
+            "leak_detections_count": len(self.leak_detections),
+            "leak_detections": [
                 {
-                    'object_type': ld.object_type,
-                    'growth_rate': ld.growth_rate,
-                    'current_count': ld.current_count,
-                    'baseline_count': ld.baseline_count,
-                    'duration_seconds': ld.duration_seconds,
-                    'severity': ld.severity
+                    "object_type": ld.object_type,
+                    "growth_rate": ld.growth_rate,
+                    "current_count": ld.current_count,
+                    "baseline_count": ld.baseline_count,
+                    "duration_seconds": ld.duration_seconds,
+                    "severity": ld.severity,
                 }
                 for ld in self.leak_detections
-            ]
+            ],
         }
 
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(report, f, indent=2, ensure_ascii=False, default=str)
 
         return output_path
-
 
     def get_memory_optimization_recommendations(self) -> List[str]:
         """
@@ -491,35 +523,47 @@ class MemoryTracker:
         max_memory = max(s.rss_mb for s in self.snapshots)
 
         if current_memory > 1000:  # больше 1GB
-            recommendations.append("Текущее использование памяти превышает 1GB. Рассмотрите оптимизацию.")
+            recommendations.append(
+                "Текущее использование памяти превышает 1GB. Рассмотрите оптимизацию."
+            )
 
         if max_memory > 2000:  # больше 2GB
-            recommendations.append("Максимальное использование памяти превышает 2GB. Необходима срочная оптимизация.")
+            recommendations.append(
+                "Максимальное использование памяти превышает 2GB. Необходима срочная оптимизация."
+            )
 
         # Проверяем рост памяти
         if len(self.snapshots) >= 10:
             initial_memory = self.snapshots[0].rss_mb
             final_memory = self.snapshots[-1].rss_mb
-            growth = ((final_memory - initial_memory) / initial_memory) * 100 if initial_memory > 0 else 0
+            growth = (
+                ((final_memory - initial_memory) / initial_memory) * 100
+                if initial_memory > 0
+                else 0
+            )
 
             if growth > 50:  # Рост более чем на 50%
-                recommendations.append(f"Обнаружен значительный рост памяти: {growth:.2f}%. Возможно наличие утечки.")
+                recommendations.append(
+                    f"Обнаружен значительный рост памяти: {growth:.2f}%. Возможно наличие утечки."
+                )
 
         # Проверяем обнаруженные утечки
-        critical_leaks = [ld for ld in self.leak_detections if ld.severity in ['high', 'critical']]
+        critical_leaks = [ld for ld in self.leak_detections if ld.severity in ["high", "critical"]]
         if critical_leaks:
-            recommendations.append(f"Обнаружены критические утечки памяти: {len(critical_leaks)}. Требуется немедленное вмешательство.")
+            recommendations.append(
+                f"Обнаружены критические утечки памяти: {len(critical_leaks)}. Требуется немедленное вмешательство."
+            )
 
         if not recommendations:
             recommendations.append("Использование памяти в норме. Рекомендаций по оптимизации нет.")
 
         return recommendations
 
+
 class MemoryDecorator:
     """
     Декоратор для отслеживания использования памяти функций
     """
-
 
     def __init__(self, memory_tracker: MemoryTracker):
         """
@@ -529,7 +573,6 @@ class MemoryDecorator:
             memory_tracker: Экземпляр трекера памяти
         """
         self.memory_tracker = memory_tracker
-
 
     def __call__(self, func: Callable) -> Callable:
         """
@@ -541,11 +584,11 @@ class MemoryDecorator:
         Returns:
             Обернутая функция
         """
-        @wraps(func)
 
+        @wraps(func)
         def wrapper(*args, **kwargs):
             # Замеряем память до выполнения
-                    before_memory = self.memory_tracker.get_current_memory_usage()
+            before_memory = self.memory_tracker.get_current_memory_usage()
 
             # Выполняем функцию
             result = func(*args, **kwargs)
@@ -554,7 +597,7 @@ class MemoryDecorator:
             after_memory = self.memory_tracker.get_current_memory_usage()
 
             # Рассчитываем разницу
-            memory_diff = after_memory['rss_mb'] - before_memory['rss_mb']
+            memory_diff = after_memory["rss_mb"] - before_memory["rss_mb"]
 
             print(f"\n=== Отслеживание памяти для {func.__name__} ===")
             print(f"Память до: {before_memory['rss_mb']:.2f} MB")
@@ -565,6 +608,7 @@ class MemoryDecorator:
             return result
 
         return wrapper
+
 
 def main():
     """Главная функция для демонстрации возможностей трекера памяти"""
@@ -595,7 +639,6 @@ def main():
 
     # Пример функции для тестирования
     @mem_decorator
-
     def example_function():
         """Пример функции для отслеживания памяти"""
         # Создаем некоторое количество объектов
@@ -679,6 +722,6 @@ def main():
     print("- Рекомендации: memory_tracker.get_memory_optimization_recommendations()")
     print("- Декоратор для функций: MemoryDecorator")
 
+
 if __name__ == "__main__":
     main()
-

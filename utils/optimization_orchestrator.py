@@ -18,6 +18,7 @@ import gc
 
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.performance_profiler import PerformanceProfiler
@@ -26,13 +27,13 @@ from utils.advanced_logger_analyzer import AdvancedLoggerAnalyzer
 from utils.memory_tracker import MemoryTracker
 from utils.performance_benchmark import PerformanceBenchmarkSuite
 
+
 class OptimizationOrchestrator:
     """
     Класс оркестратора оптимизации
     Обеспечивает координацию всех инструментов оптимизации проекта,
     позволяет запускать комплексные оптимизационные процедуры.
     """
-
 
     def __init__(self, output_dir: str = "optimization_reports"):
         """
@@ -60,7 +61,6 @@ class OptimizationOrchestrator:
         self.monitoring_thread = None
         self.monitoring_interval = 5.0
 
-
     def start_comprehensive_optimization(self, target_modules: List[str] = None):
         """
         Запускает комплексную оптимизацию проекта
@@ -78,11 +78,11 @@ class OptimizationOrchestrator:
         # Определяем модули для оптимизации
         if target_modules is None:
             target_modules = [
-                "spm_simulator",      # Симулятор СЗМ
-                "image_analyzer",     # Анализатор изображений
-                "sstv_station",       # Наземная станция SSTV
-                "core_utils",         # Утилиты ядра
-                "web_dashboard"       # Веб-панель
+                "spm_simulator",  # Симулятор СЗМ
+                "image_analyzer",  # Анализатор изображений
+                "sstv_station",  # Наземная станция SSTV
+                "core_utils",  # Утилиты ядра
+                "web_dashboard",  # Веб-панель
             ]
 
         results = {}
@@ -103,11 +103,11 @@ class OptimizationOrchestrator:
             memory_result = self._track_memory(module)
 
             results[module] = {
-                'performance': perf_result,
-                'resources': resource_result,
-                'logs': log_result,
-                'memory': memory_result,
-                'timestamp': datetime.now().isoformat()
+                "performance": perf_result,
+                "resources": resource_result,
+                "logs": log_result,
+                "memory": memory_result,
+                "timestamp": datetime.now().isoformat(),
             }
 
         # Останавливаем мониторинг
@@ -115,17 +115,18 @@ class OptimizationOrchestrator:
         self.memory_tracker.stop_tracking()
 
         # Сохраняем результаты
-        self.optimization_results.append({
-            'session_id': self.current_session_id,
-            'target_modules': target_modules,
-            'results': results,
-            'summary': self._generate_summary(results),
-            'timestamp': datetime.now().isoformat()
-        })
+        self.optimization_results.append(
+            {
+                "session_id": self.current_session_id,
+                "target_modules": target_modules,
+                "results": results,
+                "summary": self._generate_summary(results),
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
 
         print("\n=== КОМПЛЕКСНАЯ ОПТИМИЗАЦИЯ ЗАВЕРШЕНА ===")
         return results
-
 
     def _optimize_performance(self, module_name: str) -> Dict[str, Any]:
         """Оптимизация производительности модуля"""
@@ -133,10 +134,9 @@ class OptimizationOrchestrator:
 
         # Простой тест производительности для демонстрации
         def dummy_test():
-
             result = 0
             for i in range(10000):
-                result += i ** 2
+                result += i**2
             return result
 
         # Профилируем функцию
@@ -146,12 +146,11 @@ class OptimizationOrchestrator:
         optimized_result = self.performance_profiler.profile_function(dummy_test)()
 
         return {
-            'benchmark_result': profile_result,
-            'optimized': True,
-            'improvement_notes': 'Applied performance optimizations',
-            'recommendations': self.performance_profiler.get_optimization_recommendations()
+            "benchmark_result": profile_result,
+            "optimized": True,
+            "improvement_notes": "Applied performance optimizations",
+            "recommendations": self.performance_profiler.get_optimization_recommendations(),
         }
-
 
     def _optimize_resources(self, module_name: str) -> Dict[str, Any]:
         """Оптимизация ресурсов модуля"""
@@ -161,19 +160,18 @@ class OptimizationOrchestrator:
         optimization_results = self.resource_manager.optimize_all_resources()
 
         return {
-            'optimization_results': {
+            "optimization_results": {
                 k: {
-                    'original': v.original_value,
-                    'optimized': v.optimized_value,
-                    'improvement': v.improvement_percent,
-                    'status': v.status
+                    "original": v.original_value,
+                    "optimized": v.optimized_value,
+                    "improvement": v.improvement_percent,
+                    "status": v.status,
                 }
                 for k, v in optimization_results.items()
             },
-            'efficiency_score': self.resource_manager.get_resource_efficiency_score(),
-            'suggestions': self.resource_manager.suggest_optimizations()
+            "efficiency_score": self.resource_manager.get_resource_efficiency_score(),
+            "suggestions": self.resource_manager.suggest_optimizations(),
         }
-
 
     def _analyze_logs(self, module_name: str) -> Dict[str, Any]:
         """Анализ логов модуля"""
@@ -187,7 +185,7 @@ class OptimizationOrchestrator:
             "src/log",
             "components/cpp-spm-hardware-sim/logs",
             "components/py-surface-image-analyzer/logs",
-            "components/py-sstv-groundstation/logs"
+            "components/py-sstv-groundstation/logs",
         ]
 
         log_files = []
@@ -200,18 +198,23 @@ class OptimizationOrchestrator:
         if log_files:
             # Анализируем найденные логи
             try:
-                analysis_result = self.logger_analyzer.analyze_log_files([str(f) for f in log_files[:5]])  # Ограничиваем для скорости
+                analysis_result = self.logger_analyzer.analyze_log_files(
+                    [str(f) for f in log_files[:5]]
+                )  # Ограничиваем для скорости
                 return {
-                    'log_analysis': analysis_result,
-                    'files_analyzed': len(log_files),
-                    'error_count': sum(1 for entry in analysis_result.get('entries', []) if 'ERROR' in entry.get('level', '').upper())
+                    "log_analysis": analysis_result,
+                    "files_analyzed": len(log_files),
+                    "error_count": sum(
+                        1
+                        for entry in analysis_result.get("entries", [])
+                        if "ERROR" in entry.get("level", "").upper()
+                    ),
                 }
             except Exception as e:
                 print(f"    Ошибка анализа логов: {e}")
-                return {'error': str(e)}
+                return {"error": str(e)}
         else:
-            return {'message': 'No log files found for analysis'}
-
+            return {"message": "No log files found for analysis"}
 
     def _track_memory(self, module_name: str) -> Dict[str, Any]:
         """Отслеживание памяти модуля"""
@@ -237,17 +240,19 @@ class OptimizationOrchestrator:
         leaks = self.memory_tracker.detect_memory_leaks(threshold_growth=0.5)
 
         return {
-            'snapshot': {
-                'rss_mb': snapshot.rss_mb,
-                'vms_mb': snapshot.vms_mb,
-                'percent': snapshot.percent
+            "snapshot": {
+                "rss_mb": snapshot.rss_mb,
+                "vms_mb": snapshot.vms_mb,
+                "percent": snapshot.percent,
             },
-            'trace_stats': trace_stats,
-            'detected_leaks': len(leaks),
-            'leak_details': [{'type': l.object_type, 'growth': l.growth_rate, 'severity': l.severity} for l in leaks],
-            'recommendations': self.memory_tracker.get_memory_optimization_recommendations()
+            "trace_stats": trace_stats,
+            "detected_leaks": len(leaks),
+            "leak_details": [
+                {"type": l.object_type, "growth": l.growth_rate, "severity": l.severity}
+                for l in leaks
+            ],
+            "recommendations": self.memory_tracker.get_memory_optimization_recommendations(),
         }
-
 
     def _generate_summary(self, results: Dict[str, Any]) -> Dict[str, Any]:
         """Генерирует сводку результатов оптимизации"""
@@ -260,25 +265,24 @@ class OptimizationOrchestrator:
         memory_analyzed = 0
 
         for module_results in results.values():
-            if 'performance' in module_results:
+            if "performance" in module_results:
                 successful_perf += 1
-            if 'resources' in module_results:
+            if "resources" in module_results:
                 successful_res += 1
-            if 'logs' in module_results:
+            if "logs" in module_results:
                 analyzed_logs += 1
-            if 'memory' in module_results:
+            if "memory" in module_results:
                 memory_analyzed += 1
 
         return {
-            'total_modules_processed': total_modules,
-            'performance_optimizations': successful_perf,
-            'resource_optimizations': successful_res,
-            'log_analyses': analyzed_logs,
-            'memory_analyses': memory_analyzed,
-            'efficiency_improvements': self.resource_manager.get_resource_efficiency_score(),
-            'total_optimization_sessions': len(self.optimization_results)
+            "total_modules_processed": total_modules,
+            "performance_optimizations": successful_perf,
+            "resource_optimizations": successful_res,
+            "log_analyses": analyzed_logs,
+            "memory_analyses": memory_analyzed,
+            "efficiency_improvements": self.resource_manager.get_resource_efficiency_score(),
+            "total_optimization_sessions": len(self.optimization_results),
         }
-
 
     def run_optimization_cycle(self, cycle_duration: int = 300) -> Dict[str, Any]:
         """
@@ -305,36 +309,38 @@ class OptimizationOrchestrator:
                 current_resources = self.resource_manager.get_current_resources()
 
                 # Если ресурсы перегружены, применяем оптимизации
-                if (current_resources.get('cpu_percent', 0) > 70 or
-                    current_resources.get('memory_percent', 0) > 70):
-
+                if (
+                    current_resources.get("cpu_percent", 0) > 70
+                    or current_resources.get("memory_percent", 0) > 70
+                ):
                     print(f"  Обнаружена высокая нагрузка, запуск оптимизации...")
                     opt_result = self.resource_manager.optimize_all_resources()
-                    cycle_results.append({
-                        'timestamp': datetime.now().isoformat(),
-                        'type': 'resource_optimization',
-                        'result': {
-                            k: {
-                                'original': v.original_value,
-                                'optimized': v.optimized_value,
-                                'improvement': v.improvement_percent,
-                                'status': v.status
-                            }
-                            for k, v in opt_result.items()
+                    cycle_results.append(
+                        {
+                            "timestamp": datetime.now().isoformat(),
+                            "type": "resource_optimization",
+                            "result": {
+                                k: {
+                                    "original": v.original_value,
+                                    "optimized": v.optimized_value,
+                                    "improvement": v.improvement_percent,
+                                    "status": v.status,
+                                }
+                                for k, v in opt_result.items()
+                            },
                         }
-                    })
+                    )
 
                 # Периодическая проверка памяти
                 if len(self.memory_tracker.snapshots) % 10 == 0:  # Каждые 10 снимков
                     snapshot = self.memory_tracker.take_snapshot()
-                    cycle_results.append({
-                        'timestamp': datetime.now().isoformat(),
-                        'type': 'memory_check',
-                        'result': {
-                            'rss_mb': snapshot.rss_mb,
-                            'percent': snapshot.percent
+                    cycle_results.append(
+                        {
+                            "timestamp": datetime.now().isoformat(),
+                            "type": "memory_check",
+                            "result": {"rss_mb": snapshot.rss_mb, "percent": snapshot.percent},
                         }
-                    })
+                    )
 
                 time.sleep(10)  # Проверяем каждые 10 секунд
 
@@ -345,12 +351,11 @@ class OptimizationOrchestrator:
 
         print("=== ЦИКЛ ОПТИМИЗАЦИИ ЗАВЕРШЕН ===")
         return {
-            'cycle_duration': cycle_duration,
-            'checks_performed': len(cycle_results),
-            'results': cycle_results,
-            'final_efficiency': self.resource_manager.get_resource_efficiency_score()
+            "cycle_duration": cycle_duration,
+            "checks_performed": len(cycle_results),
+            "results": cycle_results,
+            "final_efficiency": self.resource_manager.get_resource_efficiency_score(),
         }
-
 
     def generate_optimization_report(self, output_path: str = None) -> str:
         """
@@ -363,21 +368,22 @@ class OptimizationOrchestrator:
             Путь к сохраненному отчету
         """
         if output_path is None:
-            output_path = str(self.output_dir / f"optimization_report_{self.current_session_id}.json")
+            output_path = str(
+                self.output_dir / f"optimization_report_{self.current_session_id}.json"
+            )
 
         report = {
-            'report_generation_time': datetime.now().isoformat(),
-            'total_sessions': len(self.optimization_results),
-            'latest_session': self.optimization_results[-1] if self.optimization_results else None,
-            'historical_summary': self._get_historical_summary(),
-            'system_info': self._get_system_info()
+            "report_generation_time": datetime.now().isoformat(),
+            "total_sessions": len(self.optimization_results),
+            "latest_session": self.optimization_results[-1] if self.optimization_results else None,
+            "historical_summary": self._get_historical_summary(),
+            "system_info": self._get_system_info(),
         }
 
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(report, f, indent=2, ensure_ascii=False, default=str)
 
         return output_path
-
 
     def _get_historical_summary(self) -> Dict[str, Any]:
         """Получает сводку по историческим сессиям"""
@@ -385,44 +391,46 @@ class OptimizationOrchestrator:
             return {}
 
         # Подсчет общих метрик
-        total_modules = sum(len(session['target_modules']) for session in self.optimization_results)
+        total_modules = sum(len(session["target_modules"]) for session in self.optimization_results)
         total_sessions = len(self.optimization_results)
 
         # Средняя эффективность
         efficiency_scores = [
-            session['results'][module]['resources']['efficiency_score']
+            session["results"][module]["resources"]["efficiency_score"]
             for session in self.optimization_results
-            for module in session['results'].keys()
-            if 'resources' in session['results'][module]
-            and 'efficiency_score' in session['results'][module]['resources']
+            for module in session["results"].keys()
+            if "resources" in session["results"][module]
+            and "efficiency_score" in session["results"][module]["resources"]
         ]
 
         avg_efficiency = sum(efficiency_scores) / len(efficiency_scores) if efficiency_scores else 0
 
         return {
-            'total_sessions': total_sessions,
-            'total_modules_optimized': total_modules,
-            'average_efficiency_score': avg_efficiency,
-            'last_session_time': self.optimization_results[-1]['timestamp']
+            "total_sessions": total_sessions,
+            "total_modules_optimized": total_modules,
+            "average_efficiency_score": avg_efficiency,
+            "last_session_time": self.optimization_results[-1]["timestamp"],
         }
-
 
     def _get_system_info(self) -> Dict[str, Any]:
         """Получает информацию о системе"""
         try:
             cpu_count = psutil.cpu_count()
             memory_total = psutil.virtual_memory().total / (1024**3)  # GB
-            disk_total = psutil.disk_usage('/').total / (1024**3) if hasattr(psutil, 'disk_usage') else 0
+            disk_total = (
+                psutil.disk_usage("/").total / (1024**3) if hasattr(psutil, "disk_usage") else 0
+            )
 
             return {
-                'cpu_count': cpu_count,
-                'memory_gb': round(memory_total, 2),
-                'disk_space_gb': round(disk_total, 2),
-                'platform': str(psutil.Process().parent().exe()) if psutil.Process().parent() else 'unknown'
+                "cpu_count": cpu_count,
+                "memory_gb": round(memory_total, 2),
+                "disk_space_gb": round(disk_total, 2),
+                "platform": str(psutil.Process().parent().exe())
+                if psutil.Process().parent()
+                else "unknown",
             }
         except:
-            return {'info': 'Could not retrieve system info'}
-
+            return {"info": "Could not retrieve system info"}
 
     def get_optimization_recommendations(self) -> List[str]:
         """
@@ -436,9 +444,13 @@ class OptimizationOrchestrator:
         # Рекомендации на основе эффективности ресурсов
         efficiency = self.resource_manager.get_resource_efficiency_score()
         if efficiency < 70:
-            recommendations.append("Эффективность использования ресурсов низкая (<70%). Рассмотрите комплексную оптимизацию.")
+            recommendations.append(
+                "Эффективность использования ресурсов низкая (<70%). Рассмотрите комплексную оптимизацию."
+            )
         elif efficiency < 90:
-            recommendations.append("Эффективность использования ресурсов средняя (<90%). Возможна дополнительная оптимизация.")
+            recommendations.append(
+                "Эффективность использования ресурсов средняя (<90%). Возможна дополнительная оптимизация."
+            )
         else:
             recommendations.append("Эффективность использования ресурсов высокая. Хорошая работа!")
 
@@ -456,6 +468,7 @@ class OptimizationOrchestrator:
 
         return recommendations
 
+
 def main():
     """Главная функция для демонстрации возможностей оркестратора оптимизации"""
     print("=== ОРКЕСТРАТОР ОПТИМИЗАЦИИ ===")
@@ -468,10 +481,7 @@ def main():
 
     # Запускаем комплексную оптимизацию для нескольких модулей
     print("\nЗапуск комплексной оптимизации...")
-    results = orchestrator.start_comprehensive_optimization([
-        "core_utils",
-        "spm_simulator"
-    ])
+    results = orchestrator.start_comprehensive_optimization(["core_utils", "spm_simulator"])
 
     print(f"\nРезультаты оптимизации:")
     for module, result in results.items():
@@ -506,6 +516,6 @@ def main():
     print("- Рекомендации: orchestrator.get_optimization_recommendations()")
     print("- Модульные оптимизации: _optimize_*() методы")
 
+
 if __name__ == "__main__":
     main()
-

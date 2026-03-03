@@ -29,14 +29,17 @@ import line_profiler
 import tracemalloc
 from contextlib import contextmanager
 
+
 @dataclass
 class PerformanceMetric:
     """Метрика производительности"""
+
     name: str
     value: float
     unit: str
     timestamp: datetime
     context: str
+
 
 class Profiler:
     """
@@ -44,7 +47,6 @@ class Profiler:
     Обеспечивает профилирование, анализ
     производительности и оптимизацию кода.
     """
-
 
     def __init__(self, output_dir: str = "profiles"):
         """
@@ -62,12 +64,11 @@ class Profiler:
         self.memory_monitoring = False
         self.monitoring_thread = None
         self.monitoring_data = {
-            'timestamps': [],
-            'cpu_percent': [],
-            'memory_percent': [],
-            'memory_mb': []
+            "timestamps": [],
+            "cpu_percent": [],
+            "memory_percent": [],
+            "memory_mb": [],
         }
-
 
     def start_cpu_monitoring(self):
         """Запускает мониторинг CPU"""
@@ -77,24 +78,23 @@ class Profiler:
         self.cpu_monitoring = True
 
         def monitor():
-
             while self.cpu_monitoring:
-                self.monitoring_data['timestamps'].append(datetime.now())
-                self.monitoring_data['cpu_percent'].append(psutil.cpu_percent())
-                self.monitoring_data['memory_percent'].append(psutil.virtual_memory().percent)
-                self.monitoring_data['memory_mb'].append(psutil.virtual_memory().used / (1024*1024))
+                self.monitoring_data["timestamps"].append(datetime.now())
+                self.monitoring_data["cpu_percent"].append(psutil.cpu_percent())
+                self.monitoring_data["memory_percent"].append(psutil.virtual_memory().percent)
+                self.monitoring_data["memory_mb"].append(
+                    psutil.virtual_memory().used / (1024 * 1024)
+                )
                 time.sleep(1)
 
         self.monitoring_thread = threading.Thread(target=monitor, daemon=True)
         self.monitoring_thread.start()
-
 
     def stop_cpu_monitoring(self):
         """Останавливает мониторинг CPU"""
         self.cpu_monitoring = False
         if self.monitoring_thread:
             self.monitoring_thread.join(timeout=2.0)
-
 
     def profile_function(self, func: Callable, *args, **kwargs) -> Dict[str, Any]:
         """
@@ -122,21 +122,20 @@ class Profiler:
         # Сохраняем статистику
         stream = io.StringIO()
         stats = pstats.Stats(profiler, stream=stream)
-        stats.sort_stats('cumulative')
+        stats.sort_stats("cumulative")
         stats.print_stats()
 
         execution_time = end_time - start_time
 
         profile_data = {
-            'function_name': func.__name__,
-            'execution_time': execution_time,
-            'profile_stats': stream.getvalue(),
-            'call_count': stats.total_calls,
-            'primitive_calls': stats.primitive_calls
+            "function_name": func.__name__,
+            "execution_time": execution_time,
+            "profile_stats": stream.getvalue(),
+            "call_count": stats.total_calls,
+            "primitive_calls": stats.primitive_calls,
         }
 
         return profile_data
-
 
     def profile_memory_usage(self, func: Callable, *args, **kwargs) -> Dict[str, Any]:
         """
@@ -161,15 +160,14 @@ class Profiler:
         tracemalloc.stop()
 
         memory_data = {
-            'function_name': func.__name__,
-            'execution_time': end_time - start_time,
-            'current_memory_mb': current / (1024 * 1024),
-            'peak_memory_mb': peak / (1024 * 1024),
-            'result': result
+            "function_name": func.__name__,
+            "execution_time": end_time - start_time,
+            "current_memory_mb": current / (1024 * 1024),
+            "peak_memory_mb": peak / (1024 * 1024),
+            "result": result,
         }
 
         return memory_data
-
 
     def profile_line_by_line(self, func: Callable, *args, **kwargs) -> Dict[str, Any]:
         """
@@ -186,7 +184,7 @@ class Profiler:
         # Создаем временную функцию для профилирования
 
         def temp_func():
-                    return func(*args, **kwargs)
+            return func(*args, **kwargs)
 
         # Используем line_profiler
         profiler = line_profiler.LineProfiler()
@@ -202,15 +200,16 @@ class Profiler:
         profiler.print_stats(stream=stream)
 
         line_profile_data = {
-            'function_name': func.__name__,
-            'line_profile_stats': stream.getvalue(),
-            'result': result
+            "function_name": func.__name__,
+            "line_profile_stats": stream.getvalue(),
+            "result": result,
         }
 
         return line_profile_data
 
-
-    def benchmark_function(self, func: Callable, iterations: int = 100, *args, **kwargs) -> Dict[str, Any]:
+    def benchmark_function(
+        self, func: Callable, iterations: int = 100, *args, **kwargs
+    ) -> Dict[str, Any]:
         """
         Бенчмаркинг функции
 
@@ -237,18 +236,17 @@ class Profiler:
         std_dev = (sum((t - avg_time) ** 2 for t in times) / len(times)) ** 0.5
 
         benchmark_data = {
-            'function_name': func.__name__,
-            'iterations': iterations,
-            'avg_time': avg_time,
-            'min_time': min_time,
-            'max_time': max_time,
-            'std_dev': std_dev,
-            'total_time': sum(times),
-            'ops_per_sec': iterations / sum(times) if sum(times) > 0 else 0
+            "function_name": func.__name__,
+            "iterations": iterations,
+            "avg_time": avg_time,
+            "min_time": min_time,
+            "max_time": max_time,
+            "std_dev": std_dev,
+            "total_time": sum(times),
+            "ops_per_sec": iterations / sum(times) if sum(times) > 0 else 0,
         }
 
         return benchmark_data
-
 
     def analyze_system_resources(self) -> Dict[str, Any]:
         """
@@ -260,22 +258,22 @@ class Profiler:
         process = psutil.Process(os.getpid())
 
         system_info = {
-            'cpu_percent': psutil.cpu_percent(interval=1),
-            'memory_percent': psutil.virtual_memory().percent,
-            'memory_available_gb': psutil.virtual_memory().available / (1024**3),
-            'disk_usage_percent': psutil.disk_usage('/').percent,
-            'process_memory_mb': process.memory_info().rss / (1024 * 1024),
-            'process_cpu_percent': process.cpu_percent(),
-            'num_threads': process.num_threads(),
-            'num_fds': process.num_fds() if os.name != 'nt' else 'N/A',
-            'timestamp': datetime.now().isoformat()
+            "cpu_percent": psutil.cpu_percent(interval=1),
+            "memory_percent": psutil.virtual_memory().percent,
+            "memory_available_gb": psutil.virtual_memory().available / (1024**3),
+            "disk_usage_percent": psutil.disk_usage("/").percent,
+            "process_memory_mb": process.memory_info().rss / (1024 * 1024),
+            "process_cpu_percent": process.cpu_percent(),
+            "num_threads": process.num_threads(),
+            "num_fds": process.num_fds() if os.name != "nt" else "N/A",
+            "timestamp": datetime.now().isoformat(),
         }
 
         return system_info
 
-
-    def generate_performance_report(self, profile_data: Dict[str, Any],
-                                 output_path: str = None) -> str:
+    def generate_performance_report(
+        self, profile_data: Dict[str, Any], output_path: str = None
+    ) -> str:
         """
         Генерирует отчет о производительности
 
@@ -291,17 +289,16 @@ class Profiler:
             output_path = self.output_dir / f"performance_report_{timestamp}.json"
 
         report = {
-            'timestamp': datetime.now().isoformat(),
-            'profile_data': profile_data,
-            'system_info': self.analyze_system_resources(),
-            'summary': self._generate_summary(profile_data)
+            "timestamp": datetime.now().isoformat(),
+            "profile_data": profile_data,
+            "system_info": self.analyze_system_resources(),
+            "summary": self._generate_summary(profile_data),
         }
 
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(report, f, indent=2, ensure_ascii=False, default=str)
 
         return str(output_path)
-
 
     def _generate_summary(self, profile_data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -315,26 +312,25 @@ class Profiler:
         """
         summary = {}
 
-        if 'execution_time' in profile_data:
-            summary['execution_time'] = profile_data['execution_time']
+        if "execution_time" in profile_data:
+            summary["execution_time"] = profile_data["execution_time"]
 
-        if 'avg_time' in profile_data:
-            summary['avg_execution_time'] = profile_data['avg_time']
-            summary['operations_per_second'] = profile_data.get('ops_per_sec', 0)
+        if "avg_time" in profile_data:
+            summary["avg_execution_time"] = profile_data["avg_time"]
+            summary["operations_per_second"] = profile_data.get("ops_per_sec", 0)
 
-        if 'current_memory_mb' in profile_data:
-            summary['memory_usage_mb'] = profile_data['current_memory_mb']
-            summary['peak_memory_mb'] = profile_data['peak_memory_mb']
+        if "current_memory_mb" in profile_data:
+            summary["memory_usage_mb"] = profile_data["current_memory_mb"]
+            summary["peak_memory_mb"] = profile_data["peak_memory_mb"]
 
-        if 'call_count' in profile_data:
-            summary['function_calls'] = profile_data['call_count']
-
+        if "call_count" in profile_data:
+            summary["function_calls"] = profile_data["call_count"]
 
         return summary
 
-
-    def visualize_performance_data(self, profile_data: Dict[str, Any],
-                                output_path: str = None) -> str:
+    def visualize_performance_data(
+        self, profile_data: Dict[str, Any], output_path: str = None
+    ) -> str:
         """
         Визуализирует данные производительности
 
@@ -353,41 +349,45 @@ class Profiler:
 
         # Создаем подграфики для разных метрик
         fig, axes = plt.subplots(2, 2, figsize=(15, 10))
-        fig.suptitle('Анализ производительности', fontsize=16)
+        fig.suptitle("Анализ производительности", fontsize=16)
 
         # График времени выполнения (если есть)
-        if 'avg_time' in profile_data and 'min_time' in profile_data and 'max_time' in profile_data:
-            labels = ['Avg', 'Min', 'Max']
-            values = [profile_data['avg_time'], profile_data['min_time'], profile_data['max_time']]
+        if "avg_time" in profile_data and "min_time" in profile_data and "max_time" in profile_data:
+            labels = ["Avg", "Min", "Max"]
+            values = [profile_data["avg_time"], profile_data["min_time"], profile_data["max_time"]]
             axes[0, 0].bar(labels, values)
-            axes[0, 0].set_title('Время выполнения (с)')
-            axes[0, 0].set_ylabel('Время (с)')
+            axes[0, 0].set_title("Время выполнения (с)")
+            axes[0, 0].set_ylabel("Время (с)")
 
         # График использования памяти (если есть)
-        if 'current_memory_mb' in profile_data and 'peak_memory_mb' in profile_data:
-            labels = ['Current', 'Peak']
-            values = [profile_data['current_memory_mb'], profile_data['peak_memory_mb']]
+        if "current_memory_mb" in profile_data and "peak_memory_mb" in profile_data:
+            labels = ["Current", "Peak"]
+            values = [profile_data["current_memory_mb"], profile_data["peak_memory_mb"]]
             axes[0, 1].bar(labels, values)
-            axes[0, 1].set_title('Использование памяти (MB)')
-            axes[0, 1].set_ylabel('Память (MB)')
+            axes[0, 1].set_title("Использование памяти (MB)")
+            axes[0, 1].set_ylabel("Память (MB)")
 
         # График количества вызовов (если есть)
-        if 'call_count' in profile_data:
-            axes[1, 0].pie([profile_data['call_count'], 100 - profile_data['call_count']],
-                          labels=['Function Calls', 'Other'], autopct='%1.1f%%')
-            axes[1, 0].set_title('Распределение вызовов функций')
+        if "call_count" in profile_data:
+            axes[1, 0].pie(
+                [profile_data["call_count"], 100 - profile_data["call_count"]],
+                labels=["Function Calls", "Other"],
+                autopct="%1.1f%%",
+            )
+            axes[1, 0].set_title("Распределение вызовов функций")
 
         # График производительности (если есть)
-        if 'ops_per_sec' in profile_data:
-            axes[1, 1].bar(['Ops/sec'], [profile_data['ops_per_sec']])
-            axes[1, 1].set_title('Операций в секунду')
-            axes[1, 1].set_ylabel('Операций/с')
+        if "ops_per_sec" in profile_data:
+            axes[1, 1].bar(["Ops/sec"], [profile_data["ops_per_sec"]])
+            axes[1, 1].set_title("Операций в секунду")
+            axes[1, 1].set_ylabel("Операций/с")
 
         plt.tight_layout()
-        plt.savefig(output_path, dpi=300, bbox_inches='tight')
+        plt.savefig(output_path, dpi=300, bbox_inches="tight")
         plt.close()
 
         return str(output_path)
+
 
 def profile_performance(func: Callable) -> Callable:
     """
@@ -400,10 +400,10 @@ def profile_performance(func: Callable) -> Callable:
 
         Обернутая функция с профилированием
     """
-    @wraps(func)
 
+    @wraps(func)
     def wrapper(*args, **kwargs):
-            profiler = Profiler()
+        profiler = Profiler()
 
         print(f"Начинаем профилирование функции {func.__name__}...")
 
@@ -416,9 +416,14 @@ def profile_performance(func: Callable) -> Callable:
         print(f"Профилирование завершено. Отчет сохранен: {report_path}")
 
         # Возвращаем результат функции
-        return profile_result.get('result', None) if 'result' in profile_result else func(*args, **kwargs)
+        return (
+            profile_result.get("result", None)
+            if "result" in profile_result
+            else func(*args, **kwargs)
+        )
 
     return wrapper
+
 
 def benchmark_function(iterations: int = 100):
     """
@@ -433,9 +438,9 @@ def benchmark_function(iterations: int = 100):
     """
 
     def decorator(func: Callable) -> Callable:
-            @wraps(func)
+        @wraps(func)
         def wrapper(*args, **kwargs):
-                    profiler = Profiler()
+            profiler = Profiler()
 
             print(f"Запускаем бенчмарк функции {func.__name__} ({iterations} итераций)...")
 
@@ -450,10 +455,16 @@ def benchmark_function(iterations: int = 100):
             report_path = profiler.generate_performance_report(benchmark_result)
             print(f"Отчет бенчмарка сохранен: {report_path}")
 
-            return benchmark_result.get('result', None) if 'result' in benchmark_result else func(*args, **kwargs)
+            return (
+                benchmark_result.get("result", None)
+                if "result" in benchmark_result
+                else func(*args, **kwargs)
+            )
 
         return wrapper
+
     return decorator
+
 
 @contextmanager
 def performance_monitor(name: str = "Operation"):
@@ -489,10 +500,11 @@ def performance_monitor(name: str = "Operation"):
             value=execution_time,
             unit="seconds",
             timestamp=datetime.now(),
-            context=name
+            context=name,
         )
 
         # Здесь можно добавить сохранение метрики в файл или базу данных
+
 
 def main():
     """Главная функция для демонстрации возможностей профилировщика"""
@@ -510,7 +522,7 @@ def main():
         """Пример функции для профилирования"""
         result = []
         for i in range(n):
-            result.append(i ** 2)
+            result.append(i**2)
         return sum(result)
 
     # Профилируем функцию
@@ -553,9 +565,8 @@ def main():
     print("\nДемонстрация декоратора профилирования...")
 
     @profile_performance
-
     def decorated_function():
-            time.sleep(0.1)  # Имитация работы
+        time.sleep(0.1)  # Имитация работы
         return "Результат функции"
 
     result = decorated_function()
@@ -564,9 +575,8 @@ def main():
     print("\nДемонстрация декоратора бенчмаркинга...")
 
     @benchmark_function(iterations=5)
-
     def benchmarked_function():
-            return sum(i**2 for i in range(1000))
+        return sum(i**2 for i in range(1000))
 
     result = benchmarked_function()
 
@@ -588,6 +598,6 @@ def main():
     print("- Декоратор бенчмаркинга: @benchmark_function")
     print("- Контекстный менеджер: performance_monitor")
 
+
 if __name__ == "__main__":
     main()
-

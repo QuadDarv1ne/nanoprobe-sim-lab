@@ -87,34 +87,28 @@ class NanoprobeDashboard:
 
         # Кнопки управления
         ttk.Button(
-            left_frame, text="Запустить СЗМ симуляцию",
-            command=self.run_spm_simulation
+            left_frame, text="Запустить СЗМ симуляцию", command=self.run_spm_simulation
         ).pack(fill=tk.X, pady=5)
 
         ttk.Button(
-            left_frame, text="Запустить анализ изображений",
-            command=self.run_image_analysis
+            left_frame, text="Запустить анализ изображений", command=self.run_image_analysis
         ).pack(fill=tk.X, pady=5)
 
         ttk.Button(
-            left_frame, text="Запустить SSTV декодирование",
-            command=self.run_sstv_decoding
+            left_frame, text="Запустить SSTV декодирование", command=self.run_sstv_decoding
         ).pack(fill=tk.X, pady=5)
 
         ttk.Button(
-            left_frame, text="Комплексная симуляция",
-            command=self.run_comprehensive_simulation
+            left_frame, text="Комплексная симуляция", command=self.run_comprehensive_simulation
         ).pack(fill=tk.X, pady=5)
 
         ttk.Button(
-            left_frame, text="Непрерывная симуляция",
-            command=self.run_continuous_simulation
+            left_frame, text="Непрерывная симуляция", command=self.run_continuous_simulation
         ).pack(fill=tk.X, pady=5)
 
-        ttk.Button(
-            left_frame, text="Остановить симуляцию",
-            command=self.stop_simulation
-        ).pack(fill=tk.X, pady=5)
+        ttk.Button(left_frame, text="Остановить симуляцию", command=self.stop_simulation).pack(
+            fill=tk.X, pady=5
+        )
 
         # Правая часть - информация о состоянии
         right_frame = ttk.LabelFrame(frame, text="Информация о состоянии", padding=10)
@@ -136,13 +130,15 @@ class NanoprobeDashboard:
         control_frame.pack(fill=tk.X, padx=10, pady=10)
 
         ttk.Button(
-            control_frame, text="Загрузить и отобразить данные",
-            command=self.load_and_visualize_data
+            control_frame,
+            text="Загрузить и отобразить данные",
+            command=self.load_and_visualize_data,
         ).pack(side=tk.LEFT, padx=5)
 
         ttk.Button(
-            control_frame, text="Создать отчет визуализации",
-            command=self.create_visualization_report
+            control_frame,
+            text="Создать отчет визуализации",
+            command=self.create_visualization_report,
         ).pack(side=tk.LEFT, padx=5)
 
         canvas_frame = ttk.Frame(frame)
@@ -160,10 +156,7 @@ class NanoprobeDashboard:
         self.logs_text = scrolledtext.ScrolledText(frame, wrap=tk.WORD)
         self.logs_text.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-        ttk.Button(
-            frame, text="Обновить логи",
-            command=self.refresh_logs
-        ).pack(pady=5)
+        ttk.Button(frame, text="Обновить логи", command=self.refresh_logs).pack(pady=5)
 
     def create_settings_tab(self, parent):
         """Создает вкладку настроек."""
@@ -174,25 +167,18 @@ class NanoprobeDashboard:
         project_frame.pack(fill=tk.X, padx=10, pady=5)
 
         ttk.Label(project_frame, text="Директория данных:").pack(anchor=tk.W)
-        self.data_dir_var = tk.StringVar(
-            value=self.config_manager.get("paths.data_dir", "data")
-        )
-        ttk.Entry(project_frame, textvariable=self.data_dir_var).pack(
-            fill=tk.X, pady=5
-        )
+        self.data_dir_var = tk.StringVar(value=self.config_manager.get("paths.data_dir", "data"))
+        ttk.Entry(project_frame, textvariable=self.data_dir_var).pack(fill=tk.X, pady=5)
 
         ttk.Label(project_frame, text="Директория вывода:").pack(anchor=tk.W)
         self.output_dir_var = tk.StringVar(
             value=self.config_manager.get("paths.output_dir", "output")
         )
-        ttk.Entry(project_frame, textvariable=self.output_dir_var).pack(
-            fill=tk.X, pady=5
-        )
+        ttk.Entry(project_frame, textvariable=self.output_dir_var).pack(fill=tk.X, pady=5)
 
-        ttk.Button(
-            project_frame, text="Сохранить настройки",
-            command=self.save_settings
-        ).pack(pady=10)
+        ttk.Button(project_frame, text="Сохранить настройки", command=self.save_settings).pack(
+            pady=10
+        )
 
     def update_status_info(self):
         """Обновляет информацию о состоянии."""
@@ -222,27 +208,22 @@ class NanoprobeDashboard:
 
     def run_spm_simulation(self):
         """Запускает симуляцию СЗМ."""
+
         def worker():
             try:
-                self.logger_manager.log_system_event(
-                    "Запуск СЗМ симуляции из GUI", "INFO"
-                )
+                self.logger_manager.log_system_event("Запуск СЗМ симуляции из GUI", "INFO")
 
                 surface = self.orchestrator.create_simulation_surface((30, 30))
                 results = self.orchestrator.run_spm_simulation(surface)
 
                 messagebox.showinfo(
                     "Симуляция СЗМ",
-                    f"Симуляция завершена!\nДлительность: {results['duration']:.2f} сек"
+                    f"Симуляция завершена!\nДлительность: {results['duration']:.2f} сек",
                 )
-                self.logger_manager.log_spm_event(
-                    "СЗМ симуляция завершена успешно", "INFO"
-                )
+                self.logger_manager.log_spm_event("СЗМ симуляция завершена успешно", "INFO")
 
             except Exception as e:
-                self.logger_manager.log_spm_event(
-                    f"Ошибка СЗМ симуляции: {e}", "ERROR"
-                )
+                self.logger_manager.log_spm_event(f"Ошибка СЗМ симуляции: {e}", "ERROR")
                 messagebox.showerror("Ошибка", f"Ошибка СЗМ симуляции: {e}")
             finally:
                 self.update_status_info()
@@ -251,45 +232,37 @@ class NanoprobeDashboard:
 
     def run_image_analysis(self):
         """Запускает анализ изображений."""
+
         def worker():
             try:
                 file_path = filedialog.askopenfilename(
                     title="Выберите изображение для анализа",
-                    filetypes=[
-                        ("Image files", "*.jpg *.jpeg *.png *.bmp *.tiff")
-                    ]
+                    filetypes=[("Image files", "*.jpg *.jpeg *.png *.bmp *.tiff")],
                 )
 
                 if not file_path:
                     return
 
-                self.logger_manager.log_system_event(
-                    "Запуск анализа изображений из GUI", "INFO"
-                )
+                self.logger_manager.log_system_event("Запуск анализа изображений из GUI", "INFO")
 
                 results = self.orchestrator.run_image_analysis(file_path)
 
                 if results.get("success"):
                     messagebox.showinfo(
                         "Анализ изображений",
-                        f"Анализ завершен!\nШероховатость: {results.get('roughness', 0):.4f}"
+                        f"Анализ завершен!\nШероховатость: {results.get('roughness', 0):.4f}",
                     )
                     self.logger_manager.log_analyzer_event(
                         "Анализ изображений завершен успешно", "INFO"
                     )
                 else:
                     messagebox.showerror(
-                        "Ошибка",
-                        f"Ошибка анализа: {results.get('error', 'Unknown error')}"
+                        "Ошибка", f"Ошибка анализа: {results.get('error', 'Unknown error')}"
                     )
-                    self.logger_manager.log_analyzer_event(
-                        "Ошибка анализа изображений", "ERROR"
-                    )
+                    self.logger_manager.log_analyzer_event("Ошибка анализа изображений", "ERROR")
 
             except Exception as e:
-                self.logger_manager.log_analyzer_event(
-                    f"Ошибка анализа изображений: {e}", "ERROR"
-                )
+                self.logger_manager.log_analyzer_event(f"Ошибка анализа изображений: {e}", "ERROR")
                 messagebox.showerror("Ошибка", f"Ошибка анализа изображений: {e}")
             finally:
                 self.update_status_info()
@@ -298,42 +271,34 @@ class NanoprobeDashboard:
 
     def run_sstv_decoding(self):
         """Запускает декодирование SSTV."""
+
         def worker():
             try:
                 file_path = filedialog.askopenfilename(
                     title="Выберите аудиофайл SSTV",
-                    filetypes=[("Audio files", "*.wav *.mp3 *.flac *.aac")]
+                    filetypes=[("Audio files", "*.wav *.mp3 *.flac *.aac")],
                 )
 
                 if not file_path:
                     return
 
-                self.logger_manager.log_system_event(
-                    "Запуск SSTV декодирования из GUI", "INFO"
-                )
+                self.logger_manager.log_system_event("Запуск SSTV декодирования из GUI", "INFO")
 
                 results = self.orchestrator.run_sstv_decoding(file_path)
 
                 if results.get("success"):
-                    messagebox.showinfo(
-                        "SSTV декодирование", "Декодирование завершено!"
-                    )
+                    messagebox.showinfo("SSTV декодирование", "Декодирование завершено!")
                     self.logger_manager.log_sstv_event(
                         "SSTV декодирование завершено успешно", "INFO"
                     )
                 else:
                     messagebox.showerror(
-                        "Ошибка",
-                        f"Ошибка декодирования: {results.get('error', 'Unknown error')}"
+                        "Ошибка", f"Ошибка декодирования: {results.get('error', 'Unknown error')}"
                     )
-                    self.logger_manager.log_sstv_event(
-                        "Ошибка SSTV декодирования", "ERROR"
-                    )
+                    self.logger_manager.log_sstv_event("Ошибка SSTV декодирования", "ERROR")
 
             except Exception as e:
-                self.logger_manager.log_sstv_event(
-                    f"Ошибка SSTV декодирования: {e}", "ERROR"
-                )
+                self.logger_manager.log_sstv_event(f"Ошибка SSTV декодирования: {e}", "ERROR")
                 messagebox.showerror("Ошибка", f"Ошибка SSTV декодирования: {e}")
             finally:
                 self.update_status_info()
@@ -342,28 +307,23 @@ class NanoprobeDashboard:
 
     def run_comprehensive_simulation(self):
         """Запускает комплексную симуляцию."""
+
         def worker():
             try:
-                self.logger_manager.log_system_event(
-                    "Запуск комплексной симуляции из GUI", "INFO"
-                )
+                self.logger_manager.log_system_event("Запуск комплексной симуляции из GUI", "INFO")
 
-                results = self.orchestrator.coordinate_multi_component_simulation(
-                    (40, 40)
-                )
+                results = self.orchestrator.coordinate_multi_component_simulation((40, 40))
 
                 messagebox.showinfo(
                     "Комплексная симуляция",
-                    f"Симуляция завершена!\nДлительность: {results['total_duration']:.2f} сек"
+                    f"Симуляция завершена!\nДлительность: {results['total_duration']:.2f} сек",
                 )
                 self.logger_manager.log_simulation_event(
                     "Комплексная симуляция завершена успешно", "INFO"
                 )
 
             except Exception as e:
-                self.logger_manager.log_system_event(
-                    f"Ошибка комплексной симуляции: {e}", "ERROR"
-                )
+                self.logger_manager.log_system_event(f"Ошибка комплексной симуляции: {e}", "ERROR")
                 messagebox.showerror("Ошибка", f"Ошибка комплексной симуляции: {e}")
             finally:
                 self.update_status_info()
@@ -372,23 +332,19 @@ class NanoprobeDashboard:
 
     def run_continuous_simulation(self):
         """Запускает непрерывную симуляцию."""
+
         def worker():
             try:
-                self.logger_manager.log_system_event(
-                    "Запуск непрерывной симуляции из GUI", "INFO"
-                )
+                self.logger_manager.log_system_event("Запуск непрерывной симуляции из GUI", "INFO")
 
                 self.orchestrator.start_background_simulation(5)
 
                 messagebox.showinfo(
-                    "Непрерывная симуляция",
-                    "Непрерывная симуляция запущена (5 минут)"
+                    "Непрерывная симуляция", "Непрерывная симуляция запущена (5 минут)"
                 )
 
             except Exception as e:
-                self.logger_manager.log_system_event(
-                    f"Ошибка непрерывной симуляции: {e}", "ERROR"
-                )
+                self.logger_manager.log_system_event(f"Ошибка непрерывной симуляции: {e}", "ERROR")
                 messagebox.showerror("Ошибка", f"Ошибка непрерывной симуляции: {e}")
             finally:
                 self.update_status_info()
@@ -407,23 +363,20 @@ class NanoprobeDashboard:
         try:
             file_path = filedialog.askopenfilename(
                 title="Выберите файл данных",
-                filetypes=[
-                    ("Data files", "*.txt *.csv *.npy"),
-                    ("All files", "*.*")
-                ]
+                filetypes=[("Data files", "*.txt *.csv *.npy"), ("All files", "*.*")],
             )
 
             if not file_path:
                 return
 
-            if file_path.endswith('.npy'):
+            if file_path.endswith(".npy"):
                 data = np.load(file_path)
             else:
                 data = np.loadtxt(file_path)
 
             self.ax.clear()
             if len(data.shape) == 2:
-                im = self.ax.imshow(data, cmap='viridis')
+                im = self.ax.imshow(data, cmap="viridis")
                 self.fig.colorbar(im, ax=self.ax)
                 self.ax.set_title("Визуализация данных")
             else:
@@ -443,12 +396,10 @@ class NanoprobeDashboard:
                 surface_data=sample_data,
                 original_image=sample_data,
                 processed_image=sample_data,
-                sstv_image=sample_data
+                sstv_image=sample_data,
             )
 
-            messagebox.showinfo(
-                "Отчет", "Отчет визуализации создан в директории output"
-            )
+            messagebox.showinfo("Отчет", "Отчет визуализации создан в директории output")
 
         except Exception as e:
             messagebox.showerror("Ошибка", f"Ошибка создания отчета: {e}")
@@ -467,9 +418,7 @@ class NanoprobeDashboard:
             self.config_manager.set("paths.data_dir", self.data_dir_var.get())
             self.config_manager.set("paths.output_dir", self.output_dir_var.get())
 
-            self.data_manager = DataManager(
-                self.data_dir_var.get(), self.output_dir_var.get()
-            )
+            self.data_manager = DataManager(self.data_dir_var.get(), self.output_dir_var.get())
 
             messagebox.showinfo("Настройки", "Настройки успешно сохранены")
 
@@ -496,6 +445,7 @@ def main():
     except Exception as e:
         print(f"Ошибка запуска панели управления: {e}")
         import traceback
+
         traceback.print_exc()
 
 

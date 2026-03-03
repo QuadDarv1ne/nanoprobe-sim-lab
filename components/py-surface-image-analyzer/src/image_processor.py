@@ -11,6 +11,7 @@ import cv2
 import numpy as np
 from typing import Tuple, Optional
 
+
 class ImageProcessor:
     """
     Класс для обработки изображений поверхности
@@ -18,12 +19,10 @@ class ImageProcessor:
     с изображениями поверхности.
     """
 
-
     def __init__(self):
         """Инициализирует процессор изображений"""
         self.image = None
         self.processed_image = None
-
 
     def load_image(self, filepath: str) -> bool:
         """
@@ -45,7 +44,6 @@ class ImageProcessor:
         except Exception as e:
             print(f"Ошибка при загрузке изображения: {str(e)}")
             return False
-
 
     def apply_noise_reduction(self, method: str = "gaussian") -> Optional[np.ndarray]:
         """
@@ -77,7 +75,6 @@ class ImageProcessor:
         self.processed_image = filtered
         return filtered
 
-
     def detect_edges(self, threshold1: int = 100, threshold2: int = 200) -> Optional[np.ndarray]:
         """
         Обнаруживает края на изображении с помощью алгоритма Canny
@@ -97,6 +94,7 @@ class ImageProcessor:
         edges = cv2.Canny(gray, threshold1, threshold2)
         return edges
 
+
 def calculate_surface_roughness(image: np.ndarray) -> float:
     """
     Вычисляет шероховатость поверхности на основе статистики изображения
@@ -111,4 +109,3 @@ def calculate_surface_roughness(image: np.ndarray) -> float:
     # Стандартное отклонение как мера шероховатости
     roughness = float(np.std(gray))
     return roughness
-
