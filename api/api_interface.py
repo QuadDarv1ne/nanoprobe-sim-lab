@@ -21,6 +21,7 @@ from utils.logger import setup_project_logging
 from cpp_spm_hardware_sim.src.spm_simulator import SurfaceModel, SPMController
 from py_surface_image_analyzer.src.image_processor import ImageProcessor
 from py_sstv_groundstation.src.sstv_decoder import SSTVDecoder
+from .validators import DataValidator, ResponseBuilder, ValidationError
 
 class NanoprobeAPI:
     """
@@ -86,10 +87,19 @@ class NanoprobeAPI:
 
     def create_surface(self):
         """
-        Создает новую поверхность для симуляции
+        Создает новую поверхность для симуляции.
+        
+        Returns:
+            JSON ответ с результатом операции
         """
         try:
             data = request.get_json()
+            
+            # Валидация входных данных
+            is_valid, error_message = DataValidator.validate_surface_params(data)
+            if not is_valid:
+                self.logger_manager.log_spm_event(f"Ошибка валидации: {error_message}", "WARNING")
+                return jsonify(ResponseBuilder.validation_error("surface_params", error_message)), 400
 
             width = data.get('width', 50)
             height = data.get('height', 50)
@@ -106,28 +116,37 @@ class NanoprobeAPI:
             # Логируем действие
             self.logger_manager.log_spm_event(f"Создана поверхность {filename}, размер: {width}x{height}", "INFO")
 
-            return jsonify({
-                'status': 'success',
+            return jsonify(ResponseBuilder.success({
                 'surface_id': filename,
                 'dimensions': {'width': width, 'height': height},
-                'timestamp': timestamp
-            })
+                'type': surface_type
+            }, f"Поверхность {width}x{height} создана"))
 
+        except ValidationError as e:
+            self.logger_manager.log_spm_event(f"Ошибка валидации: {e.message}", "ERROR")
+            return jsonify(ResponseBuilder.validation_error(e.field, e.message)), 400
         except Exception as e:
-            self.logger_manager.log_spm_event(f"Ошибка создания поверхности: {e}", "ERROR")
-            return jsonify({'status': 'error', 'message': str(e)}), 500
+            self.logger_manager.log_spm_event(f"Критическая ошибка: {str(e)}", "ERROR")
+            return jsonify(ResponseBuilder.error(str(e), "INTERNAL_ERROR")), 500
 
 
     def scan_surface(self):
         """
-        Выполняет сканирование поверхности СЗМ
+        Выполняет сканирование поверхности СЗМ.
+        
+        Returns:
+            JSON ответ с результатом сканирования
         """
         try:
             data = request.get_json()
+            
+            # Валидация входных данных
+            is_valid, error_message = DataValidator.validate_scan_params(data)
+            if not is_valid:
+                return jsonify(ResponseBuilder.validation_error("scan_params", error_message)), 400
 
             surface_id = data.get('surface_id')
-            if not surface_id:
-                return jsonify({'status': 'error', 'message': 'surface_id is required'}), 400
+            scan_speed = data.get('scan_speed', 1.0)
 
             # Загружаем поверхность (в реальной реализации)
             # surface = load_surface(surface_id)
@@ -148,35 +167,43 @@ class NanoprobeAPI:
                 json.dump({
                     'scan_results': scan_results,
                     'surface_id': surface_id,
+                    'scan_speed': scan_speed,
                     'timestamp': timestamp
                 }, f, ensure_ascii=False)
 
             # Логируем действие
             self.logger_manager.log_spm_event(f"Выполнено сканирование поверхности {surface_id}", "INFO")
 
-            return jsonify({
-                'status': 'success',
+            return jsonify(ResponseBuilder.success({
                 'results_file': results_filename,
-                'timestamp': timestamp
-            })
+                'surface_id': surface_id,
+                'scan_speed': scan_speed
+            }, f"Сканирование {surface_id} завершено"))
 
+        except ValidationError as e:
+            return jsonify(ResponseBuilder.validation_error(e.field, e.message)), 400
         except Exception as e:
-            self.logger_manager.log_spm_event(f"Ошибка сканирования: {e}", "ERROR")
-            return jsonify({'status': 'error', 'message': str(e)}), 500
+            self.logger_manager.log_spm_event(f"Ошибка сканирования: {str(e)}", "ERROR")
+            return jsonify(ResponseBuilder.error(str(e), "SCAN_ERROR")), 500
 
 
     def process_image(self):
         """
-        Обрабатывает изображение
+        Обрабатывает изображение.
+        
+        Returns:
+            JSON ответ с результатом обработки
         """
         try:
             data = request.get_json()
+            
+            # Валидация входных данных
+            is_valid, error_message = DataValidator.validate_image_data(data)
+            if not is_valid:
+                return jsonify(ResponseBuilder.validation_error("image_data", error_message)), 400
 
             image_data = data.get('image_data')  # base64 encoded
             filter_type = data.get('filter', 'gaussian')
-
-            if not image_data:
-                return jsonify({'status': 'error', 'message': 'image_data is required'}), 400
 
             # Декодируем изображение из base64
             # image = self.decode_base64_image(image_data)
@@ -200,29 +227,35 @@ class NanoprobeAPI:
             # Логируем действие
             self.logger_manager.log_analyzer_event(f"Обработано изображение с фильтром {filter_type}", "INFO")
 
-            return jsonify({
-                'status': 'success',
+            return jsonify(ResponseBuilder.success({
                 'results_file': results_filename,
-                'timestamp': timestamp
-            })
+                'filter_type': filter_type
+            }, f"Изображение обработано фильтром {filter_type}"))
 
+        except ValidationError as e:
+            return jsonify(ResponseBuilder.validation_error(e.field, e.message)), 400
         except Exception as e:
-            self.logger_manager.log_analyzer_event(f"Ошибка обработки изображения: {e}", "ERROR")
-            return jsonify({'status': 'error', 'message': str(e)}), 500
+            self.logger_manager.log_analyzer_event(f"Ошибка обработки изображения: {str(e)}", "ERROR")
+            return jsonify(ResponseBuilder.error(str(e), "IMAGE_PROCESSING_ERROR")), 500
 
 
     def decode_sstv(self):
         """
-        Декодирует SSTV сигнал
+        Декодирует SSTV сигнал.
+        
+        Returns:
+            JSON ответ с результатом декодирования
         """
         try:
             data = request.get_json()
+            
+            # Валидация входных данных
+            is_valid, error_message = DataValidator.validate_audio_data(data)
+            if not is_valid:
+                return jsonify(ResponseBuilder.validation_error("audio_data", error_message)), 400
 
             audio_data = data.get('audio_data')  # base64 encoded
             mode = data.get('mode', 'MartinM1')
-
-            if not audio_data:
-                return jsonify({'status': 'error', 'message': 'audio_data is required'}), 400
 
             # Декодируем аудио из base64
             # audio = self.decode_base64_audio(audio_data)
