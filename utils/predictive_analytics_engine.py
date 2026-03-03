@@ -10,7 +10,7 @@
 import time
 import threading
 from pathlib import Path
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Tuple, Optional
 from datetime import datetime, timedelta
 import numpy as np
 from scipy import stats
@@ -719,12 +719,12 @@ def main():
     print(f"   Рекомендаций сгенерировано: {len(insights['recommendations'])}")
 
     # Показываем статистику
-    print(f"\n📊 Статистика:")
+    print("\n📊 Статистика:")
     print(f"   • Прогнозов сделано: {engine.stats['predictions_made']}")
     print(f"   • Аномалий обнаружено: {engine.stats['anomalies_detected']}")
     print(f"   • Обучено моделей: {engine.stats['models_trained']}")
 
-    print(f"\n🔗 Доступные функции:")
+    print("\n🔗 Доступные функции:")
     print("   • Прогнозирование: engine.generate_prediction()")
     print("   • Обнаружение аномалий: engine.detect_anomalies()")
     print("   • Инсайты: engine.get_predictive_insights()")

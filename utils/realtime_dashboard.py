@@ -392,8 +392,8 @@ class RealTimeDashboard:
         httpd = HTTPServer(("localhost", self.port), Handler)
         httpd.dashboard_instance = self  # Передаем экземпляр дашборда
 
-        print(f"🚀 Real-Time Dashboard запущен на http://localhost:{self.port}")
-        print(f"📊 Открываю веб-браузер...")
+        print("🚀 Real-Time Dashboard запущен на http://localhost:" + str(self.port))
+        print("📊 Открываю веб-браузер...")
 
         # Открываем в браузере
         webbrowser.open(f"http://localhost:{self.port}")

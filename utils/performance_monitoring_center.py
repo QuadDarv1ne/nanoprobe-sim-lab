@@ -15,6 +15,7 @@ from typing import Dict, Any, List, Callable, Optional
 from datetime import datetime, timedelta
 import psutil
 import statistics
+import pandas as pd
 from dataclasses import dataclass
 import matplotlib.pyplot as plt
 from collections import defaultdict, deque
@@ -724,12 +725,12 @@ def main():
         print(f"  • Применено оптимизаций: {summary['stats']['optimizations_applied']}")
         print(f"  • Улучшений производительности: {summary['stats']['performance_improvements']}")
 
-        print(f"\n📊 Отчеты сохранены:")
+        print("\n📊 Отчеты сохранены:")
         print(f"  • JSON: {report_path}")
         print(f"  • Визуализация: {viz_report_path}")
         print(f"  • CSV: {csv_path}")
 
-        print(f"\n🔗 Реал-тайм дашборд доступен на http://localhost:8081")
+        print("\n🔗 Реал-тайм дашборд доступен на http://localhost:8081")
 
         print("\nНажмите Ctrl+C для остановки мониторинга...")
         while True:

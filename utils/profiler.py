@@ -13,12 +13,14 @@ import io
 import time
 import threading
 import psutil
+import os
 from pathlib import Path
-from typing import Dict, Any, Callable
+from typing import Dict, Any, Callable, List
 from datetime import datetime
 import json
 import matplotlib.pyplot as plt
 from dataclasses import dataclass
+from contextlib import contextmanager
 from functools import wraps
 import line_profiler
 import tracemalloc
@@ -484,7 +486,7 @@ def performance_monitor(name: str = "Operation"):
 
         print(f"Мониторинг завершен: {name}")
         print(f"Время выполнения: {execution_time:.4f} с")
-        print(f"Пиковое использование памяти: {peak / (1024*1024):.2f} MB")
+        print(f"Пиковое использование памяти: {peak / (1024 * 1024):.2f} MB")
 
         # Сохраняем метрики
         PerformanceMetric(

@@ -14,7 +14,7 @@ import time
 import threading
 import psutil
 from pathlib import Path
-from typing import Dict, Any, Callable
+from typing import Dict, Any, Callable, List
 from datetime import datetime
 import json
 import matplotlib.pyplot as plt

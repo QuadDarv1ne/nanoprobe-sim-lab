@@ -624,7 +624,7 @@ def main():
     print("Создание снимков памяти...")
     for i in range(5):
         snapshot = memory_tracker.take_snapshot()
-        print(f"  Снимок {i+1}: {snapshot.rss_mb:.2f} MB")
+        print(f"  Снимок {i + 1}: {snapshot.rss_mb:.2f} MB")
         time.sleep(0.2)
 
     # Устанавливаем базовую линию

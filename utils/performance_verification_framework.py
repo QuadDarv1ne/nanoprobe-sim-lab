@@ -471,7 +471,7 @@ class PerformanceVerificationFramework:
             "recommendations": self._generate_verification_recommendations(),
         }
 
-        print(f"Верификация завершена:")
+        print("Верификация завершена:")
         print(f"  - Общее количество тестов: {total_tests}")
         print(f"  - Положительных улучшений: {positive_improvements}")
         print(f"  - Среднее улучшение: {avg_improvement:.2f}%")
