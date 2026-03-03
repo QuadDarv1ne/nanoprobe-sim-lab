@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-#!/usr/bin/env python3
-#!/usr/bin/env python3
-
 """
 Модуль управления конфигурацией для проекта Лаборатория моделирования нанозонда
 Этот модуль предоставляет централизованное управление конфигурацией
@@ -20,15 +17,6 @@ class ConfigManager:
 
     Обеспечивает централизованное хранение и доступ к параметрам конфигурации
     для всех компонентов проекта.
-
-    Attributes:
-        config_file: Путь к файлу конфигурации.
-        config: Словарь с параметрами конфигурации.
-
-    Example:
-        >>> config_mgr = ConfigManager()
-        >>> config = config_mgr.get_config()
-        >>> config_mgr.update_config({"debug": True})
     """
 
     def __init__(self, config_file: str = "config.json") -> None:
