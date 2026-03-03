@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-#!/usr/bin/env python3
-#!/usr/bin/env python3
-
 """
 Модуль мониторинга системы для проекта Лаборатория моделирования нанозонда
 Этот модуль предоставляет инструменты для мониторинга
@@ -13,7 +10,7 @@ import time
 import threading
 import json
 import tkinter as tk
-from tkinter import ttk, scrolledtext
+from tkinter import ttk
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Any
@@ -311,8 +308,6 @@ class MonitoringDashboard:
             ax.grid(True)
 
         # Встраиваем matplotlib в tkinter
-        from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-
         canvas = FigureCanvasTkAgg(self.fig, plots_frame)
         canvas.draw()
         canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)

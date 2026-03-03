@@ -303,7 +303,10 @@ class TestFramework:
     def _test_spm_component(self) -> Dict[str, Any]:
         """Тестирует компонент СЗМ"""
         try:
-            from cpp_spm_hardware_sim.src.spm_simulator import SurfaceModel, SPMController
+            from cpp_spm_hardware_sim.src.spm_simulator import (  # noqa: F401
+                SurfaceModel,
+                SPMController,
+            )
 
             # Создаем тестовую поверхность
             surface = SurfaceModel(10, 10)
