@@ -1,23 +1,17 @@
 # -*- coding: utf-8 -*-
-#!/usr/bin/env python3
-#!/usr/bin/env python3
-#!/usr/bin/env python3
-#!/usr/bin/env python3
-
 """
 API интерфейс для проекта Лаборатория моделирования нанозонда
 Этот модуль предоставляет REST API для взаимодействия между различными компонентами проекта.
 """
 
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 import json
 import uuid
 from datetime import datetime
 from pathlib import Path
 import numpy as np
-import base64
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 import threading
 import time
 

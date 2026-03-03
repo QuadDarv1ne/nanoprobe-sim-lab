@@ -1,21 +1,12 @@
 # -*- coding: utf-8 -*-
-#!/usr/bin/env python3
-#!/usr/bin/env python3
-#!/usr/bin/env python3
-#!/usr/bin/env python3
-
 """
 Модуль форматов обмена данными для проекта Лаборатория моделирования нанозонда
 Этот модуль определяет стандартные форматы для обмена данными между компонентами проекта.
 """
 
-import json
 import numpy as np
-import pandas as pd
-from typing import Dict, Any, List, Optional, Union
+from typing import Dict, Any, List
 from datetime import datetime
-from pathlib import Path
-import struct
 import base64
 
 class DataFormatSpec:

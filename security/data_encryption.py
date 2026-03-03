@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-#!/usr/bin/env python3
-#!/usr/bin/env python3
-#!/usr/bin/env python3
-#!/usr/bin/env python3
-
 """
 Модуль шифрования данных для проекта Лаборатория моделирования нанозонда
 Этот модуль предоставляет инструменты для шифрования и защиты чувствительных данных проекта.
@@ -12,12 +7,10 @@
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 import base64
 import os
 from typing import Union, Tuple, Optional
-from pathlib import Path
 import json
 
 class DataEncryption:

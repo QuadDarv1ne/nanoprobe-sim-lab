@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-#!/usr/bin/env python3
-#!/usr/bin/env python3
-#!/usr/bin/env python3
-#!/usr/bin/env python3
-
 """
 Модуль управления аутентификацией для проекта Лаборатория моделирования нанозонда
 Этот модуль предоставляет систему аутентификации и авторизации для API и компонентов проекта.
@@ -15,8 +10,6 @@ import jwt
 import bcrypt
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional, List
-from pathlib import Path
-import json
 import sqlite3
 from functools import wraps
 from flask import request, jsonify, g
