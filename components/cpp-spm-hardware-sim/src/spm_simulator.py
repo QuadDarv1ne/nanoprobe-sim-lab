@@ -9,6 +9,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 from typing import Tuple
 import random
+from multiprocessing import Pool, cpu_count
+
+
+def _scan_line(args):
+    """Функция для параллельного сканирования строки."""
+    y, width, surface_height_map = args
+    line_data = []
+    for x in range(width):
+        height = float(surface_height_map[y, x])
+        line_data.append(height + 0.5)
+    return y, np.array(line_data)
 
 
 class SurfaceModel:
@@ -226,38 +237,69 @@ class SPMController:
         self.surface = surface
         self.scan_data = np.zeros((surface.height, surface.width))
 
-    def scan_surface(self):
-        """Выполняет сканирование всей поверхности"""
+    def scan_surface(self, parallel: bool = True, num_processes: int = None):
+        """
+        Выполняет сканирование всей поверхности.
+
+        Args:
+            parallel: Использовать ли многопроцессорное сканирование
+            num_processes: Количество процессов (по умолчанию = число CPU)
+        """
         if self.surface is None:
             print("Ошибка: Модель поверхности не установлена!")
             return
 
-        print("Начинаем сканирование поверхности...")
+        width = self.surface.width
+        height = self.surface.height
+
+        if parallel and num_processes != 1:
+            self._scan_surface_parallel(num_processes)
+        else:
+            self._scan_surface_sequential()
+
+    def _scan_surface_sequential(self):
+        """Последовательное сканирование поверхности."""
+        print("Начинаем последовательное сканирование поверхности...")
 
         width = self.surface.width
         height = self.surface.height
 
         for y in range(height):
-            # Сканируем строку слева направо
             for x in range(width):
-                # Устанавливаем позицию зонда
                 self.probe.move_to(x, y)
-
-                # Адаптируем высоту зонда к поверхности
                 adjusted_z = self.probe.adjust_to_surface(self.surface)
-
-                # Сохраняем данные сканирования (высота зонда как индикатор рельефа)
                 self.scan_data[y, x] = adjusted_z
-
                 self.current_x = x
                 self.current_y = y
 
-            # Выводим прогресс каждые несколько строк
             if y % max(1, height // 10) == 0:
                 progress = (y * 100) // height
                 print(f"Прогресс: {progress}%")
 
         print("Сканирование завершено!")
+
+    def _scan_surface_parallel(self, num_processes: int = None):
+        """Параллельное сканирование поверхности с использованием multiprocessing."""
+        if num_processes is None:
+            num_processes = cpu_count()
+
+        print(f"Начинаем параллельное сканирование ({num_processes} процессов)...")
+
+        # Подготавливаем данные для параллельной обработки
+        tasks = [
+            (y, self.surface.width, self.surface.height_map)
+            for y in range(self.surface.height)
+        ]
+
+        # Выполняем сканирование параллельно
+        with Pool(processes=num_processes) as pool:
+            results = pool.map(_scan_line, tasks)
+
+        # Собираем результаты
+        for y, line_data in results:
+            self.scan_data[y, :] = line_data
+
+        print("Параллельное сканирование завершено!")
 
     def save_scan_results(self, filename: str) -> bool:
         """
