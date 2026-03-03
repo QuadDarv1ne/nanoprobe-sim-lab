@@ -16,12 +16,10 @@ from datetime import datetime
 
 
 class CodeFormatter:
-    """
-    Класс для форматирования кода проекта
-    """
+    """Класс для форматирования кода проекта."""
 
     def __init__(self):
-        """Инициализация форматтера кода"""
+        """Инициализация форматтера кода."""
         self.project_root = Path(__file__).parent
         self.log_messages = []
         self.changes_made = []

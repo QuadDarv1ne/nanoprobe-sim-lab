@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-#!/usr/bin/env python3
-#!/usr/bin/env python3
-#!/usr/bin/env python3
-#!/usr/bin/env python3
-
 """
 Мастер-скрипт комплексной оптимизации для проекта Лаборатория моделирования нанозонда
 Этот скрипт демонстрирует интеграцию всех инструментов оптимизации
@@ -25,8 +20,9 @@ from utils.optimization_orchestrator import OptimizationOrchestrator
 from utils.system_health_monitor import SystemHealthMonitor
 from utils.performance_analytics_dashboard import PerformanceAnalyticsDashboard
 
+
 def run_comprehensive_optimization():
-    """Запускает комплексную оптимизацию системы"""
+    """Запускает комплексную оптимизацию системы."""
     print("=" * 80)
     print("🚀 КОМПЛЕКСНАЯ ОПТИМИЗАЦИЯ СИСТЕМЫ NANOPROBE SIMULATION LAB")
     print("=" * 80)

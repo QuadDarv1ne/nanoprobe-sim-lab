@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-#!/usr/bin/env python3
-#!/usr/bin/env python3
-#!/usr/bin/env python3
-#!/usr/bin/env python3
-
 """
 Скрипт улучшения проекта Nanoprobe Simulation Lab
 Этот скрипт автоматически применяет улучшения и исправления проекта.
@@ -22,10 +17,9 @@ from typing import Dict, List, Any
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
+
 class ProjectImprover:
-    """
-    Класс для улучшения проекта и автоматического исправления проблем
-    """
+    """Класс для улучшения проекта и автоматического исправления проблем."""
 
 
     def __init__(self):

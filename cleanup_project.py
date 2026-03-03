@@ -16,12 +16,10 @@ from typing import Dict, List, Tuple
 
 
 class ProjectCleaner:
-    """
-    Класс для очистки и организации проекта
-    """
+    """Класс для очистки и организации проекта."""
 
     def __init__(self):
-        """Инициализация очистки проекта"""
+        """Инициализация очистки проекта."""
         self.project_root = Path(__file__).parent
         self.log_messages = []
         self.changes_made = []

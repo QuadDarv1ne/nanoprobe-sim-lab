@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-#!/usr/bin/env python3
-#!/usr/bin/env python3
-
 """
 Main entry point for Nanoprobe Simulation Lab
 This script provides access to all project components through a unified interface.
@@ -17,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 
 def show_help():
-    """Display help information"""
+    """Display help information."""
     print("="*60)
     print("           ЛАБОРАТОРИЯ МОДЕЛИРОВАНИЯ НАНОЗОНДА")
     print("        Nanoprobe Simulation Lab - Main Entry Point")
@@ -36,7 +33,7 @@ def show_help():
 
 
 def run_component(script_path: Path, description: str) -> None:
-    """Запуск компонента с обработкой ошибок"""
+    """Запуск компонента с обработкой ошибок."""
     if not script_path.exists():
         print(f"Файл {script_path} не найден")
         return
@@ -52,7 +49,7 @@ def run_component(script_path: Path, description: str) -> None:
 
 
 def main():
-    """Main entry point"""
+    """Main entry point."""
     if len(sys.argv) < 2:
         show_help()
         return
