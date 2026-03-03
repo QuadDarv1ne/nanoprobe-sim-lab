@@ -20,14 +20,17 @@ from dataclasses import dataclass, asdict
 # Опциональный импорт Docker
 try:
     import docker
+
     DOCKER_AVAILABLE = True
 except ImportError:
     DOCKER_AVAILABLE = False
     docker = None
 
+
 @dataclass
 class DeploymentConfig:
     """Конфигурация развертывания"""
+
     project_name: str
     version: str
     environment: str  # dev, staging, prod
@@ -38,13 +41,13 @@ class DeploymentConfig:
     environment_vars: Dict[str, str]
     dependencies: List[str]
 
+
 class DeploymentManager:
     """
     Класс менеджера развертывания
     Обеспечивает управление развертыванием, контейнеризацией
     и оркестрацией проекта.
     """
-
 
     def __init__(self, project_root: str = "."):
         """
@@ -60,20 +63,17 @@ class DeploymentManager:
         # Проверяем наличие Docker
         self.docker_available = self._check_docker() and DOCKER_AVAILABLE
 
-
     def _check_docker(self) -> bool:
         """Проверяет доступность Docker"""
         try:
-            subprocess.run(['docker', '--version'],
-                         capture_output=True, check=True)
+            subprocess.run(["docker", "--version"], capture_output=True, check=True)
             return True
         except (subprocess.CalledProcessError, FileNotFoundError):
             return False
 
-
-    def create_virtual_environment(self, env_name: str = "venv",
-
-                                 python_version: str = "3.9") -> bool:
+    def create_virtual_environment(
+        self, env_name: str = "venv", python_version: str = "3.9"
+    ) -> bool:
         """
         Создает виртуальное окружение
 
@@ -88,20 +88,18 @@ class DeploymentManager:
 
         try:
             # Создаем виртуальное окружение
-            subprocess.run([sys.executable, '-m', 'venv', str(env_path)],
-                         check=True)
+            subprocess.run([sys.executable, "-m", "venv", str(env_path)], check=True)
 
             # Активируем и устанавливаем зависимости
-            if os.name == 'nt':  # Windows
-                pip_path = env_path / 'Scripts' / 'pip.exe'
+            if os.name == "nt":  # Windows
+                pip_path = env_path / "Scripts" / "pip.exe"
             else:  # Unix/Linux/Mac
-                pip_path = env_path / 'bin' / 'pip'
+                pip_path = env_path / "bin" / "pip"
 
             # Устанавливаем зависимости
-            requirements_path = self.project_root / 'requirements.txt'
+            requirements_path = self.project_root / "requirements.txt"
             if requirements_path.exists():
-                subprocess.run([str(pip_path), 'install', '-r', str(requirements_path)],
-                             check=True)
+                subprocess.run([str(pip_path), "install", "-r", str(requirements_path)], check=True)
 
             print(f"✓ Виртуальное окружение создано: {env_path}")
             return True
@@ -112,7 +110,6 @@ class DeploymentManager:
         except Exception as e:
             print(f"❌ Неожиданная ошибка: {e}")
             return False
-
 
     def generate_dockerfile(self, output_path: str = None) -> str:
         """
@@ -159,12 +156,11 @@ EXPOSE 5000 8000
 CMD ["python", "start.py", "help"]
 """
 
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write(dockerfile_content)
 
         print(f"✓ Dockerfile сгенерирован: {output_path}")
         return output_path
-
 
     def generate_docker_compose(self, output_path: str = None) -> str:
         """
@@ -222,16 +218,13 @@ volumes:
   nanoprobe-output:
 """
 
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write(compose_content)
 
         print(f"✓ docker-compose.yml сгенерирован: {output_path}")
         return output_path
 
-
-
-    def build_docker_image(self, image_name: str = "nanoprobe-lab",
-                          tag: str = "latest") -> bool:
+    def build_docker_image(self, image_name: str = "nanoprobe-lab", tag: str = "latest") -> bool:
         """
         Собирает Docker образ
 
@@ -256,8 +249,9 @@ volumes:
             full_image_name = f"{image_name}:{tag}"
             print(f"Сборка Docker образа: {full_image_name}")
 
-            subprocess.run(['docker', 'build', '-t', full_image_name, '.'],
-                         cwd=self.project_root, check=True)
+            subprocess.run(
+                ["docker", "build", "-t", full_image_name, "."], cwd=self.project_root, check=True
+            )
 
             print(f"✓ Docker образ собран: {full_image_name}")
             return True
@@ -269,10 +263,9 @@ volumes:
             print(f"❌ Неожиданная ошибка: {e}")
             return False
 
-
-    def run_container(self, image_name: str = "nanoprobe-lab",
-                     tag: str = "latest",
-                     ports: List[str] = None) -> bool:
+    def run_container(
+        self, image_name: str = "nanoprobe-lab", tag: str = "latest", ports: List[str] = None
+    ) -> bool:
         """
         Запускает контейнер
 
@@ -295,24 +288,27 @@ volumes:
             full_image_name = f"{image_name}:{tag}"
 
             # Останавливаем существующий контейнер
-            subprocess.run(['docker', 'stop', 'nanoprobe-lab'],
-                         capture_output=True)
-            subprocess.run(['docker', 'rm', 'nanoprobe-lab'],
-                         capture_output=True)
+            subprocess.run(["docker", "stop", "nanoprobe-lab"], capture_output=True)
+            subprocess.run(["docker", "rm", "nanoprobe-lab"], capture_output=True)
 
             # Запускаем новый контейнер
-            cmd = ['docker', 'run', '-d', '--name', 'nanoprobe-lab']
+            cmd = ["docker", "run", "-d", "--name", "nanoprobe-lab"]
 
             # Добавляем порты
             for port in ports:
-                cmd.extend(['-p', port])
+                cmd.extend(["-p", port])
 
             # Добавляем volumes
-            cmd.extend([
-                '-v', f'{self.project_root}/data:/app/data',
-                '-v', f'{self.project_root}/logs:/app/logs',
-                '-v', f'{self.project_root}/output:/app/output'
-            ])
+            cmd.extend(
+                [
+                    "-v",
+                    f"{self.project_root}/data:/app/data",
+                    "-v",
+                    f"{self.project_root}/logs:/app/logs",
+                    "-v",
+                    f"{self.project_root}/output:/app/output",
+                ]
+            )
 
             # Добавляем образ
             cmd.append(full_image_name)
@@ -331,10 +327,9 @@ volumes:
 
             return False
 
-
-    def generate_systemd_service(self, service_name: str = "nanoprobe-lab",
-                               user: str = "root",
-                               output_path: str = None) -> str:
+    def generate_systemd_service(
+        self, service_name: str = "nanoprobe-lab", user: str = "root", output_path: str = None
+    ) -> str:
         """
         Генерирует systemd service файл
 
@@ -366,12 +361,11 @@ RestartSec=10
 WantedBy=multi-user.target
 """
 
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write(service_content)
 
         print(f"✓ Systemd service файл сгенерирован: {output_path}")
         return output_path
-
 
     def create_deployment_package(self, package_name: str = None) -> str:
         """
@@ -392,14 +386,14 @@ WantedBy=multi-user.target
         try:
             # Копируем необходимые файлы
             files_to_copy = [
-                'start.py',
-                'requirements.txt',
-                'README.md',
-                'config/',
-                'src/',
-                'utils/',
-                'templates/',
-                'components/'
+                "start.py",
+                "requirements.txt",
+                "README.md",
+                "config/",
+                "src/",
+                "utils/",
+                "templates/",
+                "components/",
             ]
 
             for item in files_to_copy:
@@ -419,8 +413,9 @@ WantedBy=multi-user.target
 
             # Создаем установочный скрипт
             install_script = package_dir / "install.sh"
-            with open(install_script, 'w', encoding='utf-8') as f:
-                f.write(f"""#!/bin/bash
+            with open(install_script, "w", encoding="utf-8") as f:
+                f.write(
+                    f"""#!/bin/bash
 # Установочный скрипт для Nanoprobe Simulation Lab
 
 echo "Установка Nanoprobe Simulation Lab..."
@@ -448,10 +443,11 @@ docker build -t nanoprobe-lab .
 
 echo "Установка завершена!"
 echo "Для запуска используйте: docker-compose up -d"
-""")
+"""
+                )
 
             # Делаем скрипт исполняемым
-            if os.name != 'nt':
+            if os.name != "nt":
                 install_script.chmod(0o755)
 
             print(f"✓ Пакет развертывания создан: {package_dir}")
@@ -460,7 +456,6 @@ echo "Для запуска используйте: docker-compose up -d"
         except Exception as e:
             print(f"❌ Ошибка создания пакета: {e}")
             return ""
-
 
     def generate_kubernetes_manifests(self, output_dir: str = None) -> str:
         """
@@ -520,7 +515,7 @@ spec:
           claimName: nanoprobe-output-pvc
 """
 
-        with open(k8s_dir / "deployment.yaml", 'w', encoding='utf-8') as f:
+        with open(k8s_dir / "deployment.yaml", "w", encoding="utf-8") as f:
             f.write(deployment_content)
 
         # Service
@@ -541,7 +536,7 @@ spec:
   type: LoadBalancer
 """
 
-        with open(k8s_dir / "service.yaml", 'w', encoding='utf-8') as f:
+        with open(k8s_dir / "service.yaml", "w", encoding="utf-8") as f:
             f.write(service_content)
 
         # PVCs
@@ -579,46 +574,47 @@ spec:
       storage: 20Gi
 """
 
-        with open(k8s_dir / "pvcs.yaml", 'w', encoding='utf-8') as f:
+        with open(k8s_dir / "pvcs.yaml", "w", encoding="utf-8") as f:
             f.write(pvc_content)
 
         print(f"✓ Манифесты Kubernetes сгенерированы: {k8s_dir}")
         return str(k8s_dir)
 
-
     def get_deployment_status(self) -> Dict[str, Any]:
         """Получает статус развертывания"""
         status = {
-            'docker_available': self.docker_available,
-            'deployment_dir': str(self.deployment_dir),
-            'generated_files': [],
-            'running_containers': []
+            "docker_available": self.docker_available,
+            "deployment_dir": str(self.deployment_dir),
+            "generated_files": [],
+            "running_containers": [],
         }
 
         # Проверяем сгенерированные файлы
         if self.deployment_dir.exists():
             for file_path in self.deployment_dir.iterdir():
                 if file_path.is_file():
-                    status['generated_files'].append(str(file_path.name))
+                    status["generated_files"].append(str(file_path.name))
 
         # Проверяем запущенные контейнеры
         if self.docker_available:
             try:
-                result = subprocess.run(['docker', 'ps', '--format',
-                                       '{{.Names}}:{{.Status}}'],
-                                      capture_output=True, text=True)
+                result = subprocess.run(
+                    ["docker", "ps", "--format", "{{.Names}}:{{.Status}}"],
+                    capture_output=True,
+                    text=True,
+                )
                 if result.returncode == 0:
-                    for line in result.stdout.strip().split('\n'):
+                    for line in result.stdout.strip().split("\n"):
                         if line:
-                            name, status_str = line.split(':', 1)
-                            status['running_containers'].append({
-                                'name': name,
-                                'status': status_str
-                            })
+                            name, status_str = line.split(":", 1)
+                            status["running_containers"].append(
+                                {"name": name, "status": status_str}
+                            )
             except Exception:
                 pass
 
         return status
+
 
 def main():
     """Главная функция для демонстрации менеджера развертывания"""
@@ -680,6 +676,6 @@ def main():
     print("- Генерация Kubernetes манифестов: generate_kubernetes_manifests()")
     print("- Получение статуса: get_deployment_status()")
 
+
 if __name__ == "__main__":
     main()
-

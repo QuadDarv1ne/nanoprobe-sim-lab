@@ -48,7 +48,7 @@ class ConfigManager:
             possible_paths: List[Path] = [
                 Path(config_file),
                 Path("config") / config_file,
-                Path(__file__).parent.parent / "config" / config_file
+                Path(__file__).parent.parent / "config" / config_file,
             ]
 
             for path in possible_paths:
@@ -69,11 +69,13 @@ class ConfigManager:
             Словарь с параметрами конфигурации.
         """
         if not os.path.exists(self.config_file):
-            print(f"Файл конфигурации {self.config_file} не найден. Создается стандартная конфигурация.")
+            print(
+                f"Файл конфигурации {self.config_file} не найден. Создается стандартная конфигурация."
+            )
             self.create_default_config()
 
         try:
-            with open(self.config_file, 'r', encoding='utf-8') as f:
+            with open(self.config_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 return data if isinstance(data, dict) else {}
         except json.JSONDecodeError as e:
@@ -91,13 +93,12 @@ class ConfigManager:
             True если сохранение успешно, иначе False.
         """
         try:
-            with open(self.config_file, 'w', encoding='utf-8') as f:
+            with open(self.config_file, "w", encoding="utf-8") as f:
                 json.dump(self.config, f, indent=2, ensure_ascii=False)
             return True
         except Exception as e:
             print(f"Ошибка при сохранении конфигурации: {e}")
             return False
-
 
     def get_default_config(self) -> Dict[str, Any]:
         """
@@ -112,7 +113,7 @@ class ConfigManager:
                 "version": "1.0.0",
                 "description": "Комплекс инструментов для моделирования наноразмерных измерительных систем",
                 "author": "Школа программирования Maestro7IT",
-                "copyright": "все права защищены"
+                "copyright": "все права защищены",
             },
             "components": {
                 "spm_simulator": {
@@ -123,8 +124,8 @@ class ConfigManager:
                     "config": {
                         "surface_size": [50, 50],
                         "probe_scan_speed": 0.1,
-                        "output_format": "txt"
-                    }
+                        "output_format": "txt",
+                    },
                 },
                 "surface_analyzer": {
                     "name": "Анализатор изображений",
@@ -134,8 +135,8 @@ class ConfigManager:
                     "config": {
                         "supported_formats": [".jpg", ".png", ".bmp"],
                         "default_filter": "gaussian",
-                        "analysis_metrics": ["roughness", "defect_detection"]
-                    }
+                        "analysis_metrics": ["roughness", "defect_detection"],
+                    },
                 },
                 "sstv_groundstation": {
                     "name": "Наземная станция SSTV",
@@ -145,25 +146,21 @@ class ConfigManager:
                     "config": {
                         "supported_modes": ["MartinM1", "ScottieS1"],
                         "sample_rate": 44100,
-                        "frequency_range": [144000000, 148000000]
-                    }
-                }
+                        "frequency_range": [144000000, 148000000],
+                    },
+                },
             },
             "paths": {
                 "data_dir": "data",
                 "output_dir": "output",
                 "temp_dir": "temp",
-                "log_dir": "logs"
+                "log_dir": "logs",
             },
-            "simulation": {
-                "default_duration": 3600,
-                "real_time": True,
-                "save_results": True
-            },
+            "simulation": {"default_duration": 3600, "real_time": True, "save_results": True},
             "logging": {
                 "level": "INFO",
                 "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-                "file": "nanoprobe_simulation.log"
+                "file": "nanoprobe_simulation.log",
             },
             "license": {
                 "type": "All Rights Reserved",
@@ -171,11 +168,10 @@ class ConfigManager:
                 "reserved_rights": [
                     "Использование материалов проекта возможно только с разрешения владельца",
                     "Запрещено копирование, распространение и коммерческое использование без разрешения",
-                    "Все права на исходный код принадлежат Школе программирования Maestro7IT"
-                ]
-            }
+                    "Все права на исходный код принадлежат Школе программирования Maestro7IT",
+                ],
+            },
         }
-
 
     def create_default_config(self):
         """Создает стандартный файл конфигурации"""
@@ -183,7 +179,6 @@ class ConfigManager:
         self.config = default_config
         self.save_config()
         print(f"Создан стандартный файл конфигурации: {self.config_file}")
-
 
     def get(self, key_path: str, default: Any = None) -> Any:
         """
@@ -196,7 +191,7 @@ class ConfigManager:
         Returns:
             Значение конфигурации или значение по умолчанию
         """
-        keys = key_path.split('.')
+        keys = key_path.split(".")
         value = self.config
 
         for key in keys:
@@ -206,7 +201,6 @@ class ConfigManager:
                 return default
 
         return value
-
 
     def set(self, key_path: str, value: Any) -> bool:
         """
@@ -219,7 +213,7 @@ class ConfigManager:
         Returns:
             bool: True если успешно установлено, иначе False
         """
-        keys = key_path.split('.')
+        keys = key_path.split(".")
         config_ref = self.config
 
         for key in keys[:-1]:
@@ -229,7 +223,6 @@ class ConfigManager:
 
         config_ref[keys[-1]] = value
         return self.save_config()
-
 
     def update_component_config(self, component_name: str, new_config: Dict[str, Any]) -> bool:
         """
@@ -249,7 +242,6 @@ class ConfigManager:
             print(f"Компонент {component_name} не найден в конфигурации")
             return False
 
-
     def get_component_config(self, component_name: str) -> Optional[Dict[str, Any]]:
         """
         Получает конфигурацию компонента
@@ -265,7 +257,6 @@ class ConfigManager:
         else:
             print(f"Компонент {component_name} не найден в конфигурации")
             return None
-
 
     def validate_config(self) -> bool:
         """
@@ -288,6 +279,7 @@ class ConfigManager:
                 return False
 
         return True
+
 
 def main():
     """Главная функция для демонстрации работы менеджера конфигурации"""
@@ -312,16 +304,15 @@ def main():
         print(f"Размер поверхности СЗМ: {spm_config.get('surface_size')}")
 
     # Обновляем конфигурацию
-    success = config_manager.update_component_config("spm_simulator", {
-        "surface_size": [100, 100],
-        "probe_scan_speed": 0.05
-    })
+    success = config_manager.update_component_config(
+        "spm_simulator", {"surface_size": [100, 100], "probe_scan_speed": 0.05}
+    )
 
     if success:
         print("✓ Конфигурация СЗМ симулятора обновлена")
 
     print("Менеджер конфигурации успешно инициализирован")
 
+
 if __name__ == "__main__":
     main()
-

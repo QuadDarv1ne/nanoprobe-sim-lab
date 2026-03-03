@@ -29,9 +29,11 @@ from sklearn.exceptions import ConvergenceWarning
 import xgboost as xgb
 import lightgbm as lgb
 
+
 @dataclass
 class ModelResult:
     """Результат обучения модели"""
+
     model: Any
     metrics: Dict[str, float]
     predictions: np.ndarray
@@ -39,13 +41,13 @@ class ModelResult:
     training_time: float
     feature_importance: Optional[np.ndarray] = None
 
+
 class ModelTrainer:
     """
     Класс тренера моделей
     Обеспечивает обучение, оценку и
     оптимизацию моделей машинного обучения.
     """
-
 
     def __init__(self, output_dir: str = "models"):
         """
@@ -62,13 +64,14 @@ class ModelTrainer:
         self.label_encoder = LabelEncoder()
         self.feature_names = None
 
-    def prepare_data(self,
-
-                    X: Union[np.ndarray, pd.DataFrame],
-                    y: Union[np.ndarray, pd.Series],
-                    test_size: float = 0.2,
-                    scale_features: bool = True,
-                    encode_labels: bool = True) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    def prepare_data(
+        self,
+        X: Union[np.ndarray, pd.DataFrame],
+        y: Union[np.ndarray, pd.Series],
+        test_size: float = 0.2,
+        scale_features: bool = True,
+        encode_labels: bool = True,
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
         Подготавливает данные для обучения
 
@@ -106,11 +109,9 @@ class ModelTrainer:
 
         return X_train, X_test, y_train, y_test
 
-
-    def train_regression_model(self,
-                             X_train: np.ndarray,
-                             y_train: np.ndarray,
-                             model_type: str = "random_forest") -> Any:
+    def train_regression_model(
+        self, X_train: np.ndarray, y_train: np.ndarray, model_type: str = "random_forest"
+    ) -> Any:
         """
         Обучает модель регрессии
 
@@ -134,10 +135,9 @@ class ModelTrainer:
         model.fit(X_train, y_train)
         return model
 
-    def train_classification_model(self,
-                                 X_train: np.ndarray,
-                                 y_train: np.ndarray,
-                                 model_type: str = "random_forest") -> Any:
+    def train_classification_model(
+        self, X_train: np.ndarray, y_train: np.ndarray, model_type: str = "random_forest"
+    ) -> Any:
         """
         Обучает модель классификации
 
@@ -164,11 +164,9 @@ class ModelTrainer:
 
         return model
 
-    def evaluate_model(self,
-                      model: Any,
-                      X_test: np.ndarray,
-                      y_test: np.ndarray,
-                      model_type: str = "regression") -> Dict[str, float]:
+    def evaluate_model(
+        self, model: Any, X_test: np.ndarray, y_test: np.ndarray, model_type: str = "regression"
+    ) -> Dict[str, float]:
         """
         Оценивает модель
 
@@ -187,25 +185,29 @@ class ModelTrainer:
             mse = mean_squared_error(y_test, predictions)
             r2 = r2_score(y_test, predictions)
             metrics = {
-                'mse': mse,
-                'rmse': np.sqrt(mse),
-                'r2_score': r2,
-                'mae': np.mean(np.abs(y_test - predictions))
+                "mse": mse,
+                "rmse": np.sqrt(mse),
+                "r2_score": r2,
+                "mae": np.mean(np.abs(y_test - predictions)),
             }
         else:  # classification
             accuracy = accuracy_score(y_test, predictions)
             metrics = {
-                'accuracy': accuracy,
-                'classification_report': classification_report(y_test, predictions, output_dict=True)
+                "accuracy": accuracy,
+                "classification_report": classification_report(
+                    y_test, predictions, output_dict=True
+                ),
             }
 
         return metrics
 
-    def hyperparameter_tuning(self,
-                            X_train: np.ndarray,
-                            y_train: np.ndarray,
-                            model_type: str = "random_forest",
-                            cv_folds: int = 5) -> Tuple[Any, Dict[str, Any]]:
+    def hyperparameter_tuning(
+        self,
+        X_train: np.ndarray,
+        y_train: np.ndarray,
+        model_type: str = "random_forest",
+        cv_folds: int = 5,
+    ) -> Tuple[Any, Dict[str, Any]]:
         """
         Подбирает гиперпараметры модели
 
@@ -222,50 +224,54 @@ class ModelTrainer:
             if len(np.unique(y_train)) <= min(len(y_train), 20):  # Классификация
                 model = RandomForestClassifier(random_state=42)
                 param_grid = {
-                    'n_estimators': [50, 100, 200],
-                    'max_depth': [None, 10, 20],
-                    'min_samples_split': [2, 5, 10]
+                    "n_estimators": [50, 100, 200],
+                    "max_depth": [None, 10, 20],
+                    "min_samples_split": [2, 5, 10],
                 }
             else:  # Регрессия
                 model = RandomForestRegressor(random_state=42)
                 param_grid = {
-                    'n_estimators': [50, 100, 200],
-                    'max_depth': [None, 10, 20],
-                    'min_samples_split': [2, 5, 10]
+                    "n_estimators": [50, 100, 200],
+                    "max_depth": [None, 10, 20],
+                    "min_samples_split": [2, 5, 10],
                 }
         elif model_type == "xgboost":
             if len(np.unique(y_train)) <= min(len(y_train), 20):  # Классификация
                 model = xgb.XGBClassifier(random_state=42)
                 param_grid = {
-                    'n_estimators': [50, 100, 200],
-                    'max_depth': [3, 6, 9],
-                    'learning_rate': [0.01, 0.1, 0.2]
+                    "n_estimators": [50, 100, 200],
+                    "max_depth": [3, 6, 9],
+                    "learning_rate": [0.01, 0.1, 0.2],
                 }
             else:  # Регрессия
                 model = xgb.XGBRegressor(random_state=42)
                 param_grid = {
-                    'n_estimators': [50, 100, 200],
-                    'max_depth': [3, 6, 9],
-                    'learning_rate': [0.01, 0.1, 0.2]
+                    "n_estimators": [50, 100, 200],
+                    "max_depth": [3, 6, 9],
+                    "learning_rate": [0.01, 0.1, 0.2],
                 }
         else:
             raise ValueError(f"Гиперпараметрическая настройка не поддерживается для: {model_type}")
 
         grid_search = GridSearchCV(
-            model, param_grid, cv=cv_folds, scoring='accuracy' if
-            len(np.unique(y_train)) <= min(len(y_train), 20) else 'r2', n_jobs=-1
+            model,
+            param_grid,
+            cv=cv_folds,
+            scoring="accuracy" if len(np.unique(y_train)) <= min(len(y_train), 20) else "r2",
+            n_jobs=-1,
         )
-
 
         grid_search.fit(X_train, y_train)
 
         return grid_search.best_estimator_, grid_search.cv_results_
 
-    def train_and_evaluate(self,
-                          X: Union[np.ndarray, pd.DataFrame],
-                          y: Union[np.ndarray, pd.Series],
-                          model_type: str = "random_forest",
-                          problem_type: str = "auto") -> ModelResult:
+    def train_and_evaluate(
+        self,
+        X: Union[np.ndarray, pd.DataFrame],
+        y: Union[np.ndarray, pd.Series],
+        model_type: str = "random_forest",
+        problem_type: str = "auto",
+    ) -> ModelResult:
         """
         Обучает и оценивает модель
 
@@ -279,6 +285,7 @@ class ModelTrainer:
             Результат обучения модели
         """
         import time
+
         start_time = time.time()
 
         # Определяем тип задачи автоматически
@@ -307,7 +314,7 @@ class ModelTrainer:
 
         # Получаем важность признаков (если доступна)
         feature_importance = None
-        if hasattr(model, 'feature_importances_'):
+        if hasattr(model, "feature_importances_"):
             feature_importance = model.feature_importances_
 
         training_time = time.time() - start_time
@@ -319,11 +326,10 @@ class ModelTrainer:
             predictions=predictions,
             test_scores=test_scores,
             training_time=training_time,
-            feature_importance=feature_importance
+            feature_importance=feature_importance,
         )
 
         return result
-
 
     def save_model(self, model: Any, model_name: str, metadata: Dict[str, Any] = None) -> str:
         """
@@ -349,11 +355,10 @@ class ModelTrainer:
         # Сохраняем метаданные
         if metadata:
             metadata_path = self.output_dir / f"{model_name}_metadata.json"
-            with open(metadata_path, 'w', encoding='utf-8') as f:
+            with open(metadata_path, "w", encoding="utf-8") as f:
                 json.dump(metadata, f, indent=2, ensure_ascii=False, default=str)
 
         return str(model_path)
-
 
     def load_model(self, model_name: str) -> Tuple[Any, Any, Optional[Dict]]:
         """
@@ -378,17 +383,14 @@ class ModelTrainer:
         # Загружаем метаданные
         metadata = None
         if metadata_path.exists():
-
-            with open(metadata_path, 'r', encoding='utf-8') as f:
+            with open(metadata_path, "r", encoding="utf-8") as f:
                 metadata = json.load(f)
 
         return model, scaler, metadata
 
-    def cross_validate_model(self,
-                           X: np.ndarray,
-                           y: np.ndarray,
-                           model_type: str = "random_forest",
-                           cv_folds: int = 5) -> Dict[str, Any]:
+    def cross_validate_model(
+        self, X: np.ndarray, y: np.ndarray, model_type: str = "random_forest", cv_folds: int = 5
+    ) -> Dict[str, Any]:
         """
         Проводит кросс-валидацию модели
 
@@ -411,7 +413,7 @@ class ModelTrainer:
                 model = xgb.XGBClassifier(random_state=42)
             else:
                 model = RandomForestClassifier(n_estimators=100, random_state=42)
-            scoring = 'accuracy'
+            scoring = "accuracy"
         else:
             if model_type == "random_forest":
                 model = RandomForestRegressor(n_estimators=100, random_state=42)
@@ -421,27 +423,24 @@ class ModelTrainer:
                 model = xgb.XGBRegressor(random_state=42)
             else:
                 model = RandomForestRegressor(n_estimators=100, random_state=42)
-            scoring = 'r2'
+            scoring = "r2"
 
         # Выполняем кросс-валидацию
         scores = cross_val_score(model, X, y, cv=cv_folds, scoring=scoring)
 
         results = {
-            'cv_scores': scores.tolist(),
-            'mean_cv_score': scores.mean(),
-            'std_cv_score': scores.std(),
-
-            'min_cv_score': scores.min(),
-            'max_cv_score': scores.max()
+            "cv_scores": scores.tolist(),
+            "mean_cv_score": scores.mean(),
+            "std_cv_score": scores.std(),
+            "min_cv_score": scores.min(),
+            "max_cv_score": scores.max(),
         }
 
         return results
 
-    def plot_feature_importance(self,
-                               model: Any,
-                               feature_names: List[str] = None,
-                               top_n: int = 10,
-                               output_path: str = None) -> str:
+    def plot_feature_importance(
+        self, model: Any, feature_names: List[str] = None, top_n: int = 10, output_path: str = None
+    ) -> str:
         """
         Строит график важности признаков
 
@@ -454,7 +453,7 @@ class ModelTrainer:
         Returns:
             Путь к сохраненному графику
         """
-        if not hasattr(model, 'feature_importances_'):
+        if not hasattr(model, "feature_importances_"):
             raise ValueError("Модель не имеет атрибута feature_importances_")
 
         importances = model.feature_importances_
@@ -463,35 +462,35 @@ class ModelTrainer:
             feature_names = [f"Feature_{i}" for i in range(len(importances))]
 
         # Создаем DataFrame с важностью признаков
-        importance_df = pd.DataFrame({
-            'feature': feature_names,
-            'importance': importances
-        }).sort_values('importance', ascending=False).head(top_n)
+        importance_df = (
+            pd.DataFrame({"feature": feature_names, "importance": importances})
+            .sort_values("importance", ascending=False)
+            .head(top_n)
+        )
 
         # Строим график
         plt.figure(figsize=(10, 6))
-        sns.barplot(data=importance_df, x='importance', y='feature')
-        plt.title('Важность признаков')
-        plt.xlabel('Важность')
-        plt.ylabel('Признаки')
+        sns.barplot(data=importance_df, x="importance", y="feature")
+        plt.title("Важность признаков")
+        plt.xlabel("Важность")
+        plt.ylabel("Признаки")
         plt.tight_layout()
 
         if output_path:
-            plt.savefig(output_path, dpi=300, bbox_inches='tight')
+            plt.savefig(output_path, dpi=300, bbox_inches="tight")
         else:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
             output_path = self.output_dir / f"feature_importance_{timestamp}.png"
-            plt.savefig(output_path, dpi=300, bbox_inches='tight')
+            plt.savefig(output_path, dpi=300, bbox_inches="tight")
 
         plt.close()
 
         return str(output_path)
 
-    def plot_predictions_vs_actual(self,
-                                  y_true: np.ndarray,
-                                  y_pred: np.ndarray,
-                                  output_path: str = None) -> str:
+    def plot_predictions_vs_actual(
+        self, y_true: np.ndarray, y_pred: np.ndarray, output_path: str = None
+    ) -> str:
         """
         Строит график предсказанных vs фактических значений
 
@@ -508,41 +507,42 @@ class ModelTrainer:
         # Диаграмма рассеяния
         plt.subplot(2, 2, 1)
         plt.scatter(y_true, y_pred, alpha=0.6)
-        plt.plot([y_true.min(), y_true.max()], [y_true.min(), y_true.max()], 'r--', lw=2)
-        plt.xlabel('Фактические значения')
-        plt.ylabel('Предсказанные значения')
-        plt.title('Предсказанные vs Фактические')
+        plt.plot([y_true.min(), y_true.max()], [y_true.min(), y_true.max()], "r--", lw=2)
+        plt.xlabel("Фактические значения")
+        plt.ylabel("Предсказанные значения")
+        plt.title("Предсказанные vs Фактические")
 
         # Остатки
         residuals = y_true - y_pred
         plt.subplot(2, 2, 2)
         plt.scatter(y_pred, residuals, alpha=0.6)
-        plt.axhline(y=0, color='r', linestyle='--')
-        plt.xlabel('Предсказанные значения')
-        plt.ylabel('Остатки')
-        plt.title('Диаграмма остатков')
+        plt.axhline(y=0, color="r", linestyle="--")
+        plt.xlabel("Предсказанные значения")
+        plt.ylabel("Остатки")
+        plt.title("Диаграмма остатков")
 
         # Гистограмма остатков
         plt.subplot(2, 2, 3)
-        plt.hist(residuals, bins=30, edgecolor='black', alpha=0.7)
-        plt.xlabel('Остатки')
-        plt.ylabel('Частота')
-        plt.title('Распределение остатков')
+        plt.hist(residuals, bins=30, edgecolor="black", alpha=0.7)
+        plt.xlabel("Остатки")
+        plt.ylabel("Частота")
+        plt.title("Распределение остатков")
 
         # Q-Q plot
         from scipy import stats
+
         plt.subplot(2, 2, 4)
         stats.probplot(residuals, dist="norm", plot=plt)
-        plt.title('Q-Q plot остатков')
+        plt.title("Q-Q plot остатков")
 
         plt.tight_layout()
 
         if output_path:
-            plt.savefig(output_path, dpi=300, bbox_inches='tight')
+            plt.savefig(output_path, dpi=300, bbox_inches="tight")
         else:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             output_path = self.output_dir / f"predictions_vs_actual_{timestamp}.png"
-            plt.savefig(output_path, dpi=300, bbox_inches='tight')
+            plt.savefig(output_path, dpi=300, bbox_inches="tight")
 
         plt.close()
 
@@ -556,10 +556,10 @@ def model_training_pipeline(func):
     Args:
         func: Функция для декорирования
     """
-    @wraps(func)
 
+    @wraps(func)
     def wrapper(*args, **kwargs):
-            trainer = ModelTrainer()
+        trainer = ModelTrainer()
         print(f"Запуск пайплайна обучения модели: {func.__name__}")
 
         # Выполняем функцию
@@ -569,6 +569,7 @@ def model_training_pipeline(func):
         return result
 
     return wrapper
+
 
 def main():
     """Главная функция для демонстрации возможностей тренера моделей"""
@@ -588,7 +589,7 @@ def main():
     n_samples = 1000
     n_features = 5
     X_reg = np.random.randn(n_samples, n_features)
-    y_reg = (2 * X_reg[:, 0] + 3 * X_reg[:, 1] - X_reg[:, 2] + 0.5 * np.random.randn(n_samples))
+    y_reg = 2 * X_reg[:, 0] + 3 * X_reg[:, 1] - X_reg[:, 2] + 0.5 * np.random.randn(n_samples)
 
     # Данные для классификации
     X_clf = np.random.randn(n_samples, n_features)
@@ -599,14 +600,18 @@ def main():
 
     # Обучаем регрессионную модель
     print("\nОбучение регрессионной модели...")
-    reg_result = trainer.train_and_evaluate(X_reg, y_reg, model_type="random_forest", problem_type="regression")
+    reg_result = trainer.train_and_evaluate(
+        X_reg, y_reg, model_type="random_forest", problem_type="regression"
+    )
     print(f"  - Время обучения: {reg_result.training_time:.2f} с")
     print(f"  - R² Score: {reg_result.test_scores['r2_score']:.4f}")
     print(f"  - RMSE: {reg_result.test_scores['rmse']:.4f}")
 
     # Обучаем классификационную модель
     print("\nОбучение классификационной модели...")
-    clf_result = trainer.train_and_evaluate(X_clf, y_clf, model_type="random_forest", problem_type="classification")
+    clf_result = trainer.train_and_evaluate(
+        X_clf, y_clf, model_type="random_forest", problem_type="classification"
+    )
     print(f"  - Время обучения: {clf_result.training_time:.2f} с")
     print(f"  - Accuracy: {clf_result.test_scores['accuracy']:.4f}")
 
@@ -621,17 +626,19 @@ def main():
     best_model, tuning_results = trainer.hyperparameter_tuning(
         X_reg[:500], y_reg[:500], model_type="random_forest", cv_folds=3
     )
-    print(f"  - Лучшие параметры: {tuning_results['params'][np.argmax(tuning_results['mean_test_score'])]}")
+    print(
+        f"  - Лучшие параметры: {tuning_results['params'][np.argmax(tuning_results['mean_test_score'])]}"
+    )
     print(f"  - Лучший скор: {max(tuning_results['mean_test_score']):.4f}")
 
     # Сохраняем модель
     print("\nСохранение модели...")
     metadata = {
-        'created_at': datetime.now().isoformat(),
-        'model_type': 'random_forest_regression',
-        'features_count': X_reg.shape[1],
-        'samples_count': X_reg.shape[0],
-        'r2_score': reg_result.test_scores['r2_score']
+        "created_at": datetime.now().isoformat(),
+        "model_type": "random_forest_regression",
+        "features_count": X_reg.shape[1],
+        "samples_count": X_reg.shape[0],
+        "r2_score": reg_result.test_scores["r2_score"],
     }
     model_path = trainer.save_model(reg_result.model, "regression_model", metadata)
     print(f"  - Модель сохранена: {model_path}")
@@ -645,9 +652,7 @@ def main():
     # Строим графики
     print("\nСоздание графиков важности признаков...")
     feature_names = [f"Feature_{i}" for i in range(X_reg.shape[1])]
-    importance_plot_path = trainer.plot_feature_importance(
-        reg_result.model, feature_names, top_n=5
-    )
+    importance_plot_path = trainer.plot_feature_importance(reg_result.model, feature_names, top_n=5)
     print(f"  - График важности признаков сохранен: {importance_plot_path}")
 
     print("\nСоздание графика предсказанных vs фактических значений...")
@@ -655,16 +660,17 @@ def main():
     predictions_vs_actual_path = trainer.plot_predictions_vs_actual(
         y_reg[:100], reg_result.predictions[:100]
     )
-    print(f"  - График предсказанных vs фактических значений сохранен: {predictions_vs_actual_path}")
+    print(
+        f"  - График предсказанных vs фактических значений сохранен: {predictions_vs_actual_path}"
+    )
 
     # Демонстрируем декоратор пайплайна
     print("\nДемонстрация декоратора пайплайна обучения модели...")
 
     @model_training_pipeline
-
     def sample_training_pipeline(trainer_instance):
         # Создаем простую модель
-            X_simple = np.random.randn(100, 2)
+        X_simple = np.random.randn(100, 2)
         y_simple = X_simple[:, 0] + X_simple[:, 1] + np.random.randn(100) * 0.1
 
         result = trainer_instance.train_and_evaluate(
@@ -686,6 +692,6 @@ def main():
     print("- Графики предсказаний: plot_predictions_vs_actual()")
     print("- Декоратор пайплайна: @model_training_pipeline")
 
+
 if __name__ == "__main__":
     main()
-

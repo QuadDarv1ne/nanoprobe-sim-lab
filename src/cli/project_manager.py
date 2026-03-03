@@ -45,9 +45,9 @@ class ProjectManager:
         self.config = self.load_config()
 
         self.components = {
-            'spm_simulator': self.config['components']['spm_simulator'],
-            'surface_analyzer': self.config['components']['surface_analyzer'],
-            'sstv_groundstation': self.config['components']['sstv_groundstation']
+            "spm_simulator": self.config["components"]["spm_simulator"],
+            "surface_analyzer": self.config["components"]["surface_analyzer"],
+            "sstv_groundstation": self.config["components"]["sstv_groundstation"],
         }
 
         atexit.register(self._auto_cleanup_on_exit)
@@ -60,7 +60,7 @@ class ProjectManager:
             Словарь с конфигурацией проекта.
         """
         try:
-            with open(self.config_file, 'r', encoding='utf-8') as f:
+            with open(self.config_file, "r", encoding="utf-8") as f:
                 return json.load(f)
         except FileNotFoundError:
             print(f"Файл конфигурации {self.config_file} не найден")
@@ -78,8 +78,7 @@ class ProjectManager:
         """
         if use_python:
             spm_path = (
-                project_root / self.components['spm_simulator']['path'] / 'src'
-                / 'spm_simulator.py'
+                project_root / self.components["spm_simulator"]["path"] / "src" / "spm_simulator.py"
             )
             if spm_path.exists():
                 print(f"Запуск симулятора СЗМ (Python): {spm_path}")
@@ -87,24 +86,23 @@ class ProjectManager:
             else:
                 print(f"Файл симулятора СЗМ не найден: {spm_path}")
         else:
-            build_dir = (
-                project_root / self.components['spm_simulator']['path'] / 'build'
-            )
-            binary_path = build_dir / 'spm-simulator'
+            build_dir = project_root / self.components["spm_simulator"]["path"] / "build"
+            binary_path = build_dir / "spm-simulator"
 
             if binary_path.exists():
                 print(f"Запуск симулятора СЗМ (C++): {binary_path}")
                 subprocess.run([str(binary_path)])
             else:
                 print("C++ версия симулятора СЗМ не найдена.")
-                print("Соберите: cd cpp-spm-hardware-sim && mkdir build && "
-                      "cd build && cmake .. && make")
+                print(
+                    "Соберите: cd cpp-spm-hardware-sim && mkdir build && "
+                    "cd build && cmake .. && make"
+                )
 
     def run_surface_analyzer(self):
         """Запускает анализатор изображений поверхности."""
         analyzer_path = (
-            project_root / self.components['surface_analyzer']['path'] / 'src'
-            / 'main.py'
+            project_root / self.components["surface_analyzer"]["path"] / "src" / "main.py"
         )
 
         if analyzer_path.exists():
@@ -116,8 +114,8 @@ class ProjectManager:
 
     def create_sample_analyzer(self):
         """Создает пример скрипта анализатора изображений."""
-        analyzer_path = project_root / self.components['surface_analyzer']['path']
-        main_py_path = analyzer_path / 'src' / 'main.py'
+        analyzer_path = project_root / self.components["surface_analyzer"]["path"]
+        main_py_path = analyzer_path / "src" / "main.py"
 
         sample_code = '''#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
@@ -142,7 +140,7 @@ if __name__ == "__main__":
 '''
 
         os.makedirs(main_py_path.parent, exist_ok=True)
-        with open(main_py_path, 'w', encoding='utf-8') as f:
+        with open(main_py_path, "w", encoding="utf-8") as f:
             f.write(sample_code)
 
         print(f"Создан пример скрипта: {main_py_path}")
@@ -150,8 +148,7 @@ if __name__ == "__main__":
     def run_sstv_station(self):
         """Запускает наземную станцию SSTV."""
         station_path = (
-            project_root / self.components['sstv_groundstation']['path'] / 'src'
-            / 'main.py'
+            project_root / self.components["sstv_groundstation"]["path"] / "src" / "main.py"
         )
 
         if station_path.exists():
@@ -163,8 +160,8 @@ if __name__ == "__main__":
 
     def create_sample_sstv_station(self):
         """Создает пример скрипта наземной станции SSTV."""
-        station_path = project_root / self.components['sstv_groundstation']['path']
-        main_py_path = station_path / 'src' / 'main.py'
+        station_path = project_root / self.components["sstv_groundstation"]["path"]
+        main_py_path = station_path / "src" / "main.py"
 
         sample_code = '''#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
@@ -189,7 +186,7 @@ if __name__ == "__main__":
 '''
 
         os.makedirs(main_py_path.parent, exist_ok=True)
-        with open(main_py_path, 'w', encoding='utf-8') as f:
+        with open(main_py_path, "w", encoding="utf-8") as f:
             f.write(sample_code)
 
         print(f"Создан пример скрипта: {main_py_path}")
@@ -198,19 +195,16 @@ if __name__ == "__main__":
         """Собирает C++ компоненты проекта."""
         print("Сборка C++ компонентов проекта...")
 
-        spm_path = project_root / self.components['spm_simulator']['path']
-        build_dir = spm_path / 'build'
+        spm_path = project_root / self.components["spm_simulator"]["path"]
+        build_dir = spm_path / "build"
 
         os.makedirs(build_dir, exist_ok=True)
 
         try:
             print("Запуск cmake...")
-            subprocess.run(
-                ['cmake', '..', '-B', str(build_dir)],
-                cwd=str(build_dir), check=True
-            )
+            subprocess.run(["cmake", "..", "-B", str(build_dir)], cwd=str(build_dir), check=True)
             print("Запуск make...")
-            subprocess.run(['make'], cwd=str(build_dir), check=True)
+            subprocess.run(["make"], cwd=str(build_dir), check=True)
             print("C++ компоненты успешно собраны!")
         except subprocess.CalledProcessError as e:
             print(f"Ошибка при сборке C++ компонентов: {e}")
@@ -220,6 +214,7 @@ if __name__ == "__main__":
         """Очищает кэш проекта."""
         try:
             from utils.cache_manager import CacheManager
+
             cache_manager = CacheManager(str(project_root))
 
             print("Очистка кэша проекта...")
@@ -262,11 +257,10 @@ if __name__ == "__main__":
 
     def show_project_info(self):
         """Показывает информацию о проекте."""
-        project_info = self.config.get('project', {})
+        project_info = self.config.get("project", {})
 
         print("\n" + "=" * 60)
-        print(f"ИНФОРМАЦИЯ О ПРОЕКТЕ: "
-              f"{project_info.get('name', 'Nanoprobe Simulation Lab')}")
+        print(f"ИНФОРМАЦИЯ О ПРОЕКТЕ: " f"{project_info.get('name', 'Nanoprobe Simulation Lab')}")
         print("=" * 60)
         print(f"Версия: {project_info.get('version', '1.0.0')}")
         print(f"Описание: {project_info.get('description', 'Проект не описан')}")
@@ -280,12 +274,12 @@ if __name__ == "__main__":
             print(f"    Язык: {info['language']}")
 
         print("\nЛИЦЕНЗИЯ:")
-        license_info = self.config.get('license', {})
+        license_info = self.config.get("license", {})
         print(f"  Тип: {license_info.get('type', 'Не указана')}")
         print(f"  Файл: {license_info.get('file', 'Не указан')}")
         print(f"  Владелец: {license_info.get('owner', 'Не указан')}")
 
-        reserved_rights = license_info.get('reserved_rights', [])
+        reserved_rights = license_info.get("reserved_rights", [])
         if reserved_rights:
             print("  Ограниченные права:")
             for right in reserved_rights:
@@ -317,21 +311,21 @@ if __name__ == "__main__":
             try:
                 choice = input("\nВыберите действие (0-7): ").strip()
 
-                if choice == '1':
+                if choice == "1":
                     self.run_spm_simulator(use_python=True)
-                elif choice == '2':
+                elif choice == "2":
                     self.run_spm_simulator(use_python=False)
-                elif choice == '3':
+                elif choice == "3":
                     self.run_surface_analyzer()
-                elif choice == '4':
+                elif choice == "4":
                     self.run_sstv_station()
-                elif choice == '5':
+                elif choice == "5":
                     self.build_cpp_components()
-                elif choice == '6':
+                elif choice == "6":
                     self.clean_cache()
-                elif choice == '7':
+                elif choice == "7":
                     self.show_project_info()
-                elif choice == '0':
+                elif choice == "0":
                     print("\nСпасибо за использование Лаборатории моделирования нанозонда!")
                     break
                 else:
@@ -351,24 +345,26 @@ def main():
     if len(sys.argv) > 1:
         command = sys.argv[1]
 
-        if command == 'spm-python':
+        if command == "spm-python":
             manager.run_spm_simulator(use_python=True)
-        elif command == 'spm-cpp':
+        elif command == "spm-cpp":
             manager.run_spm_simulator(use_python=False)
-        elif command == 'analyzer':
+        elif command == "analyzer":
             manager.run_surface_analyzer()
-        elif command == 'sstv':
+        elif command == "sstv":
             manager.run_sstv_station()
-        elif command == 'build':
+        elif command == "build":
             manager.build_cpp_components()
-        elif command == 'clean-cache':
+        elif command == "clean-cache":
             manager.clean_cache()
-        elif command == 'info':
+        elif command == "info":
             manager.show_project_info()
         else:
             print(f"Неизвестная команда: {command}")
-            print("Доступные команды: spm-python, spm-cpp, analyzer, sstv, "
-                  "build, clean-cache, info")
+            print(
+                "Доступные команды: spm-python, spm-cpp, analyzer, sstv, "
+                "build, clean-cache, info"
+            )
     else:
         manager.run_interactive()
 

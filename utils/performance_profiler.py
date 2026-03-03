@@ -24,6 +24,7 @@ import seaborn as sns
 import pandas as pd
 from dataclasses import dataclass
 from functools import wraps
+
 try:
     import memory_profiler
 except ImportError:
@@ -33,18 +34,22 @@ import tracemalloc
 from contextlib import contextmanager
 import gc
 
+
 @dataclass
 class PerformanceMetric:
     """Метрика производительности"""
+
     name: str
     value: float
     unit: str
     timestamp: datetime
     context: str
 
+
 @dataclass
 class ResourceUsage:
     """Использование ресурсов"""
+
     cpu_percent: float
     memory_percent: float
     memory_mb: float
@@ -54,13 +59,13 @@ class ResourceUsage:
     network_recv: float
     timestamp: datetime
 
+
 class PerformanceProfiler:
     """
     Класс профилировщика производительности
     Обеспечивает детальный анализ производительности,
     профилирование функций и оптимизацию ресурсов.
     """
-
 
     def __init__(self, output_dir: str = "profiles"):
         """
@@ -78,18 +83,17 @@ class PerformanceProfiler:
         self.memory_monitoring = False
         self.monitoring_thread = None
         self.monitoring_data = {
-            'timestamps': [],
-            'cpu_percent': [],
-            'memory_percent': [],
-            'memory_mb': [],
-            'disk_io_read': [],
-            'disk_io_write': [],
-            'network_sent': [],
-            'network_recv': []
+            "timestamps": [],
+            "cpu_percent": [],
+            "memory_percent": [],
+            "memory_mb": [],
+            "disk_io_read": [],
+            "disk_io_write": [],
+            "network_sent": [],
+            "network_recv": [],
         }
         self.current_process = psutil.Process()
         self.benchmark_results = {}
-
 
     def start_resource_monitoring(self, interval: float = 1.0):
         """
@@ -104,7 +108,6 @@ class PerformanceProfiler:
         self.cpu_monitoring = True
 
         def monitor():
-
             while self.cpu_monitoring:
                 try:
                     # Сбор метрик
@@ -120,25 +123,25 @@ class PerformanceProfiler:
                     net_recv = net_io.bytes_recv if net_io else 0
 
                     # Добавляем данные
-                    self.monitoring_data['timestamps'].append(datetime.now())
-                    self.monitoring_data['cpu_percent'].append(cpu_percent)
-                    self.monitoring_data['memory_percent'].append(memory_info.percent)
-                    self.monitoring_data['memory_mb'].append(memory_info.used / (1024*1024))
-                    self.monitoring_data['disk_io_read'].append(disk_read)
-                    self.monitoring_data['disk_io_write'].append(disk_write)
-                    self.monitoring_data['network_sent'].append(net_sent)
-                    self.monitoring_data['network_recv'].append(net_recv)
+                    self.monitoring_data["timestamps"].append(datetime.now())
+                    self.monitoring_data["cpu_percent"].append(cpu_percent)
+                    self.monitoring_data["memory_percent"].append(memory_info.percent)
+                    self.monitoring_data["memory_mb"].append(memory_info.used / (1024 * 1024))
+                    self.monitoring_data["disk_io_read"].append(disk_read)
+                    self.monitoring_data["disk_io_write"].append(disk_write)
+                    self.monitoring_data["network_sent"].append(net_sent)
+                    self.monitoring_data["network_recv"].append(net_recv)
 
                     # Сохраняем в историю
                     resource_usage = ResourceUsage(
                         cpu_percent=cpu_percent,
                         memory_percent=memory_info.percent,
-                        memory_mb=memory_info.used / (1024*1024),
+                        memory_mb=memory_info.used / (1024 * 1024),
                         disk_io_read=disk_read,
                         disk_io_write=disk_write,
                         network_sent=net_sent,
                         network_recv=net_recv,
-                        timestamp=datetime.now()
+                        timestamp=datetime.now(),
                     )
                     self.resource_usage_history.append(resource_usage)
 
@@ -150,13 +153,11 @@ class PerformanceProfiler:
         self.monitoring_thread = threading.Thread(target=monitor, daemon=True)
         self.monitoring_thread.start()
 
-
     def stop_resource_monitoring(self):
         """Останавливает мониторинг ресурсов"""
         self.cpu_monitoring = False
         if self.monitoring_thread:
             self.monitoring_thread.join(timeout=2)
-
 
     def profile_function(self, func: Callable) -> Callable:
         """
@@ -168,11 +169,11 @@ class PerformanceProfiler:
         Returns:
             Профилированная функция
         """
-        @wraps(func)
 
+        @wraps(func)
         def wrapper(*args, **kwargs):
             # Запускаем трассировку памяти
-                    tracemalloc.start()
+            tracemalloc.start()
             start_time = time.time()
             start_cpu = self.current_process.cpu_percent()
             start_memory = self.current_process.memory_info().rss / (1024 * 1024)  # MB
@@ -199,7 +200,7 @@ class PerformanceProfiler:
                     value=execution_time,
                     unit="seconds",
                     timestamp=datetime.now(),
-                    context=f"Function: {func.__name__}"
+                    context=f"Function: {func.__name__}",
                 )
                 self.metrics.append(metric)
 
@@ -208,7 +209,7 @@ class PerformanceProfiler:
                     value=memory_used,
                     unit="MB",
                     timestamp=datetime.now(),
-                    context=f"Function: {func.__name__}"
+                    context=f"Function: {func.__name__}",
                 )
                 self.metrics.append(metric)
 
@@ -226,7 +227,6 @@ class PerformanceProfiler:
                 raise e
 
         return wrapper
-
 
     def profile_code_block(self, code: str, name: str = "code_block") -> Dict[str, Any]:
         """
@@ -251,12 +251,14 @@ class PerformanceProfiler:
         # Сохраняем статистику
         s = io.StringIO()
         ps = pstats.Stats(pr, stream=s)
-        ps.sort_stats('cumulative')
+        ps.sort_stats("cumulative")
         ps.print_stats()
 
         # Сохраняем в файл
-        profile_file = self.output_dir / f"profile_{name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-        with open(profile_file, 'w', encoding='utf-8') as f:
+        profile_file = (
+            self.output_dir / f"profile_{name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+        )
+        with open(profile_file, "w", encoding="utf-8") as f:
             f.write(s.getvalue())
 
         execution_time = end_time - start_time
@@ -267,17 +269,16 @@ class PerformanceProfiler:
             value=execution_time,
             unit="seconds",
             timestamp=datetime.now(),
-            context=f"Code block: {name}"
+            context=f"Code block: {name}",
         )
         self.metrics.append(metric)
 
         return {
-            'execution_time': execution_time,
-            'profile_file': str(profile_file),
-            'call_count': ps.total_calls,
-            'primitive_calls': ps.total_calls  # primitive_calls is not a valid attribute, using total_calls instead
+            "execution_time": execution_time,
+            "profile_file": str(profile_file),
+            "call_count": ps.total_calls,
+            "primitive_calls": ps.total_calls,  # primitive_calls is not a valid attribute, using total_calls instead
         }
-
 
     def memory_profile_function(self, func: Callable) -> Callable:
         """
@@ -292,18 +293,16 @@ class PerformanceProfiler:
 
         @wraps(func)
         def wrapper(*args, **kwargs):
-                    if memory_profiler is None:
+            if memory_profiler is None:
                 print(f"\n=== Memory profiler not available for: {func.__name__} ===")
-                print("Install memory-profiler to enable memory profiling: pip install memory-profiler")
+                print(
+                    "Install memory-profiler to enable memory profiling: pip install memory-profiler"
+                )
                 return func(*args, **kwargs)
 
             # Запускаем профилирование памяти
             mem_usage = memory_profiler.memory_usage(
-                (func, args, kwargs),
-                retval=True,
-                timeout=None,
-                repeat=1,
-                precision=2
+                (func, args, kwargs), retval=True, timeout=None, repeat=1, precision=2
             )
 
             # Получаем результат функции и использование памяти
@@ -318,7 +317,7 @@ class PerformanceProfiler:
                 value=avg_memory,
                 unit="MB",
                 timestamp=datetime.now(),
-                context=f"Function: {func.__name__}"
+                context=f"Function: {func.__name__}",
             )
             self.metrics.append(metric)
 
@@ -327,7 +326,7 @@ class PerformanceProfiler:
                 value=peak_memory,
                 unit="MB",
                 timestamp=datetime.now(),
-                context=f"Function: {func.__name__}"
+                context=f"Function: {func.__name__}",
             )
             self.metrics.append(metric)
 
@@ -339,8 +338,9 @@ class PerformanceProfiler:
 
         return wrapper
 
-
-    def benchmark_function(self, func: Callable, iterations: int = 100, warmup: int = 10) -> Dict[str, Any]:
+    def benchmark_function(
+        self, func: Callable, iterations: int = 100, warmup: int = 10
+    ) -> Dict[str, Any]:
         """
         Бенчмаркинг функции
 
@@ -373,14 +373,14 @@ class PerformanceProfiler:
         # Сохраняем результаты
         benchmark_key = f"{func.__name__}_benchmark"
         self.benchmark_results[benchmark_key] = {
-            'function': func.__name__,
-            'iterations': iterations,
-            'warmup': warmup,
-            'avg_time': avg_time,
-            'min_time': min_time,
-            'max_time': max_time,
-            'std_dev': std_dev,
-            'total_time': sum(times)
+            "function": func.__name__,
+            "iterations": iterations,
+            "warmup": warmup,
+            "avg_time": avg_time,
+            "min_time": min_time,
+            "max_time": max_time,
+            "std_dev": std_dev,
+            "total_time": sum(times),
         }
 
         # Добавляем метрики
@@ -389,19 +389,18 @@ class PerformanceProfiler:
             value=avg_time,
             unit="seconds",
             timestamp=datetime.now(),
-            context=f"Benchmark: {func.__name__}"
+            context=f"Benchmark: {func.__name__}",
         )
         self.metrics.append(metric)
 
         return {
-            'avg_time': avg_time,
-            'min_time': min_time,
-            'max_time': max_time,
-            'std_dev': std_dev,
-            'total_time': sum(times),
-            'iterations': iterations
+            "avg_time": avg_time,
+            "min_time": min_time,
+            "max_time": max_time,
+            "std_dev": std_dev,
+            "total_time": sum(times),
+            "iterations": iterations,
         }
-
 
     def generate_performance_report(self, output_path: str = None) -> str:
         """
@@ -414,46 +413,48 @@ class PerformanceProfiler:
             Путь к сохраненному отчету
         """
         if output_path is None:
-            output_path = str(self.output_dir / f"performance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
+            output_path = str(
+                self.output_dir
+                / f"performance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            )
 
         # Подготавливаем данные для отчета
         report_data = {
-            'timestamp': datetime.now().isoformat(),
-            'total_metrics': len(self.metrics),
-            'total_resource_samples': len(self.resource_usage_history),
-            'benchmark_results': self.benchmark_results,
-            'metrics': [
+            "timestamp": datetime.now().isoformat(),
+            "total_metrics": len(self.metrics),
+            "total_resource_samples": len(self.resource_usage_history),
+            "benchmark_results": self.benchmark_results,
+            "metrics": [
                 {
-                    'name': metric.name,
-                    'value': metric.value,
-                    'unit': metric.unit,
-                    'timestamp': metric.timestamp.isoformat(),
-                    'context': metric.context
+                    "name": metric.name,
+                    "value": metric.value,
+                    "unit": metric.unit,
+                    "timestamp": metric.timestamp.isoformat(),
+                    "context": metric.context,
                 }
                 for metric in self.metrics
             ],
-            'resource_usage': [
+            "resource_usage": [
                 {
-                    'cpu_percent': usage.cpu_percent,
-                    'memory_percent': usage.memory_percent,
-                    'memory_mb': usage.memory_mb,
-                    'disk_io_read': usage.disk_io_read,
-                    'disk_io_write': usage.disk_io_write,
-                    'network_sent': usage.network_sent,
-                    'network_recv': usage.network_recv,
-                    'timestamp': usage.timestamp.isoformat()
+                    "cpu_percent": usage.cpu_percent,
+                    "memory_percent": usage.memory_percent,
+                    "memory_mb": usage.memory_mb,
+                    "disk_io_read": usage.disk_io_read,
+                    "disk_io_write": usage.disk_io_write,
+                    "network_sent": usage.network_sent,
+                    "network_recv": usage.network_recv,
+                    "timestamp": usage.timestamp.isoformat(),
                 }
                 for usage in self.resource_usage_history
             ],
-            'aggregated_stats': self._calculate_aggregated_stats()
+            "aggregated_stats": self._calculate_aggregated_stats(),
         }
 
         # Сохраняем отчет
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(report_data, f, indent=2, ensure_ascii=False, default=str)
 
         return output_path
-
 
     def _calculate_aggregated_stats(self) -> Dict[str, Any]:
         """Рассчитывает агрегированные статистики"""
@@ -471,15 +472,14 @@ class PerformanceProfiler:
         stats = {}
         for metric_type, values in metric_types.items():
             stats[metric_type] = {
-                'count': len(values),
-                'avg': sum(values) / len(values),
-                'min': min(values),
-                'max': max(values),
-                'sum': sum(values)
+                "count": len(values),
+                "avg": sum(values) / len(values),
+                "min": min(values),
+                "max": max(values),
+                "sum": sum(values),
             }
 
         return stats
-
 
     def visualize_performance(self, output_path: str = None) -> str:
         """
@@ -492,56 +492,73 @@ class PerformanceProfiler:
             Путь к сохраненной визуализации
         """
         if output_path is None:
-            output_path = str(self.output_dir / f"performance_visualization_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png")
+            output_path = str(
+                self.output_dir
+                / f"performance_visualization_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+            )
 
-        if not self.monitoring_data['timestamps']:
+        if not self.monitoring_data["timestamps"]:
             print("Нет данных для визуализации")
             return ""
 
         # Создаем фигуру с несколькими подграфиками
         fig, axes = plt.subplots(2, 2, figsize=(15, 10))
-        fig.suptitle('Анализ производительности', fontsize=16)
+        fig.suptitle("Анализ производительности", fontsize=16)
 
-        timestamps = self.monitoring_data['timestamps']
+        timestamps = self.monitoring_data["timestamps"]
 
         # График CPU
-        axes[0, 0].plot(timestamps, self.monitoring_data['cpu_percent'], label='CPU %', color='blue')
-        axes[0, 0].set_title('Загрузка CPU')
-        axes[0, 0].set_ylabel('Проценты')
+        axes[0, 0].plot(
+            timestamps, self.monitoring_data["cpu_percent"], label="CPU %", color="blue"
+        )
+        axes[0, 0].set_title("Загрузка CPU")
+        axes[0, 0].set_ylabel("Проценты")
         axes[0, 0].grid(True)
 
         # График памяти
-        axes[0, 1].plot(timestamps, self.monitoring_data['memory_mb'], label='Память (MB)', color='red')
-        axes[0, 1].set_title('Использование памяти')
-        axes[0, 1].set_ylabel('MB')
+        axes[0, 1].plot(
+            timestamps, self.monitoring_data["memory_mb"], label="Память (MB)", color="red"
+        )
+        axes[0, 1].set_title("Использование памяти")
+        axes[0, 1].set_ylabel("MB")
         axes[0, 1].grid(True)
 
         # График дискового ввода-вывода
-        axes[1, 0].plot(timestamps, self.monitoring_data['disk_io_read'], label='Диск чтение', color='green')
-        axes[1, 0].plot(timestamps, self.monitoring_data['disk_io_write'], label='Диск запись', color='orange')
-        axes[1, 0].set_title('Дисковый I/O')
-        axes[1, 0].set_ylabel('Байты')
+        axes[1, 0].plot(
+            timestamps, self.monitoring_data["disk_io_read"], label="Диск чтение", color="green"
+        )
+        axes[1, 0].plot(
+            timestamps, self.monitoring_data["disk_io_write"], label="Диск запись", color="orange"
+        )
+        axes[1, 0].set_title("Дисковый I/O")
+        axes[1, 0].set_ylabel("Байты")
         axes[1, 0].legend()
         axes[1, 0].grid(True)
 
         # График сетевого ввода-вывода
-        axes[1, 1].plot(timestamps, self.monitoring_data['network_sent'], label='Сеть отправлено', color='purple')
-        axes[1, 1].plot(timestamps, self.monitoring_data['network_recv'], label='Сеть получено', color='brown')
-        axes[1, 1].set_title('Сетевой I/O')
-        axes[1, 1].set_ylabel('Байты')
+        axes[1, 1].plot(
+            timestamps,
+            self.monitoring_data["network_sent"],
+            label="Сеть отправлено",
+            color="purple",
+        )
+        axes[1, 1].plot(
+            timestamps, self.monitoring_data["network_recv"], label="Сеть получено", color="brown"
+        )
+        axes[1, 1].set_title("Сетевой I/O")
+        axes[1, 1].set_ylabel("Байты")
         axes[1, 1].legend()
         axes[1, 1].grid(True)
 
         # Настройка подписей
         for ax in axes.flat:
-            ax.tick_params(axis='x', rotation=45)
+            ax.tick_params(axis="x", rotation=45)
 
         plt.tight_layout()
-        plt.savefig(output_path, dpi=300, bbox_inches='tight')
+        plt.savefig(output_path, dpi=300, bbox_inches="tight")
         plt.close()
 
         return output_path
-
 
     def get_optimization_recommendations(self) -> List[str]:
         """
@@ -556,29 +573,44 @@ class PerformanceProfiler:
             return ["Нет данных для анализа оптимизации"]
 
         # Анализ средних значений
-        avg_cpu = sum(r.cpu_percent for r in self.resource_usage_history) / len(self.resource_usage_history)
-        avg_memory = sum(r.memory_mb for r in self.resource_usage_history) / len(self.resource_usage_history)
+        avg_cpu = sum(r.cpu_percent for r in self.resource_usage_history) / len(
+            self.resource_usage_history
+        )
+        avg_memory = sum(r.memory_mb for r in self.resource_usage_history) / len(
+            self.resource_usage_history
+        )
 
         if avg_cpu > 80:
-            recommendations.append("Высокая загрузка CPU (>80%). Рассмотрите оптимизацию алгоритмов или параллелизацию.")
+            recommendations.append(
+                "Высокая загрузка CPU (>80%). Рассмотрите оптимизацию алгоритмов или параллелизацию."
+            )
 
         if avg_memory > 1000:  # больше 1GB
-            recommendations.append("Высокое использование памяти (>1GB). Рассмотрите оптимизацию использования памяти.")
+            recommendations.append(
+                "Высокое использование памяти (>1GB). Рассмотрите оптимизацию использования памяти."
+            )
 
         # Анализ пиковых значений
         peak_cpu = max(r.cpu_percent for r in self.resource_usage_history)
         peak_memory = max(r.memory_mb for r in self.resource_usage_history)
 
         if peak_cpu > 95:
-            recommendations.append("Пиковая загрузка CPU очень высока (>95%). Необходима срочная оптимизация.")
+            recommendations.append(
+                "Пиковая загрузка CPU очень высока (>95%). Необходима срочная оптимизация."
+            )
 
         if peak_memory > 2000:  # больше 2GB
-            recommendations.append("Пиковое использование памяти чрезмерно (>2GB). Проверьте утечки памяти.")
+            recommendations.append(
+                "Пиковое использование памяти чрезмерно (>2GB). Проверьте утечки памяти."
+            )
 
         if not recommendations:
-            recommendations.append("Производительность системы в норме. Рекомендаций по оптимизации нет.")
+            recommendations.append(
+                "Производительность системы в норме. Рекомендаций по оптимизации нет."
+            )
 
         return recommendations
+
 
 def main():
     """Главная функция для демонстрации возможностей профилировщика производительности"""
@@ -596,17 +628,15 @@ def main():
 
     # Пример функции для профилирования
     @profiler.profile_function
-
     def example_heavy_function():
         """Пример тяжелой функции для профилирования"""
         result = 0
         for i in range(1000000):
-            result += i ** 2
+            result += i**2
         return result
 
     # Пример функции для профилирования памяти
     @profiler.memory_profile_function
-
     def example_memory_function():
         """Пример функции для профилирования памяти"""
         # Создаем большой список
@@ -672,6 +702,6 @@ result = test_function()
     print("- Визуализация: profiler.visualize_performance()")
     print("- Рекомендации: profiler.get_optimization_recommendations()")
 
+
 if __name__ == "__main__":
     main()
-

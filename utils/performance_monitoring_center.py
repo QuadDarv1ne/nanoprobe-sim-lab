@@ -24,6 +24,7 @@ from collections import defaultdict, deque
 
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.performance_profiler import PerformanceProfiler
@@ -36,9 +37,11 @@ from utils.system_health_monitor import SystemHealthMonitor
 from utils.performance_analytics_dashboard import PerformanceAnalyticsDashboard
 from utils.realtime_dashboard import RealTimeDashboard
 
+
 @dataclass
 class PerformanceAlert:
     """Оповещение о производительности"""
+
     timestamp: datetime
     severity: str  # 'low', 'medium', 'high', 'critical'
     category: str  # 'cpu', 'memory', 'disk', 'network', 'performance', 'optimization'
@@ -46,21 +49,23 @@ class PerformanceAlert:
     value: float
     threshold: float
 
+
 @dataclass
 class PerformanceTrend:
     """Тренд производительности"""
+
     metric: str
     trend_direction: str  # 'increasing', 'decreasing', 'stable'
     rate_of_change: float
     confidence: float  # 0-1
     duration: timedelta
 
+
 class PerformanceMonitoringCenter:
     """
     Класс центра мониторинга производительности
     Обеспечивает комплексный мониторинг, анализ и управление производительностью проекта.
     """
-
 
     def __init__(self, output_dir: str = "performance_monitoring"):
         """
@@ -84,19 +89,21 @@ class PerformanceMonitoringCenter:
         self.realtime_dashboard = RealTimeDashboard(port=8081)  # Порт для мониторинга
 
         # История метрик
-        self.metric_history = defaultdict(lambda: deque(maxlen=1000))  # Хранит последние 1000 значений
+        self.metric_history = defaultdict(
+            lambda: deque(maxlen=1000)
+        )  # Хранит последние 1000 значений
         self.alerts_history = []
         self.trends_history = []
 
         # Пороговые значения
         self.thresholds = {
-            'cpu_percent': 80.0,
-            'memory_percent': 85.0,
-            'disk_usage': 90.0,
-            'response_time_ms': 1000.0,
-            'error_rate': 0.05,
-            'resource_efficiency': 70.0,
-            'optimization_score': 75.0
+            "cpu_percent": 80.0,
+            "memory_percent": 85.0,
+            "disk_usage": 90.0,
+            "response_time_ms": 1000.0,
+            "error_rate": 0.05,
+            "resource_efficiency": 70.0,
+            "optimization_score": 75.0,
         }
 
         # Состояние мониторинга
@@ -107,12 +114,11 @@ class PerformanceMonitoringCenter:
 
         # Статистика
         self.stats = {
-            'total_checks': 0,
-            'alerts_generated': 0,
-            'optimizations_applied': 0,
-            'performance_improvements': 0
+            "total_checks": 0,
+            "alerts_generated": 0,
+            "optimizations_applied": 0,
+            "performance_improvements": 0,
         }
-
 
     def add_alert_handler(self, handler: Callable[[PerformanceAlert], None]):
         """
@@ -123,7 +129,6 @@ class PerformanceMonitoringCenter:
         """
         self.alert_handlers.append(handler)
 
-
     def add_data_exporter(self, exporter: Callable[[Dict[str, Any]], None]):
         """
         Добавляет экспортер данных
@@ -132,7 +137,6 @@ class PerformanceMonitoringCenter:
             exporter: Функция-экспортер данных
         """
         self.data_exporters.append(exporter)
-
 
     def set_threshold(self, metric: str, value: float):
         """
@@ -144,7 +148,6 @@ class PerformanceMonitoringCenter:
         """
         self.thresholds[metric] = value
 
-
     def get_current_metrics(self) -> Dict[str, float]:
         """
         Получает текущие метрики производительности
@@ -155,7 +158,7 @@ class PerformanceMonitoringCenter:
         # Системные метрики
         cpu_percent = psutil.cpu_percent(interval=None)
         memory = psutil.virtual_memory()
-        disk_usage = psutil.disk_usage('/').percent if hasattr(psutil, 'disk_usage') else 0
+        disk_usage = psutil.disk_usage("/").percent if hasattr(psutil, "disk_usage") else 0
 
         # Метрики из инструментов оптимизации
         resource_efficiency = self.resource_manager.get_resource_efficiency_score()
@@ -165,20 +168,21 @@ class PerformanceMonitoringCenter:
 
         # Собираем все метрики
         metrics = {
-            'timestamp': datetime.now().isoformat(),
-            'cpu_percent': cpu_percent,
-            'memory_percent': memory.percent,
-            'disk_usage': disk_usage,
-            'resource_efficiency': resource_efficiency,
-            'optimization_score': optimization_score,
-            'active_processes': len(psutil.pids()),
-            'load_average': getattr(os, 'getloadavg', lambda: (0, 0, 0))()[0] if hasattr(os, 'getloadavg') else 0,
-            'network_connections': len(psutil.net_connections()),
-            'threads_count': sum(p.num_threads() for p in psutil.process_iter())
+            "timestamp": datetime.now().isoformat(),
+            "cpu_percent": cpu_percent,
+            "memory_percent": memory.percent,
+            "disk_usage": disk_usage,
+            "resource_efficiency": resource_efficiency,
+            "optimization_score": optimization_score,
+            "active_processes": len(psutil.pids()),
+            "load_average": getattr(os, "getloadavg", lambda: (0, 0, 0))()[0]
+            if hasattr(os, "getloadavg")
+            else 0,
+            "network_connections": len(psutil.net_connections()),
+            "threads_count": sum(p.num_threads() for p in psutil.process_iter()),
         }
 
         return metrics
-
 
     def check_for_alerts(self, metrics: Dict[str, float]) -> List[PerformanceAlert]:
         """
@@ -198,26 +202,26 @@ class PerformanceMonitoringCenter:
 
                 if current_value > threshold_value:
                     # Определяем уровень серьезности
-                    severity = 'low'
+                    severity = "low"
                     if current_value > threshold_value * 1.2:
-                        severity = 'medium'
+                        severity = "medium"
                     if current_value > threshold_value * 1.5:
-                        severity = 'high'
+                        severity = "high"
                     if current_value > threshold_value * 2.0:
-                        severity = 'critical'
+                        severity = "critical"
 
                     # Определяем категорию
-                    category = 'performance'
-                    if 'cpu' in metric_name:
-                        category = 'cpu'
-                    elif 'memory' in metric_name:
-                        category = 'memory'
-                    elif 'disk' in metric_name:
-                        category = 'disk'
-                    elif 'resource' in metric_name:
-                        category = 'optimization'
-                    elif 'optimization' in metric_name:
-                        category = 'optimization'
+                    category = "performance"
+                    if "cpu" in metric_name:
+                        category = "cpu"
+                    elif "memory" in metric_name:
+                        category = "memory"
+                    elif "disk" in metric_name:
+                        category = "disk"
+                    elif "resource" in metric_name:
+                        category = "optimization"
+                    elif "optimization" in metric_name:
+                        category = "optimization"
 
                     alert = PerformanceAlert(
                         timestamp=datetime.now(),
@@ -225,15 +229,16 @@ class PerformanceMonitoringCenter:
                         category=category,
                         message=f"Метрика {metric_name} превысила порог: {current_value:.2f} > {threshold_value:.2f}",
                         value=current_value,
-                        threshold=threshold_value
+                        threshold=threshold_value,
                     )
 
                     alerts.append(alert)
 
         return alerts
 
-
-    def analyze_trends(self, metric_name: str, window_minutes: int = 30) -> Optional[PerformanceTrend]:
+    def analyze_trends(
+        self, metric_name: str, window_minutes: int = 30
+    ) -> Optional[PerformanceTrend]:
         """
         Анализирует тренды для метрики
 
@@ -254,7 +259,9 @@ class PerformanceMonitoringCenter:
             return None
 
         # Вычисляем изменения
-        recent_values = history_values[-min(len(history_values), window_minutes * 2):]  # 2 значения в минуту
+        recent_values = history_values[
+            -min(len(history_values), window_minutes * 2) :
+        ]  # 2 значения в минуту
         if len(recent_values) < 2:
             return None
 
@@ -265,11 +272,11 @@ class PerformanceMonitoringCenter:
         rate_of_change = (end_value - start_value) / len(recent_values)
 
         if abs(rate_of_change) < 0.1:  # Порог для стабильности
-            trend_direction = 'stable'
+            trend_direction = "stable"
         elif rate_of_change > 0:
-            trend_direction = 'increasing'
+            trend_direction = "increasing"
         else:
-            trend_direction = 'decreasing'
+            trend_direction = "decreasing"
 
         # Вычисляем уверенность (на основе стандартного отклонения)
         std_dev = statistics.stdev(recent_values) if len(recent_values) > 1 else 0
@@ -280,11 +287,10 @@ class PerformanceMonitoringCenter:
             trend_direction=trend_direction,
             rate_of_change=rate_of_change,
             confidence=confidence,
-            duration=timedelta(minutes=len(recent_values)//2)  # Приблизительно
+            duration=timedelta(minutes=len(recent_values) // 2),  # Приблизительно
         )
 
         return trend
-
 
     def collect_and_process_metrics(self):
         """Собирает и обрабатывает метрики"""
@@ -302,7 +308,7 @@ class PerformanceMonitoringCenter:
         # Обрабатываем оповещения
         for alert in alerts:
             self.alerts_history.append(alert)
-            self.stats['alerts_generated'] += 1
+            self.stats["alerts_generated"] += 1
 
             # Вызываем обработчики
             for handler in self.alert_handlers:
@@ -325,10 +331,9 @@ class PerformanceMonitoringCenter:
             except Exception as e:
                 print(f"Ошибка в экспортере данных: {e}")
 
-        self.stats['total_checks'] += 1
+        self.stats["total_checks"] += 1
 
         return current_metrics, alerts
-
 
     def start_monitoring(self, interval: float = 5.0):
         """
@@ -343,7 +348,6 @@ class PerformanceMonitoringCenter:
         self.monitoring_active = True
 
         def monitor():
-
             while self.monitoring_active:
                 try:
                     self.collect_and_process_metrics()
@@ -357,7 +361,6 @@ class PerformanceMonitoringCenter:
 
         print("✅ Мониторинг производительности запущен")
 
-
     def stop_monitoring(self):
         """Останавливает мониторинг"""
         self.monitoring_active = False
@@ -365,7 +368,6 @@ class PerformanceMonitoringCenter:
             self.monitoring_thread.join(timeout=2.0)
 
         print("🛑 Мониторинг производительности остановлен")
-
 
     def get_performance_summary(self) -> Dict[str, Any]:
         """
@@ -379,35 +381,38 @@ class PerformanceMonitoringCenter:
         # Получаем последние тренды
         recent_trends = []
         for trend in self.trends_history[-10:]:  # Последние 10 трендов
-            recent_trends.append({
-                'metric': trend.metric,
-                'direction': trend.trend_direction,
-                'rate': trend.rate_of_change,
-                'confidence': trend.confidence
-            })
+            recent_trends.append(
+                {
+                    "metric": trend.metric,
+                    "direction": trend.trend_direction,
+                    "rate": trend.rate_of_change,
+                    "confidence": trend.confidence,
+                }
+            )
 
         # Получаем последние оповещения
         recent_alerts = []
         for alert in self.alerts_history[-10:]:  # Последние 10 оповещений
-            recent_alerts.append({
-                'severity': alert.severity,
-                'category': alert.category,
-                'message': alert.message,
-                'timestamp': alert.timestamp.isoformat()
-            })
+            recent_alerts.append(
+                {
+                    "severity": alert.severity,
+                    "category": alert.category,
+                    "message": alert.message,
+                    "timestamp": alert.timestamp.isoformat(),
+                }
+            )
 
         summary = {
-            'current_metrics': current_metrics,
-            'stats': self.stats,
-            'recent_trends': recent_trends,
-            'recent_alerts': recent_alerts,
-            'health_status': self.health_monitor.get_current_health_status(),
-            'optimization_status': self.analytics_dashboard.get_performance_summary(),
-            'timestamp': datetime.now().isoformat()
+            "current_metrics": current_metrics,
+            "stats": self.stats,
+            "recent_trends": recent_trends,
+            "recent_alerts": recent_alerts,
+            "health_status": self.health_monitor.get_current_health_status(),
+            "optimization_status": self.analytics_dashboard.get_performance_summary(),
+            "timestamp": datetime.now().isoformat(),
         }
 
         return summary
-
 
     def generate_performance_report(self, output_path: Optional[str] = None) -> str:
         """
@@ -425,12 +430,11 @@ class PerformanceMonitoringCenter:
 
         summary = self.get_performance_summary()
 
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(summary, f, ensure_ascii=False, indent=2, default=str)
 
         print(f"📊 Отчет о производительности сохранен: {output_path}")
         return output_path
-
 
     def generate_visualization_report(self, output_path: Optional[str] = None) -> str:
         """
@@ -448,44 +452,70 @@ class PerformanceMonitoringCenter:
 
         # Подготовка данных для визуализации
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 12))
-        fig.suptitle('Performance Monitoring Report - Nanoprobe Simulation Lab', fontsize=16)
+        fig.suptitle("Performance Monitoring Report - Nanoprobe Simulation Lab", fontsize=16)
 
         # CPU Usage
-        if 'cpu_percent' in self.metric_history and len(self.metric_history['cpu_percent']) > 1:
-            cpu_data = list(self.metric_history['cpu_percent'])
-            ax1.plot(cpu_data, label='CPU %', color='red')
-            ax1.axhline(y=self.thresholds['cpu_percent'], color='red', linestyle='--', alpha=0.5, label='Threshold')
-            ax1.set_title('CPU Usage Over Time')
-            ax1.set_xlabel('Measurements')
-            ax1.set_ylabel('CPU %')
+        if "cpu_percent" in self.metric_history and len(self.metric_history["cpu_percent"]) > 1:
+            cpu_data = list(self.metric_history["cpu_percent"])
+            ax1.plot(cpu_data, label="CPU %", color="red")
+            ax1.axhline(
+                y=self.thresholds["cpu_percent"],
+                color="red",
+                linestyle="--",
+                alpha=0.5,
+                label="Threshold",
+            )
+            ax1.set_title("CPU Usage Over Time")
+            ax1.set_xlabel("Measurements")
+            ax1.set_ylabel("CPU %")
             ax1.legend()
             ax1.grid(True, alpha=0.3)
 
         # Memory Usage
-        if 'memory_percent' in self.metric_history and len(self.metric_history['memory_percent']) > 1:
-            memory_data = list(self.metric_history['memory_percent'])
-            ax2.plot(memory_data, label='Memory %', color='blue')
-            ax2.axhline(y=self.thresholds['memory_percent'], color='blue', linestyle='--', alpha=0.5, label='Threshold')
-            ax2.set_title('Memory Usage Over Time')
-            ax2.set_xlabel('Measurements')
-            ax2.set_ylabel('Memory %')
+        if (
+            "memory_percent" in self.metric_history
+            and len(self.metric_history["memory_percent"]) > 1
+        ):
+            memory_data = list(self.metric_history["memory_percent"])
+            ax2.plot(memory_data, label="Memory %", color="blue")
+            ax2.axhline(
+                y=self.thresholds["memory_percent"],
+                color="blue",
+                linestyle="--",
+                alpha=0.5,
+                label="Threshold",
+            )
+            ax2.set_title("Memory Usage Over Time")
+            ax2.set_xlabel("Measurements")
+            ax2.set_ylabel("Memory %")
             ax2.legend()
             ax2.grid(True, alpha=0.3)
 
         # Resource Efficiency
-        if 'resource_efficiency' in self.metric_history and len(self.metric_history['resource_efficiency']) > 1:
-            eff_data = list(self.metric_history['resource_efficiency'])
-            ax3.plot(eff_data, label='Efficiency %', color='green')
-            ax3.axhline(y=self.thresholds['resource_efficiency'], color='green', linestyle='--', alpha=0.5, label='Threshold')
-            ax3.set_title('Resource Efficiency Over Time')
-            ax3.set_xlabel('Measurements')
-            ax3.set_ylabel('Efficiency %')
+        if (
+            "resource_efficiency" in self.metric_history
+            and len(self.metric_history["resource_efficiency"]) > 1
+        ):
+            eff_data = list(self.metric_history["resource_efficiency"])
+            ax3.plot(eff_data, label="Efficiency %", color="green")
+            ax3.axhline(
+                y=self.thresholds["resource_efficiency"],
+                color="green",
+                linestyle="--",
+                alpha=0.5,
+                label="Threshold",
+            )
+            ax3.set_title("Resource Efficiency Over Time")
+            ax3.set_xlabel("Measurements")
+            ax3.set_ylabel("Efficiency %")
             ax3.legend()
             ax3.grid(True, alpha=0.3)
 
         # Alert Distribution
         if self.alerts_history:
-            alert_categories = [alert.category for alert in self.alerts_history[-50:]]  # Последние 50
+            alert_categories = [
+                alert.category for alert in self.alerts_history[-50:]
+            ]  # Последние 50
             alert_severities = [alert.severity for alert in self.alerts_history[-50:]]
 
             if alert_categories:
@@ -494,19 +524,18 @@ class PerformanceMonitoringCenter:
                 for cat in alert_categories:
                     category_counts[cat] = category_counts.get(cat, 0) + 1
 
-                ax4.bar(category_counts.keys(), category_counts.values(), alpha=0.7, color='orange')
-                ax4.set_title('Alert Distribution by Category')
-                ax4.set_xlabel('Category')
-                ax4.set_ylabel('Count')
-                ax4.tick_params(axis='x', rotation=45)
+                ax4.bar(category_counts.keys(), category_counts.values(), alpha=0.7, color="orange")
+                ax4.set_title("Alert Distribution by Category")
+                ax4.set_xlabel("Category")
+                ax4.set_ylabel("Count")
+                ax4.tick_params(axis="x", rotation=45)
 
         plt.tight_layout()
-        plt.savefig(output_path, dpi=300, bbox_inches='tight')
+        plt.savefig(output_path, dpi=300, bbox_inches="tight")
         plt.close()
 
         print(f"📊 Визуальный отчет о производительности сохранен: {output_path}")
         return output_path
-
 
     def apply_optimizations_based_on_metrics(self) -> Dict[str, Any]:
         """
@@ -517,74 +546,84 @@ class PerformanceMonitoringCenter:
         """
         current_metrics = self.get_current_metrics()
         results = {
-            'optimizations_applied': [],
-            'improvements_detected': 0,
-            'before_metrics': current_metrics.copy()
+            "optimizations_applied": [],
+            "improvements_detected": 0,
+            "before_metrics": current_metrics.copy(),
         }
 
         # Применяем оптимизации в зависимости от метрик
         optimizations_performed = []
 
         # Высокая загрузка CPU
-        if current_metrics.get('cpu_percent', 0) > self.thresholds['cpu_percent']:
+        if current_metrics.get("cpu_percent", 0) > self.thresholds["cpu_percent"]:
             print("⚠️ Высокая загрузка CPU, применяем оптимизации...")
             cpu_opt_results = self.resource_manager.optimize_cpu_usage()
-            optimizations_performed.append({
-                'type': 'cpu_optimization',
-                'results': cpu_opt_results,
-                'trigger_metric': 'cpu_percent',
-                'value': current_metrics['cpu_percent']
-            })
+            optimizations_performed.append(
+                {
+                    "type": "cpu_optimization",
+                    "results": cpu_opt_results,
+                    "trigger_metric": "cpu_percent",
+                    "value": current_metrics["cpu_percent"],
+                }
+            )
 
         # Высокое использование памяти
-        if current_metrics.get('memory_percent', 0) > self.thresholds['memory_percent']:
+        if current_metrics.get("memory_percent", 0) > self.thresholds["memory_percent"]:
             print("⚠️ Высокое использование памяти, применяем оптимизации...")
             mem_opt_results = self.resource_manager.optimize_memory_usage()
-            optimizations_performed.append({
-                'type': 'memory_optimization',
-                'results': mem_opt_results,
-                'trigger_metric': 'memory_percent',
-                'value': current_metrics['memory_percent']
-            })
+            optimizations_performed.append(
+                {
+                    "type": "memory_optimization",
+                    "results": mem_opt_results,
+                    "trigger_metric": "memory_percent",
+                    "value": current_metrics["memory_percent"],
+                }
+            )
 
         # Запускаем комплексную оптимизацию
         print("🔄 Запуск комплексной оптимизации...")
-        comp_opt_results = self.orchestrator.start_comprehensive_optimization([
-            "core_utils", "spm_simulator", "image_analyzer"
-        ])
-        optimizations_performed.append({
-            'type': 'comprehensive_optimization',
-            'results': comp_opt_results,
-            'trigger_metric': 'overall_performance',
-            'value': 'N/A'
-        })
+        comp_opt_results = self.orchestrator.start_comprehensive_optimization(
+            ["core_utils", "spm_simulator", "image_analyzer"]
+        )
+        optimizations_performed.append(
+            {
+                "type": "comprehensive_optimization",
+                "results": comp_opt_results,
+                "trigger_metric": "overall_performance",
+                "value": "N/A",
+            }
+        )
 
         # Обновляем статистику
-        self.stats['optimizations_applied'] += len(optimizations_performed)
+        self.stats["optimizations_applied"] += len(optimizations_performed)
 
         # Проверяем улучшения
         after_metrics = self.get_current_metrics()
-        results['after_metrics'] = after_metrics
-        results['optimizations_applied'] = optimizations_performed
+        results["after_metrics"] = after_metrics
+        results["optimizations_applied"] = optimizations_performed
 
         # Подсчитываем улучшения
-        for metric_name in ['cpu_percent', 'memory_percent', 'resource_efficiency', 'optimization_score']:
-            before_val = results['before_metrics'].get(metric_name, 0)
-            after_val = results['after_metrics'].get(metric_name, 0)
+        for metric_name in [
+            "cpu_percent",
+            "memory_percent",
+            "resource_efficiency",
+            "optimization_score",
+        ]:
+            before_val = results["before_metrics"].get(metric_name, 0)
+            after_val = results["after_metrics"].get(metric_name, 0)
 
-            if metric_name in ['cpu_percent', 'memory_percent']:
+            if metric_name in ["cpu_percent", "memory_percent"]:
                 # Для этих метрик улучшение - снижение значения
                 if after_val < before_val:
-                    results['improvements_detected'] += 1
+                    results["improvements_detected"] += 1
             else:
                 # Для этих метрик улучшение - увеличение значения
                 if after_val > before_val:
-                    results['improvements_detected'] += 1
+                    results["improvements_detected"] += 1
 
-        self.stats['performance_improvements'] += results['improvements_detected']
+        self.stats["performance_improvements"] += results["improvements_detected"]
 
         return results
-
 
     def export_to_csv(self, output_path: Optional[str] = None) -> str:
         """
@@ -604,11 +643,15 @@ class PerformanceMonitoringCenter:
         all_metrics = []
         if self.metric_history:
             # Определяем общую длину (берем самую длинную серию)
-            max_len = max(len(series) for series in self.metric_history.values()) if self.metric_history else 0
+            max_len = (
+                max(len(series) for series in self.metric_history.values())
+                if self.metric_history
+                else 0
+            )
 
             # Создаем строки данных
             for i in range(max_len):
-                row = {'index': i}
+                row = {"index": i}
                 for metric_name, series in self.metric_history.items():
                     if i < len(series):
                         row[metric_name] = series[i]
@@ -625,18 +668,20 @@ class PerformanceMonitoringCenter:
         print(f"📊 История метрик экспортирована в CSV: {output_path}")
         return output_path
 
+
 def default_alert_handler(alert: PerformanceAlert):
     """Обработчик оповещений по умолчанию"""
     severity_colors = {
-        'low': '\033[92m',      # Green
-        'medium': '\033[93m',   # Yellow
-        'high': '\033[91m',     # Red
-        'critical': '\033[95m'  # Magenta
+        "low": "\033[92m",  # Green
+        "medium": "\033[93m",  # Yellow
+        "high": "\033[91m",  # Red
+        "critical": "\033[95m",  # Magenta
     }
-    reset_color = '\033[0m'
+    reset_color = "\033[0m"
 
-    color = severity_colors.get(alert.severity, '')
+    color = severity_colors.get(alert.severity, "")
     print(f"{color}[{alert.severity.upper()} - {alert.category}] {alert.message}{reset_color}")
+
 
 def main():
     """Главная функция для демонстрации возможностей центра мониторинга"""
@@ -696,9 +741,11 @@ def main():
 
             # Периодически показываем статус
             current_metrics = pmc.get_current_metrics()
-            print(f"\n📊 Текущее состояние (CPU: {current_metrics['cpu_percent']:.1f}%, "
-                  f"MEM: {current_metrics['memory_percent']:.1f}%, "
-                  f"EFF: {current_metrics['resource_efficiency']:.1f}%)")
+            print(
+                f"\n📊 Текущее состояние (CPU: {current_metrics['cpu_percent']:.1f}%, "
+                f"MEM: {current_metrics['memory_percent']:.1f}%, "
+                f"EFF: {current_metrics['resource_efficiency']:.1f}%)"
+            )
 
     except KeyboardInterrupt:
         print("\n🛑 Остановка мониторинга...")
@@ -706,6 +753,6 @@ def main():
         pmc.realtime_dashboard.stop_monitoring()
         print("✅ Мониторинг остановлен")
 
+
 if __name__ == "__main__":
     main()
-

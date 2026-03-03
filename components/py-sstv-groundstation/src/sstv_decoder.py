@@ -11,6 +11,7 @@ import numpy as np
 from typing import Optional, Tuple
 from PIL import Image
 
+
 class SSTVDecoder:
     """
     Класс для декодирования SSTV-сигналов
@@ -18,12 +19,10 @@ class SSTVDecoder:
     с использованием библиотеки pysstv.
     """
 
-
     def __init__(self):
         """Инициализирует декодер SSTV"""
         self.decoded_image = None
         self.signal_data = None
-
 
     def decode_from_audio(self, audio_file: str) -> Optional[Image.Image]:
         """
@@ -41,7 +40,7 @@ class SSTVDecoder:
             import wave
 
             # Открываем аудиофайл
-            with wave.open(audio_file, 'r') as wav:
+            with wave.open(audio_file, "r") as wav:
                 frames = wav.readframes(wav.getnframes())
                 sample_width = wav.getsampwidth()
                 framerate = wav.getframerate()
@@ -62,7 +61,7 @@ class SSTVDecoder:
 
                 # Здесь будет реализация декодирования SSTV
                 # Возвращаем заглушку изображения
-                decoded_img = Image.new('RGB', (320, 240), color='blue')
+                decoded_img = Image.new("RGB", (320, 240), color="blue")
                 self.decoded_image = decoded_img
 
                 return decoded_img
@@ -73,7 +72,6 @@ class SSTVDecoder:
         except Exception as e:
             print(f"Ошибка при декодировании SSTV-сигнала: {str(e)}")
             return None
-
 
     def save_decoded_image(self, filepath: str) -> bool:
         """
@@ -97,6 +95,7 @@ class SSTVDecoder:
             print(f"Ошибка при сохранении изображения: {str(e)}")
             return False
 
+
 def convert_audio_to_image(audio_data: np.ndarray, sample_rate: int) -> Optional[Image.Image]:
     """
     Конвертирует аудиоданные в изображение
@@ -115,6 +114,7 @@ def convert_audio_to_image(audio_data: np.ndarray, sample_rate: int) -> Optional
     img = Image.fromarray(img_array)
     return img
 
+
 def detect_sstv_signal(audio_data: np.ndarray, sample_rate: int) -> Tuple[bool, float]:
     """
     Обнаруживает SSTV-сигнал в аудиоданных
@@ -130,4 +130,3 @@ def detect_sstv_signal(audio_data: np.ndarray, sample_rate: int) -> Tuple[bool, 
     # В реальной реализации анализируется наличие характерных тонов
     print("Поиск SSTV-сигнала в аудиоданных...")
     return True, 0.0  # Предполагаем, что сигнал найден
-

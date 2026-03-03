@@ -28,9 +28,11 @@ import tracemalloc
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 import numpy as np
 
+
 @dataclass
 class BenchmarkResult:
     """Результат бенчмарка"""
+
     name: str
     execution_time: float
     memory_used_mb: float
@@ -40,21 +42,23 @@ class BenchmarkResult:
     parameters: Dict[str, Any]
     result_value: Any = None
 
+
 @dataclass
 class PerformanceComparison:
     """Сравнение производительности"""
+
     test_name: str
     baseline_result: BenchmarkResult
     comparison_result: BenchmarkResult
     improvement_percent: float
     is_significant: bool
 
+
 class PerformanceBenchmarkSuite:
     """
     Класс набора бенчмарков производительности
     Обеспечивает тестирование производительности, сравнение и анализ результатов.
     """
-
 
     def __init__(self, output_dir: str = "benchmarks"):
         """
@@ -72,18 +76,16 @@ class PerformanceBenchmarkSuite:
         self.monitoring = False
         self.monitoring_thread = None
         self.monitoring_data = {
-            'timestamps': [],
-            'cpu_percent': [],
-            'memory_mb': [],
-            'disk_io': [],
-            'network_io': []
+            "timestamps": [],
+            "cpu_percent": [],
+            "memory_mb": [],
+            "disk_io": [],
+            "network_io": [],
         }
 
-
-    def measure_performance(self, func: Callable, *args,
-
-                          iterations: int = 10, warmup: int = 2,
-                          **kwargs) -> List[BenchmarkResult]:
+    def measure_performance(
+        self, func: Callable, *args, iterations: int = 10, warmup: int = 2, **kwargs
+    ) -> List[BenchmarkResult]:
         """
         Измеряет производительность функции
 
@@ -131,8 +133,8 @@ class PerformanceBenchmarkSuite:
                 cpu_percent=cpu_after,
                 iterations=1,
                 timestamp=datetime.now(),
-                parameters={'iteration': i, 'args_count': len(args), 'kwargs_count': len(kwargs)},
-                result_value=result_value
+                parameters={"iteration": i, "args_count": len(args), "kwargs_count": len(kwargs)},
+                result_value=result_value,
             )
 
             results.append(result)
@@ -140,11 +142,9 @@ class PerformanceBenchmarkSuite:
 
         return results
 
-
-
-    def benchmark_function(self, name: str, func: Callable, *args,
-                          iterations: int = 100, warmup: int = 10,
-                          **kwargs) -> Dict[str, Any]:
+    def benchmark_function(
+        self, name: str, func: Callable, *args, iterations: int = 100, warmup: int = 10, **kwargs
+    ) -> Dict[str, Any]:
         """
         Выполняет бенчмарк функции
 
@@ -202,28 +202,25 @@ class PerformanceBenchmarkSuite:
         avg_cpu = statistics.mean(cpu_usages)
 
         result = {
-            'name': name,
-            'function': func.__name__,
-            'iterations': iterations,
-            'warmup': warmup,
-            'timing_stats': {
-                'avg_seconds': avg_time,
-                'min_seconds': min_time,
-                'max_seconds': max_time,
-                'std_dev_seconds': std_dev,
-                'total_seconds': sum(times)
+            "name": name,
+            "function": func.__name__,
+            "iterations": iterations,
+            "warmup": warmup,
+            "timing_stats": {
+                "avg_seconds": avg_time,
+                "min_seconds": min_time,
+                "max_seconds": max_time,
+                "std_dev_seconds": std_dev,
+                "total_seconds": sum(times),
             },
-            'memory_stats': {
-                'avg_mb': avg_memory,
-                'max_mb': max_memory,
-                'measurements_count': len(memory_usages)
+            "memory_stats": {
+                "avg_mb": avg_memory,
+                "max_mb": max_memory,
+                "measurements_count": len(memory_usages),
             },
-            'cpu_stats': {
-                'avg_percent': avg_cpu,
-                'measurements_count': len(cpu_usages)
-            },
-            'throughput_ops_per_second': 1 / avg_time if avg_time > 0 else 0,
-            'timestamp': datetime.now().isoformat()
+            "cpu_stats": {"avg_percent": avg_cpu, "measurements_count": len(cpu_usages)},
+            "throughput_ops_per_second": 1 / avg_time if avg_time > 0 else 0,
+            "timestamp": datetime.now().isoformat(),
         }
 
         # Сохраняем как BenchmarkResult для внутреннего использования
@@ -234,21 +231,21 @@ class PerformanceBenchmarkSuite:
             cpu_percent=avg_cpu,
             iterations=iterations,
             timestamp=datetime.now(),
-            parameters={
-                'function': func.__name__,
-                'iterations': iterations,
-                'warmup': warmup
-            }
+            parameters={"function": func.__name__, "iterations": iterations, "warmup": warmup},
         )
         self.results.append(benchmark_result)
 
         return result
 
-
-    def benchmark_parallel_execution(self, name: str, func: Callable, *args,
-                                   thread_counts: List[int] = [1, 2, 4, 8],
-                                   iterations_per_thread: int = 10,
-                                   **kwargs) -> Dict[str, Any]:
+    def benchmark_parallel_execution(
+        self,
+        name: str,
+        func: Callable,
+        *args,
+        thread_counts: List[int] = [1, 2, 4, 8],
+        iterations_per_thread: int = 10,
+        **kwargs,
+    ) -> Dict[str, Any]:
         """
         Бенчмарка параллельного выполнения
 
@@ -276,7 +273,9 @@ class PerformanceBenchmarkSuite:
 
             # Тестирование
             with ThreadPoolExecutor(max_workers=num_threads) as executor:
-                futures = [executor.submit(func, *args, **kwargs) for _ in range(iterations_per_thread)]
+                futures = [
+                    executor.submit(func, *args, **kwargs) for _ in range(iterations_per_thread)
+                ]
                 # Ждем завершения всех задач
                 for future in futures:
                     future.result()
@@ -285,21 +284,20 @@ class PerformanceBenchmarkSuite:
             execution_time = end_time - start_time
 
             results[num_threads] = {
-                'execution_time': execution_time,
-                'throughput': iterations_per_thread / execution_time if execution_time > 0 else 0,
-                'threads': num_threads
+                "execution_time": execution_time,
+                "throughput": iterations_per_thread / execution_time if execution_time > 0 else 0,
+                "threads": num_threads,
             }
 
         parallel_result = {
-            'name': f"{name}_parallel",
-            'results': results,
-            'thread_counts': thread_counts,
-            'iterations_per_thread': iterations_per_thread,
-            'timestamp': datetime.now().isoformat()
+            "name": f"{name}_parallel",
+            "results": results,
+            "thread_counts": thread_counts,
+            "iterations_per_thread": iterations_per_thread,
+            "timestamp": datetime.now().isoformat(),
         }
 
         return parallel_result
-
 
     def benchmark_memory_usage(self, func: Callable, *args, **kwargs) -> Dict[str, Any]:
         """
@@ -326,18 +324,17 @@ class PerformanceBenchmarkSuite:
         tracemalloc.stop()
 
         memory_result = {
-            'function': func.__name__,
-            'current_memory_mb': current / (1024 * 1024),
-            'peak_memory_mb': peak / (1024 * 1024),
-            'timestamp': datetime.now().isoformat()
+            "function": func.__name__,
+            "current_memory_mb": current / (1024 * 1024),
+            "peak_memory_mb": peak / (1024 * 1024),
+            "timestamp": datetime.now().isoformat(),
         }
-
 
         return memory_result
 
-
-    def compare_algorithms(self, algorithms: Dict[str, Callable],
-                          test_data: Any, iterations: int = 50, **kwargs) -> List[PerformanceComparison]:
+    def compare_algorithms(
+        self, algorithms: Dict[str, Callable], test_data: Any, iterations: int = 50, **kwargs
+    ) -> List[PerformanceComparison]:
         """
         Сравнивает производительность алгоритмов
 
@@ -356,11 +353,7 @@ class PerformanceBenchmarkSuite:
         for name, func in algorithms.items():
             # Выполняем бенчмарк для каждого алгоритма
             result = self.benchmark_function(
-                f"algorithm_{name}",
-                func,
-                test_data,
-                iterations=iterations,
-                **kwargs
+                f"algorithm_{name}", func, test_data, iterations=iterations, **kwargs
             )
             algorithm_results[name] = result
 
@@ -373,8 +366,8 @@ class PerformanceBenchmarkSuite:
         for name, result in algorithm_results.items():
             if name != base_name:
                 # Сравниваем по времени выполнения
-                base_time = base_result['timing_stats']['avg_seconds']
-                current_time = result['timing_stats']['avg_seconds']
+                base_time = base_result["timing_stats"]["avg_seconds"]
+                current_time = result["timing_stats"]["avg_seconds"]
 
                 improvement = ((base_time - current_time) / base_time) * 100 if base_time > 0 else 0
                 is_significant = abs(improvement) > 5  # Различие более 5% считаем значимым
@@ -384,30 +377,29 @@ class PerformanceBenchmarkSuite:
                     baseline_result=BenchmarkResult(
                         name=base_name,
                         execution_time=base_time,
-                        memory_used_mb=base_result['memory_stats']['avg_mb'],
-                        cpu_percent=base_result['cpu_stats']['avg_percent'],
+                        memory_used_mb=base_result["memory_stats"]["avg_mb"],
+                        cpu_percent=base_result["cpu_stats"]["avg_percent"],
                         iterations=iterations,
                         timestamp=datetime.now(),
-                        parameters={}
+                        parameters={},
                     ),
                     comparison_result=BenchmarkResult(
                         name=name,
                         execution_time=current_time,
-                        memory_used_mb=result['memory_stats']['avg_mb'],
-                        cpu_percent=result['cpu_stats']['avg_percent'],
+                        memory_used_mb=result["memory_stats"]["avg_mb"],
+                        cpu_percent=result["cpu_stats"]["avg_percent"],
                         iterations=iterations,
                         timestamp=datetime.now(),
-                        parameters={}
+                        parameters={},
                     ),
                     improvement_percent=improvement,
-                    is_significant=is_significant
+                    is_significant=is_significant,
                 )
 
                 comparisons.append(comparison)
                 self.comparisons.append(comparison)
 
         return comparisons
-
 
     def start_system_monitoring(self, interval: float = 1.0):
         """
@@ -422,15 +414,15 @@ class PerformanceBenchmarkSuite:
         self.monitoring = True
 
         def monitor():
-                    while self.monitoring:
+            while self.monitoring:
                 try:
                     # Замеряем системные показатели
                     cpu_percent = psutil.cpu_percent()
                     memory_info = psutil.virtual_memory()
 
-                    self.monitoring_data['timestamps'].append(datetime.now())
-                    self.monitoring_data['cpu_percent'].append(cpu_percent)
-                    self.monitoring_data['memory_mb'].append(memory_info.used / (1024 * 1024))
+                    self.monitoring_data["timestamps"].append(datetime.now())
+                    self.monitoring_data["cpu_percent"].append(cpu_percent)
+                    self.monitoring_data["memory_mb"].append(memory_info.used / (1024 * 1024))
 
                     time.sleep(interval)
 
@@ -441,13 +433,11 @@ class PerformanceBenchmarkSuite:
         self.monitoring_thread = threading.Thread(target=monitor, daemon=True)
         self.monitoring_thread.start()
 
-
     def stop_system_monitoring(self):
         """Останавливает мониторинг системы"""
         self.monitoring = False
         if self.monitoring_thread:
             self.monitoring_thread.join(timeout=2)
-
 
     def generate_performance_report(self, output_path: str = None) -> str:
         """
@@ -460,58 +450,64 @@ class PerformanceBenchmarkSuite:
             Путь к сохраненному отчету
         """
         if output_path is None:
-            output_path = str(self.output_dir / f"performance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
+            output_path = str(
+                self.output_dir
+                / f"performance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            )
 
         # Подготавливаем данные для отчета
         report_data = {
-            'timestamp': datetime.now().isoformat(),
-            'total_benchmarks': len(self.results),
-            'total_comparisons': len(self.comparisons),
-            'benchmark_results': [
+            "timestamp": datetime.now().isoformat(),
+            "total_benchmarks": len(self.results),
+            "total_comparisons": len(self.comparisons),
+            "benchmark_results": [
                 {
-                    'name': r.name,
-                    'execution_time': r.execution_time,
-                    'memory_used_mb': r.memory_used_mb,
-                    'cpu_percent': r.cpu_percent,
-                    'iterations': r.iterations,
-                    'timestamp': r.timestamp.isoformat(),
-                    'parameters': r.parameters
+                    "name": r.name,
+                    "execution_time": r.execution_time,
+                    "memory_used_mb": r.memory_used_mb,
+                    "cpu_percent": r.cpu_percent,
+                    "iterations": r.iterations,
+                    "timestamp": r.timestamp.isoformat(),
+                    "parameters": r.parameters,
                 }
                 for r in self.results
             ],
-            'comparisons': [
+            "comparisons": [
                 {
-                    'test_name': c.test_name,
-                    'baseline': {
-                        'name': c.baseline_result.name,
-                        'execution_time': c.baseline_result.execution_time,
-                        'memory_used_mb': c.baseline_result.memory_used_mb,
-                        'cpu_percent': c.baseline_result.cpu_percent
+                    "test_name": c.test_name,
+                    "baseline": {
+                        "name": c.baseline_result.name,
+                        "execution_time": c.baseline_result.execution_time,
+                        "memory_used_mb": c.baseline_result.memory_used_mb,
+                        "cpu_percent": c.baseline_result.cpu_percent,
                     },
-                    'comparison': {
-                        'name': c.comparison_result.name,
-                        'execution_time': c.comparison_result.execution_time,
-                        'memory_used_mb': c.comparison_result.memory_used_mb,
-                        'cpu_percent': c.comparison_result.cpu_percent
+                    "comparison": {
+                        "name": c.comparison_result.name,
+                        "execution_time": c.comparison_result.execution_time,
+                        "memory_used_mb": c.comparison_result.memory_used_mb,
+                        "cpu_percent": c.comparison_result.cpu_percent,
                     },
-                    'improvement_percent': c.improvement_percent,
-                    'is_significant': c.is_significant
+                    "improvement_percent": c.improvement_percent,
+                    "is_significant": c.is_significant,
                 }
                 for c in self.comparisons
             ],
-            'aggregated_stats': self._calculate_aggregated_stats(),
-            'monitoring_data': {
-                'samples_count': len(self.monitoring_data['timestamps']),
-                'avg_cpu_percent': statistics.mean(self.monitoring_data['cpu_percent']) if self.monitoring_data['cpu_percent'] else 0,
-                'avg_memory_mb': statistics.mean(self.monitoring_data['memory_mb']) if self.monitoring_data['memory_mb'] else 0
-            }
+            "aggregated_stats": self._calculate_aggregated_stats(),
+            "monitoring_data": {
+                "samples_count": len(self.monitoring_data["timestamps"]),
+                "avg_cpu_percent": statistics.mean(self.monitoring_data["cpu_percent"])
+                if self.monitoring_data["cpu_percent"]
+                else 0,
+                "avg_memory_mb": statistics.mean(self.monitoring_data["memory_mb"])
+                if self.monitoring_data["memory_mb"]
+                else 0,
+            },
         }
 
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(report_data, f, indent=2, ensure_ascii=False, default=str)
 
         return output_path
-
 
     def _calculate_aggregated_stats(self) -> Dict[str, Any]:
         """Рассчитывает агрегированные статистики"""
@@ -523,26 +519,25 @@ class PerformanceBenchmarkSuite:
         cpu_percentages = [r.cpu_percent for r in self.results]
 
         return {
-            'execution_time': {
-                'avg': statistics.mean(execution_times),
-                'min': min(execution_times),
-                'max': max(execution_times),
-                'median': statistics.median(execution_times),
-                'std_dev': statistics.stdev(execution_times) if len(execution_times) > 1 else 0
+            "execution_time": {
+                "avg": statistics.mean(execution_times),
+                "min": min(execution_times),
+                "max": max(execution_times),
+                "median": statistics.median(execution_times),
+                "std_dev": statistics.stdev(execution_times) if len(execution_times) > 1 else 0,
             },
-            'memory_usage': {
-                'avg_mb': statistics.mean(memory_usages),
-                'min_mb': min(memory_usages),
-                'max_mb': max(memory_usages),
-                'median_mb': statistics.median(memory_usages)
+            "memory_usage": {
+                "avg_mb": statistics.mean(memory_usages),
+                "min_mb": min(memory_usages),
+                "max_mb": max(memory_usages),
+                "median_mb": statistics.median(memory_usages),
             },
-            'cpu_usage': {
-                'avg_percent': statistics.mean(cpu_percentages),
-                'min_percent': min(cpu_percentages),
-                'max_percent': max(cpu_percentages)
-            }
+            "cpu_usage": {
+                "avg_percent": statistics.mean(cpu_percentages),
+                "min_percent": min(cpu_percentages),
+                "max_percent": max(cpu_percentages),
+            },
         }
-
 
     def visualize_benchmark_results(self, output_path: str = None) -> str:
         """
@@ -559,59 +554,68 @@ class PerformanceBenchmarkSuite:
             return ""
 
         if output_path is None:
-            output_path = str(self.output_dir / f"benchmark_visualization_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png")
+            output_path = str(
+                self.output_dir
+                / f"benchmark_visualization_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+            )
 
         # Подготовка данных
-        df = pd.DataFrame([
-            {
-                'name': r.name,
-                'execution_time': r.execution_time,
-                'memory_used_mb': r.memory_used_mb,
-                'cpu_percent': r.cpu_percent,
-                'iterations': r.iterations
-            }
-            for r in self.results
-        ])
+        df = pd.DataFrame(
+            [
+                {
+                    "name": r.name,
+                    "execution_time": r.execution_time,
+                    "memory_used_mb": r.memory_used_mb,
+                    "cpu_percent": r.cpu_percent,
+                    "iterations": r.iterations,
+                }
+                for r in self.results
+            ]
+        )
 
         # Создаем фигуру с несколькими подграфиками
         fig, axes = plt.subplots(2, 2, figsize=(15, 10))
-        fig.suptitle('Результаты бенчмарков производительности', fontsize=16)
+        fig.suptitle("Результаты бенчмарков производительности", fontsize=16)
 
         # 1. Время выполнения
-        axes[0, 0].bar(range(len(df)), df['execution_time'], color='skyblue')
-        axes[0, 0].set_title('Время выполнения по тестам')
-        axes[0, 0].set_ylabel('Время (сек)')
+        axes[0, 0].bar(range(len(df)), df["execution_time"], color="skyblue")
+        axes[0, 0].set_title("Время выполнения по тестам")
+        axes[0, 0].set_ylabel("Время (сек)")
         axes[0, 0].set_xticks(range(len(df)))
-        axes[0, 0].set_xticklabels(df['name'], rotation=45, ha='right')
+        axes[0, 0].set_xticklabels(df["name"], rotation=45, ha="right")
 
         # 2. Использование памяти
-        axes[0, 1].bar(range(len(df)), df['memory_used_mb'], color='lightgreen')
-        axes[0, 1].set_title('Использование памяти по тестам')
-        axes[0, 1].set_ylabel('Память (MB)')
+        axes[0, 1].bar(range(len(df)), df["memory_used_mb"], color="lightgreen")
+        axes[0, 1].set_title("Использование памяти по тестам")
+        axes[0, 1].set_ylabel("Память (MB)")
         axes[0, 1].set_xticks(range(len(df)))
-        axes[0, 1].set_xticklabels(df['name'], rotation=45, ha='right')
+        axes[0, 1].set_xticklabels(df["name"], rotation=45, ha="right")
 
         # 3. Использование CPU
-        axes[1, 0].bar(range(len(df)), df['cpu_percent'], color='coral')
-        axes[1, 0].set_title('Использование CPU по тестам')
-        axes[1, 0].set_ylabel('CPU (%)')
+        axes[1, 0].bar(range(len(df)), df["cpu_percent"], color="coral")
+        axes[1, 0].set_title("Использование CPU по тестам")
+        axes[1, 0].set_ylabel("CPU (%)")
         axes[1, 0].set_xticks(range(len(df)))
-        axes[1, 0].set_xticklabels(df['name'], rotation=45, ha='right')
+        axes[1, 0].set_xticklabels(df["name"], rotation=45, ha="right")
 
         # 4. Сравнение времени выполнения и памяти (scatter plot)
-        scatter = axes[1, 1].scatter(df['execution_time'], df['memory_used_mb'],
-                                     c=df['cpu_percent'], cmap='viridis', alpha=0.7)
-        axes[1, 1].set_title('Сравнение времени и памяти')
-        axes[1, 1].set_xlabel('Время выполнения (сек)')
-        axes[1, 1].set_ylabel('Использование памяти (MB)')
-        plt.colorbar(scatter, ax=axes[1, 1], label='CPU (%)')
+        scatter = axes[1, 1].scatter(
+            df["execution_time"],
+            df["memory_used_mb"],
+            c=df["cpu_percent"],
+            cmap="viridis",
+            alpha=0.7,
+        )
+        axes[1, 1].set_title("Сравнение времени и памяти")
+        axes[1, 1].set_xlabel("Время выполнения (сек)")
+        axes[1, 1].set_ylabel("Использование памяти (MB)")
+        plt.colorbar(scatter, ax=axes[1, 1], label="CPU (%)")
 
         plt.tight_layout()
-        plt.savefig(output_path, dpi=300, bbox_inches='tight')
+        plt.savefig(output_path, dpi=300, bbox_inches="tight")
         plt.close()
 
         return output_path
-
 
     def get_performance_recommendations(self) -> List[str]:
         """
@@ -631,10 +635,14 @@ class PerformanceBenchmarkSuite:
         avg_cpu = statistics.mean(r.cpu_percent for r in self.results)
 
         if avg_time > 1.0:  # Если среднее время больше 1 секунды
-            recommendations.append("Среднее время выполнения превышает 1 секунду. Рассмотрите оптимизацию.")
+            recommendations.append(
+                "Среднее время выполнения превышает 1 секунду. Рассмотрите оптимизацию."
+            )
 
         if avg_memory > 100:  # Если среднее использование памяти больше 100MB
-            recommendations.append("Среднее использование памяти превышает 100MB. Рассмотрите оптимизацию.")
+            recommendations.append(
+                "Среднее использование памяти превышает 100MB. Рассмотрите оптимизацию."
+            )
 
         if avg_cpu > 80:  # Если среднее использование CPU больше 80%
             recommendations.append("Средняя загрузка CPU превышает 80%. Рассмотрите оптимизацию.")
@@ -646,21 +654,27 @@ class PerformanceBenchmarkSuite:
             worse_performers = [c for c in significant_comparisons if c.improvement_percent < 0]
 
             if better_performers:
-                recommendations.append(f"Найдено {len(better_performers)} алгоритмов с лучшей производительностью.")
+                recommendations.append(
+                    f"Найдено {len(better_performers)} алгоритмов с лучшей производительностью."
+                )
 
             if worse_performers:
-                recommendations.append(f"Найдено {len(worse_performers)} алгоритмов с худшей производительностью.")
+                recommendations.append(
+                    f"Найдено {len(worse_performers)} алгоритмов с худшей производительностью."
+                )
 
         if not recommendations:
-            recommendations.append("Производительность системы в норме. Рекомендаций по оптимизации нет.")
+            recommendations.append(
+                "Производительность системы в норме. Рекомендаций по оптимизации нет."
+            )
 
         return recommendations
+
 
 class BenchmarkDecorator:
     """
     Декоратор для бенчмаркинга функций
     """
-
 
     def __init__(self, benchmark_suite: PerformanceBenchmarkSuite):
         """
@@ -670,7 +684,6 @@ class BenchmarkDecorator:
             benchmark_suite: Экземпляр набора бенчмарков
         """
         self.benchmark_suite = benchmark_suite
-
 
     def __call__(self, func: Callable, iterations: int = 10, warmup: int = 2) -> Callable:
         """
@@ -685,16 +698,17 @@ class BenchmarkDecorator:
         Returns:
             Обернутая функция
         """
+
         @wraps(func)
         def wrapper(*args, **kwargs):
             # Выполняем бенчмарк
-                    result = self.benchmark_suite.benchmark_function(
+            result = self.benchmark_suite.benchmark_function(
                 name=f"decorated_{func.__name__}",
                 func=func,
                 *args,
                 iterations=iterations,
                 warmup=warmup,
-                **kwargs
+                **kwargs,
             )
 
             print(f"\n=== Результаты бенчмарка для {func.__name__} ===")
@@ -707,6 +721,7 @@ class BenchmarkDecorator:
             return func(*args, **kwargs)
 
         return wrapper
+
 
 def main():
     """Главная функция для демонстрации возможностей бенчмарка"""
@@ -728,14 +743,12 @@ def main():
         """Медленное вычисление для тестирования"""
         result = 0
         for i in range(n):
-            result += i ** 2
+            result += i**2
         return result
-
 
     def fast_calculation(n):
         """Быстрое вычисление для тестирования"""
-        return sum(i ** 2 for i in range(n))
-
+        return sum(i**2 for i in range(n))
 
     def memory_intensive_operation(size):
         """Операция с интенсивным использованием памяти"""
@@ -746,29 +759,20 @@ def main():
     # Выполняем бенчмарк для медленной функции
     print("\nБенчмарк медленной функции...")
     slow_result = benchmark_suite.benchmark_function(
-        "slow_calculation",
-        slow_calculation,
-        10000,
-        iterations=50
+        "slow_calculation", slow_calculation, 10000, iterations=50
     )
     print(f"Среднее время: {slow_result['timing_stats']['avg_seconds']:.6f} сек")
 
     # Выполняем бенчмарк для быстрой функции
     print("\nБенчмарк быстрой функции...")
     fast_result = benchmark_suite.benchmark_function(
-        "fast_calculation",
-        fast_calculation,
-        10000,
-        iterations=50
+        "fast_calculation", fast_calculation, 10000, iterations=50
     )
     print(f"Среднее время: {fast_result['timing_stats']['avg_seconds']:.6f} сек")
 
     # Бенчмарк использования памяти
     print("\nБенчмарк использования памяти...")
-    memory_result = benchmark_suite.benchmark_memory_usage(
-        memory_intensive_operation,
-        50000
-    )
+    memory_result = benchmark_suite.benchmark_memory_usage(memory_intensive_operation, 50000)
     print(f"Пик использования памяти: {memory_result['peak_memory_mb']:.2f} MB")
 
     # Бенчмарк параллельного выполнения
@@ -778,26 +782,27 @@ def main():
         slow_calculation,
         5000,
         thread_counts=[1, 2, 4],
-        iterations_per_thread=10
+        iterations_per_thread=10,
     )
 
-    for threads, result in parallel_result['results'].items():
-        print(f"  {threads} потоков: {result['execution_time']:.4f} сек, "
-              f"пропускная способность: {result['throughput']:.2f} ops/sec")
+    for threads, result in parallel_result["results"].items():
+        print(
+            f"  {threads} потоков: {result['execution_time']:.4f} сек, "
+            f"пропускная способность: {result['throughput']:.2f} ops/sec"
+        )
 
     # Сравниваем алгоритмы
     print("\nСравнение алгоритмов...")
-    algorithms = {
-        'slow': slow_calculation,
-        'fast': fast_calculation
-    }
+    algorithms = {"slow": slow_calculation, "fast": fast_calculation}
 
     comparisons = benchmark_suite.compare_algorithms(algorithms, 5000, iterations=20)
     print(f"Выполнено {len(comparisons)} сравнений")
 
     for comparison in comparisons:
-        print(f"  {comparison.test_name}: {comparison.improvement_percent:+.2f}% "
-              f"({'значимо' if comparison.is_significant else 'незначимо'})")
+        print(
+            f"  {comparison.test_name}: {comparison.improvement_percent:+.2f}% "
+            f"({'значимо' if comparison.is_significant else 'незначимо'})"
+        )
 
     # Останавливаем мониторинг
     benchmark_suite.stop_system_monitoring()
@@ -821,15 +826,13 @@ def main():
     for rec in recommendations:
         print(f"  - {rec}")
 
-
     # Пример использования декоратора
     print("\nПример использования декоратора бенчмарка...")
     benchmark_decorator = BenchmarkDecorator(benchmark_suite)
 
     @benchmark_decorator
-
     def decorated_function(x):
-            return x ** 2
+        return x**2
 
     result = decorated_function(100)
     print(f"Результат функции: {result}")
@@ -846,6 +849,6 @@ def main():
     print("- Рекомендации: benchmark_suite.get_performance_recommendations()")
     print("- Декоратор для функций: BenchmarkDecorator")
 
+
 if __name__ == "__main__":
     main()
-

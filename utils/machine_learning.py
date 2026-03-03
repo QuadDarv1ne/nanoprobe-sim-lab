@@ -21,6 +21,7 @@ from typing import Dict, List, Tuple, Optional, Any, Union
 from pathlib import Path
 import json
 
+
 class SurfacePredictionModel:
     """
     Класс для построения предсказательных моделей для данных поверхности
@@ -28,17 +29,15 @@ class SurfacePredictionModel:
     на основе параметров симуляции.
     """
 
-
     def __init__(self):
         """Инициализирует модель предсказания поверхности"""
         self.models = {
-            'regressor': RandomForestRegressor(n_estimators=100, random_state=42),
-            'classifier': RandomForestClassifier(n_estimators=100, random_state=42)
+            "regressor": RandomForestRegressor(n_estimators=100, random_state=42),
+            "classifier": RandomForestClassifier(n_estimators=100, random_state=42),
         }
         self.scaler = StandardScaler()
         self.label_encoder = LabelEncoder()
         self.is_trained = False
-
 
     def prepare_features(self, surface_data: np.ndarray) -> np.ndarray:
         """
@@ -54,40 +53,43 @@ class SurfacePredictionModel:
 
         # Вычисляем статистические признаки
         features = [
-            np.mean(flat_data),      # Средняя высота
-            np.std(flat_data),       # Стандартное отклонение
-            np.min(flat_data),       # Минимальная высота
-            np.max(flat_data),       # Максимальная высота
-            np.median(flat_data),    # Медиана
+            np.mean(flat_data),  # Средняя высота
+            np.std(flat_data),  # Стандартное отклонение
+            np.min(flat_data),  # Минимальная высота
+            np.max(flat_data),  # Максимальная высота
+            np.median(flat_data),  # Медиана
             np.percentile(flat_data, 25),  # 25-й процентиль
             np.percentile(flat_data, 75),  # 75-й процентиль
-            np.var(flat_data),       # Дисперсия
-            np.ptp(flat_data),       # Размах
-            np.sqrt(np.mean(flat_data**2))  # Среднеквадратичное отклонение
+            np.var(flat_data),  # Дисперсия
+            np.ptp(flat_data),  # Размах
+            np.sqrt(np.mean(flat_data**2)),  # Среднеквадратичное отклонение
         ]
 
         # Добавляем геометрические признаки
         rows, cols = surface_data.shape
-        features.extend([
-            rows,                   # Количество строк
-            cols,                   # Количество столбцов
-            rows * cols,            # Общее количество точек
-            rows / cols if cols != 0 else 0  # Соотношение сторон
-        ])
+        features.extend(
+            [
+                rows,  # Количество строк
+                cols,  # Количество столбцов
+                rows * cols,  # Общее количество точек
+                rows / cols if cols != 0 else 0,  # Соотношение сторон
+            ]
+        )
 
         # Добавляем признаки формы поверхности
         grad_x = np.gradient(surface_data, axis=1)
         grad_y = np.gradient(surface_data, axis=0)
-        features.extend([
-            np.mean(grad_x),        # Средний градиент по X
-            np.mean(grad_y),        # Средний градиент по Y
-            np.std(grad_x),         # Стандартное отклонение градиента X
-            np.std(grad_y),         # Стандартное отклонение градиента Y
-            np.mean(np.sqrt(grad_x**2 + grad_y**2))  # Средний модуль градиента
-        ])
+        features.extend(
+            [
+                np.mean(grad_x),  # Средний градиент по X
+                np.mean(grad_y),  # Средний градиент по Y
+                np.std(grad_x),  # Стандартное отклонение градиента X
+                np.std(grad_y),  # Стандартное отклонение градиента Y
+                np.mean(np.sqrt(grad_x**2 + grad_y**2)),  # Средний модуль градиента
+            ]
+        )
 
         return np.array(features).reshape(1, -1)
-
 
     def train_regression_model(self, X: np.ndarray, y: np.ndarray) -> Dict[str, float]:
         """
@@ -108,25 +110,24 @@ class SurfacePredictionModel:
         X_test_scaled = self.scaler.transform(X_test)
 
         # Обучаем модель
-        self.models['regressor'].fit(X_train_scaled, y_train)
+        self.models["regressor"].fit(X_train_scaled, y_train)
 
         # Делаем предсказания
-        y_pred = self.models['regressor'].predict(X_test_scaled)
+        y_pred = self.models["regressor"].predict(X_test_scaled)
 
         # Вычисляем метрики
         mse = mean_squared_error(y_test, y_pred)
         r2 = r2_score(y_test, y_pred)
 
         metrics = {
-            'mse': mse,
-            'rmse': np.sqrt(mse),
-            'r2_score': r2,
-            'mae': np.mean(np.abs(y_test - y_pred))
+            "mse": mse,
+            "rmse": np.sqrt(mse),
+            "r2_score": r2,
+            "mae": np.mean(np.abs(y_test - y_pred)),
         }
 
         self.is_trained = True
         return metrics
-
 
     def train_classification_model(self, X: np.ndarray, y_labels: np.ndarray) -> Dict[str, Any]:
         """
@@ -143,32 +144,30 @@ class SurfacePredictionModel:
         y_encoded = self.label_encoder.fit_transform(y_labels)
 
         # Разделяем данные
-        X_train, X_test, y_train, y_test = train_test_split(X, y_encoded, test_size=0.2, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y_encoded, test_size=0.2, random_state=42
+        )
 
         # Масштабируем признаки
         X_train_scaled = self.scaler.fit_transform(X_train)
         X_test_scaled = self.scaler.transform(X_test)
 
         # Обучаем модель
-        self.models['classifier'].fit(X_train_scaled, y_train)
+        self.models["classifier"].fit(X_train_scaled, y_train)
 
         # Делаем предсказания
-        y_pred = self.models['classifier'].predict(X_test_scaled)
+        y_pred = self.models["classifier"].predict(X_test_scaled)
 
         # Вычисляем метрики
         accuracy = accuracy_score(y_test, y_pred)
         class_report = classification_report(y_test, y_pred, output_dict=True)
 
-        metrics = {
-            'accuracy': accuracy,
-            'classification_report': class_report
-        }
+        metrics = {"accuracy": accuracy, "classification_report": class_report}
 
         self.is_trained = True
         return metrics
 
-
-    def predict(self, surface_data: np.ndarray, task_type: str = 'regression') -> np.ndarray:
+    def predict(self, surface_data: np.ndarray, task_type: str = "regression") -> np.ndarray:
         """
         Делает предсказание для новых данных поверхности
 
@@ -187,15 +186,14 @@ class SurfacePredictionModel:
         features_scaled = self.scaler.transform(features)
 
         # Делаем предсказание
-        if task_type == 'regression':
-            prediction = self.models['regressor'].predict(features_scaled)
-        elif task_type == 'classification':
-            prediction = self.models['classifier'].predict(features_scaled)
+        if task_type == "regression":
+            prediction = self.models["regressor"].predict(features_scaled)
+        elif task_type == "classification":
+            prediction = self.models["classifier"].predict(features_scaled)
         else:
             raise ValueError("task_type должен быть 'regression' или 'classification'")
 
         return prediction
-
 
     def save_model(self, filepath: str):
         """
@@ -205,14 +203,13 @@ class SurfacePredictionModel:
             filepath: Путь для сохранения модели
         """
         model_data = {
-            'models': self.models,
-            'scaler': self.scaler,
-            'label_encoder': self.label_encoder,
-            'is_trained': self.is_trained
+            "models": self.models,
+            "scaler": self.scaler,
+            "label_encoder": self.label_encoder,
+            "is_trained": self.is_trained,
         }
         joblib.dump(model_data, filepath)
         print(f"Модель сохранена: {filepath}")
-
 
     def load_model(self, filepath: str):
         """
@@ -222,11 +219,12 @@ class SurfacePredictionModel:
             filepath: Путь для загрузки модели
         """
         model_data = joblib.load(filepath)
-        self.models = model_data['models']
-        self.scaler = model_data['scaler']
-        self.label_encoder = model_data['label_encoder']
-        self.is_trained = model_data['is_trained']
+        self.models = model_data["models"]
+        self.scaler = model_data["scaler"]
+        self.label_encoder = model_data["label_encoder"]
+        self.is_trained = model_data["is_trained"]
         print(f"Модель загружена: {filepath}")
+
 
 class ImageAnalysisPredictor:
     """
@@ -235,17 +233,24 @@ class ImageAnalysisPredictor:
     и обнаруженных паттернов.
     """
 
-
     def __init__(self):
         """Инициализирует предиктор анализа изображений"""
         self.model = RandomForestRegressor(n_estimators=100, random_state=42)
         self.scaler = StandardScaler()
         self.feature_names = [
-            'mean_intensity', 'std_intensity', 'min_intensity', 'max_intensity',
-            'contrast', 'entropy', 'homogeneity', 'energy', 'correlation',
-            'edge_density', 'texture_complexity', 'average_edge_strength'
+            "mean_intensity",
+            "std_intensity",
+            "min_intensity",
+            "max_intensity",
+            "contrast",
+            "entropy",
+            "homogeneity",
+            "energy",
+            "correlation",
+            "edge_density",
+            "texture_complexity",
+            "average_edge_strength",
         ]
-
 
     def prepare_image_features(self, image_data: np.ndarray) -> np.ndarray:
         """
@@ -266,10 +271,10 @@ class ImageAnalysisPredictor:
 
         # Вычисляем те же признаки, что и в analytics
         features = [
-            np.mean(flat_data),      # mean_intensity
-            np.std(flat_data),       # std_intensity
-            np.min(flat_data),       # min_intensity
-            np.max(flat_data),       # max_intensity
+            np.mean(flat_data),  # mean_intensity
+            np.std(flat_data),  # std_intensity
+            np.min(flat_data),  # min_intensity
+            np.max(flat_data),  # max_intensity
             np.std(flat_data) / np.mean(flat_data) if np.mean(flat_data) != 0 else 0,  # contrast
         ]
 
@@ -302,14 +307,15 @@ class ImageAnalysisPredictor:
         edge_pixels = np.sum(edges > edge_threshold)
         total_pixels = gray.size
 
-        features.extend([
-            edge_pixels / total_pixels,  # edge_density
-            np.std(edges),               # texture_complexity
-            np.mean(edges)               # average_edge_strength
-        ])
+        features.extend(
+            [
+                edge_pixels / total_pixels,  # edge_density
+                np.std(edges),  # texture_complexity
+                np.mean(edges),  # average_edge_strength
+            ]
+        )
 
         return np.array(features).reshape(1, -1)
-
 
     def train(self, X: np.ndarray, y: np.ndarray) -> Dict[str, float]:
         """
@@ -340,14 +346,13 @@ class ImageAnalysisPredictor:
         r2 = r2_score(y_test, y_pred)
 
         metrics = {
-            'mse': mse,
-            'rmse': np.sqrt(mse),
-            'r2_score': r2,
-            'mae': np.mean(np.abs(y_test - y_pred))
+            "mse": mse,
+            "rmse": np.sqrt(mse),
+            "r2_score": r2,
+            "mae": np.mean(np.abs(y_test - y_pred)),
         }
 
         return metrics
-
 
     def predict_quality_score(self, image_data: np.ndarray) -> float:
         """
@@ -368,6 +373,7 @@ class ImageAnalysisPredictor:
 
         return float(quality_score)
 
+
 class SSTVPredictor:
     """
     Класс для предсказания качества SSTV декодирования
@@ -375,15 +381,15 @@ class SSTVPredictor:
     на основе характеристик сигнала.
     """
 
-
     def __init__(self):
         """Инициализирует предиктор SSTV"""
         self.quality_model = RandomForestRegressor(n_estimators=100, random_state=42)
         self.error_model = RandomForestClassifier(n_estimators=100, random_state=42)
         self.scaler = StandardScaler()
 
-
-    def prepare_signal_features(self, signal_data: np.ndarray, sample_rate: int = 44100) -> np.ndarray:
+    def prepare_signal_features(
+        self, signal_data: np.ndarray, sample_rate: int = 44100
+    ) -> np.ndarray:
         """
         Подготавливает признаки из аудиосигнала SSTV
 
@@ -401,7 +407,7 @@ class SSTVPredictor:
 
         # Частотный анализ
         fft = np.fft.fft(signal_data)
-        frequencies = np.fft.fftfreq(len(signal_data), 1/sample_rate)
+        frequencies = np.fft.fftfreq(len(signal_data), 1 / sample_rate)
 
         # Берем только положительные частоты
         pos_freq_idx = frequencies > 0
@@ -413,7 +419,9 @@ class SSTVPredictor:
         dominant_frequency = pos_freqs[dominant_freq_idx] if len(pos_freqs) > 0 else 0
 
         # Вычисляем отношение сигнал/шум (приближенно)
-        noise_estimate = np.std(signal_data[:1000]) if len(signal_data) > 1000 else np.std(signal_data)
+        noise_estimate = (
+            np.std(signal_data[:1000]) if len(signal_data) > 1000 else np.std(signal_data)
+        )
         snr = 20 * np.log10(rms_amplitude / noise_estimate) if noise_estimate > 0 else 0
 
         # Скорость пересечения нуля
@@ -427,11 +435,10 @@ class SSTVPredictor:
             dominant_frequency,
             snr,
             np.sum(signal_data**2),  # total_energy
-            zero_crossing_rate
+            zero_crossing_rate,
         ]
 
         return np.array(features).reshape(1, -1)
-
 
     def train_quality_model(self, X: np.ndarray, y_quality: np.ndarray) -> Dict[str, float]:
         """
@@ -445,7 +452,9 @@ class SSTVPredictor:
             Словарь с метриками качества
         """
         # Разделяем данные
-        X_train, X_test, y_train, y_test = train_test_split(X, y_quality, test_size=0.2, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y_quality, test_size=0.2, random_state=42
+        )
 
         # Масштабируем признаки
         X_train_scaled = self.scaler.fit_transform(X_train)
@@ -462,14 +471,13 @@ class SSTVPredictor:
         r2 = r2_score(y_test, y_pred)
 
         metrics = {
-            'mse': mse,
-            'rmse': np.sqrt(mse),
-            'r2_score': r2,
-            'mae': np.mean(np.abs(y_test - y_pred))
+            "mse": mse,
+            "rmse": np.sqrt(mse),
+            "r2_score": r2,
+            "mae": np.mean(np.abs(y_test - y_pred)),
         }
 
         return metrics
-
 
     def predict_decoding_quality(self, signal_data: np.ndarray) -> float:
         """
@@ -489,6 +497,7 @@ class SSTVPredictor:
 
         return float(quality_score)
 
+
 class ProjectMLPipeline:
     """
     Центральный класс ML пайплайна проекта
@@ -496,13 +505,11 @@ class ProjectMLPipeline:
     единый интерфейс для машинного обучения.
     """
 
-
     def __init__(self):
         """Инициализирует ML пайплайн проекта"""
         self.surface_predictor = SurfacePredictionModel()
         self.image_predictor = ImageAnalysisPredictor()
         self.sstv_predictor = SSTVPredictor()
-
 
     def train_all_models(self, training_data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -517,40 +524,39 @@ class ProjectMLPipeline:
         results = {}
 
         # Обучение модели поверхности (если предоставлены данные)
-        if 'surface' in training_data:
-            surf_data = training_data['surface']
-            if 'features' in surf_data and 'targets' in surf_data:
+        if "surface" in training_data:
+            surf_data = training_data["surface"]
+            if "features" in surf_data and "targets" in surf_data:
                 try:
-                    results['surface_regression'] = self.surface_predictor.train_regression_model(
-                        surf_data['features'], surf_data['targets']
+                    results["surface_regression"] = self.surface_predictor.train_regression_model(
+                        surf_data["features"], surf_data["targets"]
                     )
                 except Exception as e:
                     print(f"Ошибка обучения модели поверхности: {e}")
 
         # Обучение модели анализа изображений (если предоставлены данные)
-        if 'image' in training_data:
-            img_data = training_data['image']
-            if 'features' in img_data and 'targets' in img_data:
+        if "image" in training_data:
+            img_data = training_data["image"]
+            if "features" in img_data and "targets" in img_data:
                 try:
-                    results['image_prediction'] = self.image_predictor.train(
-                        img_data['features'], img_data['targets']
+                    results["image_prediction"] = self.image_predictor.train(
+                        img_data["features"], img_data["targets"]
                     )
                 except Exception as e:
                     print(f"Ошибка обучения модели изображений: {e}")
 
         # Обучение модели SSTV (если предоставлены данные)
-        if 'sstv' in training_data:
-            sstv_data = training_data['sstv']
-            if 'features' in sstv_data and 'targets' in sstv_data:
+        if "sstv" in training_data:
+            sstv_data = training_data["sstv"]
+            if "features" in sstv_data and "targets" in sstv_data:
                 try:
-                    results['sstv_prediction'] = self.sstv_predictor.train_quality_model(
-                        sstv_data['features'], sstv_data['targets']
+                    results["sstv_prediction"] = self.sstv_predictor.train_quality_model(
+                        sstv_data["features"], sstv_data["targets"]
                     )
                 except Exception as e:
                     print(f"Ошибка обучения модели SSTV: {e}")
 
         return results
-
 
     def make_predictions(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -565,34 +571,33 @@ class ProjectMLPipeline:
         predictions = {}
 
         # Предсказание поверхности
-        if 'surface' in input_data:
+        if "surface" in input_data:
             try:
-                surface_data = input_data['surface']
-                pred = self.surface_predictor.predict(surface_data, 'regression')
-                predictions['surface_prediction'] = pred.tolist()
+                surface_data = input_data["surface"]
+                pred = self.surface_predictor.predict(surface_data, "regression")
+                predictions["surface_prediction"] = pred.tolist()
             except Exception as e:
                 print(f"Ошибка предсказания поверхности: {e}")
 
         # Предсказание качества изображения
-        if 'image' in input_data:
+        if "image" in input_data:
             try:
-                image_data = input_data['image']
+                image_data = input_data["image"]
                 pred = self.image_predictor.predict_quality_score(image_data)
-                predictions['image_quality_prediction'] = float(pred)
+                predictions["image_quality_prediction"] = float(pred)
             except Exception as e:
                 print(f"Ошибка предсказания качества изображения: {e}")
 
         # Предсказание качества SSTV
-        if 'sstv_signal' in input_data:
+        if "sstv_signal" in input_data:
             try:
-                signal_data = input_data['sstv_signal']
+                signal_data = input_data["sstv_signal"]
                 pred = self.sstv_predictor.predict_decoding_quality(signal_data)
-                predictions['sstv_quality_prediction'] = float(pred)
+                predictions["sstv_quality_prediction"] = float(pred)
             except Exception as e:
                 print(f"Ошибка предсказания качества SSTV: {e}")
 
         return predictions
-
 
     def save_all_models(self, directory: str):
         """
@@ -610,7 +615,6 @@ class ProjectMLPipeline:
 
         print(f"Все модели сохранены в директорию: {directory}")
 
-
     def load_all_models(self, directory: str):
         """
         Загружает все модели
@@ -626,6 +630,7 @@ class ProjectMLPipeline:
 
         print(f"Все модели загружены из директории: {directory}")
 
+
 def main():
     """Главная функция для демонстрации возможностей ML модуля"""
     print("=== МОДУЛЬ МАШИННОГО ОБУЧЕНИЯ ПРОЕКТА ===")
@@ -640,7 +645,7 @@ def main():
     x = np.linspace(-2, 2, 50)
     y = np.linspace(-2, 2, 50)
     X, Y = np.meshgrid(x, y)
-    surface_data = np.sin(np.sqrt(X**2 + Y**2)) * np.exp(-(X**2 + Y**2)/4)
+    surface_data = np.sin(np.sqrt(X**2 + Y**2)) * np.exp(-(X**2 + Y**2) / 4)
 
     # Тестовые данные изображения
     image_data = np.random.rand(50, 50, 3)
@@ -650,11 +655,7 @@ def main():
     signal_data = np.sin(2 * np.pi * 1000 * t) + 0.5 * np.sin(2 * np.pi * 2000 * t)
 
     # Делаем предсказания
-    input_data = {
-        'surface': surface_data,
-        'image': image_data,
-        'sstv_signal': signal_data
-    }
+    input_data = {"surface": surface_data, "image": image_data, "sstv_signal": signal_data}
 
     predictions = ml_pipeline.make_predictions(input_data)
 
@@ -663,6 +664,6 @@ def main():
 
     print("ML модуль успешно протестирован")
 
+
 if __name__ == "__main__":
     main()
-

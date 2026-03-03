@@ -22,13 +22,13 @@ from cryptography.fernet import Fernet
 from utils.logger import setup_project_logging
 from utils.config_manager import ConfigManager
 
+
 class BackupManager:
     """
     Класс управления резервным копированием
     Обеспечивает создание, хранение и восстановление
     резервных копий проекта и его данных.
     """
-
 
     def __init__(self, config_manager: Optional[ConfigManager] = None):
         """
@@ -52,32 +52,33 @@ class BackupManager:
         self.metadata_file = self.backup_dir / "backup_metadata.json"
         self.metadata = self._load_metadata()
 
-
     def _load_metadata(self) -> Dict:
         """Загружает метаданные резервных копий"""
         if self.metadata_file.exists():
             try:
-                with open(self.metadata_file, 'r', encoding='utf-8') as f:
+                with open(self.metadata_file, "r", encoding="utf-8") as f:
                     return json.load(f)
             except Exception as e:
                 self.logger_manager.log_system_event(f"Ошибка загрузки метаданных: {e}", "WARNING")
                 return {}
         return {}
 
-
     def _save_metadata(self):
         """Сохраняет метаданные резервных копий"""
         try:
-            with open(self.metadata_file, 'w', encoding='utf-8') as f:
+            with open(self.metadata_file, "w", encoding="utf-8") as f:
                 json.dump(self.metadata, f, indent=2, ensure_ascii=False, default=str)
         except Exception as e:
             self.logger_manager.log_system_event(f"Ошибка сохранения метаданных: {e}", "ERROR")
 
-
-    def create_backup(self, backup_name: str = None, include_outputs: bool = True,
-
-                     compress: bool = True, encrypt: bool = False,
-                     encryption_key: bytes = None) -> Optional[str]:
+    def create_backup(
+        self,
+        backup_name: str = None,
+        include_outputs: bool = True,
+        compress: bool = True,
+        encrypt: bool = False,
+        encryption_key: bytes = None,
+    ) -> Optional[str]:
         """
         Создает резервную копию проекта
 
@@ -110,7 +111,7 @@ class BackupManager:
                 Path("api"),
                 Path("security"),
                 Path("tests"),
-                Path("docs")
+                Path("docs"),
             ]
 
             if include_outputs:
@@ -138,10 +139,10 @@ class BackupManager:
                 "compressed": compress,
                 "encrypted": encrypt,
                 "directories_backed_up": [str(d) for d in dirs_to_backup if d.exists()],
-                "files_backed_up": [str(f) for f in config_files if Path(f).exists()]
+                "files_backed_up": [str(f) for f in config_files if Path(f).exists()],
             }
 
-            with open(index_file, 'w', encoding='utf-8') as f:
+            with open(index_file, "w", encoding="utf-8") as f:
                 json.dump(backup_info, f, indent=2, ensure_ascii=False, default=str)
 
             # Определяем путь для сохранения
@@ -152,7 +153,7 @@ class BackupManager:
                     self._create_zip_archive(temp_dir, archive_path)
 
                     # Шифруем архив
-                    encrypted_path = archive_path.with_suffix('.enc.zip')
+                    encrypted_path = archive_path.with_suffix(".enc.zip")
                     if self._encrypt_file(archive_path, encrypted_path, encryption_key):
                         archive_path.unlink()  # Удаляем незашифрованный архив
                         final_path = encrypted_path
@@ -181,7 +182,7 @@ class BackupManager:
                 "size": self._get_file_size(final_path),
                 "includes_outputs": include_outputs,
                 "compressed": compress,
-                "encrypted": encrypt
+                "encrypted": encrypt,
             }
             self._save_metadata()
 
@@ -192,7 +193,6 @@ class BackupManager:
             self.logger_manager.log_system_event(f"Ошибка создания резервной копии: {e}", "ERROR")
             return None
 
-
     def _create_zip_archive(self, source_dir: Path, archive_path: Path):
         """
         Создает ZIP архив
@@ -201,13 +201,12 @@ class BackupManager:
             source_dir: Исходная директория
             archive_path: Путь к архиву
         """
-        with zipfile.ZipFile(archive_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        with zipfile.ZipFile(archive_path, "w", zipfile.ZIP_DEFLATED) as zipf:
             for root, dirs, files in os.walk(source_dir):
                 for file in files:
                     file_path = Path(root) / file
                     arc_path = file_path.relative_to(source_dir)
                     zipf.write(file_path, arc_path)
-
 
     def _encrypt_file(self, input_file: Path, output_file: Path, key: bytes = None) -> bool:
         """
@@ -227,12 +226,12 @@ class BackupManager:
 
             cipher = Fernet(key)
 
-            with open(input_file, 'rb') as f:
+            with open(input_file, "rb") as f:
                 data = f.read()
 
             encrypted_data = cipher.encrypt(data)
 
-            with open(output_file, 'wb') as f:
+            with open(output_file, "wb") as f:
                 f.write(encrypted_data)
 
             return True
@@ -240,10 +239,9 @@ class BackupManager:
             self.logger_manager.log_system_event(f"Ошибка шифрования файла: {e}", "ERROR")
             return False
 
-
-
-    def restore_backup(self, backup_name: str, restore_path: str = None,
-                      decrypt_key: bytes = None) -> bool:
+    def restore_backup(
+        self, backup_name: str, restore_path: str = None, decrypt_key: bytes = None
+    ) -> bool:
         """
         Восстанавливает резервную копию
 
@@ -257,14 +255,18 @@ class BackupManager:
         """
         try:
             if backup_name not in self.metadata:
-                self.logger_manager.log_system_event(f"Резервная копия не найдена: {backup_name}", "ERROR")
+                self.logger_manager.log_system_event(
+                    f"Резервная копия не найдена: {backup_name}", "ERROR"
+                )
                 return False
 
             backup_info = self.metadata[backup_name]
             backup_path = Path(backup_info["path"])
 
             if not backup_path.exists():
-                self.logger_manager.log_system_event(f"Файл резервной копии не найден: {backup_path}", "ERROR")
+                self.logger_manager.log_system_event(
+                    f"Файл резервной копии не найден: {backup_path}", "ERROR"
+                )
                 return False
 
             # Определяем путь восстановления
@@ -282,7 +284,7 @@ class BackupManager:
                     return False
 
                 # Создаем временный файл для дешифрования
-                with tempfile.NamedTemporaryFile(suffix='.zip', delete=False) as temp_file:
+                with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as temp_file:
                     temp_path = Path(temp_file.name)
 
                 # Дешифруем файл
@@ -292,26 +294,29 @@ class BackupManager:
 
                 # Извлекаем архив
                 extracted_path = restore_path
-                with zipfile.ZipFile(temp_path, 'r') as zipf:
+                with zipfile.ZipFile(temp_path, "r") as zipf:
                     zipf.extractall(extracted_path)
 
                 # Удаляем временный файл
                 temp_path.unlink()
-            elif backup_path.suffix == '.zip':
+            elif backup_path.suffix == ".zip":
                 # Извлекаем ZIP архив
-                with zipfile.ZipFile(backup_path, 'r') as zipf:
+                with zipfile.ZipFile(backup_path, "r") as zipf:
                     zipf.extractall(restore_path)
             else:
                 # Копируем директорию
                 shutil.copytree(backup_path, restore_path, dirs_exist_ok=True)
 
-            self.logger_manager.log_system_event(f"Восстановлена резервная копия: {backup_name}", "INFO")
+            self.logger_manager.log_system_event(
+                f"Восстановлена резервная копия: {backup_name}", "INFO"
+            )
             return True
 
         except Exception as e:
-            self.logger_manager.log_system_event(f"Ошибка восстановления резервной копии: {e}", "ERROR")
+            self.logger_manager.log_system_event(
+                f"Ошибка восстановления резервной копии: {e}", "ERROR"
+            )
             return False
-
 
     def _decrypt_file(self, input_file: Path, output_file: Path, key: bytes) -> bool:
         """
@@ -328,19 +333,18 @@ class BackupManager:
         try:
             cipher = Fernet(key)
 
-            with open(input_file, 'rb') as f:
+            with open(input_file, "rb") as f:
                 encrypted_data = f.read()
 
             decrypted_data = cipher.decrypt(encrypted_data)
 
-            with open(output_file, 'wb') as f:
+            with open(output_file, "wb") as f:
                 f.write(decrypted_data)
 
             return True
         except Exception as e:
             self.logger_manager.log_system_event(f"Ошибка дешифрования файла: {e}", "ERROR")
             return False
-
 
     def list_backups(self) -> List[Dict]:
         """
@@ -351,20 +355,21 @@ class BackupManager:
         """
         backups = []
         for name, info in self.metadata.items():
-            backups.append({
-                "name": name,
-                "timestamp": info["timestamp"],
-                "size": info["size"],
-                "includes_outputs": info.get("includes_outputs", False),
-                "compressed": info.get("compressed", False),
-                "encrypted": info.get("encrypted", False),
-                "path": info["path"]
-            })
+            backups.append(
+                {
+                    "name": name,
+                    "timestamp": info["timestamp"],
+                    "size": info["size"],
+                    "includes_outputs": info.get("includes_outputs", False),
+                    "compressed": info.get("compressed", False),
+                    "encrypted": info.get("encrypted", False),
+                    "path": info["path"],
+                }
+            )
 
         # Сортируем по времени создания (новые первыми)
         backups.sort(key=lambda x: x["timestamp"], reverse=True)
         return backups
-
 
     def delete_backup(self, backup_name: str) -> bool:
         """
@@ -399,7 +404,6 @@ class BackupManager:
             self.logger_manager.log_system_event(f"Ошибка удаления резервной копии: {e}", "ERROR")
             return False
 
-
     def verify_backup_integrity(self, backup_name: str) -> Tuple[bool, str]:
         """
         Проверяет целостность резервной копии
@@ -425,12 +429,15 @@ class BackupManager:
             expected_size = backup_info["size"]
 
             if actual_size != expected_size:
-                return False, f"Несоответствие размера: ожидаемый {expected_size}, фактический {actual_size}"
+                return (
+                    False,
+                    f"Несоответствие размера: ожидаемый {expected_size}, фактический {actual_size}",
+                )
 
             # Если это архив, проверяем его целостность
-            if backup_path.suffix == '.zip':
+            if backup_path.suffix == ".zip":
                 try:
-                    with zipfile.ZipFile(backup_path, 'r') as zipf:
+                    with zipfile.ZipFile(backup_path, "r") as zipf:
                         bad_file = zipf.testzip()
                         if bad_file:
                             return False, f"Поврежденный файл в архиве: {bad_file}"
@@ -441,7 +448,6 @@ class BackupManager:
 
         except Exception as e:
             return False, f"Ошибка проверки целостности: {str(e)}"
-
 
     def _get_file_size(self, path: Path) -> int:
         """
@@ -464,7 +470,6 @@ class BackupManager:
             return total_size
         else:
             return 0
-
 
     def cleanup_old_backups(self, keep_days: int = 30, keep_count: int = 5) -> int:
         """
@@ -492,12 +497,15 @@ class BackupManager:
                         if self.delete_backup(backup["name"]):
                             deleted_count += 1
 
-            self.logger_manager.log_system_event(f"Очистка старых резервных копий: удалено {deleted_count}", "INFO")
+            self.logger_manager.log_system_event(
+                f"Очистка старых резервных копий: удалено {deleted_count}", "INFO"
+            )
             return deleted_count
 
         except Exception as e:
             self.logger_manager.log_system_event(f"Ошибка очистки резервных копий: {e}", "ERROR")
             return 0
+
 
 def main():
     """Главная функция для демонстрации возможностей менеджера резервного копирования"""
@@ -527,6 +535,6 @@ def main():
 
     print("Менеджер резервного копирования готов к работе")
 
+
 if __name__ == "__main__":
     main()
-

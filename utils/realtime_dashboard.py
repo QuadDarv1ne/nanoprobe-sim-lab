@@ -27,6 +27,7 @@ import mimetypes
 
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.performance_profiler import PerformanceProfiler
@@ -38,9 +39,11 @@ from utils.optimization_orchestrator import OptimizationOrchestrator
 from utils.system_health_monitor import SystemHealthMonitor
 from utils.performance_analytics_dashboard import PerformanceAnalyticsDashboard
 
+
 @dataclass
 class RealTimeMetric:
     """Метрика реального времени"""
+
     timestamp: datetime
     cpu_percent: float
     memory_percent: float
@@ -51,12 +54,12 @@ class RealTimeMetric:
     resource_efficiency: float
     optimization_score: float
 
+
 class RealTimeDashboard:
     """
     Класс реал-тайм дашборда
     Обеспечивает визуализацию и мониторинг производительности в реальном времени.
     """
-
 
     def __init__(self, port: int = 8080):
         """
@@ -84,7 +87,6 @@ class RealTimeDashboard:
         # Текущие метрики
         self.current_metrics = {}
 
-
     def collect_realtime_metrics(self) -> RealTimeMetric:
         """
         Собирает метрики в реальном времени
@@ -95,7 +97,7 @@ class RealTimeDashboard:
         # Системные метрики
         cpu_percent = psutil.cpu_percent(interval=None)
         memory = psutil.virtual_memory()
-        disk_usage = psutil.disk_usage('/').percent if hasattr(psutil, 'disk_usage') else 0
+        disk_usage = psutil.disk_usage("/").percent if hasattr(psutil, "disk_usage") else 0
 
         # Статистика сети
         net_io = psutil.net_io_counters()
@@ -120,7 +122,7 @@ class RealTimeDashboard:
             network_recv=network_recv,
             active_processes=active_processes,
             resource_efficiency=resource_efficiency,
-            optimization_score=optimization_score
+            optimization_score=optimization_score,
         )
 
         # Сохраняем в историю
@@ -130,17 +132,16 @@ class RealTimeDashboard:
 
         # Обновляем текущие метрики
         self.current_metrics = {
-            'cpu_percent': cpu_percent,
-            'memory_percent': memory.percent,
-            'disk_usage': disk_usage,
-            'active_processes': active_processes,
-            'resource_efficiency': resource_efficiency,
-            'optimization_score': optimization_score,
-            'timestamp': metric.timestamp.isoformat()
+            "cpu_percent": cpu_percent,
+            "memory_percent": memory.percent,
+            "disk_usage": disk_usage,
+            "active_processes": active_processes,
+            "resource_efficiency": resource_efficiency,
+            "optimization_score": optimization_score,
+            "timestamp": metric.timestamp.isoformat(),
         }
 
         return metric
-
 
     def get_current_status(self) -> Dict[str, Any]:
         """
@@ -150,7 +151,6 @@ class RealTimeDashboard:
             Словарь с текущими метриками
         """
         return self.current_metrics.copy()
-
 
     def get_metrics_history(self, last_n: int = 50) -> List[Dict[str, Any]]:
         """
@@ -162,22 +162,25 @@ class RealTimeDashboard:
         Returns:
             Список метрик за последние N измерений
         """
-        history = self.metrics_history[-last_n:] if len(self.metrics_history) >= last_n else self.metrics_history
+        history = (
+            self.metrics_history[-last_n:]
+            if len(self.metrics_history) >= last_n
+            else self.metrics_history
+        )
         return [
             {
-                'timestamp': m.timestamp.isoformat(),
-                'cpu_percent': m.cpu_percent,
-                'memory_percent': m.memory_percent,
-                'disk_usage': m.disk_usage,
-                'network_sent': m.network_sent,
-                'network_recv': m.network_recv,
-                'active_processes': m.active_processes,
-                'resource_efficiency': m.resource_efficiency,
-                'optimization_score': m.optimization_score
+                "timestamp": m.timestamp.isoformat(),
+                "cpu_percent": m.cpu_percent,
+                "memory_percent": m.memory_percent,
+                "disk_usage": m.disk_usage,
+                "network_sent": m.network_sent,
+                "network_recv": m.network_recv,
+                "active_processes": m.active_processes,
+                "resource_efficiency": m.resource_efficiency,
+                "optimization_score": m.optimization_score,
             }
             for m in history
         ]
-
 
     def generate_dashboard_html(self) -> str:
         """
@@ -192,33 +195,52 @@ class RealTimeDashboard:
 
         # Создаем графики
         fig = make_subplots(
-            rows=2, cols=2,
-            subplot_titles=('CPU & Memory', 'Disk Usage', 'Network Activity', 'Optimization Score'),
-            specs=[[{"secondary_y": True}, {"secondary_y": True}],
-                   [{"secondary_y": True}, {"secondary_y": True}]]
+            rows=2,
+            cols=2,
+            subplot_titles=("CPU & Memory", "Disk Usage", "Network Activity", "Optimization Score"),
+            specs=[
+                [{"secondary_y": True}, {"secondary_y": True}],
+                [{"secondary_y": True}, {"secondary_y": True}],
+            ],
         )
 
         if history:
-            timestamps = [item['timestamp'] for item in history]
-            cpu_data = [item['cpu_percent'] for item in history]
-            memory_data = [item['memory_percent'] for item in history]
-            disk_data = [item['disk_usage'] for item in history]
-            opt_data = [item['optimization_score'] for item in history]
+            timestamps = [item["timestamp"] for item in history]
+            cpu_data = [item["cpu_percent"] for item in history]
+            memory_data = [item["memory_percent"] for item in history]
+            disk_data = [item["disk_usage"] for item in history]
+            opt_data = [item["optimization_score"] for item in history]
 
             # CPU и Memory
-            fig.add_trace(go.Scatter(x=timestamps, y=cpu_data, name='CPU %', line=dict(color='red')), row=1, col=1)
-            fig.add_trace(go.Scatter(x=timestamps, y=memory_data, name='Memory %', line=dict(color='blue')), row=1, col=1)
+            fig.add_trace(
+                go.Scatter(x=timestamps, y=cpu_data, name="CPU %", line=dict(color="red")),
+                row=1,
+                col=1,
+            )
+            fig.add_trace(
+                go.Scatter(x=timestamps, y=memory_data, name="Memory %", line=dict(color="blue")),
+                row=1,
+                col=1,
+            )
 
             # Disk Usage
-            fig.add_trace(go.Scatter(x=timestamps, y=disk_data, name='Disk %', line=dict(color='green')), row=1, col=2)
+            fig.add_trace(
+                go.Scatter(x=timestamps, y=disk_data, name="Disk %", line=dict(color="green")),
+                row=1,
+                col=2,
+            )
 
             # Optimization Score
-            fig.add_trace(go.Scatter(x=timestamps, y=opt_data, name='Opt Score', line=dict(color='orange')), row=2, col=2)
+            fig.add_trace(
+                go.Scatter(x=timestamps, y=opt_data, name="Opt Score", line=dict(color="orange")),
+                row=2,
+                col=2,
+            )
 
         fig.update_layout(height=600, title_text="Real-Time Performance Dashboard")
 
         # Генерируем график как HTML
-        chart_html = fig.to_html(include_plotlyjs='cdn', div_id="main-chart")
+        chart_html = fig.to_html(include_plotlyjs="cdn", div_id="main-chart")
 
         html_content = f"""
         <!DOCTYPE html>
@@ -324,45 +346,43 @@ class RealTimeDashboard:
 
         return html_content
 
-
     def start_server(self):
         """Запускает веб-сервер дашборда"""
+
         class DashboardHandler(BaseHTTPRequestHandler):
-
-
             def do_GET(self):
-                            if self.path == '/' or self.path == '/dashboard':
+                if self.path == "/" or self.path == "/dashboard":
                     self.send_response(200)
-                    self.send_header('Content-type', 'text/html')
+                    self.send_header("Content-type", "text/html")
                     self.end_headers()
 
                     html = self.server.dashboard_instance.generate_dashboard_html()
                     self.wfile.write(html.encode())
-                elif self.path == '/api/metrics':
+                elif self.path == "/api/metrics":
                     self.send_response(200)
-                    self.send_header('Content-type', 'application/json')
+                    self.send_header("Content-type", "application/json")
                     self.end_headers()
 
                     metrics = self.server.dashboard_instance.get_current_status()
                     self.wfile.write(json.dumps(metrics).encode())
-                elif self.path == '/api/history':
+                elif self.path == "/api/history":
                     self.send_response(200)
-                    self.send_header('Content-type', 'application/json')
+                    self.send_header("Content-type", "application/json")
                     self.end_headers()
 
                     history = self.server.dashboard_instance.get_metrics_history()
                     self.wfile.write(json.dumps(history).encode())
                 else:
                     # Попробовать обработать как статический файл
-                    file_path = os.path.join(os.getcwd(), self.path.lstrip('/'))
+                    file_path = os.path.join(os.getcwd(), self.path.lstrip("/"))
                     if os.path.exists(file_path) and os.path.isfile(file_path):
                         mime_type, _ = mimetypes.guess_type(file_path)
                         if mime_type:
                             self.send_response(200)
-                            self.send_header('Content-type', mime_type)
+                            self.send_header("Content-type", mime_type)
                             self.end_headers()
 
-                            with open(file_path, 'rb') as f:
+                            with open(file_path, "rb") as f:
                                 self.wfile.write(f.read())
                     else:
                         self.send_response(404)
@@ -370,7 +390,7 @@ class RealTimeDashboard:
 
             def log_message(self, format, *args):
                 # Подавляем стандартные логи сервера
-                            pass
+                pass
 
         # Создаем сервер
         Handler = DashboardHandler
@@ -389,7 +409,6 @@ class RealTimeDashboard:
             print("\n🛑 Сервер остановлен")
             httpd.shutdown()
 
-
     def start_monitoring(self, interval: float = 2.0):
         """
         Запускает мониторинг в фоновом режиме
@@ -400,11 +419,10 @@ class RealTimeDashboard:
         if self.is_running:
             return
 
-
         self.is_running = True
 
         def monitor():
-                    while self.is_running:
+            while self.is_running:
                 try:
                     self.collect_realtime_metrics()
                     time.sleep(interval)
@@ -415,12 +433,12 @@ class RealTimeDashboard:
         self.dashboard_thread = threading.Thread(target=monitor, daemon=True)
         self.dashboard_thread.start()
 
-
     def stop_monitoring(self):
         """Останавливает мониторинг"""
         self.is_running = False
         if self.dashboard_thread:
             self.dashboard_thread.join(timeout=2.0)
+
 
 def main():
     """Главная функция для демонстрации возможностей дашборда"""
@@ -440,6 +458,6 @@ def main():
         print("\n🛑 Остановка дашборда...")
         dashboard.stop_monitoring()
 
+
 if __name__ == "__main__":
     main()
-

@@ -17,9 +17,11 @@ from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
 from dataclasses import dataclass, asdict
 
+
 @dataclass
 class DocItem:
     """Элемент документации"""
+
     name: str
     type: str  # module, class, function, method
     docstring: str
@@ -30,13 +32,13 @@ class DocItem:
     return_type: str
     decorators: List[str]
 
+
 class DocumentationGenerator:
     """
     Класс генератора документации
     Обеспечивает автоматическую генерацию документации
     из исходного кода проекта.
     """
-
 
     def __init__(self, project_root: str = "."):
         """
@@ -49,7 +51,6 @@ class DocumentationGenerator:
         self.doc_items = []
         self.project_info = {}
 
-
     def analyze_project_structure(self) -> Dict[str, Any]:
         """
         Анализирует структуру проекта
@@ -57,38 +58,36 @@ class DocumentationGenerator:
         Returns:
             Информация о структуре проекта
         """
-        structure = {
-            'modules': [],
-            'packages': [],
-            'files': [],
-            'directories': []
-        }
+        structure = {"modules": [], "packages": [], "files": [], "directories": []}
 
         # Анализируем директории
         for item in self.project_root.iterdir():
-            if item.is_dir() and not item.name.startswith('.'):
-                structure['directories'].append({
-                    'name': item.name,
-                    'path': str(item.relative_to(self.project_root)),
-                    'type': 'package' if (item / '__init__.py').exists() else 'directory'
-                })
-                if (item / '__init__.py').exists():
-                    structure['packages'].append(item.name)
-            elif item.is_file() and item.suffix == '.py' and not item.name.startswith('.'):
-                structure['files'].append({
-                    'name': item.name,
-                    'path': str(item.relative_to(self.project_root)),
-                    'size': item.stat().st_size
-                })
-                if item.name != '__init__.py':
-                    structure['modules'].append(item.stem)
+            if item.is_dir() and not item.name.startswith("."):
+                structure["directories"].append(
+                    {
+                        "name": item.name,
+                        "path": str(item.relative_to(self.project_root)),
+                        "type": "package" if (item / "__init__.py").exists() else "directory",
+                    }
+                )
+                if (item / "__init__.py").exists():
+                    structure["packages"].append(item.name)
+            elif item.is_file() and item.suffix == ".py" and not item.name.startswith("."):
+                structure["files"].append(
+                    {
+                        "name": item.name,
+                        "path": str(item.relative_to(self.project_root)),
+                        "size": item.stat().st_size,
+                    }
+                )
+                if item.name != "__init__.py":
+                    structure["modules"].append(item.stem)
 
         return structure
 
-
-    def extract_docstrings(self, include_patterns: List[str] = None,
-
-                          exclude_patterns: List[str] = None) -> List[DocItem]:
+    def extract_docstrings(
+        self, include_patterns: List[str] = None, exclude_patterns: List[str] = None
+    ) -> List[DocItem]:
         """
         Извлекает docstring из проекта
 
@@ -100,10 +99,10 @@ class DocumentationGenerator:
             Список элементов документации
         """
         if include_patterns is None:
-            include_patterns = ['*.py']
+            include_patterns = ["*.py"]
 
         if exclude_patterns is None:
-            exclude_patterns = ['__pycache__', '*.pyc', 'venv', '.git', 'tests']
+            exclude_patterns = ["__pycache__", "*.pyc", "venv", ".git", "tests"]
 
         # Находим все Python файлы
         python_files = []
@@ -123,11 +122,10 @@ class DocumentationGenerator:
 
         return self.doc_items
 
-
     def _extract_from_file(self, file_path: Path):
         """Извлекает документацию из файла"""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
             # Парсим AST
@@ -136,17 +134,19 @@ class DocumentationGenerator:
             # Извлекаем docstring модуля
             module_doc = ast.get_docstring(tree)
             if module_doc:
-                self.doc_items.append(DocItem(
-                    name=file_path.stem,
-                    type='module',
-                    docstring=module_doc,
-                    signature='',
-                    file_path=str(file_path.relative_to(self.project_root)),
-                    line_number=1,
-                    parameters=[],
-                    return_type='',
-                    decorators=[]
-                ))
+                self.doc_items.append(
+                    DocItem(
+                        name=file_path.stem,
+                        type="module",
+                        docstring=module_doc,
+                        signature="",
+                        file_path=str(file_path.relative_to(self.project_root)),
+                        line_number=1,
+                        parameters=[],
+                        return_type="",
+                        decorators=[],
+                    )
+                )
 
             # Извлекаем классы и функции
             for node in ast.walk(tree):
@@ -154,14 +154,15 @@ class DocumentationGenerator:
                     self._extract_class_doc(node, file_path, content)
                 elif isinstance(node, ast.FunctionDef):
                     # Проверяем, является ли функция методом класса
-                    is_method = any(isinstance(parent, ast.ClassDef)
-                                  for parent in ast.walk(tree)
-                                  if node in ast.iter_child_nodes(parent))
+                    is_method = any(
+                        isinstance(parent, ast.ClassDef)
+                        for parent in ast.walk(tree)
+                        if node in ast.iter_child_nodes(parent)
+                    )
                     self._extract_function_doc(node, file_path, content, is_method)
 
         except Exception as e:
             print(f"Ошибка обработки файла {file_path}: {e}")
-
 
     def _extract_class_doc(self, node: ast.ClassDef, file_path: Path, content: str):
         """Извлекает документацию класса"""
@@ -178,22 +179,23 @@ class DocumentationGenerator:
         # Получаем декораторы
         decorators = [ast.unparse(dec) for dec in node.decorator_list]
 
-        self.doc_items.append(DocItem(
-            name=node.name,
-            type='class',
-            docstring=docstring,
-            signature=signature,
-            file_path=str(file_path.relative_to(self.project_root)),
-            line_number=node.lineno,
-            parameters=[],
-            return_type='',
-            decorators=decorators
-        ))
+        self.doc_items.append(
+            DocItem(
+                name=node.name,
+                type="class",
+                docstring=docstring,
+                signature=signature,
+                file_path=str(file_path.relative_to(self.project_root)),
+                line_number=node.lineno,
+                parameters=[],
+                return_type="",
+                decorators=decorators,
+            )
+        )
 
-
-
-    def _extract_function_doc(self, node: ast.FunctionDef, file_path: Path,
-                            content: str, is_method: bool = False):
+    def _extract_function_doc(
+        self, node: ast.FunctionDef, file_path: Path, content: str, is_method: bool = False
+    ):
         """Извлекает документацию функции/метода"""
         docstring = ast.get_docstring(node)
         if not docstring:
@@ -202,19 +204,19 @@ class DocumentationGenerator:
         # Получаем сигнатуру
         params = []
         for arg in node.args.args:
-            param_info = {'name': arg.arg, 'type': '', 'default': ''}
+            param_info = {"name": arg.arg, "type": "", "default": ""}
             if arg.annotation:
-                param_info['type'] = ast.unparse(arg.annotation)
+                param_info["type"] = ast.unparse(arg.annotation)
             params.append(param_info)
 
         # Добавляем *args и **kwargs
         if node.args.vararg:
-            params.append({'name': f"*{node.args.vararg.arg}", 'type': '', 'default': ''})
+            params.append({"name": f"*{node.args.vararg.arg}", "type": "", "default": ""})
         if node.args.kwarg:
-            params.append({'name': f"**{node.args.kwarg.arg}", 'type': '', 'default': ''})
+            params.append({"name": f"**{node.args.kwarg.arg}", "type": "", "default": ""})
 
         # Получаем возвращаемый тип
-        return_type = ''
+        return_type = ""
         if node.returns:
             return_type = ast.unparse(node.returns)
 
@@ -222,20 +224,21 @@ class DocumentationGenerator:
         decorators = [ast.unparse(dec) for dec in node.decorator_list]
 
         # Определяем тип
-        item_type = 'method' if is_method else 'function'
+        item_type = "method" if is_method else "function"
 
-        self.doc_items.append(DocItem(
-            name=node.name,
-            type=item_type,
-            docstring=docstring,
-            signature=self._build_function_signature(node, is_method),
-            file_path=str(file_path.relative_to(self.project_root)),
-            line_number=node.lineno,
-            parameters=params,
-            return_type=return_type,
-            decorators=decorators
-        ))
-
+        self.doc_items.append(
+            DocItem(
+                name=node.name,
+                type=item_type,
+                docstring=docstring,
+                signature=self._build_function_signature(node, is_method),
+                file_path=str(file_path.relative_to(self.project_root)),
+                line_number=node.lineno,
+                parameters=params,
+                return_type=return_type,
+                decorators=decorators,
+            )
+        )
 
     def _build_function_signature(self, node: ast.FunctionDef, is_method: bool) -> str:
         """Строит сигнатуру функции"""
@@ -301,7 +304,6 @@ class DocumentationGenerator:
 
         return "\n".join(parts)
 
-
     def generate_markdown_documentation(self, output_path: str = "docs/api_reference.md") -> str:
         """
         Генерирует документацию в формате Markdown
@@ -327,9 +329,9 @@ class DocumentationGenerator:
         # Добавляем информацию о структуре проекта
         structure = self.analyze_project_structure()
         md_content.append("## Project Structure\n")
-        for pkg in structure['packages']:
+        for pkg in structure["packages"]:
             md_content.append(f"- **{pkg}/** - Package\n")
-        for mod in structure['modules']:
+        for mod in structure["modules"]:
             md_content.append(f"- **{mod}.py** - Module\n")
         md_content.append("\n")
 
@@ -338,14 +340,14 @@ class DocumentationGenerator:
             md_content.append(f"## {file_path}\n")
 
             # Модуль
-            module_items = [item for item in items if item.type == 'module']
+            module_items = [item for item in items if item.type == "module"]
             if module_items:
                 module = module_items[0]
                 md_content.append(f"### Module: {module.name}\n")
                 md_content.append(f"{self._format_docstring(module.docstring)}\n")
 
             # Классы
-            class_items = [item for item in items if item.type == 'class']
+            class_items = [item for item in items if item.type == "class"]
             if class_items:
                 md_content.append("### Classes\n")
                 for cls in class_items:
@@ -357,11 +359,11 @@ class DocumentationGenerator:
                     md_content.append(f"{self._format_docstring(cls.docstring)}\n")
 
             # Функции и методы
-            func_items = [item for item in items if item.type in ['function', 'method']]
+            func_items = [item for item in items if item.type in ["function", "method"]]
             if func_items:
                 md_content.append("### Functions\n")
                 for func in func_items:
-                    func_type = "Method" if func.type == 'method' else "Function"
+                    func_type = "Method" if func.type == "method" else "Function"
                     md_content.append(f"#### {func.name}\n")
                     if func.decorators:
                         for dec in func.decorators:
@@ -374,7 +376,7 @@ class DocumentationGenerator:
                         md_content.append("**Parameters:**\n")
                         for param in func.parameters:
                             param_desc = f"- `{param['name']}`"
-                            if param['type']:
+                            if param["type"]:
                                 param_desc += f" (*{param['type']}*)"
                             md_content.append(param_desc)
                         md_content.append("\n")
@@ -389,11 +391,10 @@ class DocumentationGenerator:
         output_file = Path(output_path)
         output_file.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(output_file, 'w', encoding='utf-8') as f:
-            f.write('\n'.join(md_content))
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write("\n".join(md_content))
 
         return str(output_file)
-
 
     def generate_html_documentation(self, output_path: str = "docs/api_reference.html") -> str:
         """
@@ -426,19 +427,18 @@ class DocumentationGenerator:
             "</style>",
             "</head>",
             "<body>",
-            md_content.replace('\n', '<br>'),
+            md_content.replace("\n", "<br>"),
             "</body>",
-            "</html>"
+            "</html>",
         ]
 
         output_file = Path(output_path)
         output_file.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(output_file, 'w', encoding='utf-8') as f:
-            f.write('\n'.join(html_content))
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write("\n".join(html_content))
 
         return str(output_file)
-
 
     def generate_json_documentation(self, output_path: str = "docs/api_reference.json") -> str:
         """
@@ -455,23 +455,22 @@ class DocumentationGenerator:
 
         # Создаем структуру данных
         data = {
-            'metadata': {
-                'project': 'Nanoprobe Simulation Lab',
-                'generated': datetime.now().isoformat(),
-                'total_items': len(self.doc_items)
+            "metadata": {
+                "project": "Nanoprobe Simulation Lab",
+                "generated": datetime.now().isoformat(),
+                "total_items": len(self.doc_items),
             },
-            'project_structure': self.analyze_project_structure(),
-            'documentation_items': doc_dicts
+            "project_structure": self.analyze_project_structure(),
+            "documentation_items": doc_dicts,
         }
 
         output_file = Path(output_path)
         output_file.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(output_file, 'w', encoding='utf-8') as f:
+        with open(output_file, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False, default=str)
 
         return str(output_file)
-
 
     def _format_docstring(self, docstring: str) -> str:
         """Форматирует docstring для отображения"""
@@ -479,7 +478,7 @@ class DocumentationGenerator:
             return "No documentation available."
 
         # Обрабатываем многострочные docstring
-        lines = docstring.strip().split('\n')
+        lines = docstring.strip().split("\n")
         formatted_lines = []
 
         for line in lines:
@@ -487,20 +486,20 @@ class DocumentationGenerator:
             stripped = line.lstrip()
             formatted_lines.append(stripped)
 
-        return '\n'.join(formatted_lines)
-
+        return "\n".join(formatted_lines)
 
     def get_statistics(self) -> Dict[str, int]:
         """Получает статистику по документации"""
         stats = {
-            'total_items': len(self.doc_items),
-            'modules': len([item for item in self.doc_items if item.type == 'module']),
-            'classes': len([item for item in self.doc_items if item.type == 'class']),
-            'functions': len([item for item in self.doc_items if item.type == 'function']),
-            'methods': len([item for item in self.doc_items if item.type == 'method']),
-            'files': len(set(item.file_path for item in self.doc_items))
+            "total_items": len(self.doc_items),
+            "modules": len([item for item in self.doc_items if item.type == "module"]),
+            "classes": len([item for item in self.doc_items if item.type == "class"]),
+            "functions": len([item for item in self.doc_items if item.type == "function"]),
+            "methods": len([item for item in self.doc_items if item.type == "method"]),
+            "files": len(set(item.file_path for item in self.doc_items)),
         }
         return stats
+
 
 def main():
     """Главная функция для демонстрации генератора документации"""
@@ -555,6 +554,6 @@ def main():
     print("- Анализ структуры: analyze_project_structure()")
     print("- Статистика: get_statistics()")
 
+
 if __name__ == "__main__":
     main()
-

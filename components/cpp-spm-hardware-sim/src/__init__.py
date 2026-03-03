@@ -3,4 +3,4 @@
 
 from .spm_simulator import SurfaceModel, ProbeModel, SPMController
 
-__all__ = ['SurfaceModel', 'ProbeModel', 'SPMController']
+__all__ = ["SurfaceModel", "ProbeModel", "SPMController"]

@@ -21,6 +21,7 @@ from typing import Dict, List, Tuple, Optional, Any
 from pathlib import Path
 import json
 
+
 class SurfaceAnalytics:
     """
     Класс для анализа данных поверхности
@@ -28,14 +29,12 @@ class SurfaceAnalytics:
     предсказательное моделирование для данных поверхности.
     """
 
-
     def __init__(self):
         """Инициализирует аналитический модуль для поверхности"""
         self.scaler = StandardScaler()
         self.pca = PCA(n_components=2)
         self.kmeans = KMeans(n_clusters=3, random_state=42)
         self.regressor = RandomForestRegressor(random_state=42)
-
 
     def calculate_surface_properties(self, surface_data: np.ndarray) -> Dict[str, float]:
         """
@@ -59,11 +58,10 @@ class SurfaceAnalytics:
             "skewness": float(pd.Series(flat_data).skew()),
             "kurtosis": float(pd.Series(flat_data).kurtosis()),
             "surface_area": float(self._calculate_surface_area(surface_data)),
-            "volume": float(np.sum(np.abs(flat_data)))
+            "volume": float(np.sum(np.abs(flat_data))),
         }
 
         return properties
-
 
     def _calculate_surface_area(self, surface_data: np.ndarray) -> float:
         """
@@ -81,7 +79,6 @@ class SurfaceAnalytics:
 
         surface_elements = np.sqrt(1 + grad_x**2 + grad_y**2)
         return float(np.sum(surface_elements))
-
 
     def cluster_surface_regions(self, surface_data: np.ndarray, n_clusters: int = 3) -> np.ndarray:
         """
@@ -115,7 +112,6 @@ class SurfaceAnalytics:
         cluster_map = labels.reshape(rows, cols)
         return cluster_map
 
-
     def dimensionality_reduction(self, surface_data: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
         Выполняет понижение размерности поверхности с помощью PCA
@@ -147,8 +143,9 @@ class SurfaceAnalytics:
 
         return X_reduced, self.pca.explained_variance_ratio_
 
-
-    def predict_surface_properties(self, features: np.ndarray, target_property: str = "roughness") -> np.ndarray:
+    def predict_surface_properties(
+        self, features: np.ndarray, target_property: str = "roughness"
+    ) -> np.ndarray:
         """
         Предсказывает свойства поверхности на основе признаков
 
@@ -166,7 +163,9 @@ class SurfaceAnalytics:
         y = np.random.rand(features.shape[0])  # Заменить на реальные значения
 
         # Разделяем данные
-        X_train, X_test, y_train, y_test = train_test_split(features, y, test_size=0.2, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(
+            features, y, test_size=0.2, random_state=42
+        )
 
         # Обучаем модель
         self.regressor.fit(X_train, y_train)
@@ -180,6 +179,7 @@ class SurfaceAnalytics:
 
         return predictions
 
+
 class ImageAnalytics:
     """
     Класс для анализа изображений
@@ -187,11 +187,9 @@ class ImageAnalytics:
     обнаружение паттернов в данных изображений.
     """
 
-
     def __init__(self):
         """Инициализирует аналитический модуль для изображений"""
         pass
-
 
     def calculate_image_features(self, image_data: np.ndarray) -> Dict[str, float]:
         """
@@ -216,15 +214,18 @@ class ImageAnalytics:
             "std_intensity": float(np.std(flat_data)),
             "min_intensity": float(np.min(flat_data)),
             "max_intensity": float(np.max(flat_data)),
-            "contrast": float(np.std(flat_data) / np.mean(flat_data)) if np.mean(flat_data) != 0 else 0,
+            "contrast": float(np.std(flat_data) / np.mean(flat_data))
+            if np.mean(flat_data) != 0
+            else 0,
             "entropy": self._calculate_entropy(flat_data),
             "homogeneity": self._calculate_homogeneity(gray),
             "energy": float(np.sum(flat_data**2)),
-            "correlation": float(np.corrcoef(flat_data[:-1], flat_data[1:])[0, 1]) if len(flat_data) > 1 else 0
+            "correlation": float(np.corrcoef(flat_data[:-1], flat_data[1:])[0, 1])
+            if len(flat_data) > 1
+            else 0,
         }
 
         return features
-
 
     def _calculate_entropy(self, data: np.ndarray) -> float:
         """Вычисляет энтропию изображения"""
@@ -234,14 +235,12 @@ class ImageAnalytics:
         entropy = -np.sum(prob * np.log2(prob))
         return float(entropy)
 
-
     def _calculate_homogeneity(self, image: np.ndarray) -> float:
         """Вычисляет однородность изображения"""
         # Простой метод: среднее значение близости к среднему
         mean_val = np.mean(image)
         homogeneity = 1.0 / (1.0 + np.mean(np.abs(image - mean_val)))
         return float(homogeneity)
-
 
     def detect_patterns(self, image_data: np.ndarray) -> Dict[str, Any]:
         """
@@ -275,11 +274,10 @@ class ImageAnalytics:
             "edge_density": float(edge_pixels / total_pixels),
             "texture_complexity": float(texture_measure),
             "average_edge_strength": float(np.mean(edges)),
-            "pattern_regions": self._detect_regions(gray)
+            "pattern_regions": self._detect_regions(gray),
         }
 
         return patterns
-
 
     def _detect_regions(self, image: np.ndarray) -> int:
         """Обнаруживает регионы с похожими характеристиками"""
@@ -293,6 +291,7 @@ class ImageAnalytics:
         unique_values = len(np.unique(np.round(image / threshold).astype(int)))
         return min(unique_values, 100)  # Ограничение для стабильности
 
+
 class SSTVAnalytics:
     """
     Класс для анализа SSTV данных
@@ -300,13 +299,13 @@ class SSTVAnalytics:
     качество декодирования SSTV.
     """
 
-
     def __init__(self):
         """Инициализирует аналитический модуль для SSTV"""
         pass
 
-
-    def analyze_signal_quality(self, signal_data: np.ndarray, sample_rate: int = 44100) -> Dict[str, float]:
+    def analyze_signal_quality(
+        self, signal_data: np.ndarray, sample_rate: int = 44100
+    ) -> Dict[str, float]:
         """
         Анализирует качество SSTV сигнала
 
@@ -324,7 +323,7 @@ class SSTVAnalytics:
 
         # Частотный анализ
         fft = np.fft.fft(signal_data)
-        frequencies = np.fft.fftfreq(len(signal_data), 1/sample_rate)
+        frequencies = np.fft.fftfreq(len(signal_data), 1 / sample_rate)
 
         # Берем только положительные частоты
         pos_freq_idx = frequencies > 0
@@ -337,7 +336,9 @@ class SSTVAnalytics:
 
         # Вычисляем отношение сигнал/шум (приближенно)
         signal_energy = np.sum(signal_data**2)
-        noise_estimate = np.std(signal_data[:1000]) if len(signal_data) > 1000 else np.std(signal_data)
+        noise_estimate = (
+            np.std(signal_data[:1000]) if len(signal_data) > 1000 else np.std(signal_data)
+        )
         snr = 20 * np.log10(rms_amplitude / noise_estimate) if noise_estimate > 0 else 0
 
         quality_metrics = {
@@ -348,23 +349,21 @@ class SSTVAnalytics:
             "signal_to_noise_ratio_db": float(snr),
             "total_energy": float(signal_energy),
             "zero_crossing_rate": float(self._calculate_zero_crossing_rate(signal_data)),
-            "spectral_centroid": float(self._calculate_spectral_centroid(signal_data, sample_rate))
+            "spectral_centroid": float(self._calculate_spectral_centroid(signal_data, sample_rate)),
         }
 
         return quality_metrics
-
 
     def _calculate_zero_crossing_rate(self, signal: np.ndarray) -> float:
         """Вычисляет скорость пересечения нуля"""
         zero_crossings = np.sum(np.diff(np.sign(signal)) != 0)
         return float(zero_crossings / len(signal))
 
-
     def _calculate_spectral_centroid(self, signal: np.ndarray, sample_rate: int) -> float:
         """Вычисляет спектроцентроид сигнала"""
         fft = np.fft.fft(signal)
-        magnitude = np.abs(fft[:len(fft)//2])
-        freqs = np.fft.fftfreq(len(signal), 1/sample_rate)[:len(fft)//2]
+        magnitude = np.abs(fft[: len(fft) // 2])
+        freqs = np.fft.fftfreq(len(signal), 1 / sample_rate)[: len(fft) // 2]
 
         if np.sum(magnitude) == 0:
             return 0.0
@@ -372,8 +371,9 @@ class SSTVAnalytics:
         spectral_centroid = np.sum(freqs * magnitude) / np.sum(magnitude)
         return float(spectral_centroid)
 
-
-    def evaluate_decoding_quality(self, original_image: np.ndarray, decoded_image: np.ndarray) -> Dict[str, float]:
+    def evaluate_decoding_quality(
+        self, original_image: np.ndarray, decoded_image: np.ndarray
+    ) -> Dict[str, float]:
         """
         Оценивает качество декодирования SSTV
 
@@ -396,7 +396,7 @@ class SSTVAnalytics:
 
         # PSNR (Peak Signal-to-Noise Ratio)
         if mse == 0:
-            psnr = float('inf')
+            psnr = float("inf")
         else:
             max_pixel = np.max(orig_crop)
             psnr = 20 * np.log10(max_pixel / np.sqrt(mse)) if max_pixel > 0 else 0
@@ -411,18 +411,20 @@ class SSTVAnalytics:
         c1 = (0.01 * np.max(orig_crop)) ** 2
         c2 = (0.03 * np.max(orig_crop)) ** 2
 
-        ssim = ((2 * mean_orig * mean_dec + c1) * (2 * covar + c2)) / \
-               ((mean_orig**2 + mean_dec**2 + c1) * (var_orig + var_dec + c2))
+        ssim = ((2 * mean_orig * mean_dec + c1) * (2 * covar + c2)) / (
+            (mean_orig**2 + mean_dec**2 + c1) * (var_orig + var_dec + c2)
+        )
 
         quality_metrics = {
             "mse": float(mse),
             "psnr": float(psnr),
             "ssim": float(ssim),
             "correlation": float(np.corrcoef(orig_crop.flatten(), dec_crop.flatten())[0, 1]),
-            "mean_difference": float(np.mean(np.abs(orig_crop - dec_crop)))
+            "mean_difference": float(np.mean(np.abs(orig_crop - dec_crop))),
         }
 
         return quality_metrics
+
 
 class ProjectAnalytics:
     """
@@ -431,19 +433,19 @@ class ProjectAnalytics:
     комплексный анализ данных из всех компонентов проекта.
     """
 
-
     def __init__(self):
         """Инициализирует центральный аналитический модуль"""
         self.surface_analytics = SurfaceAnalytics()
         self.image_analytics = ImageAnalytics()
         self.sstv_analytics = SSTVAnalytics()
 
-
-    def generate_comprehensive_report(self, surface_data: Optional[np.ndarray] = None,
-
-                                   image_data: Optional[np.ndarray] = None,
-                                   signal_data: Optional[np.ndarray] = None,
-                                   sample_rate: int = 44100) -> Dict[str, Any]:
+    def generate_comprehensive_report(
+        self,
+        surface_data: Optional[np.ndarray] = None,
+        image_data: Optional[np.ndarray] = None,
+        signal_data: Optional[np.ndarray] = None,
+        sample_rate: int = 44100,
+    ) -> Dict[str, Any]:
         """
         Генерирует комплексный аналитический отчет
 
@@ -461,12 +463,14 @@ class ProjectAnalytics:
             "analyses_performed": [],
             "surface_analysis": {},
             "image_analysis": {},
-            "sstv_analysis": {}
+            "sstv_analysis": {},
         }
 
         if surface_data is not None:
             try:
-                report["surface_analysis"] = self.surface_analytics.calculate_surface_properties(surface_data)
+                report["surface_analysis"] = self.surface_analytics.calculate_surface_properties(
+                    surface_data
+                )
                 report["analyses_performed"].append("surface")
             except Exception as e:
                 print(f"Ошибка анализа поверхности: {e}")
@@ -481,17 +485,18 @@ class ProjectAnalytics:
 
         if signal_data is not None:
             try:
-                report["sstv_analysis"] = self.sstv_analytics.analyze_signal_quality(signal_data, sample_rate)
+                report["sstv_analysis"] = self.sstv_analytics.analyze_signal_quality(
+                    signal_data, sample_rate
+                )
                 report["analyses_performed"].append("sstv")
             except Exception as e:
                 print(f"Ошибка анализа SSTV сигнала: {e}")
 
         return report
 
-
-
-    def visualize_analytics(self, analytics_report: Dict[str, Any],
-                          output_path: str = "analytics_report.png"):
+    def visualize_analytics(
+        self, analytics_report: Dict[str, Any], output_path: str = "analytics_report.png"
+    ):
         """
         Визуализирует аналитический отчет
 
@@ -500,7 +505,7 @@ class ProjectAnalytics:
             output_path: Путь для сохранения визуализации
         """
         fig, axes = plt.subplots(2, 2, figsize=(15, 12))
-        fig.suptitle('Комплексный аналитический отчет проекта', fontsize=16)
+        fig.suptitle("Комплексный аналитический отчет проекта", fontsize=16)
 
         # Визуализация анализа поверхности
         if analytics_report.get("surface_analysis"):
@@ -509,9 +514,9 @@ class ProjectAnalytics:
             props_values = [surface_props[prop] for prop in props_names]
 
             axes[0, 0].bar(range(len(props_names)), props_values)
-            axes[0, 0].set_title('Свойства поверхности')
+            axes[0, 0].set_title("Свойства поверхности")
             axes[0, 0].set_xticks(range(len(props_names)))
-            axes[0, 0].set_xticklabels(props_names, rotation=45, ha='right')
+            axes[0, 0].set_xticklabels(props_names, rotation=45, ha="right")
 
         # Визуализация анализа изображения
         if analytics_report.get("image_analysis"):
@@ -520,7 +525,7 @@ class ProjectAnalytics:
             feature_values = [image_features[feat] for feat in feature_names]
 
             axes[0, 1].barh(range(len(feature_names)), feature_values)
-            axes[0, 1].set_title('Признаки изображения')
+            axes[0, 1].set_title("Признаки изображения")
             axes[0, 1].set_yticks(range(len(feature_names)))
             axes[0, 1].set_yticklabels(feature_names)
 
@@ -530,24 +535,33 @@ class ProjectAnalytics:
             metric_names = list(sstv_metrics.keys())[:6]  # Берем первые 6 метрик
             metric_values = [sstv_metrics[metric] for metric in metric_names]
 
-            axes[1, 0].plot(range(len(metric_names)), metric_values, marker='o')
-            axes[1, 0].set_title('Метрики качества SSTV')
+            axes[1, 0].plot(range(len(metric_names)), metric_values, marker="o")
+            axes[1, 0].set_title("Метрики качества SSTV")
             axes[1, 0].set_xticks(range(len(metric_names)))
-            axes[1, 0].set_xticklabels(metric_names, rotation=45, ha='right')
+            axes[1, 0].set_xticklabels(metric_names, rotation=45, ha="right")
 
         # Информация о проведенном анализе
-        axes[1, 1].axis('off')
-        analysis_info = f"Анализы выполнены: {', '.join(analytics_report.get('analyses_performed', []))}\n"
+        axes[1, 1].axis("off")
+        analysis_info = (
+            f"Анализы выполнены: {', '.join(analytics_report.get('analyses_performed', []))}\n"
+        )
         analysis_info += f"Время анализа: {analytics_report.get('timestamp', 'N/A')}"
-        axes[1, 1].text(0.1, 0.5, analysis_info, fontsize=12, verticalalignment='center',
-                        bbox=dict(boxstyle="round,pad=0.3", facecolor="lightblue"))
+        axes[1, 1].text(
+            0.1,
+            0.5,
+            analysis_info,
+            fontsize=12,
+            verticalalignment="center",
+            bbox=dict(boxstyle="round,pad=0.3", facecolor="lightblue"),
+        )
 
         plt.tight_layout()
-        plt.savefig(output_path, dpi=300, bbox_inches='tight')
+        plt.savefig(output_path, dpi=300, bbox_inches="tight")
         plt.show()
 
-
-    def save_analytics_report(self, report: Dict[str, Any], filename: str = "analytics_report.json"):
+    def save_analytics_report(
+        self, report: Dict[str, Any], filename: str = "analytics_report.json"
+    ):
         """
         Сохраняет аналитический отчет в файл
 
@@ -555,9 +569,10 @@ class ProjectAnalytics:
             report: Аналитический отчет
             filename: Имя файла для сохранения
         """
-        with open(filename, 'w', encoding='utf-8') as f:
+        with open(filename, "w", encoding="utf-8") as f:
             json.dump(report, f, indent=2, ensure_ascii=False, default=str)
         print(f"Аналитический отчет сохранен: {filename}")
+
 
 def main():
     """Главная функция для демонстрации возможностей аналитического модуля"""
@@ -573,7 +588,7 @@ def main():
     x = np.linspace(-2, 2, 50)
     y = np.linspace(-2, 2, 50)
     X, Y = np.meshgrid(x, y)
-    surface_data = np.sin(np.sqrt(X**2 + Y**2)) * np.exp(-(X**2 + Y**2)/4)
+    surface_data = np.sin(np.sqrt(X**2 + Y**2)) * np.exp(-(X**2 + Y**2) / 4)
 
     # Тестовые данные изображения
     image_data = np.random.rand(50, 50, 3)
@@ -584,9 +599,7 @@ def main():
 
     # Генерируем отчет
     report = analytics.generate_comprehensive_report(
-        surface_data=surface_data,
-        image_data=image_data,
-        signal_data=signal_data
+        surface_data=surface_data, image_data=image_data, signal_data=signal_data
     )
 
     print("✓ Комплексный аналитический отчет сгенерирован")
@@ -597,6 +610,6 @@ def main():
 
     print("Аналитический модуль успешно протестирован")
 
+
 if __name__ == "__main__":
     main()
-

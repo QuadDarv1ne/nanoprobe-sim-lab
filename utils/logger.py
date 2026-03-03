@@ -13,13 +13,13 @@ from pathlib import Path
 from datetime import datetime
 from typing import Optional
 
+
 class LoggerSetup:
     """
     Класс для настройки системы ведения логов
     Обеспечивает централизованную настройку логирования для всех
     компонентов проекта.
     """
-
 
     def __init__(self, log_dir: str = "logs", log_level: str = "INFO"):
         """
@@ -33,11 +33,9 @@ class LoggerSetup:
         self.log_level = getattr(logging, log_level.upper())
         self.setup_logging_directory()
 
-
     def setup_logging_directory(self):
         """Создает директорию для логов если она не существует"""
         self.log_dir.mkdir(parents=True, exist_ok=True)
-
 
     def create_logger(self, name: str, log_file: Optional[str] = None) -> logging.Logger:
         """
@@ -58,8 +56,7 @@ class LoggerSetup:
 
         # Формат сообщений
         formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
         )
 
         # Обработчик для консоли
@@ -73,12 +70,13 @@ class LoggerSetup:
             log_file = f"{name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
 
         file_path = self.log_dir / log_file
-        file_handler = logging.FileHandler(file_path, encoding='utf-8')
+        file_handler = logging.FileHandler(file_path, encoding="utf-8")
         file_handler.setLevel(self.log_level)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
 
         return logger
+
 
 class NanoprobeLogger:
     """
@@ -86,7 +84,6 @@ class NanoprobeLogger:
     Предоставляет удобный интерфейс для логирования событий
     в различных компонентах проекта.
     """
-
 
     def __init__(self, config_manager=None):
         """
@@ -105,7 +102,6 @@ class NanoprobeLogger:
         self.logger_setup = LoggerSetup(log_dir, log_level)
         self.loggers = {}
 
-
     def get_logger(self, name: str) -> logging.Logger:
         """
         Получает или создает логгер с заданным именем
@@ -120,7 +116,6 @@ class NanoprobeLogger:
             self.loggers[name] = self.logger_setup.create_logger(name)
         return self.loggers[name]
 
-
     def log_spm_event(self, message: str, level: str = "INFO"):
         """
         Логирует событие связанное с СЗМ симулятором
@@ -131,7 +126,6 @@ class NanoprobeLogger:
         """
         logger = self.get_logger("spm_simulator")
         getattr(logger, level.lower())(message)
-
 
     def log_analyzer_event(self, message: str, level: str = "INFO"):
         """
@@ -144,7 +138,6 @@ class NanoprobeLogger:
         logger = self.get_logger("image_analyzer")
         getattr(logger, level.lower())(message)
 
-
     def log_sstv_event(self, message: str, level: str = "INFO"):
         """
         Логирует событие связанное с SSTV станцией
@@ -155,7 +148,6 @@ class NanoprobeLogger:
         """
         logger = self.get_logger("sstv_station")
         getattr(logger, level.lower())(message)
-
 
     def log_system_event(self, message: str, level: str = "INFO"):
         """
@@ -168,7 +160,6 @@ class NanoprobeLogger:
         logger = self.get_logger("nanoprobe_system")
         getattr(logger, level.lower())(message)
 
-
     def log_simulation_event(self, message: str, level: str = "INFO"):
         """
         Логирует событие связанное с симуляцией
@@ -179,6 +170,7 @@ class NanoprobeLogger:
         """
         logger = self.get_logger("simulation")
         getattr(logger, level.lower())(message)
+
 
 def setup_project_logging(config_manager=None) -> NanoprobeLogger:
     """
@@ -191,6 +183,7 @@ def setup_project_logging(config_manager=None) -> NanoprobeLogger:
         Настроенный экземпляр NanoprobeLogger
     """
     return NanoprobeLogger(config_manager)
+
 
 def main():
     """Главная функция для демонстрации работы системы логирования"""
@@ -213,6 +206,6 @@ def main():
     print("✓ Система логирования успешно настроена")
     print(f"✓ Логи сохраняются в директорию: {logger_manager.logger_setup.log_dir}")
 
+
 if __name__ == "__main__":
     main()
-

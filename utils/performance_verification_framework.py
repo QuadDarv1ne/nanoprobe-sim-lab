@@ -20,6 +20,7 @@ from dataclasses import dataclass
 
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.performance_profiler import PerformanceProfiler
@@ -31,9 +32,11 @@ from utils.optimization_orchestrator import OptimizationOrchestrator
 from utils.system_health_monitor import SystemHealthMonitor
 from utils.performance_analytics_dashboard import PerformanceAnalyticsDashboard
 
+
 @dataclass
 class PerformanceTestResult:
     """Результат теста производительности"""
+
     test_name: str
     original_metrics: Dict[str, Any]
     optimized_metrics: Dict[str, Any]
@@ -42,12 +45,12 @@ class PerformanceTestResult:
     timestamp: datetime
     notes: str = ""
 
+
 class PerformanceVerificationFramework:
     """
     Класс фреймворка верификации производительности
     Обеспечивает тестирование и верификацию эффективности оптимизационных инструментов.
     """
-
 
     def __init__(self, output_dir: str = "verification_reports"):
         """
@@ -73,7 +76,6 @@ class PerformanceVerificationFramework:
         self.test_results = []
         self.baseline_metrics = {}
 
-
     def establish_baseline(self) -> Dict[str, Any]:
         """
         Устанавливает базовые метрики производительности
@@ -85,38 +87,36 @@ class PerformanceVerificationFramework:
 
         # Получаем текущие системные метрики
         baseline = {
-            'timestamp': datetime.now().isoformat(),
-            'system_metrics': self._get_system_metrics(),
-            'resource_metrics': self.resource_manager.get_current_resources(),
-            'memory_snapshot': self._take_memory_snapshot(),
-            'health_status': self.health_monitor.get_current_health_status(),
-            'performance_summary': self.analytics_dashboard.get_performance_summary()
+            "timestamp": datetime.now().isoformat(),
+            "system_metrics": self._get_system_metrics(),
+            "resource_metrics": self.resource_manager.get_current_resources(),
+            "memory_snapshot": self._take_memory_snapshot(),
+            "health_status": self.health_monitor.get_current_health_status(),
+            "performance_summary": self.analytics_dashboard.get_performance_summary(),
         }
 
         self.baseline_metrics = baseline
         print("Базовые метрики установлены")
         return baseline
 
-
     def _get_system_metrics(self) -> Dict[str, float]:
         """Получает основные системные метрики"""
         try:
             cpu_percent = psutil.cpu_percent(interval=1)
             memory = psutil.virtual_memory()
-            disk = psutil.disk_usage('/')
+            disk = psutil.disk_usage("/")
 
             return {
-                'cpu_percent': cpu_percent,
-                'memory_percent': memory.percent,
-                'memory_used_gb': memory.used / (1024**3),
-                'disk_percent': disk.percent if disk else 0,
-                'process_count': len(psutil.pids()),
-                'boot_time': psutil.boot_time()
+                "cpu_percent": cpu_percent,
+                "memory_percent": memory.percent,
+                "memory_used_gb": memory.used / (1024**3),
+                "disk_percent": disk.percent if disk else 0,
+                "process_count": len(psutil.pids()),
+                "boot_time": psutil.boot_time(),
             }
         except Exception as e:
             print(f"Ошибка получения системных метрик: {e}")
             return {}
-
 
     def _take_memory_snapshot(self) -> Dict[str, Any]:
         """Делает снимок памяти"""
@@ -132,16 +132,15 @@ class PerformanceVerificationFramework:
             snapshot = self.memory_tracker.take_snapshot()
 
             return {
-                'current_memory_mb': current / (1024 * 1024),
-                'peak_memory_mb': peak / (1024 * 1024),
-                'rss_memory_mb': snapshot.rss_mb if snapshot else 0,
-                'vms_memory_mb': snapshot.vms_mb if snapshot else 0,
-                'memory_percent': snapshot.percent if snapshot else 0
+                "current_memory_mb": current / (1024 * 1024),
+                "peak_memory_mb": peak / (1024 * 1024),
+                "rss_memory_mb": snapshot.rss_mb if snapshot else 0,
+                "vms_memory_mb": snapshot.vms_mb if snapshot else 0,
+                "memory_percent": snapshot.percent if snapshot else 0,
             }
         except Exception as e:
             print(f"Ошибка получения снимка памяти: {e}")
             return {}
-
 
     def run_performance_tests(self) -> List[PerformanceTestResult]:
         """
@@ -183,7 +182,6 @@ class PerformanceVerificationFramework:
 
         return results
 
-
     def _test_cpu_performance(self) -> PerformanceTestResult:
         """Тестирует производительность CPU"""
         print("  Тест: Производительность CPU...")
@@ -200,30 +198,31 @@ class PerformanceVerificationFramework:
         optimized_metrics = self._benchmark_cpu_intensive_task()
 
         # Рассчитываем улучшение
-        original_time = original_metrics.get('execution_time', 1.0)
-        optimized_time = optimized_metrics.get('execution_time', 1.0)
-        improvement = ((original_time - optimized_time) / original_time) * 100 if original_time > 0 else 0
+        original_time = original_metrics.get("execution_time", 1.0)
+        optimized_time = optimized_metrics.get("execution_time", 1.0)
+        improvement = (
+            ((original_time - optimized_time) / original_time) * 100 if original_time > 0 else 0
+        )
 
         execution_time = time.time() - start_time
 
         return PerformanceTestResult(
-            test_name='CPU Performance',
+            test_name="CPU Performance",
             original_metrics=original_metrics,
             optimized_metrics=optimized_metrics,
             improvement_percent=improvement,
             execution_time=execution_time,
             timestamp=datetime.now(),
-            notes=f"Оптимизация статус: {optimization_result.status}"
+            notes=f"Оптимизация статус: {optimization_result.status}",
         )
-
 
     def _benchmark_cpu_intensive_task(self) -> Dict[str, Any]:
         """Бенчмарк CPU-интенсивной задачи"""
-        def cpu_intensive_task():
 
+        def cpu_intensive_task():
             result = 0
             for i in range(100000):
-                result += i ** 2
+                result += i**2
             return result
 
         # Измеряем время выполнения
@@ -235,13 +234,12 @@ class PerformanceVerificationFramework:
         resources = self.resource_manager.get_current_resources()
 
         return {
-            'execution_time': end_time - start_time,
-            'result': result,
-            'cpu_percent': resources.get('cpu_percent', 0),
-            'memory_rss_mb': resources.get('memory_rss_mb', 0),
-            'timestamp': datetime.now().isoformat()
+            "execution_time": end_time - start_time,
+            "result": result,
+            "cpu_percent": resources.get("cpu_percent", 0),
+            "memory_rss_mb": resources.get("memory_rss_mb", 0),
+            "timestamp": datetime.now().isoformat(),
         }
-
 
     def _test_memory_performance(self) -> PerformanceTestResult:
         """Тестирует производительность памяти"""
@@ -259,22 +257,25 @@ class PerformanceVerificationFramework:
         optimized_metrics = self._benchmark_memory_usage()
 
         # Рассчитываем улучшение (меньше памяти = лучше)
-        original_memory = original_metrics.get('memory_used_mb', 1.0)
-        optimized_memory = optimized_metrics.get('memory_used_mb', 1.0)
-        improvement = ((original_memory - optimized_memory) / original_memory) * 100 if original_memory > 0 else 0
+        original_memory = original_metrics.get("memory_used_mb", 1.0)
+        optimized_memory = optimized_metrics.get("memory_used_mb", 1.0)
+        improvement = (
+            ((original_memory - optimized_memory) / original_memory) * 100
+            if original_memory > 0
+            else 0
+        )
 
         execution_time = time.time() - start_time
 
         return PerformanceTestResult(
-            test_name='Memory Performance',
+            test_name="Memory Performance",
             original_metrics=original_metrics,
             optimized_metrics=optimized_metrics,
             improvement_percent=improvement,
             execution_time=execution_time,
             timestamp=datetime.now(),
-            notes=f"Оптимизация статус: {optimization_result.status}"
+            notes=f"Оптимизация статус: {optimization_result.status}",
         )
-
 
     def _benchmark_memory_usage(self) -> Dict[str, Any]:
         """Бенчмарк использования памяти"""
@@ -294,13 +295,12 @@ class PerformanceVerificationFramework:
         snapshot = self.memory_tracker.take_snapshot()
 
         return {
-            'current_memory_mb': current / (1024 * 1024),
-            'peak_memory_mb': peak / (1024 * 1024),
-            'rss_memory_mb': snapshot.rss_mb if snapshot else 0,
-            'result': result,
-            'timestamp': datetime.now().isoformat()
+            "current_memory_mb": current / (1024 * 1024),
+            "peak_memory_mb": peak / (1024 * 1024),
+            "rss_memory_mb": snapshot.rss_mb if snapshot else 0,
+            "result": result,
+            "timestamp": datetime.now().isoformat(),
         }
-
 
     def _test_algorithm_performance(self) -> PerformanceTestResult:
         """Тестирует производительность алгоритмов"""
@@ -313,31 +313,24 @@ class PerformanceVerificationFramework:
             """Медленная реализация"""
             result = 0
             for i in range(n):
-                result += i ** 2
+                result += i**2
             return result
 
         def algorithm_fast(n):
             """Быстрая реализация"""
-            return sum(i ** 2 for i in range(n))
+            return sum(i**2 for i in range(n))
 
         def algorithm_optimal(n):
             """Оптимальная реализация (математическая формула)"""
             return n * (n - 1) * (2 * n - 1) // 6
 
-        algorithms = {
-            'slow': algorithm_slow,
-            'fast': algorithm_fast,
-            'optimal': algorithm_optimal
-        }
+        algorithms = {"slow": algorithm_slow, "fast": algorithm_fast, "optimal": algorithm_optimal}
 
         # Тестируем до оптимизации
         original_results = {}
         for name, func in algorithms.items():
             original_results[name] = self.benchmark_suite.benchmark_function(
-                f"original_{name}",
-                func,
-                10000,
-                iterations=10
+                f"original_{name}", func, 10000, iterations=10
             )
 
         # Сравниваем алгоритмы
@@ -346,29 +339,27 @@ class PerformanceVerificationFramework:
         # Применяем оптимизации
         # Используем самый быстрый алгоритм
         optimized_result = self.benchmark_suite.benchmark_function(
-            "optimized_algorithm",
-            algorithm_optimal,
-            10000,
-            iterations=10
+            "optimized_algorithm", algorithm_optimal, 10000, iterations=10
         )
 
         # Рассчитываем улучшение
-        original_time = original_results['slow']['timing_stats']['avg_seconds']
-        optimized_time = optimized_result['timing_stats']['avg_seconds']
-        improvement = ((original_time - optimized_time) / original_time) * 100 if original_time > 0 else 0
+        original_time = original_results["slow"]["timing_stats"]["avg_seconds"]
+        optimized_time = optimized_result["timing_stats"]["avg_seconds"]
+        improvement = (
+            ((original_time - optimized_time) / original_time) * 100 if original_time > 0 else 0
+        )
 
         execution_time = time.time() - start_time
 
         return PerformanceTestResult(
-            test_name='Algorithm Performance',
+            test_name="Algorithm Performance",
             original_metrics=original_results,
             optimized_metrics=optimized_result,
             improvement_percent=improvement,
             execution_time=execution_time,
             timestamp=datetime.now(),
-            notes=f"Выполнено {len(comparisons)} сравнений алгоритмов"
+            notes=f"Выполнено {len(comparisons)} сравнений алгоритмов",
         )
-
 
     def _test_resource_management(self) -> PerformanceTestResult:
         """Тестирует управление ресурсами"""
@@ -393,15 +384,14 @@ class PerformanceVerificationFramework:
         execution_time = time.time() - start_time
 
         return PerformanceTestResult(
-            test_name='Resource Management',
+            test_name="Resource Management",
             original_metrics=original_resources,
             optimized_metrics=optimized_resources,
             improvement_percent=improvement,
             execution_time=execution_time,
             timestamp=datetime.now(),
-            notes=f"Оптимизировано {len(optimization_results)} типов ресурсов"
+            notes=f"Оптимизировано {len(optimization_results)} типов ресурсов",
         )
-
 
     def _test_comprehensive_optimization(self) -> PerformanceTestResult:
         """Тестирует комплексную оптимизацию"""
@@ -413,30 +403,29 @@ class PerformanceVerificationFramework:
         original_summary = self.analytics_dashboard.get_performance_summary()
 
         # Запускаем комплексную оптимизацию
-        optimization_results = self.orchestrator.start_comprehensive_optimization([
-            "core_utils", "spm_simulator"
-        ])
+        optimization_results = self.orchestrator.start_comprehensive_optimization(
+            ["core_utils", "spm_simulator"]
+        )
 
         # Тестируем после комплексной оптимизации
         optimized_summary = self.analytics_dashboard.get_performance_summary()
 
         # Рассчитываем улучшение по комплексному показателю
-        original_score = original_summary.get('current_metrics', {}).get('efficiency_score', 50)
-        optimized_score = optimized_summary.get('current_metrics', {}).get('efficiency_score', 50)
+        original_score = original_summary.get("current_metrics", {}).get("efficiency_score", 50)
+        optimized_score = optimized_summary.get("current_metrics", {}).get("efficiency_score", 50)
         improvement = optimized_score - original_score
 
         execution_time = time.time() - start_time
 
         return PerformanceTestResult(
-            test_name='Comprehensive Optimization',
+            test_name="Comprehensive Optimization",
             original_metrics=original_summary,
             optimized_metrics=optimized_summary,
             improvement_percent=improvement,
             execution_time=execution_time,
             timestamp=datetime.now(),
-            notes=f"Обработано {len(optimization_results)} модулей"
+            notes=f"Обработано {len(optimization_results)} модулей",
         )
-
 
     def verify_optimization_effectiveness(self) -> Dict[str, Any]:
         """
@@ -456,7 +445,11 @@ class PerformanceVerificationFramework:
         positive_improvements = sum(1 for r in self.test_results if r.improvement_percent > 0)
         negative_improvements = sum(1 for r in self.test_results if r.improvement_percent < 0)
 
-        avg_improvement = statistics.mean([r.improvement_percent for r in self.test_results]) if self.test_results else 0
+        avg_improvement = (
+            statistics.mean([r.improvement_percent for r in self.test_results])
+            if self.test_results
+            else 0
+        )
 
         # Определяем общий статус
         effectiveness_score = 0
@@ -465,16 +458,18 @@ class PerformanceVerificationFramework:
             effectiveness_score = avg_improvement * positive_ratio * 100
 
         verification_results = {
-            'total_tests_run': total_tests,
-            'positive_improvements': positive_improvements,
-            'negative_improvements': negative_improvements,
-            'neutral_improvements': total_tests - positive_improvements - negative_improvements,
-            'average_improvement_percent': avg_improvement,
-            'effectiveness_score': effectiveness_score,
-            'success_rate_percent': (positive_improvements / total_tests * 100) if total_tests > 0 else 0,
-            'total_execution_time': sum(r.execution_time for r in self.test_results),
-            'timestamp': datetime.now().isoformat(),
-            'recommendations': self._generate_verification_recommendations()
+            "total_tests_run": total_tests,
+            "positive_improvements": positive_improvements,
+            "negative_improvements": negative_improvements,
+            "neutral_improvements": total_tests - positive_improvements - negative_improvements,
+            "average_improvement_percent": avg_improvement,
+            "effectiveness_score": effectiveness_score,
+            "success_rate_percent": (positive_improvements / total_tests * 100)
+            if total_tests > 0
+            else 0,
+            "total_execution_time": sum(r.execution_time for r in self.test_results),
+            "timestamp": datetime.now().isoformat(),
+            "recommendations": self._generate_verification_recommendations(),
         }
 
         print(f"Верификация завершена:")
@@ -484,7 +479,6 @@ class PerformanceVerificationFramework:
         print(f"  - Оценка эффективности: {effectiveness_score:.2f}")
 
         return verification_results
-
 
     def _generate_verification_recommendations(self) -> List[str]:
         """Генерирует рекомендации на основе верификации"""
@@ -497,29 +491,38 @@ class PerformanceVerificationFramework:
         avg_improvement = statistics.mean([r.improvement_percent for r in self.test_results])
 
         if avg_improvement > 10:
-            recommendations.append("Отличная эффективность оптимизаций! Среднее улучшение превышает 10%.")
+            recommendations.append(
+                "Отличная эффективность оптимизаций! Среднее улучшение превышает 10%."
+            )
         elif avg_improvement > 0:
-            recommendations.append("Оптимизации показывают положительный эффект, но есть резервы для улучшения.")
+            recommendations.append(
+                "Оптимизации показывают положительный эффект, но есть резервы для улучшения."
+            )
         else:
             recommendations.append("Оптимизации требуют доработки - средний эффект отрицательный.")
 
         # Рекомендации по конкретным тестам
         worst_test = min(self.test_results, key=lambda x: x.improvement_percent)
         if worst_test.improvement_percent < 0:
-            recommendations.append(f"Обратите внимание на '{worst_test.test_name}' - показал отрицательный результат.")
+            recommendations.append(
+                f"Обратите внимание на '{worst_test.test_name}' - показал отрицательный результат."
+            )
 
         best_test = max(self.test_results, key=lambda x: x.improvement_percent)
         if best_test.improvement_percent > 10:
-            recommendations.append(f"'{best_test.test_name}' показал отличный результат - {best_test.improvement_percent:.2f}% улучшения.")
+            recommendations.append(
+                f"'{best_test.test_name}' показал отличный результат - {best_test.improvement_percent:.2f}% улучшения."
+            )
 
         # Рекомендации по системе в целом
         if self.resource_manager.get_resource_efficiency_score() > 80:
             recommendations.append("Система эффективно использует ресурсы.")
         else:
-            recommendations.append("Рекомендуется дополнительно оптимизировать использование ресурсов.")
+            recommendations.append(
+                "Рекомендуется дополнительно оптимизировать использование ресурсов."
+            )
 
         return recommendations
-
 
     def generate_verification_report(self, output_path: str = None) -> str:
         """
@@ -532,40 +535,44 @@ class PerformanceVerificationFramework:
             Путь к сохраненному отчету
         """
         if output_path is None:
-            output_path = str(self.output_dir / f"verification_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
+            output_path = str(
+                self.output_dir
+                / f"verification_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            )
 
         # Выполняем верификацию
         verification_results = self.verify_optimization_effectiveness()
 
         report = {
-            'generation_time': datetime.now().isoformat(),
-            'baseline_metrics': self.baseline_metrics,
-            'test_results': [
+            "generation_time": datetime.now().isoformat(),
+            "baseline_metrics": self.baseline_metrics,
+            "test_results": [
                 {
-                    'test_name': r.test_name,
-                    'original_metrics': r.original_metrics,
-                    'optimized_metrics': r.optimized_metrics,
-                    'improvement_percent': r.improvement_percent,
-                    'execution_time': r.execution_time,
-                    'timestamp': r.timestamp.isoformat(),
-                    'notes': r.notes
+                    "test_name": r.test_name,
+                    "original_metrics": r.original_metrics,
+                    "optimized_metrics": r.optimized_metrics,
+                    "improvement_percent": r.improvement_percent,
+                    "execution_time": r.execution_time,
+                    "timestamp": r.timestamp.isoformat(),
+                    "notes": r.notes,
                 }
                 for r in self.test_results
             ],
-            'verification_results': verification_results,
-            'system_info': {
-                'cpu_count': psutil.cpu_count(),
-                'memory_total_gb': round(psutil.virtual_memory().total / (1024**3), 2),
-                'platform': str(psutil.Process().parent().exe()) if hasattr(psutil, 'Process') and psutil.Process().parent() else 'unknown'
-            }
+            "verification_results": verification_results,
+            "system_info": {
+                "cpu_count": psutil.cpu_count(),
+                "memory_total_gb": round(psutil.virtual_memory().total / (1024**3), 2),
+                "platform": str(psutil.Process().parent().exe())
+                if hasattr(psutil, "Process") and psutil.Process().parent()
+                else "unknown",
+            },
         }
 
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(report, f, indent=2, ensure_ascii=False, default=str)
 
         print(f"Отчет о верификации сохранен: {output_path}")
         return output_path
-
 
     def run_regression_tests(self) -> Dict[str, Any]:
         """
@@ -577,12 +584,12 @@ class PerformanceVerificationFramework:
         print("Запуск регрессионных тестов...")
 
         regression_results = {
-            'tests_passed': 0,
-            'tests_failed': 0,
-            'total_tests': 0,
-            'failed_tests': [],
-            'passed_tests': [],
-            'execution_time': 0
+            "tests_passed": 0,
+            "tests_failed": 0,
+            "total_tests": 0,
+            "failed_tests": [],
+            "passed_tests": [],
+            "execution_time": 0,
         }
 
         start_time = time.time()
@@ -598,63 +605,67 @@ class PerformanceVerificationFramework:
             snapshot = test_memory.take_snapshot()
             cpu_opt = test_resource.optimize_cpu_usage()
 
-            regression_results['tests_passed'] += 1
-            regression_results['passed_tests'].append({
-                'name': 'Tools Initialization',
-                'status': 'PASS',
-                'details': 'All optimization tools initialized and basic functions work'
-            })
+            regression_results["tests_passed"] += 1
+            regression_results["passed_tests"].append(
+                {
+                    "name": "Tools Initialization",
+                    "status": "PASS",
+                    "details": "All optimization tools initialized and basic functions work",
+                }
+            )
         except Exception as e:
-            regression_results['tests_failed'] += 1
-            regression_results['failed_tests'].append({
-                'name': 'Tools Initialization',
-                'status': 'FAIL',
-                'error': str(e)
-            })
+            regression_results["tests_failed"] += 1
+            regression_results["failed_tests"].append(
+                {"name": "Tools Initialization", "status": "FAIL", "error": str(e)}
+            )
 
-        regression_results['total_tests'] += 1
+        regression_results["total_tests"] += 1
 
         # Тест 2: Проверка совместимости версий
         try:
             # Проверяем, что основные методы доступны
-            methods_exist = all([
-                hasattr(self.performance_profiler, 'benchmark_function'),
-                hasattr(self.resource_manager, 'optimize_cpu_usage'),
-                hasattr(self.memory_tracker, 'take_snapshot'),
-                hasattr(self.benchmark_suite, 'benchmark_function'),
-                hasattr(self.orchestrator, 'start_comprehensive_optimization')
-            ])
+            methods_exist = all(
+                [
+                    hasattr(self.performance_profiler, "benchmark_function"),
+                    hasattr(self.resource_manager, "optimize_cpu_usage"),
+                    hasattr(self.memory_tracker, "take_snapshot"),
+                    hasattr(self.benchmark_suite, "benchmark_function"),
+                    hasattr(self.orchestrator, "start_comprehensive_optimization"),
+                ]
+            )
 
             if methods_exist:
-                regression_results['tests_passed'] += 1
-                regression_results['passed_tests'].append({
-                    'name': 'API Compatibility',
-                    'status': 'PASS',
-                    'details': 'All expected API methods are available'
-                })
+                regression_results["tests_passed"] += 1
+                regression_results["passed_tests"].append(
+                    {
+                        "name": "API Compatibility",
+                        "status": "PASS",
+                        "details": "All expected API methods are available",
+                    }
+                )
             else:
-                regression_results['tests_failed'] += 1
-                regression_results['failed_tests'].append({
-                    'name': 'API Compatibility',
-                    'status': 'FAIL',
-                    'error': 'Some expected methods are missing'
-                })
+                regression_results["tests_failed"] += 1
+                regression_results["failed_tests"].append(
+                    {
+                        "name": "API Compatibility",
+                        "status": "FAIL",
+                        "error": "Some expected methods are missing",
+                    }
+                )
         except Exception as e:
-            regression_results['tests_failed'] += 1
-            regression_results['failed_tests'].append({
-                'name': 'API Compatibility',
-                'status': 'FAIL',
-                'error': str(e)
-            })
+            regression_results["tests_failed"] += 1
+            regression_results["failed_tests"].append(
+                {"name": "API Compatibility", "status": "FAIL", "error": str(e)}
+            )
 
-        regression_results['total_tests'] += 1
+        regression_results["total_tests"] += 1
 
         # Тест 3: Проверка производительности после оптимизации
         try:
             # Сравниваем время выполнения базовой операции до и после "оптимизации"
 
             def baseline_operation():
-                            return sum(i**2 for i in range(10000))
+                return sum(i**2 for i in range(10000))
 
             # Время до
             start = time.time()
@@ -672,35 +683,40 @@ class PerformanceVerificationFramework:
 
             # Результаты должны быть одинаковыми
             if result1 == result2:
-                regression_results['tests_passed'] += 1
-                regression_results['passed_tests'].append({
-                    'name': 'Functional Correctness',
-                    'status': 'PASS',
-                    'details': f'Timing: before={time_before:.4f}s, after={time_after:.4f}s',
-                    'functional_correctness': True
-                })
+                regression_results["tests_passed"] += 1
+                regression_results["passed_tests"].append(
+                    {
+                        "name": "Functional Correctness",
+                        "status": "PASS",
+                        "details": f"Timing: before={time_before:.4f}s, after={time_after:.4f}s",
+                        "functional_correctness": True,
+                    }
+                )
             else:
-                regression_results['tests_failed'] += 1
-                regression_results['failed_tests'].append({
-                    'name': 'Functional Correctness',
-                    'status': 'FAIL',
-                    'error': 'Optimization changed functional behavior'
-                })
+                regression_results["tests_failed"] += 1
+                regression_results["failed_tests"].append(
+                    {
+                        "name": "Functional Correctness",
+                        "status": "FAIL",
+                        "error": "Optimization changed functional behavior",
+                    }
+                )
         except Exception as e:
-            regression_results['tests_failed'] += 1
-            regression_results['failed_tests'].append({
-                'name': 'Functional Correctness',
-                'status': 'FAIL',
-                'error': str(e)
-            })
+            regression_results["tests_failed"] += 1
+            regression_results["failed_tests"].append(
+                {"name": "Functional Correctness", "status": "FAIL", "error": str(e)}
+            )
 
-        regression_results['total_tests'] += 1
+        regression_results["total_tests"] += 1
 
-        regression_results['execution_time'] = time.time() - start_time
+        regression_results["execution_time"] = time.time() - start_time
 
-        print(f"Регрессионные тесты завершены: {regression_results['tests_passed']} пройдено, {regression_results['tests_failed']} провалено")
+        print(
+            f"Регрессионные тесты завершены: {regression_results['tests_passed']} пройдено, {regression_results['tests_failed']} провалено"
+        )
 
         return regression_results
+
 
 def main():
     """Главная функция для демонстрации фреймворка верификации"""
@@ -731,7 +747,9 @@ def main():
     # Запускаем регрессионные тесты
     print("\nЗапуск регрессионных тестов...")
     regression_results = verification_framework.run_regression_tests()
-    print(f"✓ Регрессионные тесты: {regression_results['tests_passed']} пройдено, {regression_results['tests_failed']} провалено")
+    print(
+        f"✓ Регрессионные тесты: {regression_results['tests_passed']} пройдено, {regression_results['tests_failed']} провалено"
+    )
 
     # Генерируем отчет
     print("\nГенерация отчета о верификации...")
@@ -740,7 +758,7 @@ def main():
 
     # Выводим рекомендации
     print("\nРекомендации по результатам верификации:")
-    for i, rec in enumerate(verification_results['recommendations'], 1):
+    for i, rec in enumerate(verification_results["recommendations"], 1):
         print(f"  {i}. {rec}")
 
     print("\nФреймворк верификации успешно протестирован")
@@ -751,6 +769,6 @@ def main():
     print("- Регрессионные тесты: verification_framework.run_regression_tests()")
     print("- Генерация отчетов: verification_framework.generate_verification_report()")
 
+
 if __name__ == "__main__":
     main()
-

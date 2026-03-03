@@ -12,13 +12,13 @@ import matplotlib.pyplot as plt
 from typing import Tuple, Optional
 import random
 
+
 class SurfaceModel:
     """
     Класс для моделирования поверхности
     Обрабатывает генерацию и загрузку данных о топографии поверхности.
     Поддерживает как процедурную генерацию, так и загрузку на основе файлов.
     """
-
 
     def __init__(self, width: int = 50, height: int = 50):
         """
@@ -33,7 +33,6 @@ class SurfaceModel:
         self.height_map = np.zeros((self.height, self.width))
         self.generate_surface()
 
-
     def generate_surface(self):
         """Генерирует случайную поверхность с заданными характеристиками"""
         # Генерируем базовую поверхность с нормальным распределением
@@ -46,14 +45,15 @@ class SurfaceModel:
         self._add_mountains()
 
         # Нормализуем значения
-        self.height_map = (self.height_map - np.min(self.height_map)) / (np.max(self.height_map) - np.min(self.height_map))
-
+        self.height_map = (self.height_map - np.min(self.height_map)) / (
+            np.max(self.height_map) - np.min(self.height_map)
+        )
 
     def _add_craters(self, num_craters: int = 3):
         """Добавляет искусственные кратеры на поверхность"""
         if self.width < 10 or self.height < 10:
             return  # Пропускаем для маленьких поверхностей
-        
+
         for _ in range(num_craters):
             center_x = random.randint(5, self.width - 5)
             center_y = random.randint(5, self.height - 5)
@@ -61,17 +61,16 @@ class SurfaceModel:
 
             for y in range(self.height):
                 for x in range(self.width):
-                    dist = np.sqrt((x - center_x)**2 + (y - center_y)**2)
+                    dist = np.sqrt((x - center_x) ** 2 + (y - center_y) ** 2)
                     if dist <= radius:
-                        depth = -0.3 * (1 - dist/radius)
+                        depth = -0.3 * (1 - dist / radius)
                         self.height_map[y, x] += depth
-
 
     def _add_mountains(self, num_mountains: int = 2):
         """Добавляет искусственные горы на поверхность"""
         if self.width < 10 or self.height < 10:
             return  # Пропускаем для маленьких поверхностей
-        
+
         for _ in range(num_mountains):
             center_x = random.randint(5, self.width - 5)
             center_y = random.randint(5, self.height - 5)
@@ -79,11 +78,10 @@ class SurfaceModel:
 
             for y in range(self.height):
                 for x in range(self.width):
-                    dist = np.sqrt((x - center_x)**2 + (y - center_y)**2)
+                    dist = np.sqrt((x - center_x) ** 2 + (y - center_y) ** 2)
                     if dist <= radius:
-                        height = 0.4 * (1 - dist/radius)
+                        height = 0.4 * (1 - dist / radius)
                         self.height_map[y, x] += height
-
 
     def get_height(self, x: int, y: int) -> float:
         """
@@ -100,7 +98,6 @@ class SurfaceModel:
             return float(self.height_map[y, x])
         else:
             return 0.0  # Значение по умолчанию за пределами поверхности
-
 
     def save_to_file(self, filename: str) -> bool:
         """
@@ -120,7 +117,6 @@ class SurfaceModel:
             print(f"Ошибка при сохранении модели поверхности: {str(e)}")
             return False
 
-
     def visualize(self, title: str = "Модель поверхности"):
         """
         Визуализирует модель поверхности
@@ -129,12 +125,13 @@ class SurfaceModel:
             title: Заголовок графика
         """
         plt.figure(figsize=(10, 8))
-        plt.imshow(self.height_map, cmap='viridis', interpolation='bilinear')
-        plt.colorbar(label='Высота')
+        plt.imshow(self.height_map, cmap="viridis", interpolation="bilinear")
+        plt.colorbar(label="Высота")
         plt.title(title)
-        plt.xlabel('X')
-        plt.ylabel('Y')
+        plt.xlabel("X")
+        plt.ylabel("Y")
         plt.show()
+
 
 class ProbeModel:
     """
@@ -142,7 +139,6 @@ class ProbeModel:
     Симулирует физическое движение зонда и взаимодействие с поверхностью,
     включая механизмы обратной связи.
     """
-
 
     def __init__(self):
         """Инициализирует модель зонда"""
@@ -152,7 +148,6 @@ class ProbeModel:
         self.scan_speed = 0.1
         self.max_z = 20.0
         self.min_z = 0.1
-
 
     def set_position(self, new_x: float, new_y: float, new_z: float):
         """
@@ -167,7 +162,6 @@ class ProbeModel:
         self.y = new_y
         self.z = new_z
 
-
     def get_position(self) -> Tuple[float, float, float]:
         """
         Получает текущую позицию зонда
@@ -176,7 +170,6 @@ class ProbeModel:
             Кортеж с координатами (x, y, z)
         """
         return (self.x, self.y, self.z)
-
 
     def move_to(self, target_x: float, target_y: float, target_z: float = None):
         """
@@ -191,7 +184,6 @@ class ProbeModel:
         self.y = target_y
         if target_z is not None:
             self.z = target_z
-
 
     def adjust_to_surface(self, surface: SurfaceModel) -> float:
         """
@@ -214,13 +206,13 @@ class ProbeModel:
         self.z = adjusted_z
         return self.z
 
+
 class SPMController:
     """
     Класс для контроллера СЗМ
     Управляет общим процессом сканирования, координирует движение зонда
     и собирает данные.
     """
-
 
     def __init__(self):
         """Инициализирует контроллер СЗМ"""
@@ -229,7 +221,6 @@ class SPMController:
         self.scan_data = None
         self.current_x = 0
         self.current_y = 0
-
 
     def set_surface(self, surface: SurfaceModel):
         """
@@ -240,7 +231,6 @@ class SPMController:
         """
         self.surface = surface
         self.scan_data = np.zeros((surface.height, surface.width))
-
 
     def scan_surface(self):
         """Выполняет сканирование всей поверхности"""
@@ -275,7 +265,6 @@ class SPMController:
 
         print("Сканирование завершено!")
 
-
     def save_scan_results(self, filename: str) -> bool:
         """
         Сохраняет результаты сканирования в файл
@@ -298,7 +287,6 @@ class SPMController:
             print(f"Ошибка при сохранении результатов сканирования: {str(e)}")
             return False
 
-
     def visualize_scan_results(self, title: str = "Результаты сканирования"):
         """
         Визуализирует результаты сканирования
@@ -311,24 +299,29 @@ class SPMController:
             return
 
         plt.figure(figsize=(10, 8))
-        plt.imshow(self.scan_data, cmap='viridis', interpolation='bilinear')
-        plt.colorbar(label='Высота зонда')
+        plt.imshow(self.scan_data, cmap="viridis", interpolation="bilinear")
+        plt.colorbar(label="Высота зонда")
         plt.title(title)
-        plt.xlabel('X')
-        plt.ylabel('Y')
+        plt.xlabel("X")
+        plt.ylabel("Y")
         plt.show()
+
 
 def main():
     """Главная функция для демонстрации работы симулятора СЗМ"""
     import argparse
-    
-    parser = argparse.ArgumentParser(description='Симулятор СЗМ')
-    parser.add_argument('--size', '-s', type=int, default=30, help='Размер поверхности (по умолчанию: 30)')
-    parser.add_argument('--output', '-o', type=str, default='scan_results.txt', help='Файл для результатов')
-    parser.add_argument('--no-visualize', action='store_true', help='Отключить визуализацию')
-    
+
+    parser = argparse.ArgumentParser(description="Симулятор СЗМ")
+    parser.add_argument(
+        "--size", "-s", type=int, default=30, help="Размер поверхности (по умолчанию: 30)"
+    )
+    parser.add_argument(
+        "--output", "-o", type=str, default="scan_results.txt", help="Файл для результатов"
+    )
+    parser.add_argument("--no-visualize", action="store_true", help="Отключить визуализацию")
+
     args = parser.parse_args()
-    
+
     print("=" * 50)
     print("    СИМУЛЯТОР АППАРАТНОГО ОБЕСПЕЧЕНИЯ СЗМ (Python)")
     print("         (Scanning Probe Microscope Simulator)")
@@ -355,6 +348,6 @@ def main():
 
     print("Симуляция завершена. Результаты сохранены.")
 
+
 if __name__ == "__main__":
     main()
-

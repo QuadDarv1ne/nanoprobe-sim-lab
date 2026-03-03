@@ -17,13 +17,13 @@ import csv
 import os
 from datetime import datetime
 
+
 class DataManager:
     """
     Класс для управления данными проекта
     Обеспечивает централизованное хранение, загрузку и сохранение
     данных для всех компонентов проекта.
     """
-
 
     def __init__(self, data_dir: str = "data", output_dir: str = "output"):
         """
@@ -39,7 +39,6 @@ class DataManager:
         # Создаем директории если они не существуют
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.output_dir.mkdir(parents=True, exist_ok=True)
-
 
     def save_surface_data(self, surface_data: np.ndarray, filename: str) -> bool:
         """
@@ -60,7 +59,6 @@ class DataManager:
         except Exception as e:
             print(f"Ошибка при сохранении данных поверхности: {e}")
             return False
-
 
     def load_surface_data(self, filename: str) -> Optional[np.ndarray]:
         """
@@ -88,7 +86,6 @@ class DataManager:
             print(f"Ошибка при загрузке данных поверхности: {e}")
             return None
 
-
     def save_scan_results(self, scan_data: np.ndarray, filename: str) -> bool:
         """
         Сохраняет результаты сканирования
@@ -108,7 +105,6 @@ class DataManager:
         except Exception as e:
             print(f"Ошибка при сохранении результатов сканирования: {e}")
             return False
-
 
     def load_scan_results(self, filename: str) -> Optional[np.ndarray]:
         """
@@ -136,7 +132,6 @@ class DataManager:
             print(f"Ошибка при загрузке результатов сканирования: {e}")
             return None
 
-
     def save_image_analysis_results(self, results: Dict[str, Any], filename: str) -> bool:
         """
         Сохраняет результаты анализа изображений
@@ -150,14 +145,13 @@ class DataManager:
         """
         try:
             filepath = self.output_dir / filename
-            with open(filepath, 'w', encoding='utf-8') as f:
+            with open(filepath, "w", encoding="utf-8") as f:
                 json.dump(results, f, indent=2, ensure_ascii=False)
             print(f"Результаты анализа изображений сохранены: {filepath}")
             return True
         except Exception as e:
             print(f"Ошибка при сохранении результатов анализа изображений: {e}")
             return False
-
 
     def load_image_analysis_results(self, filename: str) -> Optional[Dict[str, Any]]:
         """
@@ -175,7 +169,7 @@ class DataManager:
                 filepath = self.output_dir / filename  # Пробуем в output директории
 
             if filepath.exists():
-                with open(filepath, 'r', encoding='utf-8') as f:
+                with open(filepath, "r", encoding="utf-8") as f:
                     results = json.load(f)
                 print(f"Результаты анализа изображений загружены: {filepath}")
                 return results
@@ -185,7 +179,6 @@ class DataManager:
         except Exception as e:
             print(f"Ошибка при загрузке результатов анализа изображений: {e}")
             return None
-
 
     def save_sstv_results(self, image_data, filename: str) -> bool:
         """
@@ -201,20 +194,21 @@ class DataManager:
         try:
             filepath = self.output_dir / filename
             # Для простоты сохраняем как numpy массив
-            if hasattr(image_data, 'save'):
+            if hasattr(image_data, "save"):
                 # Если это объект PIL Image
                 image_data.save(filepath)
             else:
                 # Если это numpy массив
-                np.save(filepath.with_suffix('.npy'), image_data)
+                np.save(filepath.with_suffix(".npy"), image_data)
             print(f"Результаты SSTV декодирования сохранены: {filepath}")
             return True
         except Exception as e:
             print(f"Ошибка при сохранении результатов SSTV декодирования: {e}")
             return False
 
-
-    def save_simulation_metadata(self, metadata: Dict[str, Any], filename: str = "simulation_metadata.json") -> bool:
+    def save_simulation_metadata(
+        self, metadata: Dict[str, Any], filename: str = "simulation_metadata.json"
+    ) -> bool:
         """
         Сохраняет метаданные симуляции
 
@@ -227,10 +221,10 @@ class DataManager:
         """
         try:
             # Добавляем временную метку
-            metadata['timestamp'] = datetime.now().isoformat()
+            metadata["timestamp"] = datetime.now().isoformat()
 
             filepath = self.output_dir / filename
-            with open(filepath, 'w', encoding='utf-8') as f:
+            with open(filepath, "w", encoding="utf-8") as f:
                 json.dump(metadata, f, indent=2, ensure_ascii=False)
             print(f"Метаданные симуляции сохранены: {filepath}")
             return True
@@ -238,8 +232,9 @@ class DataManager:
             print(f"Ошибка при сохранении метаданных симуляции: {e}")
             return False
 
-
-    def load_simulation_metadata(self, filename: str = "simulation_metadata.json") -> Optional[Dict[str, Any]]:
+    def load_simulation_metadata(
+        self, filename: str = "simulation_metadata.json"
+    ) -> Optional[Dict[str, Any]]:
         """
         Загружает метаданные симуляции
 
@@ -255,7 +250,7 @@ class DataManager:
                 filepath = self.output_dir / filename  # Пробуем в output директории
 
             if filepath.exists():
-                with open(filepath, 'r', encoding='utf-8') as f:
+                with open(filepath, "r", encoding="utf-8") as f:
                     metadata = json.load(f)
                 print(f"Метаданные симуляции загружены: {filepath}")
                 return metadata
@@ -265,7 +260,6 @@ class DataManager:
         except Exception as e:
             print(f"Ошибка при загрузке метаданных симуляции: {e}")
             return None
-
 
     def export_to_csv(self, data: Union[np.ndarray, pd.DataFrame], filename: str) -> bool:
         """
@@ -296,7 +290,6 @@ class DataManager:
             print(f"Ошибка при экспорте в CSV: {e}")
             return False
 
-
     def get_recent_files(self, extension: str = "", count: int = 5) -> List[Path]:
         """
         Получает список последних файлов с заданным расширением
@@ -321,7 +314,6 @@ class DataManager:
         # Возвращаем только пути к файлам
         return [file[1] for file in files[:count]]
 
-
     def cleanup_old_files(self, days_old: int = 30) -> int:
         """
         Удаляет старые файлы из директорий данных
@@ -333,6 +325,7 @@ class DataManager:
             Количество удаленных файлов
         """
         import time
+
         current_time = time.time()
         cutoff_time = current_time - (days_old * 24 * 60 * 60)
         deleted_count = 0
@@ -349,6 +342,7 @@ class DataManager:
 
         return deleted_count
 
+
 def main():
     """Главная функция для демонстрации работы менеджера данных"""
     print("=== МЕНЕДЖЕР ДАННЫХ ПРОЕКТА ===")
@@ -363,21 +357,25 @@ def main():
     if data_manager.save_surface_data(test_surface, "test_surface.txt"):
         loaded_surface = data_manager.load_surface_data("test_surface.txt")
         if loaded_surface is not None:
-            print(f"✓ Данные поверхности успешно сохранены и загружены. Размер: {loaded_surface.shape}")
+            print(
+                f"✓ Данные поверхности успешно сохранены и загружены. Размер: {loaded_surface.shape}"
+            )
 
     # Создаем тестовые результаты анализа
     test_results = {
         "surface_roughness": 0.123,
         "defect_count": 5,
         "analysis_date": datetime.now().isoformat(),
-        "quality_score": 0.85
+        "quality_score": 0.85,
     }
 
     # Сохраняем и загружаем результаты анализа
     if data_manager.save_image_analysis_results(test_results, "test_analysis.json"):
         loaded_results = data_manager.load_image_analysis_results("test_analysis.json")
         if loaded_results:
-            print(f"✓ Результаты анализа успешно сохранены и загружены. Качество: {loaded_results.get('quality_score')}")
+            print(
+                f"✓ Результаты анализа успешно сохранены и загружены. Качество: {loaded_results.get('quality_score')}"
+            )
 
     # Проверяем последние файлы
     recent_txt_files = data_manager.get_recent_files(".txt", 3)
@@ -385,6 +383,6 @@ def main():
 
     print("Менеджер данных успешно инициализирован")
 
+
 if __name__ == "__main__":
     main()
-

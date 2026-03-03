@@ -31,6 +31,7 @@ class CacheInfo:
         last_accessed: Время последнего доступа.
         cache_type: Тип кэша.
     """
+
     path: Path
     size_bytes: int
     file_count: int
@@ -49,11 +50,7 @@ class CacheManager:
         >>> cache_mgr.auto_cleanup()
     """
 
-    def __init__(
-        self,
-        project_root: str = ".",
-        config_file: str = "cache_config.json"
-    ) -> None:
+    def __init__(self, project_root: str = ".", config_file: str = "cache_config.json") -> None:
         """
         Инициализирует менеджер кэша.
 
@@ -82,23 +79,18 @@ class CacheManager:
                 ".pytest_cache",
                 ".mypy_cache",
                 "logs/cache",
-                "output/cache"
+                "output/cache",
             ],
             "max_age_days": 7,
             "max_size_mb": 100,
             "auto_cleanup": True,
             "cleanup_schedule": "daily",
-            "excluded_patterns": [
-                "*.py",
-                "*.json",
-                "*.txt",
-                "config.*"
-            ]
+            "excluded_patterns": ["*.py", "*.json", "*.txt", "config.*"],
         }
 
         if self.config_file.exists():
             try:
-                with open(self.config_file, 'r', encoding='utf-8') as f:
+                with open(self.config_file, "r", encoding="utf-8") as f:
                     config = json.load(f)
                     # Объединяем с дефолтной конфигурацией
                     for key, value in default_config.items():
@@ -109,7 +101,7 @@ class CacheManager:
                 return default_config
         else:
             # Создаем дефолтный файл конфигурации
-            with open(self.config_file, 'w', encoding='utf-8') as f:
+            with open(self.config_file, "w", encoding="utf-8") as f:
                 json.dump(default_config, f, indent=2, ensure_ascii=False)
             return default_config
 
@@ -130,7 +122,7 @@ class CacheManager:
         # Добавляем системные директории кэша Python
         python_cache_dirs = [
             self.project_root / "__pycache__",
-            Path(tempfile.gettempdir()) / "nanoprobe_cache"
+            Path(tempfile.gettempdir()) / "nanoprobe_cache",
         ]
 
         for cache_dir in python_cache_dirs:
@@ -176,7 +168,7 @@ class CacheManager:
                         size_bytes=size_bytes,
                         file_count=file_count,
                         last_accessed=oldest_file_time or datetime.now(),
-                        cache_type=self._determine_cache_type(cache_dir)
+                        cache_type=self._determine_cache_type(cache_dir),
                     )
                     cache_info_list.append(cache_info)
 
@@ -207,10 +199,12 @@ class CacheManager:
         else:
             return "general_cache"
 
-    def cleanup_cache(self,
-                     max_age_days: Optional[int] = None,
-                     max_size_mb: Optional[int] = None,
-                     force: bool = False) -> Dict[str, Union[int, List[str]]]:
+    def cleanup_cache(
+        self,
+        max_age_days: Optional[int] = None,
+        max_size_mb: Optional[int] = None,
+        force: bool = False,
+    ) -> Dict[str, Union[int, List[str]]]:
         """
         Очищает кэш проекта
 
@@ -269,7 +263,7 @@ class CacheManager:
             "deleted_size_bytes": deleted_size,
             "deleted_size_mb": round(deleted_size / (1024 * 1024), 2),
             "freed_space_mb": round(deleted_size / (1024 * 1024), 2),
-            "deleted_paths": deleted_files[:10]  # Показываем первые 10 удаленных путей
+            "deleted_paths": deleted_files[:10],  # Показываем первые 10 удаленных путей
         }
 
     def _cleanup_python_cache(self):
@@ -282,7 +276,9 @@ class CacheManager:
                         cache_dir = Path(root) / dir_name
                         try:
                             shutil.rmtree(cache_dir)
-                            dirs.remove(dir_name)  # Удаляем из списка для предотвращения повторного обхода
+                            dirs.remove(
+                                dir_name
+                            )  # Удаляем из списка для предотвращения повторного обхода
                         except (OSError, PermissionError):
                             pass
         except Exception as e:
@@ -362,7 +358,7 @@ class CacheManager:
             "cache_by_type": cache_by_type,
             "timestamp": datetime.now().isoformat(),
             "auto_cleanup_enabled": self.cache_config.get("auto_cleanup", True),
-            "cleanup_schedule": self.cache_config.get("cleanup_schedule", "daily")
+            "cleanup_schedule": self.cache_config.get("cleanup_schedule", "daily"),
         }
 
     def optimize_memory_usage(self) -> Dict[str, Union[int, float]]:
@@ -381,6 +377,7 @@ class CacheManager:
 
         # Очищаем кэш Python
         import sys
+
         sys.stdout.flush()
         sys.stderr.flush()
 
@@ -392,7 +389,7 @@ class CacheManager:
             "memory_freed_bytes": memory_freed,
             "memory_freed_mb": round(memory_freed / (1024 * 1024), 2),
             "garbage_collected_objects": collected,
-            "current_memory_usage_mb": round(memory_after / (1024 * 1024), 2)
+            "current_memory_usage_mb": round(memory_after / (1024 * 1024), 2),
         }
 
     def generate_cleanup_report(self, output_path: str = None) -> str:
@@ -423,10 +420,10 @@ class CacheManager:
             "cache_statistics": stats,
             "cleanup_results": cleanup_result,
             "memory_optimization": memory_result,
-            "configuration": self.cache_config
+            "configuration": self.cache_config,
         }
 
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(report, f, indent=2, ensure_ascii=False, default=str)
 
         return output_path
@@ -449,7 +446,9 @@ def main():
     print(f"  - Найдено директорий кэша: {len(cache_info)}")
 
     for info in cache_info:
-        print(f"    * {info.path.name}: {info.file_count} файлов, {info.size_bytes / (1024*1024):.2f} MB")
+        print(
+            f"    * {info.path.name}: {info.file_count} файлов, {info.size_bytes / (1024*1024):.2f} MB"
+        )
 
     # Получаем статистику
     print("\nСтатистика кэша...")

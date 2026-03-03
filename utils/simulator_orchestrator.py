@@ -20,8 +20,12 @@ from utils.logger import setup_project_logging
 from utils.data_manager import DataManager
 from utils.visualizer import ProjectVisualizer
 from cpp_spm_hardware_sim.src.spm_simulator import SurfaceModel, SPMController
-from py_surface_image_analyzer.src.image_processor import ImageProcessor, calculate_surface_roughness
+from py_surface_image_analyzer.src.image_processor import (
+    ImageProcessor,
+    calculate_surface_roughness,
+)
 from py_sstv_groundstation.src.sstv_decoder import SSTVDecoder
+
 
 class SimulationOrchestrator:
     """
@@ -29,7 +33,6 @@ class SimulationOrchestrator:
     Координирует работу всех компонентов проекта для комплексной симуляции
     процессов, происходящих в нанозондовом микроскопе и связанных системах.
     """
-
 
     def __init__(self, config_manager: Optional[ConfigManager] = None):
         """
@@ -59,7 +62,6 @@ class SimulationOrchestrator:
         # Результаты симуляции
         self.simulation_results = {}
 
-
     def initialize_components(self):
         """Инициализирует все компоненты проекта"""
         self.logger_manager.log_system_event("Инициализация компонентов симуляции", "INFO")
@@ -76,7 +78,9 @@ class SimulationOrchestrator:
             self.image_processor = ImageProcessor()
             self.logger_manager.log_analyzer_event("Анализатор изображений инициализирован", "INFO")
         except Exception as e:
-            self.logger_manager.log_analyzer_event(f"Ошибка инициализации анализатора: {e}", "ERROR")
+            self.logger_manager.log_analyzer_event(
+                f"Ошибка инициализации анализатора: {e}", "ERROR"
+            )
 
         # Инициализация SSTV станции
         try:
@@ -85,8 +89,7 @@ class SimulationOrchestrator:
         except Exception as e:
             self.logger_manager.log_sstv_event(f"Ошибка инициализации SSTV: {e}", "ERROR")
 
-
-    def create_simulation_surface(self, size: tuple = (50, 50)) -> 'SurfaceModel':
+    def create_simulation_surface(self, size: tuple = (50, 50)) -> "SurfaceModel":
         """
         Создает поверхность для симуляции
 
@@ -108,8 +111,7 @@ class SimulationOrchestrator:
         self.logger_manager.log_spm_event(f"Поверхность создана и сохранена как {filename}", "INFO")
         return surface
 
-
-    def run_spm_simulation(self, surface: 'SurfaceModel', duration: float = 10.0) -> Dict[str, Any]:
+    def run_spm_simulation(self, surface: "SurfaceModel", duration: float = 10.0) -> Dict[str, Any]:
         """
         Запускает симуляцию сканирования поверхности СЗМ
 
@@ -142,12 +144,13 @@ class SimulationOrchestrator:
             "duration": end_time - start_time,
             "surface_size": (surface.getWidth(), surface.getHeight()),
             "results_file": results_filename,
-            "timestamp": timestamp
+            "timestamp": timestamp,
         }
 
-        self.logger_manager.log_spm_event(f"Симуляция СЗМ завершена за {results['duration']:.2f} сек", "INFO")
+        self.logger_manager.log_spm_event(
+            f"Симуляция СЗМ завершена за {results['duration']:.2f} сек", "INFO"
+        )
         return results
-
 
     def run_image_analysis(self, image_path: str) -> Dict[str, Any]:
         """
@@ -181,7 +184,7 @@ class SimulationOrchestrator:
                 "input_image": image_path,
                 "roughness": roughness,
                 "analysis_timestamp": timestamp,
-                "success": True
+                "success": True,
             }
 
             # Сохраняем результаты анализа
@@ -193,7 +196,6 @@ class SimulationOrchestrator:
         else:
             self.logger_manager.log_analyzer_event("Ошибка загрузки изображения", "ERROR")
             return {"success": False, "error": "Failed to load image"}
-
 
     def run_sstv_decoding(self, audio_file: str) -> Dict[str, Any]:
         """
@@ -223,7 +225,7 @@ class SimulationOrchestrator:
                 "input_audio": audio_file,
                 "decoded_image": output_file if success else None,
                 "decoding_timestamp": timestamp,
-                "success": success
+                "success": success,
             }
 
             self.logger_manager.log_sstv_event("Декодирование SSTV завершено", "INFO")
@@ -232,8 +234,9 @@ class SimulationOrchestrator:
             self.logger_manager.log_sstv_event("Ошибка декодирования SSTV", "ERROR")
             return {"success": False, "error": "Failed to decode SSTV signal"}
 
-
-    def coordinate_multi_component_simulation(self, surface_size: tuple = (50, 50)) -> Dict[str, Any]:
+    def coordinate_multi_component_simulation(
+        self, surface_size: tuple = (50, 50)
+    ) -> Dict[str, Any]:
         """
         Координирует симуляцию с участием нескольких компонентов
 
@@ -260,7 +263,7 @@ class SimulationOrchestrator:
             self.visualizer.surface_viz.plot_surface_2d(
                 sample_surface_data,
                 "Результаты комплексной симуляции",
-                f"output/comprehensive_simulation_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+                f"output/comprehensive_simulation_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
             )
         except Exception as e:
             self.logger_manager.log_system_event(f"Ошибка визуализации: {e}", "WARNING")
@@ -271,16 +274,17 @@ class SimulationOrchestrator:
             "total_duration": end_time - start_time,
             "spm_results": spm_results,
             "timestamp": datetime.now().isoformat(),
-            "components_involved": ["SPM", "Visualization"]
+            "components_involved": ["SPM", "Visualization"],
         }
 
         # Сохраняем метаданные симуляции
-        self.data_manager.save_simulation_metadata(comprehensive_results,
-                                                f"comprehensive_sim_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
+        self.data_manager.save_simulation_metadata(
+            comprehensive_results,
+            f"comprehensive_sim_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+        )
 
         self.logger_manager.log_simulation_event("Комплексная симуляция завершена", "INFO")
         return comprehensive_results
-
 
     def run_continuous_simulation(self, duration_minutes: int = 10):
         """
@@ -289,7 +293,9 @@ class SimulationOrchestrator:
         Args:
             duration_minutes: Продолжительность симуляции в минутах
         """
-        self.logger_manager.log_simulation_event(f"Начало непрерывной симуляции на {duration_minutes} минут", "INFO")
+        self.logger_manager.log_simulation_event(
+            f"Начало непрерывной симуляции на {duration_minutes} минут", "INFO"
+        )
 
         self.simulation_running = True
         start_time = time.time()
@@ -303,7 +309,9 @@ class SimulationOrchestrator:
                 cycle_results = self.coordinate_multi_component_simulation()
 
                 cycle_count += 1
-                self.logger_manager.log_simulation_event(f"Цикл симуляции #{cycle_count} завершен", "INFO")
+                self.logger_manager.log_simulation_event(
+                    f"Цикл симуляции #{cycle_count} завершен", "INFO"
+                )
 
                 # Ждем перед следующим циклом
                 time.sleep(5)  # 5 секунд между циклами
@@ -315,12 +323,10 @@ class SimulationOrchestrator:
         self.simulation_running = False
         self.logger_manager.log_simulation_event("Непрерывная симуляция завершена", "INFO")
 
-
     def stop_simulation(self):
         """Останавливает текущую симуляцию"""
         self.simulation_running = False
         self.logger_manager.log_system_event("Симуляция остановлена пользователем", "INFO")
-
 
     def start_background_simulation(self, duration_minutes: int = 10):
         """
@@ -334,15 +340,13 @@ class SimulationOrchestrator:
             return False
 
         self.simulation_thread = threading.Thread(
-            target=self.run_continuous_simulation,
-            args=(duration_minutes,)
+            target=self.run_continuous_simulation, args=(duration_minutes,)
         )
         self.simulation_thread.daemon = True
         self.simulation_thread.start()
 
         self.logger_manager.log_system_event("Фоновая симуляция запущена", "INFO")
         return True
-
 
     def get_simulation_status(self) -> Dict[str, Any]:
         """
@@ -355,8 +359,9 @@ class SimulationOrchestrator:
             "simulation_running": self.simulation_running,
             "thread_active": self.simulation_thread.is_alive() if self.simulation_thread else False,
             "results_count": len(self.simulation_results),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
+
 
 def main():
     """Главная функция для демонстрации возможностей оркестратора"""
@@ -384,6 +389,6 @@ def main():
 
     print("Оркестратор симуляции готов к работе")
 
+
 if __name__ == "__main__":
     main()
-

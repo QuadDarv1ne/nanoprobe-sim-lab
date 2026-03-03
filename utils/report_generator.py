@@ -18,13 +18,13 @@ from jinja2 import Template
 import pdfkit
 import html
 
+
 class ReportGenerator:
     """
     Класс для генерации отчетов
     Создает комплексные отчеты о симуляциях, анализах и
     результатах работы всех компонентов проекта.
     """
-
 
     def __init__(self, output_dir: str = "reports"):
         """
@@ -37,7 +37,8 @@ class ReportGenerator:
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
         # HTML шаблон для отчета
-        self.html_template = Template("""
+        self.html_template = Template(
+            """
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -206,13 +207,15 @@ class ReportGenerator:
     </div>
 </body>
 </html>
-        """)
+        """
+        )
 
-    def generate_simulation_report(self,
-
-                                 simulation_data: Dict[str, Any],
-                                 title: str = "Отчет о симуляции",
-                                 include_charts: bool = True) -> str:
+    def generate_simulation_report(
+        self,
+        simulation_data: Dict[str, Any],
+        title: str = "Отчет о симуляции",
+        include_charts: bool = True,
+    ) -> str:
         """
         Генерирует отчет о симуляции
 
@@ -228,15 +231,15 @@ class ReportGenerator:
 
         # Подготовка данных для шаблона
         template_data = {
-            'title': title,
-            'timestamp': timestamp,
-            'year': datetime.now().year,
-            'summary': simulation_data.get('summary', {}),
-            'surface_analysis': simulation_data.get('surface_analysis', {}),
-            'image_analysis': simulation_data.get('image_analysis', {}),
-            'sstv_analysis': simulation_data.get('sstv_analysis', {}),
-            'charts': simulation_data.get('charts', []),
-            'timeline': simulation_data.get('timeline', [])
+            "title": title,
+            "timestamp": timestamp,
+            "year": datetime.now().year,
+            "summary": simulation_data.get("summary", {}),
+            "surface_analysis": simulation_data.get("surface_analysis", {}),
+            "image_analysis": simulation_data.get("image_analysis", {}),
+            "sstv_analysis": simulation_data.get("sstv_analysis", {}),
+            "charts": simulation_data.get("charts", []),
+            "timeline": simulation_data.get("timeline", []),
         }
 
         # Генерация HTML
@@ -246,13 +249,13 @@ class ReportGenerator:
         report_filename = f"simulation_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
         report_path = self.output_dir / report_filename
 
-        with open(report_path, 'w', encoding='utf-8') as f:
+        with open(report_path, "w", encoding="utf-8") as f:
             f.write(html_content)
 
         print(f"HTML отчет сохранен: {report_path}")
 
         # Также создаем PDF версию
-        pdf_filename = report_path.with_suffix('.pdf')
+        pdf_filename = report_path.with_suffix(".pdf")
         try:
             pdfkit.from_string(html_content, str(pdf_filename))
             print(f"PDF отчет сохранен: {pdf_filename}")
@@ -261,10 +264,9 @@ class ReportGenerator:
 
         return str(report_path)
 
-
-    def generate_analytics_report(self,
-                                analytics_data: Dict[str, Any],
-                                title: str = "Аналитический отчет") -> str:
+    def generate_analytics_report(
+        self, analytics_data: Dict[str, Any], title: str = "Аналитический отчет"
+    ) -> str:
         """
         Генерирует аналитический отчет
 
@@ -279,15 +281,15 @@ class ReportGenerator:
 
         # Подготовка данных для шаблона
         template_data = {
-            'title': title,
-            'timestamp': timestamp,
-            'year': datetime.now().year,
-            'summary': analytics_data.get('summary', {}),
-            'surface_analysis': analytics_data.get('surface_analysis', {}),
-            'image_analysis': analytics_data.get('image_analysis', {}),
-            'sstv_analysis': analytics_data.get('sstv_analysis', {}),
-            'charts': analytics_data.get('charts', []),
-            'timeline': analytics_data.get('timeline', [])
+            "title": title,
+            "timestamp": timestamp,
+            "year": datetime.now().year,
+            "summary": analytics_data.get("summary", {}),
+            "surface_analysis": analytics_data.get("surface_analysis", {}),
+            "image_analysis": analytics_data.get("image_analysis", {}),
+            "sstv_analysis": analytics_data.get("sstv_analysis", {}),
+            "charts": analytics_data.get("charts", []),
+            "timeline": analytics_data.get("timeline", []),
         }
 
         # Генерация HTML
@@ -297,13 +299,13 @@ class ReportGenerator:
         report_filename = f"analytics_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
         report_path = self.output_dir / report_filename
 
-        with open(report_path, 'w', encoding='utf-8') as f:
+        with open(report_path, "w", encoding="utf-8") as f:
             f.write(html_content)
 
         print(f"Аналитический отчет сохранен: {report_path}")
 
         # Создаем PDF версию
-        pdf_filename = report_path.with_suffix('.pdf')
+        pdf_filename = report_path.with_suffix(".pdf")
         try:
             pdfkit.from_string(html_content, str(pdf_filename))
             print(f"PDF аналитический отчет сохранен: {pdf_filename}")
@@ -312,9 +314,9 @@ class ReportGenerator:
 
         return str(report_path)
 
-    def generate_comparison_report(self,
-                                 reports_data: List[Dict[str, Any]],
-                                 title: str = "Сравнительный отчет") -> str:
+    def generate_comparison_report(
+        self, reports_data: List[Dict[str, Any]], title: str = "Сравнительный отчет"
+    ) -> str:
         """
         Генерирует сравнительный отчет
 
@@ -329,20 +331,18 @@ class ReportGenerator:
 
         # Подготовка данных для сравнения
         comparison_data = {
-            'title': title,
-            'timestamp': timestamp,
-            'year': datetime.now().year,
-            'comparisons': []
+            "title": title,
+            "timestamp": timestamp,
+            "year": datetime.now().year,
+            "comparisons": [],
         }
 
         for i, report in enumerate(reports_data):
-            comparison_data['comparisons'].append({
-                'id': i + 1,
-                'data': report
-            })
+            comparison_data["comparisons"].append({"id": i + 1, "data": report})
 
         # Создание специального шаблона для сравнительного отчета
-        comparison_template = Template("""
+        comparison_template = Template(
+            """
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -451,7 +451,8 @@ class ReportGenerator:
     </div>
 </body>
 </html>
-        """)
+        """
+        )
 
         html_content = comparison_template.render(**comparison_data)
 
@@ -459,13 +460,13 @@ class ReportGenerator:
         report_filename = f"comparison_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
         report_path = self.output_dir / report_filename
 
-        with open(report_path, 'w', encoding='utf-8') as f:
+        with open(report_path, "w", encoding="utf-8") as f:
             f.write(html_content)
 
         print(f"Сравнительный отчет сохранен: {report_path}")
 
         # Создаем PDF версию
-        pdf_filename = report_path.with_suffix('.pdf')
+        pdf_filename = report_path.with_suffix(".pdf")
         try:
             pdfkit.from_string(html_content, str(pdf_filename))
             print(f"PDF сравнительный отчет сохранен: {pdf_filename}")
@@ -473,7 +474,6 @@ class ReportGenerator:
             print(f"Ошибка создания PDF: {e}")
 
         return str(report_path)
-
 
     def create_summary_statistics(self, data_list: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
@@ -508,6 +508,7 @@ class ReportGenerator:
 
         return summary
 
+
 def main():
     """Главная функция для демонстрации возможностей генератора отчетов"""
     print("=== ГЕНЕРАТОР ОТЧЕТОВ ПРОЕКТА ===")
@@ -517,47 +518,54 @@ def main():
 
     # Создаем тестовые данные
     test_simulation_data = {
-        'summary': {
-            'Время выполнения': '15.23 сек',
-            'Компоненты использованы': 'СЗМ, Визуализация',
-            'Статус': 'Успешно'
+        "summary": {
+            "Время выполнения": "15.23 сек",
+            "Компоненты использованы": "СЗМ, Визуализация",
+            "Статус": "Успешно",
         },
-        'surface_analysis': {
-            'Средняя высота': 0.1234,
-            'Стандартное отклонение': 0.0567,
-            'Минимальная высота': -0.2341,
-            'Максимальная высота': 0.4567
+        "surface_analysis": {
+            "Средняя высота": 0.1234,
+            "Стандартное отклонение": 0.0567,
+            "Минимальная высота": -0.2341,
+            "Максимальная высота": 0.4567,
         },
-        'image_analysis': {
-            'Средняя интенсивность': 0.7890,
-            'Контраст': 0.1234,
-            'Энтропия': 5.6789
-        },
-        'sstv_analysis': {
-            'SNR': 25.67,
-            'Доминирующая частота': 1200.0
-        },
-        'charts': [],
-        'timeline': [
-            {'timestamp': '2023-12-01 10:00:00', 'message': 'Начало симуляции', 'component': 'СЗМ', 'level': 'INFO'},
-            {'timestamp': '2023-12-01 10:00:05', 'message': 'Создание поверхности', 'component': 'СЗМ', 'level': 'INFO'},
-            {'timestamp': '2023-12-01 10:00:15', 'message': 'Сканирование завершено', 'component': 'СЗМ', 'level': 'INFO'}
-        ]
+        "image_analysis": {"Средняя интенсивность": 0.7890, "Контраст": 0.1234, "Энтропия": 5.6789},
+        "sstv_analysis": {"SNR": 25.67, "Доминирующая частота": 1200.0},
+        "charts": [],
+        "timeline": [
+            {
+                "timestamp": "2023-12-01 10:00:00",
+                "message": "Начало симуляции",
+                "component": "СЗМ",
+                "level": "INFO",
+            },
+            {
+                "timestamp": "2023-12-01 10:00:05",
+                "message": "Создание поверхности",
+                "component": "СЗМ",
+                "level": "INFO",
+            },
+            {
+                "timestamp": "2023-12-01 10:00:15",
+                "message": "Сканирование завершено",
+                "component": "СЗМ",
+                "level": "INFO",
+            },
+        ],
     }
 
     # Генерируем отчет
     report_path = report_gen.generate_simulation_report(
-        test_simulation_data,
-        "Тестовый отчет о симуляции"
+        test_simulation_data, "Тестовый отчет о симуляции"
     )
 
     print(f"✓ Отчет успешно сгенерирован: {report_path}")
 
     # Создаем сводную статистику
     test_data_list = [
-        {'metric1': 1.0, 'metric2': 2.0},
-        {'metric1': 1.2, 'metric2': 2.1},
-        {'metric1': 0.9, 'metric2': 1.9}
+        {"metric1": 1.0, "metric2": 2.0},
+        {"metric1": 1.2, "metric2": 2.1},
+        {"metric1": 0.9, "metric2": 1.9},
     ]
 
     summary_stats = report_gen.create_summary_statistics(test_data_list)
@@ -565,6 +573,6 @@ def main():
 
     print("Генератор отчетов успешно протестирован")
 
+
 if __name__ == "__main__":
     main()
-

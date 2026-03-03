@@ -22,9 +22,11 @@ import statistics
 import threading
 import time
 
+
 @dataclass
 class LogEntry:
     """Запись лога"""
+
     timestamp: datetime
     level: str
     component: str
@@ -33,9 +35,11 @@ class LogEntry:
     function: str = ""
     thread_id: str = ""
 
+
 @dataclass
 class LogAnalysisResult:
     """Результат анализа логов"""
+
     total_entries: int
     error_count: int
     warning_count: int
@@ -45,12 +49,12 @@ class LogAnalysisResult:
     time_range: Tuple[datetime, datetime]
     analysis_timestamp: datetime
 
+
 class AdvancedLoggerAnalyzer:
     """
     Класс продвинутого анализа логов
     Обеспечивает анализ, фильтрацию, статистику и визуализацию логов проекта.
     """
-
 
     def __init__(self, log_directory: str = "logs"):
         """
@@ -63,21 +67,20 @@ class AdvancedLoggerAnalyzer:
         self.log_entries = []
         self.analysis_results = {}
         self.patterns = {
-            'timestamp': r'\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)?)\]',
-            'level': r'(DEBUG|INFO|WARNING|ERROR|CRITICAL)',
-            'component': r'\[([^\]]+)\]',
-            'message': r'- (.+)$'
+            "timestamp": r"\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)?)\]",
+            "level": r"(DEBUG|INFO|WARNING|ERROR|CRITICAL)",
+            "component": r"\[([^\]]+)\]",
+            "message": r"- (.+)$",
         }
         self.level_colors = {
-            'DEBUG': '#808080',
-            'INFO': '#008000',
-            'WARNING': '#FFA500',
-            'ERROR': '#FF0000',
-            'CRITICAL': '#8B0000'
+            "DEBUG": "#808080",
+            "INFO": "#008000",
+            "WARNING": "#FFA500",
+            "ERROR": "#FF0000",
+            "CRITICAL": "#8B0000",
         }
         self.real_time_monitoring = False
         self.monitoring_thread = None
-
 
     def parse_log_file(self, file_path: str) -> List[LogEntry]:
         """
@@ -93,7 +96,7 @@ class AdvancedLoggerAnalyzer:
         file_path = Path(file_path)
 
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 lines = f.readlines()
 
             for line in lines:
@@ -105,7 +108,6 @@ class AdvancedLoggerAnalyzer:
             print(f"Ошибка парсинга файла {file_path}: {e}")
 
         return entries
-
 
     def parse_log_line(self, line: str) -> Optional[LogEntry]:
         """
@@ -119,22 +121,21 @@ class AdvancedLoggerAnalyzer:
         """
         try:
             # Пример формата: [2023-12-01 10:30:45] - INFO - component_name - Message text
-            timestamp_match = re.search(self.patterns['timestamp'], line)
-            level_match = re.search(self.patterns['level'], line)
-            component_match = re.search(r'- ([A-Za-z_]+(?:\.[A-Za-z_]+)*) -', line)
-            message_match = re.search(self.patterns['message'], line)
+            timestamp_match = re.search(self.patterns["timestamp"], line)
+            level_match = re.search(self.patterns["level"], line)
+            component_match = re.search(r"- ([A-Za-z_]+(?:\.[A-Za-z_]+)*) -", line)
+            message_match = re.search(self.patterns["message"], line)
 
             if timestamp_match and level_match:
-                timestamp = datetime.strptime(timestamp_match.group(1).split('.')[0], '%Y-%m-%d %H:%M:%S')
+                timestamp = datetime.strptime(
+                    timestamp_match.group(1).split(".")[0], "%Y-%m-%d %H:%M:%S"
+                )
                 level = level_match.group(1)
                 component = component_match.group(1) if component_match else "Unknown"
                 message = message_match.group(1) if message_match else line
 
                 return LogEntry(
-                    timestamp=timestamp,
-                    level=level,
-                    component=component,
-                    message=message
+                    timestamp=timestamp, level=level, component=component, message=message
                 )
 
         except Exception:
@@ -142,7 +143,6 @@ class AdvancedLoggerAnalyzer:
             pass
 
         return None
-
 
     def scan_log_directory(self, pattern: str = "*.log") -> List[Path]:
         """
@@ -162,7 +162,6 @@ class AdvancedLoggerAnalyzer:
             log_files.append(file_path)
 
         return sorted(log_files, reverse=True)  # Сортируем по убыванию (новые первыми)
-
 
     def load_all_logs(self, pattern: str = "*.log") -> List[LogEntry]:
         """
@@ -188,11 +187,14 @@ class AdvancedLoggerAnalyzer:
 
         return all_entries
 
-
-    def filter_logs(self, level: str = None, component: str = None,
-
-                   start_time: datetime = None, end_time: datetime = None,
-                   search_term: str = None) -> List[LogEntry]:
+    def filter_logs(
+        self,
+        level: str = None,
+        component: str = None,
+        start_time: datetime = None,
+        end_time: datetime = None,
+        search_term: str = None,
+    ) -> List[LogEntry]:
         """
         Фильтрует логи по различным критериям
 
@@ -209,29 +211,33 @@ class AdvancedLoggerAnalyzer:
         filtered_entries = self.log_entries.copy()
 
         if level:
-            filtered_entries = [entry for entry in filtered_entries
-                              if entry.level.upper() == level.upper()]
+            filtered_entries = [
+                entry for entry in filtered_entries if entry.level.upper() == level.upper()
+            ]
 
         if component:
-            filtered_entries = [entry for entry in filtered_entries
-                              if component.lower() in entry.component.lower()]
+            filtered_entries = [
+                entry for entry in filtered_entries if component.lower() in entry.component.lower()
+            ]
 
         if start_time:
-            filtered_entries = [entry for entry in filtered_entries
-                              if entry.timestamp >= start_time]
+            filtered_entries = [
+                entry for entry in filtered_entries if entry.timestamp >= start_time
+            ]
 
         if end_time:
-            filtered_entries = [entry for entry in filtered_entries
-                              if entry.timestamp <= end_time]
+            filtered_entries = [entry for entry in filtered_entries if entry.timestamp <= end_time]
 
         if search_term:
             search_term_lower = search_term.lower()
-            filtered_entries = [entry for entry in filtered_entries
-                              if search_term_lower in entry.message.lower() or
-                                 search_term_lower in entry.component.lower()]
+            filtered_entries = [
+                entry
+                for entry in filtered_entries
+                if search_term_lower in entry.message.lower()
+                or search_term_lower in entry.component.lower()
+            ]
 
         return filtered_entries
-
 
     def analyze_logs(self, logs: List[LogEntry] = None) -> LogAnalysisResult:
         """
@@ -255,7 +261,7 @@ class AdvancedLoggerAnalyzer:
                 debug_count=0,
                 unique_components=[],
                 time_range=(datetime.now(), datetime.now()),
-                analysis_timestamp=datetime.now()
+                analysis_timestamp=datetime.now(),
             )
 
         # Подсчет по уровням
@@ -270,15 +276,14 @@ class AdvancedLoggerAnalyzer:
 
         return LogAnalysisResult(
             total_entries=len(logs),
-            error_count=level_counts.get('ERROR', 0) + level_counts.get('CRITICAL', 0),
-            warning_count=level_counts.get('WARNING', 0),
-            info_count=level_counts.get('INFO', 0),
-            debug_count=level_counts.get('DEBUG', 0),
+            error_count=level_counts.get("ERROR", 0) + level_counts.get("CRITICAL", 0),
+            warning_count=level_counts.get("WARNING", 0),
+            info_count=level_counts.get("INFO", 0),
+            debug_count=level_counts.get("DEBUG", 0),
             unique_components=unique_components,
             time_range=time_range,
-            analysis_timestamp=datetime.now()
+            analysis_timestamp=datetime.now(),
         )
-
 
     def generate_statistics(self, logs: List[LogEntry] = None) -> Dict[str, Any]:
         """
@@ -304,8 +309,14 @@ class AdvancedLoggerAnalyzer:
 
         # Статистика по времени
         timestamps = [entry.timestamp for entry in logs]
-        time_diffs = [(timestamps[i+1] - timestamps[i]).total_seconds()
-                     for i in range(len(timestamps)-1)] if len(timestamps) > 1 else []
+        time_diffs = (
+            [
+                (timestamps[i + 1] - timestamps[i]).total_seconds()
+                for i in range(len(timestamps) - 1)
+            ]
+            if len(timestamps) > 1
+            else []
+        )
 
         # Часто встречающиеся сообщения
         message_counts = Counter(entry.message for entry in logs)
@@ -313,25 +324,26 @@ class AdvancedLoggerAnalyzer:
         # Временные интервалы (группировка по часам)
         hourly_counts = defaultdict(int)
         for entry in logs:
-            hour_key = entry.timestamp.strftime('%Y-%m-%d %H:00')
+            hour_key = entry.timestamp.strftime("%Y-%m-%d %H:00")
             hourly_counts[hour_key] += 1
 
         return {
-            'level_distribution': dict(level_counts),
-            'component_distribution': dict(component_counts),
-            'top_components': component_counts.most_common(10),
-            'top_messages': message_counts.most_common(10),
-            'hourly_activity': dict(hourly_counts),
-            'avg_interval_between_logs': statistics.mean(time_diffs) if time_diffs else 0,
-            'min_interval': min(time_diffs) if time_diffs else 0,
-            'max_interval': max(time_diffs) if time_diffs else 0,
-            'timestamp_stats': {
-                'first_log': min(timestamps).isoformat() if timestamps else None,
-                'last_log': max(timestamps).isoformat() if timestamps else None,
-                'total_duration': (max(timestamps) - min(timestamps)).total_seconds() if timestamps else 0
-            }
+            "level_distribution": dict(level_counts),
+            "component_distribution": dict(component_counts),
+            "top_components": component_counts.most_common(10),
+            "top_messages": message_counts.most_common(10),
+            "hourly_activity": dict(hourly_counts),
+            "avg_interval_between_logs": statistics.mean(time_diffs) if time_diffs else 0,
+            "min_interval": min(time_diffs) if time_diffs else 0,
+            "max_interval": max(time_diffs) if time_diffs else 0,
+            "timestamp_stats": {
+                "first_log": min(timestamps).isoformat() if timestamps else None,
+                "last_log": max(timestamps).isoformat() if timestamps else None,
+                "total_duration": (max(timestamps) - min(timestamps)).total_seconds()
+                if timestamps
+                else 0,
+            },
         }
-
 
     def detect_anomalies(self, logs: List[LogEntry] = None) -> List[Dict[str, Any]]:
         """
@@ -352,31 +364,41 @@ class AdvancedLoggerAnalyzer:
             return anomalies
 
         # 1. Высокая частота ошибок
-        error_entries = [entry for entry in logs if entry.level in ['ERROR', 'CRITICAL']]
+        error_entries = [entry for entry in logs if entry.level in ["ERROR", "CRITICAL"]]
         if len(error_entries) > len(logs) * 0.1:  # Если больше 10% ошибок
-            anomalies.append({
-                'type': 'high_error_rate',
-                'severity': 'high',
-                'description': f'Высокий процент ошибок: {len(error_entries)}/{len(logs)} ({len(error_entries)/len(logs)*100:.2f}%)',
-                'timestamp': datetime.now()
-            })
+            anomalies.append(
+                {
+                    "type": "high_error_rate",
+                    "severity": "high",
+                    "description": f"Высокий процент ошибок: {len(error_entries)}/{len(logs)} ({len(error_entries)/len(logs)*100:.2f}%)",
+                    "timestamp": datetime.now(),
+                }
+            )
 
         # 2. Повторяющиеся сообщения
         message_counts = Counter(entry.message for entry in logs)
         repeated_messages = [msg for msg, count in message_counts.items() if count > 10]
         for msg in repeated_messages:
-            anomalies.append({
-                'type': 'repeated_messages',
-                'severity': 'medium',
-                'description': f'Повторяющееся сообщение: {msg}',
-                'count': message_counts[msg],
-                'timestamp': datetime.now()
-            })
+            anomalies.append(
+                {
+                    "type": "repeated_messages",
+                    "severity": "medium",
+                    "description": f"Повторяющееся сообщение: {msg}",
+                    "count": message_counts[msg],
+                    "timestamp": datetime.now(),
+                }
+            )
 
         # 3. Аномалии по времени (очень короткие интервалы)
         timestamps = sorted([entry.timestamp for entry in logs])
-        time_diffs = [(timestamps[i+1] - timestamps[i]).total_seconds()
-                     for i in range(len(timestamps)-1)] if len(timestamps) > 1 else []
+        time_diffs = (
+            [
+                (timestamps[i + 1] - timestamps[i]).total_seconds()
+                for i in range(len(timestamps) - 1)
+            ]
+            if len(timestamps) > 1
+            else []
+        )
 
         if time_diffs:
             avg_interval = statistics.mean(time_diffs)
@@ -384,15 +406,16 @@ class AdvancedLoggerAnalyzer:
             rapid_logs = [i for i, diff in enumerate(time_diffs) if diff < threshold and diff > 0]
 
             if len(rapid_logs) > 10:  # Если много быстрых записей
-                anomalies.append({
-                    'type': 'rapid_logging',
-                    'severity': 'medium',
-                    'description': f'Обнаружено {len(rapid_logs)} случаев быстрого логирования',
-                    'timestamp': datetime.now()
-                })
+                anomalies.append(
+                    {
+                        "type": "rapid_logging",
+                        "severity": "medium",
+                        "description": f"Обнаружено {len(rapid_logs)} случаев быстрого логирования",
+                        "timestamp": datetime.now(),
+                    }
+                )
 
         return anomalies
-
 
     def visualize_logs(self, output_path: str = None, logs: List[LogEntry] = None) -> str:
         """
@@ -416,62 +439,69 @@ class AdvancedLoggerAnalyzer:
             output_path = f"log_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
 
         # Подготовка данных
-        df = pd.DataFrame([{
-            'timestamp': entry.timestamp,
-            'level': entry.level,
-            'component': entry.component,
-            'message': entry.message
-        } for entry in logs])
+        df = pd.DataFrame(
+            [
+                {
+                    "timestamp": entry.timestamp,
+                    "level": entry.level,
+                    "component": entry.component,
+                    "message": entry.message,
+                }
+                for entry in logs
+            ]
+        )
 
-        df['hour'] = df['timestamp'].dt.hour
-        df['date'] = df['timestamp'].dt.date
+        df["hour"] = df["timestamp"].dt.hour
+        df["date"] = df["timestamp"].dt.date
 
         # Создаем фигуру с несколькими подграфиками
         fig, axes = plt.subplots(2, 2, figsize=(15, 12))
-        fig.suptitle('Анализ логов проекта', fontsize=16)
+        fig.suptitle("Анализ логов проекта", fontsize=16)
 
         # 1. Распределение по уровням
-        level_counts = df['level'].value_counts()
-        axes[0, 0].bar(level_counts.index, level_counts.values,
-                       color=[self.level_colors.get(level, '#000000') for level in level_counts.index])
-        axes[0, 0].set_title('Распределение по уровням логов')
-        axes[0, 0].set_ylabel('Количество')
-        axes[0, 0].tick_params(axis='x', rotation=45)
+        level_counts = df["level"].value_counts()
+        axes[0, 0].bar(
+            level_counts.index,
+            level_counts.values,
+            color=[self.level_colors.get(level, "#000000") for level in level_counts.index],
+        )
+        axes[0, 0].set_title("Распределение по уровням логов")
+        axes[0, 0].set_ylabel("Количество")
+        axes[0, 0].tick_params(axis="x", rotation=45)
 
         # 2. Активность по компонентам (топ-10)
-        component_counts = df['component'].value_counts().head(10)
+        component_counts = df["component"].value_counts().head(10)
         axes[0, 1].bar(range(len(component_counts)), component_counts.values)
-        axes[0, 1].set_title('Активность по компонентам (топ-10)')
-        axes[0, 1].set_ylabel('Количество')
+        axes[0, 1].set_title("Активность по компонентам (топ-10)")
+        axes[0, 1].set_ylabel("Количество")
         axes[0, 1].set_xticks(range(len(component_counts)))
-        axes[0, 1].set_xticklabels(component_counts.index, rotation=45, ha='right')
+        axes[0, 1].set_xticklabels(component_counts.index, rotation=45, ha="right")
 
         # 3. Активность по времени (часы)
-        hourly_activity = df.groupby('hour').size()
-        axes[1, 0].plot(hourly_activity.index, hourly_activity.values, marker='o')
-        axes[1, 0].set_title('Активность по часам')
-        axes[1, 0].set_xlabel('Час')
-        axes[1, 0].set_ylabel('Количество записей')
+        hourly_activity = df.groupby("hour").size()
+        axes[1, 0].plot(hourly_activity.index, hourly_activity.values, marker="o")
+        axes[1, 0].set_title("Активность по часам")
+        axes[1, 0].set_xlabel("Час")
+        axes[1, 0].set_ylabel("Количество записей")
         axes[1, 0].set_xticks(range(0, 24, 2))
 
         # 4. Активность по дням
-        daily_activity = df.groupby('date').size()
-        axes[1, 1].plot(range(len(daily_activity)), daily_activity.values, marker='o')
-        axes[1, 1].set_title('Активность по дням')
-        axes[1, 1].set_xlabel('День')
-        axes[1, 1].set_ylabel('Количество записей')
-        axes[1, 1].tick_params(axis='x', rotation=45)
+        daily_activity = df.groupby("date").size()
+        axes[1, 1].plot(range(len(daily_activity)), daily_activity.values, marker="o")
+        axes[1, 1].set_title("Активность по дням")
+        axes[1, 1].set_xlabel("День")
+        axes[1, 1].set_ylabel("Количество записей")
+        axes[1, 1].tick_params(axis="x", rotation=45)
 
         plt.tight_layout()
-        plt.savefig(output_path, dpi=300, bbox_inches='tight')
+        plt.savefig(output_path, dpi=300, bbox_inches="tight")
         plt.close()
 
         return output_path
 
-
-
-    def export_filtered_logs(self, logs: List[LogEntry], output_path: str,
-                           format_type: str = 'csv') -> str:
+    def export_filtered_logs(
+        self, logs: List[LogEntry], output_path: str, format_type: str = "csv"
+    ) -> str:
         """
         Экспортирует отфильтрованные логи
 
@@ -487,39 +517,45 @@ class AdvancedLoggerAnalyzer:
             print("Нет логов для экспорта")
             return ""
 
-        if format_type.lower() == 'csv':
-            with open(output_path, 'w', newline='', encoding='utf-8') as csvfile:
-                fieldnames = ['timestamp', 'level', 'component', 'message']
+        if format_type.lower() == "csv":
+            with open(output_path, "w", newline="", encoding="utf-8") as csvfile:
+                fieldnames = ["timestamp", "level", "component", "message"]
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
                 writer.writeheader()
                 for entry in logs:
-                    writer.writerow({
-                        'timestamp': entry.timestamp.isoformat(),
-                        'level': entry.level,
-                        'component': entry.component,
-                        'message': entry.message
-                    })
+                    writer.writerow(
+                        {
+                            "timestamp": entry.timestamp.isoformat(),
+                            "level": entry.level,
+                            "component": entry.component,
+                            "message": entry.message,
+                        }
+                    )
 
-        elif format_type.lower() == 'json':
-            data = [{
-                'timestamp': entry.timestamp.isoformat(),
-                'level': entry.level,
-                'component': entry.component,
-                'message': entry.message
-            } for entry in logs]
+        elif format_type.lower() == "json":
+            data = [
+                {
+                    "timestamp": entry.timestamp.isoformat(),
+                    "level": entry.level,
+                    "component": entry.component,
+                    "message": entry.message,
+                }
+                for entry in logs
+            ]
 
-            with open(output_path, 'w', encoding='utf-8') as jsonfile:
+            with open(output_path, "w", encoding="utf-8") as jsonfile:
                 json.dump(data, jsonfile, indent=2, ensure_ascii=False, default=str)
 
-        elif format_type.lower() == 'txt':
-            with open(output_path, 'w', encoding='utf-8') as txtfile:
+        elif format_type.lower() == "txt":
+            with open(output_path, "w", encoding="utf-8") as txtfile:
                 for entry in logs:
-                    txtfile.write(f"[{entry.timestamp.strftime('%Y-%m-%d %H:%M:%S')}] - "
-                                f"{entry.level} - {entry.component} - {entry.message}\n")
+                    txtfile.write(
+                        f"[{entry.timestamp.strftime('%Y-%m-%d %H:%M:%S')}] - "
+                        f"{entry.level} - {entry.component} - {entry.message}\n"
+                    )
 
         return output_path
-
 
     def start_real_time_monitoring(self, log_file_path: str, callback: callable = None):
         """
@@ -535,13 +571,13 @@ class AdvancedLoggerAnalyzer:
         self.real_time_monitoring = True
 
         def monitor():
-                    file_path = Path(log_file_path)
+            file_path = Path(log_file_path)
             if not file_path.exists():
                 print(f"Файл {log_file_path} не существует")
                 return
 
             # Начинаем читать с конца файла
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 f.seek(0, 2)  # Перемещаемся в конец файла
                 while self.real_time_monitoring:
                     line = f.readline()
@@ -557,13 +593,11 @@ class AdvancedLoggerAnalyzer:
         self.monitoring_thread = threading.Thread(target=monitor, daemon=True)
         self.monitoring_thread.start()
 
-
     def stop_real_time_monitoring(self):
         """Останавливает мониторинг в реальном времени"""
         self.real_time_monitoring = False
         if self.monitoring_thread:
             self.monitoring_thread.join(timeout=2)
-
 
     def generate_alerts(self, logs: List[LogEntry] = None) -> List[Dict[str, Any]]:
         """
@@ -581,38 +615,45 @@ class AdvancedLoggerAnalyzer:
         alerts = []
 
         # Оповещения об ошибках
-        error_entries = [entry for entry in logs if entry.level in ['ERROR', 'CRITICAL']]
+        error_entries = [entry for entry in logs if entry.level in ["ERROR", "CRITICAL"]]
         if len(error_entries) > 0:
-            alerts.append({
-                'type': 'errors_detected',
-                'severity': 'high',
-                'count': len(error_entries),
-                'message': f'Обнаружено {len(error_entries)} ошибок',
-                'timestamp': datetime.now()
-            })
+            alerts.append(
+                {
+                    "type": "errors_detected",
+                    "severity": "high",
+                    "count": len(error_entries),
+                    "message": f"Обнаружено {len(error_entries)} ошибок",
+                    "timestamp": datetime.now(),
+                }
+            )
 
         # Оповещения о предупреждениях
-        warning_entries = [entry for entry in logs if entry.level == 'WARNING']
+        warning_entries = [entry for entry in logs if entry.level == "WARNING"]
         if len(warning_entries) > 5:  # Если больше 5 предупреждений
-            alerts.append({
-                'type': 'warnings_detected',
-                'severity': 'medium',
-                'count': len(warning_entries),
-                'message': f'Обнаружено {len(warning_entries)} предупреждений',
-                'timestamp': datetime.now()
-            })
+            alerts.append(
+                {
+                    "type": "warnings_detected",
+                    "severity": "medium",
+                    "count": len(warning_entries),
+                    "message": f"Обнаружено {len(warning_entries)} предупреждений",
+                    "timestamp": datetime.now(),
+                }
+            )
 
         # Оповещения о высокой активности
         if len(logs) > 1000:  # Если много записей за период
-            alerts.append({
-                'type': 'high_activity',
-                'severity': 'low',
-                'count': len(logs),
-                'message': f'Высокая активность: {len(logs)} записей',
-                'timestamp': datetime.now()
-            })
+            alerts.append(
+                {
+                    "type": "high_activity",
+                    "severity": "low",
+                    "count": len(logs),
+                    "message": f"Высокая активность: {len(logs)} записей",
+                    "timestamp": datetime.now(),
+                }
+            )
 
         return alerts
+
 
 def main():
     """Главная функция для демонстрации возможностей анализатора логов"""
@@ -630,13 +671,15 @@ def main():
 
     # Создаем тестовый лог-файл
     test_log_file = test_logs_dir / "test_app.log"
-    with open(test_log_file, 'w', encoding='utf-8') as f:
+    with open(test_log_file, "w", encoding="utf-8") as f:
         for i in range(100):
             timestamp = datetime.now() - timedelta(minutes=i)
             level = "INFO" if i % 10 != 0 else ("ERROR" if i % 5 == 0 else "WARNING")
             component = f"Component_{i % 5}"
             message = f"Test message {i} - Some event occurred in {component}"
-            f.write(f"[{timestamp.strftime('%Y-%m-%d %H:%M:%S')}] - {level} - {component} - {message}\n")
+            f.write(
+                f"[{timestamp.strftime('%Y-%m-%d %H:%M:%S')}] - {level} - {component} - {message}\n"
+            )
 
     print(f"✓ Создан тестовый лог-файл: {test_log_file}")
 
@@ -712,6 +755,6 @@ def main():
     print("- Мониторинг в реальном времени: analyzer.start_real_time_monitoring()")
     print("- Генерация оповещений: analyzer.generate_alerts()")
 
+
 if __name__ == "__main__":
     main()
-

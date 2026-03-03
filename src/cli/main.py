@@ -64,23 +64,19 @@ def run_spm_simulator() -> bool:
         cpp_build = project_root / "components" / "cpp-spm-hardware-sim" / "build"
         cpp_path = cpp_build / "spm-simulator"
         python_spm = (
-            project_root / "components" / "cpp-spm-hardware-sim" / "src"
-            / "spm_simulator.py"
+            project_root / "components" / "cpp-spm-hardware-sim" / "src" / "spm_simulator.py"
         )
 
         if cpp_path.exists():
             print(f"Запуск C++ версии: {cpp_path}")
             process = subprocess.Popen([str(cpp_path)], cwd=str(project_root))
-            _active_processes['spm'] = process
+            _active_processes["spm"] = process
             process.wait()
             return True
         elif python_spm.exists():
             print(f"Запуск Python версии: {python_spm}")
-            process = subprocess.Popen(
-                [sys.executable, str(python_spm)],
-                cwd=str(project_root)
-            )
-            _active_processes['spm'] = process
+            process = subprocess.Popen([sys.executable, str(python_spm)], cwd=str(project_root))
+            _active_processes["spm"] = process
             process.wait()
             return True
         else:
@@ -96,16 +92,12 @@ def run_surface_analyzer() -> bool:
     print("Запуск анализатора изображений поверхности...")
     try:
         analyzer_path = (
-            project_root / "components" / "py-surface-image-analyzer" / "src"
-            / "main.py"
+            project_root / "components" / "py-surface-image-analyzer" / "src" / "main.py"
         )
         if analyzer_path.exists():
             print(f"Запуск: {analyzer_path}")
-            process = subprocess.Popen(
-                [sys.executable, str(analyzer_path)],
-                cwd=str(project_root)
-            )
-            _active_processes['analyzer'] = process
+            process = subprocess.Popen([sys.executable, str(analyzer_path)], cwd=str(project_root))
+            _active_processes["analyzer"] = process
             process.wait()
             return True
         else:
@@ -123,11 +115,8 @@ def run_sstv_groundstation() -> bool:
         station_path = project_root / "components" / "py-sstv-groundstation" / "src" / "main.py"
         if station_path.exists():
             print(f"Запуск: {station_path}")
-            process = subprocess.Popen(
-                [sys.executable, str(station_path)],
-                cwd=str(project_root)
-            )
-            _active_processes['sstv'] = process
+            process = subprocess.Popen([sys.executable, str(station_path)], cwd=str(project_root))
+            _active_processes["sstv"] = process
             process.wait()
             return True
         else:
@@ -180,6 +169,7 @@ def clean_project_cache() -> bool:
     print("Очистка кэша проекта...")
     try:
         from utils.cache_manager import CacheManager
+
         cache_manager = CacheManager(str(project_root))
 
         stats = cache_manager.get_cache_statistics()
@@ -252,6 +242,7 @@ def main():
     print("Инициализация проекта...")
     try:
         from utils.cache_manager import CacheManager
+
         cache_manager = CacheManager(str(project_root))
         cache_manager.auto_cleanup()
     except Exception:
@@ -265,19 +256,19 @@ def main():
         try:
             choice = input("Выберите действие (0-6): ").strip()
 
-            if choice == '1':
+            if choice == "1":
                 run_spm_simulator()
-            elif choice == '2':
+            elif choice == "2":
                 run_surface_analyzer()
-            elif choice == '3':
+            elif choice == "3":
                 run_sstv_groundstation()
-            elif choice == '4':
+            elif choice == "4":
                 show_project_info()
-            elif choice == '5':
+            elif choice == "5":
                 show_license()
-            elif choice == '6':
+            elif choice == "6":
                 clean_project_cache()
-            elif choice == '0':
+            elif choice == "0":
                 print("\nСпасибо за использование Лаборатории моделирования нанозонда")
                 print("До новых встреч :)")
                 break

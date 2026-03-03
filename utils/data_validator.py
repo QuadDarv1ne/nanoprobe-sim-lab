@@ -21,21 +21,26 @@ from enum import Enum
 import logging
 from functools import wraps
 
+
 class ValidationLevel(Enum):
     """Уровни валидации"""
+
     BASIC = 1
     STANDARD = 2
     STRICT = 3
     COMPREHENSIVE = 4
 
+
 @dataclass
 class ValidationResult:
     """Результат валидации"""
+
     is_valid: bool
     errors: List[str]
     warnings: List[str]
     suggestions: List[str]
     metadata: Dict[str, Any]
+
 
 class DataValidator:
     """
@@ -43,7 +48,6 @@ class DataValidator:
     Обеспечивает проверку, валидацию и
     обеспечение качества данных проекта.
     """
-
 
     def __init__(self, validation_level: ValidationLevel = ValidationLevel.STANDARD):
         """
@@ -57,10 +61,13 @@ class DataValidator:
         self.custom_validators = {}
         self.logger = logging.getLogger(__name__)
 
-
-    def add_validation_rule(self, field_name: str, validator_func: Callable,
-
-                          error_message: str = None, warning: bool = False):
+    def add_validation_rule(
+        self,
+        field_name: str,
+        validator_func: Callable,
+        error_message: str = None,
+        warning: bool = False,
+    ):
         """
         Добавляет правило валидации
 
@@ -73,16 +80,17 @@ class DataValidator:
         if field_name not in self.validation_rules:
             self.validation_rules[field_name] = []
 
-        self.validation_rules[field_name].append({
-            'validator': validator_func,
-            'error_message': error_message or f"Неверное значение для поля {field_name}",
-            'warning': warning
-        })
+        self.validation_rules[field_name].append(
+            {
+                "validator": validator_func,
+                "error_message": error_message or f"Неверное значение для поля {field_name}",
+                "warning": warning,
+            }
+        )
 
-
-
-    def validate_numeric_field(self, value: Any, min_val: float = None,
-                             max_val: float = None, allow_nan: bool = True) -> bool:
+    def validate_numeric_field(
+        self, value: Any, min_val: float = None, max_val: float = None, allow_nan: bool = True
+    ) -> bool:
         """
         Валидирует числовое поле
 
@@ -112,10 +120,14 @@ class DataValidator:
         except (ValueError, TypeError):
             return False
 
-
-    def validate_string_field(self, value: Any, min_length: int = 1,
-                            max_length: int = None, pattern: str = None,
-                            allowed_values: List[str] = None) -> bool:
+    def validate_string_field(
+        self,
+        value: Any,
+        min_length: int = 1,
+        max_length: int = None,
+        pattern: str = None,
+        allowed_values: List[str] = None,
+    ) -> bool:
         """
         Валидирует строковое поле
 
@@ -147,13 +159,16 @@ class DataValidator:
         if allowed_values and value not in allowed_values:
             return False
 
-
         return True
 
-
-    def validate_array_field(self, arr: Any, min_length: int = 0,
-                           max_length: int = None, element_validator: Callable = None,
-                           allow_empty: bool = True) -> bool:
+    def validate_array_field(
+        self,
+        arr: Any,
+        min_length: int = 0,
+        max_length: int = None,
+        element_validator: Callable = None,
+        allow_empty: bool = True,
+    ) -> bool:
         """
         Валидирует массив
 
@@ -186,8 +201,9 @@ class DataValidator:
 
         return True
 
-
-    def validate_dataframe(self, df: pd.DataFrame, schema: Dict[str, Dict[str, Any]]) -> ValidationResult:
+    def validate_dataframe(
+        self, df: pd.DataFrame, schema: Dict[str, Dict[str, Any]]
+    ) -> ValidationResult:
         """
         Валидирует DataFrame согласно схеме
 
@@ -203,7 +219,7 @@ class DataValidator:
         suggestions = []
 
         # Проверяем наличие обязательных столбцов
-        required_columns = [col for col, props in schema.items() if props.get('required', False)]
+        required_columns = [col for col, props in schema.items() if props.get("required", False)]
         missing_columns = set(required_columns) - set(df.columns)
         if missing_columns:
             errors.append(f"Отсутствуют обязательные столбцы: {missing_columns}")
@@ -211,35 +227,49 @@ class DataValidator:
         # Проверяем типы данных
         for column, props in schema.items():
             if column in df.columns:
-                expected_dtype = props.get('dtype')
+                expected_dtype = props.get("dtype")
                 if expected_dtype:
                     actual_dtype = str(df[column].dtype)
                     if expected_dtype not in actual_dtype:
-                        if self.validation_level in [ValidationLevel.STRICT, ValidationLevel.COMPREHENSIVE]:
-                            errors.append(f"Неверный тип данных для столбца '{column}': ожидается {expected_dtype}, получено {actual_dtype}")
+                        if self.validation_level in [
+                            ValidationLevel.STRICT,
+                            ValidationLevel.COMPREHENSIVE,
+                        ]:
+                            errors.append(
+                                f"Неверный тип данных для столбца '{column}': ожидается {expected_dtype}, получено {actual_dtype}"
+                            )
                         else:
-                            warnings_list.append(f"Потенциально неверный тип данных для столбца '{column}': ожидается {expected_dtype}, получено {actual_dtype}")
+                            warnings_list.append(
+                                f"Потенциально неверный тип данных для столбца '{column}': ожидается {expected_dtype}, получено {actual_dtype}"
+                            )
 
                 # Проверяем диапазон значений для числовых столбцов
-                if expected_dtype in ['int', 'float', 'double'] and props.get('range'):
-                    min_val, max_val = props['range']
+                if expected_dtype in ["int", "float", "double"] and props.get("range"):
+                    min_val, max_val = props["range"]
                     invalid_values = df[(df[column] < min_val) | (df[column] > max_val)][column]
                     if not invalid_values.empty:
-                        errors.append(f"Найдены значения вне диапазона [{min_val}, {max_val}] в столбце '{column}': {invalid_values.tolist()}")
+                        errors.append(
+                            f"Найдены значения вне диапазона [{min_val}, {max_val}] в столбце '{column}': {invalid_values.tolist()}"
+                        )
 
                 # Проверяем уникальность
-                if props.get('unique', False):
+                if props.get("unique", False):
                     duplicates = df[df.duplicated(subset=[column])]
                     if not duplicates.empty:
                         warnings_list.append(f"Найдены дубликаты в столбце '{column}'")
 
                 # Проверяем наличие null значений
                 null_count = df[column].isnull().sum()
-                if null_count > 0 and not props.get('nullable', True):
-                    if self.validation_level in [ValidationLevel.STRICT, ValidationLevel.COMPREHENSIVE]:
+                if null_count > 0 and not props.get("nullable", True):
+                    if self.validation_level in [
+                        ValidationLevel.STRICT,
+                        ValidationLevel.COMPREHENSIVE,
+                    ]:
                         errors.append(f"Найдены null значения в столбце '{column}': {null_count}")
                     else:
-                        warnings_list.append(f"Найдены null значения в столбце '{column}': {null_count}")
+                        warnings_list.append(
+                            f"Найдены null значения в столбце '{column}': {null_count}"
+                        )
 
         # Проверяем целостность данных
         if self.validation_level in [ValidationLevel.COMPREHENSIVE]:
@@ -260,17 +290,21 @@ class DataValidator:
             warnings=warnings_list,
             suggestions=suggestions,
             metadata={
-                'total_rows': len(df),
-                'total_columns': len(df.columns),
-                'validation_level': self.validation_level.name
-
-            }
+                "total_rows": len(df),
+                "total_columns": len(df.columns),
+                "validation_level": self.validation_level.name,
+            },
         )
 
-
-    def validate_numpy_array(self, arr: np.ndarray, shape: tuple = None,
-                           dtype: str = None, min_val: float = None,
-                           max_val: float = None, allow_nan: bool = True) -> ValidationResult:
+    def validate_numpy_array(
+        self,
+        arr: np.ndarray,
+        shape: tuple = None,
+        dtype: str = None,
+        min_val: float = None,
+        max_val: float = None,
+        allow_nan: bool = True,
+    ) -> ValidationResult:
         """
         Валидирует numpy массив
 
@@ -298,7 +332,9 @@ class DataValidator:
             if self.validation_level in [ValidationLevel.STRICT, ValidationLevel.COMPREHENSIVE]:
                 errors.append(f"Неверный тип данных: ожидается {dtype}, получено {arr.dtype}")
             else:
-                warnings_list.append(f"Потенциально неверный тип данных: ожидается {dtype}, получено {arr.dtype}")
+                warnings_list.append(
+                    f"Потенциально неверный тип данных: ожидается {dtype}, получено {arr.dtype}"
+                )
 
         # Проверяем значения
         if not allow_nan and np.isnan(arr).any():
@@ -321,15 +357,16 @@ class DataValidator:
             warnings=warnings_list,
             suggestions=suggestions,
             metadata={
-                'shape': arr.shape,
-                'dtype': str(arr.dtype),
-                'size': arr.size,
-                'validation_level': self.validation_level.name
-            }
+                "shape": arr.shape,
+                "dtype": str(arr.dtype),
+                "size": arr.size,
+                "validation_level": self.validation_level.name,
+            },
         )
 
-
-    def calculate_data_quality_score(self, data: Union[pd.DataFrame, np.ndarray, Dict]) -> Dict[str, float]:
+    def calculate_data_quality_score(
+        self, data: Union[pd.DataFrame, np.ndarray, Dict]
+    ) -> Dict[str, float]:
         """
         Рассчитывает оценку качества данных
 
@@ -366,12 +403,14 @@ class DataValidator:
         elif isinstance(data, np.ndarray):
             total_elements = data.size
             null_elements = np.isnan(data).sum() if np.issubdtype(data.dtype, np.number) else 0
-            completeness = (total_elements - null_elements) / total_elements if total_elements > 0 else 1.0
+            completeness = (
+                (total_elements - null_elements) / total_elements if total_elements > 0 else 1.0
+            )
             uniqueness = len(np.unique(data)) / total_elements if total_elements > 0 else 1.0
             validity = 1.0  # Для массивов не проверяем валидность как для DF
         else:
             # Для словарей или других типов
-            total_items = len(data) if hasattr(data, '__len__') else 1
+            total_items = len(data) if hasattr(data, "__len__") else 1
             completeness = 1.0 if total_items > 0 else 0.0
             uniqueness = 1.0
             validity = 1.0
@@ -379,17 +418,16 @@ class DataValidator:
         overall_score = (completeness + uniqueness + validity) / 3.0
 
         return {
-            'completeness': completeness,
-            'uniqueness': uniqueness,
-            'validity': validity,
-
-            'overall_score': overall_score,
-            'total_items': total_items if 'total_items' in locals() else 1
+            "completeness": completeness,
+            "uniqueness": uniqueness,
+            "validity": validity,
+            "overall_score": overall_score,
+            "total_items": total_items if "total_items" in locals() else 1,
         }
 
-
-    def generate_data_report(self, data: Union[pd.DataFrame, np.ndarray],
-                           output_path: str = None) -> str:
+    def generate_data_report(
+        self, data: Union[pd.DataFrame, np.ndarray], output_path: str = None
+    ) -> str:
         """
         Генерирует отчет о данных
 
@@ -406,47 +444,52 @@ class DataValidator:
 
         if isinstance(data, pd.DataFrame):
             report = {
-                'timestamp': datetime.now().isoformat(),
-                'data_type': 'DataFrame',
-                'shape': data.shape,
-                'dtypes': {col: str(dtype) for col, dtype in data.dtypes.items()},
-                'descriptive_stats': data.describe().to_dict() if len(data.select_dtypes(include=[np.number])) > 0 else {},
-                'null_counts': data.isnull().sum().to_dict(),
-                'duplicates_count': int(data.duplicated().sum()),
-                'quality_metrics': self.calculate_data_quality_score(data),
-                'memory_usage': int(data.memory_usage(deep=True).sum())
+                "timestamp": datetime.now().isoformat(),
+                "data_type": "DataFrame",
+                "shape": data.shape,
+                "dtypes": {col: str(dtype) for col, dtype in data.dtypes.items()},
+                "descriptive_stats": data.describe().to_dict()
+                if len(data.select_dtypes(include=[np.number])) > 0
+                else {},
+                "null_counts": data.isnull().sum().to_dict(),
+                "duplicates_count": int(data.duplicated().sum()),
+                "quality_metrics": self.calculate_data_quality_score(data),
+                "memory_usage": int(data.memory_usage(deep=True).sum()),
             }
         elif isinstance(data, np.ndarray):
             report = {
-                'timestamp': datetime.now().isoformat(),
-                'data_type': 'numpy_array',
-                'shape': data.shape,
-                'dtype': str(data.dtype),
-                'size': int(data.size),
-                'itemsize': int(data.itemsize),
-                'nbytes': int(data.nbytes),
-                'quality_metrics': self.calculate_data_quality_score(data),
-                'stats': {
-                    'mean': float(np.mean(data)) if np.issubdtype(data.dtype, np.number) else None,
-                    'std': float(np.std(data)) if np.issubdtype(data.dtype, np.number) else None,
-                    'min': float(np.min(data)) if np.issubdtype(data.dtype, np.number) else None,
-                    'max': float(np.max(data)) if np.issubdtype(data.dtype, np.number) else None
-                } if np.issubdtype(data.dtype, np.number) else {}
+                "timestamp": datetime.now().isoformat(),
+                "data_type": "numpy_array",
+                "shape": data.shape,
+                "dtype": str(data.dtype),
+                "size": int(data.size),
+                "itemsize": int(data.itemsize),
+                "nbytes": int(data.nbytes),
+                "quality_metrics": self.calculate_data_quality_score(data),
+                "stats": {
+                    "mean": float(np.mean(data)) if np.issubdtype(data.dtype, np.number) else None,
+                    "std": float(np.std(data)) if np.issubdtype(data.dtype, np.number) else None,
+                    "min": float(np.min(data)) if np.issubdtype(data.dtype, np.number) else None,
+                    "max": float(np.max(data)) if np.issubdtype(data.dtype, np.number) else None,
+                }
+                if np.issubdtype(data.dtype, np.number)
+                else {},
             }
         else:
             report = {
-                'timestamp': datetime.now().isoformat(),
-                'data_type': str(type(data)),
-                'quality_metrics': self.calculate_data_quality_score(data)
+                "timestamp": datetime.now().isoformat(),
+                "data_type": str(type(data)),
+                "quality_metrics": self.calculate_data_quality_score(data),
             }
 
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(report, f, indent=2, ensure_ascii=False, default=str)
 
         return output_path
 
-
-    def validate_file_integrity(self, file_path: str, expected_hash: str = None) -> ValidationResult:
+    def validate_file_integrity(
+        self, file_path: str, expected_hash: str = None
+    ) -> ValidationResult:
         """
         Проверяет целостность файла
 
@@ -474,12 +517,14 @@ class DataValidator:
                 warnings_list.append("Файл пустой")
 
             # Вычисляем хеш файла
-            with open(file_path, 'rb') as f:
+            with open(file_path, "rb") as f:
                 file_hash = hashlib.sha256(f.read()).hexdigest()
 
             # Сравниваем с ожидаемым хешем
             if expected_hash and file_hash != expected_hash:
-                errors.append(f"Хеш файла не совпадает: ожидается {expected_hash[:8]}..., получено {file_hash[:8]}...")
+                errors.append(
+                    f"Хеш файла не совпадает: ожидается {expected_hash[:8]}..., получено {file_hash[:8]}..."
+                )
 
             return ValidationResult(
                 is_valid=len(errors) == 0,
@@ -487,17 +532,16 @@ class DataValidator:
                 warnings=warnings_list,
                 suggestions=suggestions,
                 metadata={
-                    'file_path': str(file_path),
-                    'file_size': file_size,
-                    'calculated_hash': file_hash,
-                    'expected_hash': expected_hash
-                }
+                    "file_path": str(file_path),
+                    "file_size": file_size,
+                    "calculated_hash": file_hash,
+                    "expected_hash": expected_hash,
+                },
             )
 
         except Exception as e:
             errors.append(f"Ошибка при проверке целостности файла: {str(e)}")
             return ValidationResult(False, errors, warnings_list, suggestions, {})
-
 
     def validate_json_schema(self, data: Dict, schema: Dict) -> ValidationResult:
         """
@@ -516,36 +560,45 @@ class DataValidator:
         suggestions = []
 
         def validate_recursive(data_item, schema_item, path=""):
-                    current_path = path
+            current_path = path
 
             # Проверяем тип
-            if 'type' in schema_item:
-                expected_type = schema_item['type']
+            if "type" in schema_item:
+                expected_type = schema_item["type"]
                 actual_type = type(data_item).__name__
 
-                if expected_type == 'array' and isinstance(data_item, (list, tuple)):
+                if expected_type == "array" and isinstance(data_item, (list, tuple)):
                     pass  # Массивы допустимы
-                elif expected_type == 'object' and isinstance(data_item, dict):
+                elif expected_type == "object" and isinstance(data_item, dict):
                     pass  # Объекты допустимы
                 elif expected_type != actual_type:
-                    errors.append(f"Неверный тип по пути {current_path}: ожидается {expected_type}, получено {actual_type}")
+                    errors.append(
+                        f"Неверный тип по пути {current_path}: ожидается {expected_type}, получено {actual_type}"
+                    )
                     return
 
             # Проверяем обязательные поля
-            if 'required' in schema_item and schema_item['required']:
+            if "required" in schema_item and schema_item["required"]:
                 if isinstance(data_item, dict):
-                    for req_field in schema_item['required']:
+                    for req_field in schema_item["required"]:
                         if req_field not in data_item:
-                            errors.append(f"Отсутствует обязательное поле: {current_path}.{req_field}")
+                            errors.append(
+                                f"Отсутствует обязательное поле: {current_path}.{req_field}"
+                            )
 
             # Проверяем значения
             if isinstance(data_item, dict) and isinstance(schema_item, dict):
-                properties = schema_item.get('properties', {})
+                properties = schema_item.get("properties", {})
                 for key, value in data_item.items():
                     if key in properties:
                         validate_recursive(value, properties[key], f"{current_path}.{key}")
-                    elif 'additionalProperties' in schema_item and not schema_item['additionalProperties']:
-                        warnings_list.append(f"Дополнительное поле не разрешено: {current_path}.{key}")
+                    elif (
+                        "additionalProperties" in schema_item
+                        and not schema_item["additionalProperties"]
+                    ):
+                        warnings_list.append(
+                            f"Дополнительное поле не разрешено: {current_path}.{key}"
+                        )
 
         validate_recursive(data, schema, "")
 
@@ -556,13 +609,13 @@ class DataValidator:
             warnings=warnings_list,
             suggestions=suggestions,
             metadata={
-                'validation_type': 'json_schema',
-                'validation_level': self.validation_level.name
-            }
+                "validation_type": "json_schema",
+                "validation_level": self.validation_level.name,
+            },
         )
 
-def validate_data(validation_level: ValidationLevel = ValidationLevel.STANDARD):
 
+def validate_data(validation_level: ValidationLevel = ValidationLevel.STANDARD):
     """
 
     Декоратор для валидации данных
@@ -572,9 +625,9 @@ def validate_data(validation_level: ValidationLevel = ValidationLevel.STANDARD):
     """
 
     def decorator(func):
-            @wraps(func)
+        @wraps(func)
         def wrapper(*args, **kwargs):
-                    validator = DataValidator(validation_level)
+            validator = DataValidator(validation_level)
 
             # Здесь мы могли бы добавить логику проверки входных данных
             # в зависимости от сигнатуры функции
@@ -585,27 +638,25 @@ def validate_data(validation_level: ValidationLevel = ValidationLevel.STANDARD):
             if isinstance(result, (pd.DataFrame, np.ndarray, dict)):
                 if isinstance(result, pd.DataFrame):
                     validation_result = validator.validate_dataframe(
-                        result,
-                        {}  # Пустая схема для базовой валидации
+                        result, {}  # Пустая схема для базовой валидации
                     )
                 elif isinstance(result, np.ndarray):
                     validation_result = validator.validate_numpy_array(result)
                 else:
                     # Для словарей пока просто проверяем целостность
                     validation_result = ValidationResult(
-                        is_valid=True,
-                        errors=[],
-                        warnings=[],
-                        suggestions=[],
-                        metadata={}
+                        is_valid=True, errors=[], warnings=[], suggestions=[], metadata={}
                     )
 
                 if not validation_result.is_valid:
                     warnings.warn(f"Валидация данных не прошла: {validation_result.errors}")
 
             return result
+
         return wrapper
+
     return decorator
+
 
 def main():
     """Главная функция для демонстрации возможностей валидатора данных"""
@@ -619,10 +670,10 @@ def main():
 
     # Создаем тестовые данные
     test_data = {
-        'temperature': [20.5, 21.0, 19.8, 22.1, 18.9],
-        'pressure': [1013.25, 1012.80, 1014.10, 1011.90, 1015.05],
-        'timestamp': pd.date_range('2023-01-01', periods=5, freq='H'),
-        'status': ['OK', 'OK', 'WARNING', 'OK', 'ERROR']
+        "temperature": [20.5, 21.0, 19.8, 22.1, 18.9],
+        "pressure": [1013.25, 1012.80, 1014.10, 1011.90, 1015.05],
+        "timestamp": pd.date_range("2023-01-01", periods=5, freq="H"),
+        "status": ["OK", "OK", "WARNING", "OK", "ERROR"],
     }
 
     df = pd.DataFrame(test_data)
@@ -630,21 +681,9 @@ def main():
 
     # Валидируем DataFrame
     schema = {
-        'temperature': {
-            'dtype': 'float',
-            'range': (-50, 50),
-            'required': True
-        },
-        'pressure': {
-            'dtype': 'float',
-            'range': (900, 1100),
-            'required': True
-        },
-        'status': {
-            'dtype': 'object',
-            'required': True,
-            'nullable': False
-        }
+        "temperature": {"dtype": "float", "range": (-50, 50), "required": True},
+        "pressure": {"dtype": "float", "range": (900, 1100), "required": True},
+        "status": {"dtype": "object", "required": True, "nullable": False},
     }
 
     print("\nВалидация DataFrame по схеме...")
@@ -666,7 +705,9 @@ def main():
     # Валидируем numpy массив
     print("\nВалидация numpy массива...")
     arr = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
-    arr_result = validator.validate_numpy_array(arr, shape=(2, 3), dtype='float64', min_val=0, max_val=10)
+    arr_result = validator.validate_numpy_array(
+        arr, shape=(2, 3), dtype="float64", min_val=0, max_val=10
+    )
     print(f"  - Валидация пройдена: {arr_result.is_valid}")
     print(f"  - Ошибок: {len(arr_result.errors)}")
 
@@ -693,9 +734,8 @@ def main():
     print("\nДемонстрация декоратора валидации...")
 
     @validate_data(ValidationLevel.STANDARD)
-
     def sample_data_processing():
-            return pd.DataFrame({'value': [1, 2, 3]})
+        return pd.DataFrame({"value": [1, 2, 3]})
 
     result = sample_data_processing()
     print(f"  - Функция с декоратором выполнена успешно: {type(result).__name__}")
@@ -710,6 +750,6 @@ def main():
     print("- Валидация JSON схемы: validate_json_schema()")
     print("- Декоратор валидации: @validate_data")
 
+
 if __name__ == "__main__":
     main()
-
