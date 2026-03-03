@@ -144,7 +144,7 @@ class DataValidator:
         if not isinstance(value, str):
             try:
                 value = str(value)
-            except:
+            except Exception:
                 return False
 
         if len(value) < min_length:

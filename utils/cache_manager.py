@@ -446,7 +446,7 @@ def main():
 
     for info in cache_info:
         print(
-            f"    * {info.path.name}: {info.file_count} файлов, {info.size_bytes / (1024*1024):.2f} MB"
+            f"    * {info.path.name}: {info.file_count} файлов, {info.size_bytes / (1024 * 1024):.2f} MB"
         )
 
     # Получаем статистику

@@ -521,7 +521,7 @@ def main():
 
     # Анализируем структуру проекта
     structure = doc_gen.analyze_project_structure()
-    print(f"\nСтруктура проекта:")
+    print("\nСтруктура проекта:")
     print(f"  - Директорий: {len(structure['directories'])}")
     print(f"  - Пакетов: {len(structure['packages'])}")
     print(f"  - Модулей: {len(structure['modules'])}")

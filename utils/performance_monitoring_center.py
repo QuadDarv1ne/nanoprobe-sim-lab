@@ -11,7 +11,7 @@ import time
 import threading
 import json
 from pathlib import Path
-from typing import Dict, Any, List, Callable
+from typing import Dict, Any, List, Callable, Optional
 from datetime import datetime, timedelta
 import psutil
 import statistics

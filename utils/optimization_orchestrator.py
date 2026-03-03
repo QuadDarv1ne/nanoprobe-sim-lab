@@ -246,8 +246,8 @@ class OptimizationOrchestrator:
             "trace_stats": trace_stats,
             "detected_leaks": len(leaks),
             "leak_details": [
-                {"type": l.object_type, "growth": l.growth_rate, "severity": l.severity}
-                for l in leaks
+                {"type": leak.object_type, "growth": leak.growth_rate, "severity": leak.severity}
+                for leak in leaks
             ],
             "recommendations": self.memory_tracker.get_memory_optimization_recommendations(),
         }
@@ -311,7 +311,7 @@ class OptimizationOrchestrator:
                     current_resources.get("cpu_percent", 0) > 70
                     or current_resources.get("memory_percent", 0) > 70
                 ):
-                    print(f"  Обнаружена высокая нагрузка, запуск оптимизации...")
+                    print("  Обнаружена высокая нагрузка, запуск оптимизации...")
                     opt_result = self.resource_manager.optimize_all_resources()
                     cycle_results.append(
                         {
@@ -427,7 +427,7 @@ class OptimizationOrchestrator:
                 if psutil.Process().parent()
                 else "unknown",
             }
-        except:
+        except Exception:
             return {"info": "Could not retrieve system info"}
 
     def get_optimization_recommendations(self) -> List[str]:
@@ -481,7 +481,7 @@ def main():
     print("\nЗапуск комплексной оптимизации...")
     results = orchestrator.start_comprehensive_optimization(["core_utils", "spm_simulator"])
 
-    print(f"\nРезультаты оптимизации:")
+    print("\nРезультаты оптимизации:")
     for module, result in results.items():
         print(f"  {module}:")
         print(f"    Производительность: {'✓' if result['performance']['optimized'] else '✗'}")

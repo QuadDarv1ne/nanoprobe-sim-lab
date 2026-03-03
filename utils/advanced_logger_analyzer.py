@@ -368,7 +368,7 @@ class AdvancedLoggerAnalyzer:
                 {
                     "type": "high_error_rate",
                     "severity": "high",
-                    "description": f"Высокий процент ошибок: {len(error_entries)}/{len(logs)} ({len(error_entries)/len(logs)*100:.2f}%)",
+                    "description": f"Высокий процент ошибок: {len(error_entries)}/{len(logs)} ({len(error_entries) / len(logs) * 100:.2f}%)",
                     "timestamp": datetime.now(),
                 }
             )

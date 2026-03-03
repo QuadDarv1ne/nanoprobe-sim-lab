@@ -15,6 +15,7 @@ from typing import Dict, List, Any, Callable
 from datetime import datetime
 import json
 import matplotlib.pyplot as plt
+import pandas as pd
 from dataclasses import dataclass
 from functools import wraps
 import psutil

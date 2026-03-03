@@ -441,7 +441,7 @@ class SimulationProfiler:
                 if "avg_memory_percent" in avg_metrics:
                     f.write(f"Средняя загрузка памяти: {avg_metrics['avg_memory_percent']}%\n")
 
-            f.write(f"\nРекомендации по оптимизации:\n")
+            f.write("\nРекомендации по оптимизации:\n")
             recommendations = self.get_optimization_recommendations()
             for rec in recommendations:
                 f.write(f"- {rec}\n")

@@ -314,8 +314,8 @@ volumes:
 
             subprocess.run(cmd, cwd=self.project_root, check=True)
 
-            print(f"✓ Контейнер запущен: nanoprobe-lab")
-            print(f"  Доступен по адресу: http://localhost:5000")
+            print("✓ Контейнер запущен: nanoprobe-lab")
+            print("  Доступен по адресу: http://localhost:5000")
             return True
 
         except subprocess.CalledProcessError as e:
@@ -414,7 +414,7 @@ WantedBy=multi-user.target
             install_script = package_dir / "install.sh"
             with open(install_script, "w", encoding="utf-8") as f:
                 f.write(
-                    f"""#!/bin/bash
+                    """#!/bin/bash
 # Установочный скрипт для Nanoprobe Simulation Lab
 
 echo "Установка Nanoprobe Simulation Lab..."
@@ -629,7 +629,7 @@ def main():
 
     # Показываем статус
     status = deploy_manager.get_deployment_status()
-    print(f"\nСтатус развертывания:")
+    print("\nСтатус развертывания:")
     print(f"  - Сгенерированные файлы: {len(status['generated_files'])}")
     print(f"  - Запущенные контейнеры: {len(status['running_containers'])}")
 

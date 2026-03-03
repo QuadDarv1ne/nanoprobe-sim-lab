@@ -469,7 +469,7 @@ class OptimizationAdvisor:
                     "category": "disk_io",
                     "severity": "medium",
                     "recommendation": "Рассмотрите оптимизацию записи данных и буферизацию",
-                    "details": f"Средняя скорость записи на диск {avg_disk_write_rate / (1024*1024):.2f} MB/s высока",
+                    "details": f"Средняя скорость записи на диск {avg_disk_write_rate / (1024 * 1024):.2f} MB/s высока",
                 }
             )
 
