@@ -33,6 +33,7 @@ from utils.config_manager import ConfigManager
 from utils.cache_manager import CacheManager
 from utils.data_manager import DataManager
 from utils.data_exporter import DataExporter
+from utils.database import DatabaseManager
 from utils.cli_utils import Colors
 
 
@@ -71,6 +72,7 @@ class WebDashboard:
         self.cache_manager = CacheManager()
         self.data_manager = DataManager()
         self.data_exporter = DataExporter(output_dir="output")
+        self.database = DatabaseManager(db_path="data/nanoprobe.db")
 
         # Время запуска
         self._start_time = datetime.now()
