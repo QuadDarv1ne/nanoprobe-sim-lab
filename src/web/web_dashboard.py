@@ -32,6 +32,8 @@ from utils.system_monitor import SystemMonitor
 from utils.config_manager import ConfigManager
 from utils.cache_manager import CacheManager
 from utils.data_manager import DataManager
+from utils.data_exporter import DataExporter
+from utils.cli_utils import Colors
 
 
 class WebDashboard:
@@ -68,6 +70,10 @@ class WebDashboard:
         self.config_manager = ConfigManager()
         self.cache_manager = CacheManager()
         self.data_manager = DataManager()
+        self.data_exporter = DataExporter(output_dir="output")
+
+        # Время запуска
+        self._start_time = datetime.now()
 
         # Регистрация маршрутов
         self._register_routes()
@@ -209,6 +215,48 @@ class WebDashboard:
                 self.error_handler.log_error(f"Ошибка получения статистики кэша: {e}")
                 return jsonify({"error": str(e)}), 500
 
+        @self.app.route("/api/export/data", methods=["POST"])
+        def api_export_data():
+            """API для экспорта данных"""
+            try:
+                data = request.json.get('data')
+                filename = request.json.get('filename', 'export')
+                fmt = request.json.get('format', 'csv')
+
+                if not data:
+                    return jsonify({"error": "Данные не предоставлены"}), 400
+
+                filepath = self.data_exporter.export(data, filename, fmt=fmt)
+                return jsonify({
+                    "status": "success",
+                    "filepath": str(filepath),
+                    "format": fmt
+                })
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка экспорта данных: {e}")
+                return jsonify({"error": str(e)}), 500
+
+        @self.app.route("/api/export/surface", methods=["POST"])
+        def api_export_surface():
+            """API для экспорта данных поверхности"""
+            try:
+                import numpy as np
+                surface_data = np.array(request.json.get('surface_data', []))
+                metadata = request.json.get('metadata', {})
+                fmt = request.json.get('format', 'hdf5')
+
+                if surface_data.size == 0:
+                    return jsonify({"error": "Данные поверхности пусты"}), 400
+
+                filepath = self.data_exporter.export_surface_data(surface_data, metadata, fmt=fmt)
+                return jsonify({
+                    "status": "success",
+                    "filepath": str(filepath)
+                })
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка экспорта поверхности: {e}")
+                return jsonify({"error": str(e)}), 500
+
     def _register_socket_handlers(self):
         """Регистрация обработчиков SocketIO событий"""
 
@@ -217,11 +265,32 @@ class WebDashboard:
             """Обработка подключения клиента"""
             self.logger.log_system_event("Клиент подключен к веб-панели", "INFO")
             emit("connection_response", {"data": "Connected to Nanoprobe Simulation Lab Dashboard"})
+            # Отправляем приветственное сообщение с uptime
+            emit("system_status", {
+                "status": "online",
+                "uptime": self._get_uptime(),
+                "timestamp": datetime.now().isoformat()
+            })
 
         @self.socketio.on("disconnect")
         def handle_disconnect():
             """Обработка отключения клиента"""
             self.logger.log_system_event("Клиент отключен от веб-панели", "INFO")
+
+        @self.socketio.on("request_metrics")
+        def handle_request_metrics():
+            """Запрос метрик системы в realtime"""
+            try:
+                import psutil
+                metrics = {
+                    'cpu_percent': psutil.cpu_percent(interval=1),
+                    'memory_percent': psutil.virtual_memory().percent,
+                    'disk_usage': psutil.disk_usage('/').percent,
+                    'timestamp': datetime.now().isoformat()
+                }
+                emit('metrics', metrics)
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка получения метрик: {e}")
 
         @self.socketio.on("request_system_update")
         def handle_system_update_request():
@@ -247,6 +316,26 @@ class WebDashboard:
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка отправки обновления производительности: {e}")
 
+        @self.socketio.on("export_data")
+        def handle_export_data(data):
+            """Обработка запроса на экспорт данных через WebSocket"""
+            try:
+                export_data = data.get('data')
+                filename = data.get('filename', 'export')
+                fmt = data.get('format', 'csv')
+
+                filepath = self.data_exporter.export(export_data, filename, fmt=fmt)
+                emit("export_result", {
+                    "status": "success",
+                    "filepath": str(filepath),
+                    "format": fmt
+                })
+            except Exception as e:
+                emit("export_result", {
+                    "status": "error",
+                    "error": str(e)
+                })
+
         @self.socketio.on("execute_command")
         def handle_execute_command(data):
             """Обработка команды выполнения"""
@@ -263,6 +352,8 @@ class WebDashboard:
                     result = self._execute_analyze_image(params)
                 elif command == "cleanup_cache":
                     result = self._execute_cleanup_cache(params)
+                elif command == "export_surface":
+                    result = self._execute_export_surface(params)
                 else:
                     result = {"status": "error", "message": f"Неизвестная команда: {command}"}
 
@@ -374,6 +465,31 @@ class WebDashboard:
             return {"status": "success", "message": "Кэш очищен", "cleanup_result": cleanup_result}
         except Exception as e:
             self.error_handler.log_error(f"Ошибка очистки кэша: {e}")
+            return {"status": "error", "message": str(e)}
+
+    def _execute_export_surface(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Выполнение команды экспорта данных поверхности"""
+        try:
+            import numpy as np
+            surface_data = np.array(params.get('surface_data', []))
+            filename = params.get('filename', 'surface_export')
+            fmt = params.get('format', 'hdf5')
+            metadata = params.get('metadata', {})
+
+            if surface_data.size == 0:
+                return {"status": "error", "message": "Данные поверхности пусты"}
+
+            filepath = self.data_exporter.export_surface_data(surface_data, metadata, filename, fmt)
+            
+            self.logger.log_system_event(f"Экспорт поверхности: {filepath}", "INFO")
+            
+            return {
+                "status": "success",
+                "message": f"Поверхность экспортирована: {filepath}",
+                "filepath": str(filepath)
+            }
+        except Exception as e:
+            self.error_handler.log_error(f"Ошибка экспорта поверхности: {e}")
             return {"status": "error", "message": str(e)}
 
     def start_server(self, open_browser: bool = True):
