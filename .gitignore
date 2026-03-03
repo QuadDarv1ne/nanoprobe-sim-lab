@@ -178,4 +178,4 @@ error_report_*.json
 ### Документация ###
 # Сгенерированная документация
 docs/_build/
-htmlcov/
+htmlcov/"nonexistent_config.json" ; git add .gitignore; git status
