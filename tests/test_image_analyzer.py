@@ -39,10 +39,10 @@ except ImportError:
             """Обнаружение краев."""
             return np.array([[0, 1], [1, 0]])
 
-
     def calculate_surface_roughness(image):
         """Вычисление шероховатости поверхности."""
         return 1.0
+
 
 class TestImageProcessor(unittest.TestCase):
     """Тесты для класса ImageProcessor"""
@@ -91,6 +91,7 @@ class TestImageProcessor(unittest.TestCase):
         result = self.processor.detect_edges()
         self.assertIsNotNone(result)
 
+
 class TestUtilityFunctions(unittest.TestCase):
     """Тесты для вспомогательных функций"""
 
@@ -104,7 +105,7 @@ class TestUtilityFunctions(unittest.TestCase):
 
 
 def run_tests():
-    """Запускает все тесты"""
+    """Запускает все тесты."""
     print("=" * 60)
     print("ЗАПУСК ТЕСТОВ ДЛЯ АНАЛИЗАТОРА ИЗОБРАЖЕНИЙ")
     print("=" * 60)
@@ -125,6 +126,7 @@ def run_tests():
     print("=" * 60)
 
     return result.wasSuccessful()
+
 
 if __name__ == '__main__':
     success = run_tests()

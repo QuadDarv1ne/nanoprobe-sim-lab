@@ -6,14 +6,13 @@
 
 import unittest
 import tempfile
-import os
-from pathlib import Path
 import sys
+from pathlib import Path
 import time
 
 sys.path.insert(0, str(Path(__file__).parent.parent / 'utils'))
 
-from error_handler import ErrorHandler, ErrorSeverity, ErrorInfo, RecoveryManager, SafeExecutor
+from error_handler import ErrorHandler, ErrorSeverity, RecoveryManager, SafeExecutor
 
 
 class TestErrorSeverity(unittest.TestCase):

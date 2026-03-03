@@ -5,9 +5,7 @@
 """
 
 import unittest
-import json
 import sys
-import os
 from pathlib import Path
 
 # Добавляем путь к проекту

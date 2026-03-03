@@ -34,31 +34,27 @@ except ImportError:
             """TODO: Add description"""
             return True
 
-
     def convert_audio_to_image(audio_data, sample_rate):
         """TODO: Add description"""
         from PIL import Image
         return Image.new('RGB', (320, 240), color='red')
 
-
     def detect_sstv_signal(audio_data, sample_rate):
         """TODO: Add description"""
         return True, 100.0
 
+
 class TestSSTVDecoder(unittest.TestCase):
     """Тесты для класса SSTVDecoder"""
-
 
     def setUp(self):
         """Подготовка тестового окружения"""
         self.decoder = SSTVDecoder()
 
-
     def test_initialization(self):
         """Тестирует инициализацию декодера SSTV"""
         self.assertIsNone(self.decoder.decoded_image)
         self.assertIsNone(self.decoder.signal_data)
-
 
     def test_decode_from_audio(self):
         """Тестирует декодирование из аудиофайла"""
@@ -67,7 +63,6 @@ class TestSSTVDecoder(unittest.TestCase):
             result = self.decoder.decode_from_audio(tmp.name)
             # Результат должен быть изображением или None
             self.assertIsNotNone(result)  # Для тестовой заглушки результат не None
-
 
     def test_save_decoded_image(self):
         """Тестирует сохранение декодированного изображения"""
@@ -80,9 +75,9 @@ class TestSSTVDecoder(unittest.TestCase):
             result = self.decoder.save_decoded_image(tmp.name)
             self.assertTrue(result)
 
+
 class TestUtilityFunctions(unittest.TestCase):
     """Тесты для вспомогательных функций"""
-
 
     def test_convert_audio_to_image(self):
         """Тестирует конвертацию аудио в изображение"""
@@ -94,7 +89,6 @@ class TestUtilityFunctions(unittest.TestCase):
 
         # Результат должен быть изображением или None
         self.assertIsNotNone(result)
-
 
     def test_detect_sstv_signal(self):
         """Тестирует обнаружение SSTV-сигнала"""
@@ -109,8 +103,9 @@ class TestUtilityFunctions(unittest.TestCase):
         self.assertIsInstance(freq, float)
         self.assertGreaterEqual(freq, 0.0)
 
+
 def run_tests():
-    """Запускает все тесты"""
+    """Запускает все тесты."""
     print("=" * 60)
     print("ЗАПУСК ТЕСТОВ ДЛЯ НАЗЕМНОЙ СТАНЦИИ SSTV")
     print("=" * 60)
@@ -131,6 +126,7 @@ def run_tests():
     print("=" * 60)
 
     return result.wasSuccessful()
+
 
 if __name__ == '__main__':
     success = run_tests()

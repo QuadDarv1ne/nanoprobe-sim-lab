@@ -8,7 +8,6 @@
 import unittest
 import numpy as np
 import sys
-import os
 from pathlib import Path
 
 # Добавляем путь к исходному коду
@@ -17,6 +16,7 @@ spm_path = project_root / "components" / "cpp-spm-hardware-sim" / "src"
 sys.path.insert(0, str(spm_path))
 
 from spm_simulator import SurfaceModel, ProbeModel, SPMController
+
 
 class TestSurfaceModel(unittest.TestCase):
     """Тесты для класса SurfaceModel"""
@@ -51,6 +51,7 @@ class TestSurfaceModel(unittest.TestCase):
         with tempfile.NamedTemporaryFile(delete=False, suffix='.txt') as tmp:
             result = self.surface.save_to_file(tmp.name)
             self.assertTrue(result)
+
 
 class TestProbeModel(unittest.TestCase):
     """Тесты для класса ProbeModel"""
@@ -92,6 +93,7 @@ class TestProbeModel(unittest.TestCase):
         expected_height = surface.get_height(0, 0) + 0.5
         self.assertAlmostEqual(adjusted_z, expected_height, places=1)
 
+
 class TestSPMController(unittest.TestCase):
     """Тесты для класса SPMController"""
 
@@ -122,7 +124,7 @@ class TestSPMController(unittest.TestCase):
 
 
 def run_tests():
-    """Запускает все тесты"""
+    """Запускает все тесты."""
     print("=" * 60)
     print("ЗАПУСК ТЕСТОВ ДЛЯ СИМУЛЯТОРА СЗМ")
     print("=" * 60)
@@ -143,6 +145,7 @@ def run_tests():
     print("=" * 60)
 
     return result.wasSuccessful()
+
 
 if __name__ == '__main__':
     success = run_tests()

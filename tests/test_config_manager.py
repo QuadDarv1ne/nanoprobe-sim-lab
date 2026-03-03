@@ -7,7 +7,6 @@
 import unittest
 import json
 import tempfile
-import os
 import sys
 from pathlib import Path
 
