@@ -21,11 +21,9 @@ from spm_simulator import SurfaceModel, ProbeModel, SPMController
 class TestSurfaceModel(unittest.TestCase):
     """Тесты для класса SurfaceModel"""
 
-
     def setUp(self):
         """Подготовка тестового окружения"""
         self.surface = SurfaceModel(10, 10)
-
 
     def test_initialization(self):
         """Тестирует инициализацию модели поверхности"""
@@ -33,13 +31,11 @@ class TestSurfaceModel(unittest.TestCase):
         self.assertEqual(self.surface.height, 10)
         self.assertEqual(self.surface.height_map.shape, (10, 10))
 
-
     def test_get_height_within_bounds(self):
         """Тестирует получение высоты в пределах границ"""
         height = self.surface.get_height(5, 5)
         self.assertIsInstance(height, float)
         self.assertGreaterEqual(height, -1.0)  # Значение должно быть в разумном диапазоне
-
 
     def test_get_height_out_of_bounds(self):
         """Тестирует получение высоты за пределами границ"""
@@ -48,7 +44,6 @@ class TestSurfaceModel(unittest.TestCase):
 
         height = self.surface.get_height(100, 100)
         self.assertEqual(height, 0.0)
-
 
     def test_save_to_file(self):
         """Тестирует сохранение модели поверхности в файл"""
@@ -60,11 +55,9 @@ class TestSurfaceModel(unittest.TestCase):
 class TestProbeModel(unittest.TestCase):
     """Тесты для класса ProbeModel"""
 
-
     def setUp(self):
         """Подготовка тестового окружения"""
         self.probe = ProbeModel()
-
 
     def test_initial_position(self):
         """Тестирует начальную позицию зонда"""
@@ -72,7 +65,6 @@ class TestProbeModel(unittest.TestCase):
         self.assertEqual(pos[0], 0)
         self.assertEqual(pos[1], 0)
         self.assertAlmostEqual(pos[2], 10.0, places=1)
-
 
     def test_set_position(self):
         """Тестирует установку позиции зонда"""
@@ -82,7 +74,6 @@ class TestProbeModel(unittest.TestCase):
         self.assertEqual(pos[1], 6.0)
         self.assertEqual(pos[2], 15.0)
 
-
     def test_move_to(self):
         """Тестирует перемещение зонда"""
         self.probe.move_to(3.0, 4.0, 12.0)
@@ -90,7 +81,6 @@ class TestProbeModel(unittest.TestCase):
         self.assertEqual(pos[0], 3.0)
         self.assertEqual(pos[1], 4.0)
         self.assertEqual(pos[2], 12.0)
-
 
     def test_adjust_to_surface(self):
         """Тестирует адаптацию зонда к поверхности"""
@@ -105,13 +95,11 @@ class TestProbeModel(unittest.TestCase):
 class TestSPMController(unittest.TestCase):
     """Тесты для класса SPMController"""
 
-
     def setUp(self):
         """Подготовка тестового окружения"""
         self.controller = SPMController()
         self.surface = SurfaceModel(10, 10)  # Минимальный размер 10x10
         self.controller.set_surface(self.surface)
-
 
     def test_set_surface(self):
         """Тестирует установку поверхности"""
@@ -120,7 +108,6 @@ class TestSPMController(unittest.TestCase):
         self.assertEqual(self.controller.surface.height, 10)
         self.assertIsNotNone(self.controller.scan_data)
         self.assertEqual(self.controller.scan_data.shape, (10, 10))
-
 
     def test_scan_surface(self):
         """Тестирует процесс сканирования поверхности"""
@@ -132,6 +119,7 @@ class TestSPMController(unittest.TestCase):
         # Все значения должны быть в разумном диапазоне
         self.assertTrue(np.all(self.controller.scan_data >= 0.1))
         self.assertTrue(np.all(self.controller.scan_data <= 20.0))
+
 
 def run_tests():
     """Запускает все тесты"""

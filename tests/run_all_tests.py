@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-#!/usr/bin/env python3
-#!/usr/bin/env python3
-
 """
 Скрипт запуска всех тестов для проекта Лаборатория моделирования нанозонда
 Этот скрипт запускает все доступные тесты для всех компонентов проекта.
@@ -12,6 +9,7 @@ import sys
 import os
 import subprocess
 from pathlib import Path
+
 
 def run_specific_test_suite(test_file_path):
     """
@@ -41,6 +39,7 @@ def run_specific_test_suite(test_file_path):
     except Exception as e:
         print(f"Ошибка при запуске тестов из {test_file_path}: {str(e)}")
         return False
+
 
 def discover_and_run_tests():
     """
@@ -91,6 +90,7 @@ def discover_and_run_tests():
 
     return all_passed
 
+
 def run_with_unittest():
     """
     Альтернативный способ запуска тестов с использованием unittest
@@ -128,8 +128,9 @@ def run_with_unittest():
         print("Не найдено тестов для запуска")
         return False
 
+
 def main():
-    """Главная функция запуска тестов"""
+    """Главная функция запуска тестов."""
     print("Лаборатория моделирования нанозонда")
     print("Система тестирования проекта")
     print(f"Текущая директория: {os.getcwd()}")
@@ -140,6 +141,7 @@ def main():
 
     # Возвращаем код завершения
     return 0 if success else 1
+
 
 if __name__ == "__main__":
     exit_code = main()

@@ -19,45 +19,42 @@ try:
 except ImportError:
     # Если основной модуль недоступен, создаем тестовые заглушки
     class ImageProcessor:
-        """TODO: Add description"""
+        """Заглушка процессора изображений."""
         def __init__(self):
-            """TODO: Add description"""
+            """Инициализация процессора."""
             self.image = None
             self.processed_image = None
 
         def load_image(self, filepath):
-            """TODO: Add description"""
+            """Загрузка изображения."""
             return True
 
         def apply_noise_reduction(self, method="gaussian"):
-            """TODO: Add description"""
+            """Применение шумоподавления."""
             if method == "invalid":
                 return None
             return np.array([[1, 2], [3, 4]])
 
         def detect_edges(self, threshold1=100, threshold2=200):
-            """TODO: Add description"""
+            """Обнаружение краев."""
             return np.array([[0, 1], [1, 0]])
 
 
     def calculate_surface_roughness(image):
-        """TODO: Add description"""
+        """Вычисление шероховатости поверхности."""
         return 1.0
 
 class TestImageProcessor(unittest.TestCase):
     """Тесты для класса ImageProcessor"""
 
-
     def setUp(self):
         """Подготовка тестового окружения"""
         self.processor = ImageProcessor()
-
 
     def test_initialization(self):
         """Тестирует инициализацию процессора изображений"""
         self.assertIsNone(self.processor.image)
         self.assertIsNone(self.processor.processed_image)
-
 
     def test_load_image(self):
         """Тестирует загрузку изображения"""
@@ -67,30 +64,25 @@ class TestImageProcessor(unittest.TestCase):
             # Для тестовой заглушки всегда возвращаем True
             self.assertTrue(True)
 
-
     def test_apply_noise_reduction_gaussian(self):
         """Тестирует применение гауссового фильтра"""
         result = self.processor.apply_noise_reduction("gaussian")
         self.assertIsNotNone(result)
-
 
     def test_apply_noise_reduction_median(self):
         """Тестирует применение медианного фильтра"""
         result = self.processor.apply_noise_reduction("median")
         self.assertIsNotNone(result)
 
-
     def test_apply_noise_reduction_bilateral(self):
         """Тестирует применение билатерального фильтра"""
         result = self.processor.apply_noise_reduction("bilateral")
         self.assertIsNotNone(result)
 
-
     def test_apply_noise_reduction_invalid_method(self):
         """Тестирует применение неверного метода фильтрации"""
         result = self.processor.apply_noise_reduction("invalid")
         self.assertIsNone(result)
-
 
     def test_detect_edges(self):
         """Тестирует обнаружение краев"""
@@ -102,7 +94,6 @@ class TestImageProcessor(unittest.TestCase):
 class TestUtilityFunctions(unittest.TestCase):
     """Тесты для вспомогательных функций"""
 
-
     def test_calculate_surface_roughness(self):
         """Тестирует вычисление шероховатости поверхности"""
         test_image = np.random.rand(10, 10, 3)  # Тестовое цветное изображение
@@ -110,6 +101,7 @@ class TestUtilityFunctions(unittest.TestCase):
 
         self.assertIsInstance(roughness, float)
         self.assertGreaterEqual(roughness, 0)  # Шероховатость должна быть неотрицательной
+
 
 def run_tests():
     """Запускает все тесты"""
