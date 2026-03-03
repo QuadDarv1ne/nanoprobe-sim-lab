@@ -622,7 +622,7 @@ def main():
     print("\n🔄 Интеграция с предиктивным движком...")
     scheduler.integrate_with_predictive_engine()
 
-    print(f"\n🔗 Доступные функции:")
+    print("\n🔗 Доступные функции:")
     print("   • Планирование заданий: scheduler.schedule_job()")
     print("   • Статус: scheduler.get_scheduler_status()")
     print("   • Отчеты: scheduler.generate_optimization_report()")
@@ -632,7 +632,7 @@ def main():
     print("\n🎉 Планировщик оптимизации готов к работе!")
 
     # Показываем примеры использования
-    print(f"\n💡 Примеры использования:")
+    print("\n💡 Примеры использования:")
     print("   # Создать задание на оптимизацию CPU")
     print("   job = scheduler.create_optimization_job('CPU Optimization', 'cpu', priority=5)")
     print("   scheduler.schedule_job(job)")

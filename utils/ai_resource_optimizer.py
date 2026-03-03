@@ -473,7 +473,7 @@ class AIResourceOptimizer:
             final_disk = self.get_current_state().disk_usage
 
             result["improvement"] = max(0, initial_disk - final_disk)
-            result["details"] = f"Disk usage optimization applied"
+            result["details"] = "Disk usage optimization applied"
 
         except Exception as e:
             result["success"] = False
@@ -505,7 +505,7 @@ class AIResourceOptimizer:
             final_network = self.get_current_state().network_io
 
             result["improvement"] = max(0, initial_network - final_network)
-            result["details"] = f"Network I/O optimization applied"
+            result["details"] = "Network I/O optimization applied"
 
         except Exception as e:
             result["success"] = False
@@ -882,7 +882,7 @@ def main():
     print(f"   • Улучшений достигнуто: {status['stats']['improvements_achieved']}")
     print(f"   • Обучено моделей: {status['stats']['models_trained']}")
 
-    print(f"\n🔗 Доступные функции:")
+    print("\n🔗 Доступные функции:")
     print("   • Оптимизация: ai_optimizer.run_ai_optimization_cycle()")
     print("   • Статус: ai_optimizer.get_ai_status()")
     print("   • Инсайты: ai_optimizer.get_optimization_insights()")
