@@ -211,7 +211,7 @@ class NanoprobeDashboard:
         """Запускает симуляцию СЗМ."""
 
         def worker():
-            """TODO: Add description"""
+            """Работник для запуска симуляции СЗМ."""
             try:
                 self.logger_manager.log_system_event("Запуск СЗМ симуляции из GUI", "INFO")
 
@@ -236,7 +236,7 @@ class NanoprobeDashboard:
         """Запускает анализ изображений."""
 
         def worker():
-            """TODO: Add description"""
+            """Работник для запуска анализа изображений."""
             try:
                 file_path = filedialog.askopenfilename(
                     title="Выберите изображение для анализа",
@@ -276,7 +276,7 @@ class NanoprobeDashboard:
         """Запускает декодирование SSTV."""
 
         def worker():
-            """TODO: Add description"""
+            """Работник для запуска декодирования SSTV."""
             try:
                 file_path = filedialog.askopenfilename(
                     title="Выберите аудиофайл SSTV",
@@ -313,7 +313,7 @@ class NanoprobeDashboard:
         """Запускает комплексную симуляцию."""
 
         def worker():
-            """TODO: Add description"""
+            """Работник для запуска комплексной симуляции."""
             try:
                 self.logger_manager.log_system_event("Запуск комплексной симуляции из GUI", "INFO")
 
@@ -339,7 +339,7 @@ class NanoprobeDashboard:
         """Запускает непрерывную симуляцию."""
 
         def worker():
-            """TODO: Add description"""
+            """Работник для запуска непрерывной симуляции."""
             try:
                 self.logger_manager.log_system_event("Запуск непрерывной симуляции из GUI", "INFO")
 

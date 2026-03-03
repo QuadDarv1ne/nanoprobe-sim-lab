@@ -451,11 +451,10 @@ class AuthManager:
             action: Действие для проверки прав
         """
         def decorator(f):
-
-            """TODO: Add description"""
+            """Декоратор для проверки прав доступа."""
             @wraps(f)
             def decorated_function(*args, **kwargs):
-                """TODO: Add description"""
+                """Обёртка для проверки токена аутентификации."""
                 token = None
 
                 # Проверяем токен в заголовке

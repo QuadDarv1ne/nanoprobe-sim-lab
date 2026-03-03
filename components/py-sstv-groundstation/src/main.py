@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-#!/usr/bin/env python3
-#!/usr/bin/env python3
-
 """
 Наземная станция SSTV
 Скрипт для приема и декодирования SSTV-сигналов
@@ -18,7 +15,7 @@ from sstv_decoder import SSTVDecoder, detect_sstv_signal
 
 
 def main():
-    """TODO: Add description"""
+    """Основная функция SSTV станции."""
     parser = argparse.ArgumentParser(description="Наземная станция SSTV")
     parser.add_argument("--audio", "-a", type=str, help="Путь к аудиофайлу")
     parser.add_argument(
