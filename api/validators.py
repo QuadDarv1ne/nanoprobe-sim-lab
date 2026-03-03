@@ -23,7 +23,7 @@ class DataValidator:
     def validate_surface_params(data: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
         """Валидирует параметры создания поверхности."""
         if not data:
-            return False, "Отсутствуют данные запроса"
+            return True, None  # Пустые данные = используем значения по умолчанию
 
         width = data.get('width', 50)
         height = data.get('height', 50)
@@ -158,7 +158,7 @@ class ResponseBuilder:
     def validation_error(field: str, message: str) -> Dict[str, Any]:
         """Создает ответ об ошибке валидации."""
         return ResponseBuilder.error(
-            message=f"Ошибка валидации: {message}",
+            message=f"Ошибка валидации: {field} - {message}",
             error_code="VALIDATION_ERROR",
             details={'field': field}
         )
