@@ -9,13 +9,12 @@
 
 import os
 import sys
-import json
 import subprocess
 import shutil
 from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 from datetime import datetime
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 
 # Опциональный импорт Docker
 try:

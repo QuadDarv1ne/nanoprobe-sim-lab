@@ -10,20 +10,13 @@
 import time
 import threading
 import queue
-import smtplib
 import sys
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Callable
 from datetime import datetime
 import json
 import psutil
-import logging
-from dataclasses import dataclass
 import requests
-import socket
-import os
 
 
 @dataclass

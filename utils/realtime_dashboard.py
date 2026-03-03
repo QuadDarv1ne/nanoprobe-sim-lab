@@ -10,19 +10,14 @@
 import time
 import threading
 import json
-from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from datetime import datetime
 import psutil
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-import plotly.express as px
 from dataclasses import dataclass
-import pandas as pd
 import webbrowser
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import socketserver
-import io
 import mimetypes
 
 import sys

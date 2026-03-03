@@ -8,18 +8,13 @@
 """
 
 import numpy as np
-import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
-from sklearn.linear_model import LinearRegression, LogisticRegression
-from sklearn.svm import SVR, SVC
 from sklearn.metrics import mean_squared_error, r2_score, accuracy_score, classification_report
 from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.pipeline import Pipeline
 import joblib
-from typing import Dict, List, Tuple, Optional, Any, Union
+from typing import Dict, Any
 from pathlib import Path
-import json
 
 
 class SurfacePredictionModel:

@@ -7,17 +7,12 @@
 обнаружения потенциальных проблем и автоматического рефакторинга.
 """
 
-import ast
-import os
-import sys
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Set, Tuple
+from typing import Dict, List, Any
 from datetime import datetime
 import json
 import re
 from dataclasses import dataclass
-import tokenize
-from io import StringIO
 
 
 @dataclass

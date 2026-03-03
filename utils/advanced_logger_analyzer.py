@@ -6,7 +6,6 @@
 Этот модуль предоставляет инструменты для анализа, фильтрации и визуализации логов проекта.
 """
 
-import os
 import re
 import json
 import csv
@@ -16,7 +15,6 @@ from datetime import datetime, timedelta
 from dataclasses import dataclass
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 from collections import Counter, defaultdict
 import statistics
 import threading

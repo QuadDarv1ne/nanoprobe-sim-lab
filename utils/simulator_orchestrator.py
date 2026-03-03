@@ -9,8 +9,7 @@
 
 import time
 import threading
-from typing import Dict, Any, Optional, Callable
-from pathlib import Path
+from typing import Dict, Any
 import numpy as np
 import queue
 from datetime import datetime

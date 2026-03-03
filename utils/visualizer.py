@@ -9,8 +9,7 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-from mpl_toolkits.mplot3d import Axes3D
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple
 import matplotlib.animation as animation
 from pathlib import Path
 

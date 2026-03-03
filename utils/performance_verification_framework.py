@@ -10,11 +10,10 @@
 import time
 import statistics
 from pathlib import Path
-from typing import Dict, Any, List, Callable, Optional
+from typing import Dict, Any, List
 from datetime import datetime
 import json
 import psutil
-import gc
 import tracemalloc
 from dataclasses import dataclass
 

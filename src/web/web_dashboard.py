@@ -8,18 +8,16 @@
 
 import os
 import sys
-import json
 import time
 import threading
 import webbrowser
 import subprocess
 from datetime import datetime
-from typing import Dict, List, Any, Optional
+from typing import Dict, Any
 from pathlib import Path
 
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO, emit
-import eventlet
 
 # Добавляем путь к utils для импорта служебных модулей
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))

@@ -7,16 +7,11 @@
 комплексных отчетов о симуляциях и анализах.
 """
 
-import json
-import pandas as pd
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Any, Optional
-import matplotlib.pyplot as plt
-import seaborn as sns
+from typing import Dict, List, Any
 from jinja2 import Template
 import pdfkit
-import html
 
 
 class ReportGenerator:

@@ -35,15 +35,12 @@ class SSTVDecoder:
             Image.Image: Декодированное изображение или None при ошибке
         """
         try:
-            # Импортируем библиотеку только при необходимости
-            from pysstv.sstv import SSTV
             import wave
 
             # Открываем аудиофайл
             with wave.open(audio_file, "r") as wav:
                 frames = wav.readframes(wav.getnframes())
                 sample_width = wav.getsampwidth()
-                framerate = wav.getframerate()
 
                 # Преобразуем аудиоданные в числовой формат
                 if sample_width == 1:
@@ -53,10 +50,9 @@ class SSTVDecoder:
                 else:
                     raise ValueError(f"Неподдерживаемая глубина цвета: {sample_width}")
 
-                audio_data = np.frombuffer(frames, dtype=dtype)
+                np.frombuffer(frames, dtype=dtype)
 
                 # Декодируем SSTV-сигнал
-                # Этот процесс требует использования pysstv
                 print(f"Декодирование SSTV-сигнала из файла: {audio_file}")
 
                 # Здесь будет реализация декодирования SSTV

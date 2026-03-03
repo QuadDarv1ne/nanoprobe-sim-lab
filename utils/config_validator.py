@@ -9,12 +9,10 @@
 
 import json
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Union
+from typing import Dict, Any, List, Optional
 from datetime import datetime
 import re
-import jsonschema
 from jsonschema import Draft7Validator
-import inspect
 
 
 class ConfigValidator:

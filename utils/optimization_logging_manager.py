@@ -9,7 +9,7 @@
 import logging
 import logging.handlers
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from datetime import datetime
 import json
 import threading

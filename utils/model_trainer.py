@@ -14,7 +14,6 @@ from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.metrics import mean_squared_error, r2_score, accuracy_score, classification_report
-from sklearn.pipeline import Pipeline
 import joblib
 import json
 from pathlib import Path
@@ -24,8 +23,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from dataclasses import dataclass
 from functools import wraps
-import warnings
-from sklearn.exceptions import ConvergenceWarning
 import xgboost as xgb
 import lightgbm as lgb
 

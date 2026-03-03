@@ -8,7 +8,6 @@
 
 import os
 import shutil
-import time
 import gc
 import tempfile
 import json

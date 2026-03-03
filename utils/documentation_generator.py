@@ -7,13 +7,10 @@
 документации из исходного кода и комментариев.
 """
 
-import os
-import sys
 import ast
 import json
-import re
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any
 from datetime import datetime
 from dataclasses import dataclass, asdict
 

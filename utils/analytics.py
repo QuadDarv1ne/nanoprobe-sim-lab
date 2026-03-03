@@ -16,9 +16,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 import matplotlib.pyplot as plt
-import seaborn as sns
-from typing import Dict, List, Tuple, Optional, Any
-from pathlib import Path
+from typing import Dict, Tuple, Optional, Any
 import json
 
 
@@ -174,10 +172,7 @@ class SurfaceAnalytics:
         predictions = self.regressor.predict(X_test)
 
         # Возвращаем предсказания и метрики
-        mse = mean_squared_error(y_test, predictions)
-        r2 = r2_score(y_test, predictions)
-
-        return predictions
+        return predictions, mean_squared_error(y_test, predictions), r2_score(y_test, predictions)
 
 
 class ImageAnalytics:
@@ -284,7 +279,6 @@ class ImageAnalytics:
         # Простой метод: подсчет областей с похожими значениями
         # Используем порог для определения "похожести"
         threshold = np.std(image) / 4
-        regions = 0
 
         # Упрощенный подход: считаем количество уникальных значений в окрестности
         # Для настоящей реализации использовать алгоритмы сегментации

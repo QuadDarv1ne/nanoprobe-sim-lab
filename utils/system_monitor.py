@@ -13,7 +13,7 @@ import threading
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 from collections import deque
 
 

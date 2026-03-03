@@ -9,12 +9,10 @@
 
 import logging
 import traceback
-import sys
 import json
-import os
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, Any, Optional, Callable, TypeVar, Generic
+from typing import Dict, Any, Optional, Callable
 from functools import wraps
 import threading
 import queue
