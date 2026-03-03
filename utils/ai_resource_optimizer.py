@@ -871,7 +871,7 @@ def main():
 
     for i, rec in enumerate(recommendations[:3]):  # Первые 3
         print(
-            f"   {i+1}. {rec.algorithm} - приоритет: {rec.priority}, доверие: {rec.confidence:.2f}"
+            f"   {i + 1}. {rec.algorithm} - приоритет: {rec.priority}, доверие: {rec.confidence:.2f}"
         )
 
     # Показываем статус

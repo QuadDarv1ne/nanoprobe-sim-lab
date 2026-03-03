@@ -612,7 +612,7 @@ def main():
 
     # Показываем статус
     status = scheduler.get_scheduler_status()
-    print(f"\n📊 Текущий статус:")
+    print("\n📊 Текущий статус:")
     print(f"   • Планировщик запущен: {status['running']}")
     print(f"   • Запланировано заданий: {status['scheduled_jobs']}")
     print(f"   • Выполнено заданий: {status['stats']['jobs_executed']}")
