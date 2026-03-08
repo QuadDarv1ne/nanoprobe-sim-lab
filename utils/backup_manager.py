@@ -89,7 +89,13 @@ class BackupManager:
 
         Returns:
             Путь к созданной резервной копии или None при ошибке
+
+        Raises:
+            ValueError: Если backup_name некорректен
         """
+        if backup_name is not None and (not isinstance(backup_name, str) or len(backup_name) == 0):
+            raise ValueError("Имя резервной копии должно быть непустой строкой")
+
         try:
             # Генерируем имя резервной копии
             if backup_name is None:
