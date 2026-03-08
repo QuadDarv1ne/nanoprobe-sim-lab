@@ -45,12 +45,13 @@ class SSTVDecoder:
             Image.Image: Декодированное изображение или None при ошибке
         """
         try:
-            from pysstv.audio import decode as pysstv_decode
-            import wave
-
             audio_path = Path(audio_file)
             if not audio_path.exists():
                 print(f"Ошибка: Файл '{audio_file}' не найден")
+                return None
+
+            if audio_path.suffix.lower() not in ['.wav', '.mp3', '.flac', '.ogg', '.m4a']:
+                print(f"Неподдерживаемый аудиоформат: {audio_path.suffix}")
                 return None
 
             print(f"Декодирование SSTV-сигнала из: {audio_file}")
@@ -74,6 +75,9 @@ class SSTVDecoder:
                 print("Не удалось декодировать ни в одном из режимов")
                 return None
             else:
+                if self.mode not in self.SUPPORTED_MODES:
+                    print(f"Неподдерживаемый режим: {self.mode}. Доступные: {self.SUPPORTED_MODES}")
+                    return None
                 image = self._decode_with_mode(str(audio_path), self.mode)
                 if image:
                     self.decoded_image = image
@@ -153,7 +157,16 @@ class SSTVDecoder:
 
         Returns:
             Image.Image: Декодированное изображение
+
+        Raises:
+            ValueError: Если сэмплы некорректны
         """
+        if samples is None or len(samples) == 0:
+            raise ValueError("Аудиоданные не должны быть пустыми")
+
+        if sample_rate <= 0:
+            raise ValueError("Частота дискретизации должна быть положительной")
+
         try:
             from pysstv.sstv import SSTV
             from pysstv.color import ColorSSTV
@@ -208,12 +221,24 @@ class SSTVDecoder:
             print("Сначала декодируйте изображение")
             return False
 
+        if not filepath:
+            print("Путь к файлу не указан")
+            return False
+
         try:
             path = Path(filepath)
+            valid_formats = ['.jpg', '.jpeg', '.png', '.bmp', '.tiff']
+            if path.suffix.lower() not in valid_formats:
+                print(f"Неподдерживаемый формат: {path.suffix}. Доступные: {valid_formats}")
+                return False
+
             path.parent.mkdir(parents=True, exist_ok=True)
 
             save_kwargs = {}
             if path.suffix.lower() in ['.jpg', '.jpeg']:
+                if not (1 <= quality <= 100):
+                    print(f"Качество должно быть от 1 до 100, установлено {quality}")
+                    quality = max(1, min(100, quality))
                 save_kwargs['quality'] = quality
                 save_kwargs['optimize'] = True
             elif path.suffix.lower() == '.png':
