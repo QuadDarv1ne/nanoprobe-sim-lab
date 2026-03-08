@@ -19,7 +19,7 @@ psutil>=5.9.0
 jsonschema>=4.19.0
 toml>=0.10.0
 pysstv>=0.2.0
-#rtlsdr>=0.2.0
+rtlsdr>=0.2.0
 
 # For development and testing
 pytest>=7.4.0
