@@ -33,6 +33,15 @@ class ImageProcessor:
             bool: True если изображение успешно загружено, иначе False
         """
         try:
+            path = Path(filepath)
+            if not path.exists():
+                print(f"Файл не найден: {filepath}")
+                return False
+
+            if path.suffix.lower() not in ['.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif']:
+                print(f"Неподдерживаемый формат: {path.suffix}")
+                return False
+
             self.image = cv2.imread(filepath)
             if self.image is not None:
                 self.image_path = filepath
@@ -61,6 +70,11 @@ class ImageProcessor:
             print("Сначала загрузите изображение")
             return None
 
+        valid_methods = {"gaussian", "median", "bilateral"}
+        if method not in valid_methods:
+            print(f"Неизвестный метод фильтрации: {method}. Доступные: {valid_methods}")
+            return None
+
         if method == "gaussian":
             # Применяем гауссовый фильтр для уменьшения шума
             filtered = cv2.GaussianBlur(self.image, (5, 5), 0)
@@ -70,9 +84,6 @@ class ImageProcessor:
         elif method == "bilateral":
             # Применяем билатеральный фильтр для сохранения краев
             filtered = cv2.bilateralFilter(self.image, 9, 75, 75)
-        else:
-            print(f"Неизвестный метод фильтрации: {method}")
-            return None
 
         self.processed_image = filtered
         self.metadata['filter_applied'] = method
@@ -93,11 +104,19 @@ class ImageProcessor:
             print("Сначала обработайте изображение")
             return None
 
-        gray = cv2.cvtColor(self.processed_image, cv2.COLOR_BGR2GRAY)
-        edges = cv2.Canny(gray, threshold1, threshold2)
-        self.metadata['edges_detected'] = True
-        self.metadata['edge_thresholds'] = (threshold1, threshold2)
-        return edges
+        if not (0 < threshold1 < threshold2):
+            print(f"Некорректные пороги: threshold1={threshold1}, threshold2={threshold2}")
+            return None
+
+        try:
+            gray = cv2.cvtColor(self.processed_image, cv2.COLOR_BGR2GRAY)
+            edges = cv2.Canny(gray, threshold1, threshold2)
+            self.metadata['edges_detected'] = True
+            self.metadata['edge_thresholds'] = (threshold1, threshold2)
+            return edges
+        except Exception as e:
+            print(f"Ошибка обнаружения краев: {e}")
+            return None
 
     def get_histogram(self) -> Optional[np.ndarray]:
         """
@@ -177,8 +196,16 @@ def calculate_surface_roughness(
 
     Returns:
         Dict[str, float]: Параметры шероховатости
+
+    Raises:
+        ValueError: Если изображение пустое или неверного формата
     """
+    if image is None or image.size == 0:
+        raise ValueError("Изображение не должно быть пустым")
+
     if len(image.shape) == 3:
+        if image.shape[2] not in [3, 4]:
+            raise ValueError(f"Неподдерживаемое количество каналов: {image.shape[2]}")
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     else:
         gray = image
