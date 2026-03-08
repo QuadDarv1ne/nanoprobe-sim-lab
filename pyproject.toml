@@ -69,7 +69,8 @@ dev = [
     "pre-commit>=3.0.0",
 ]
 sdr = [
-    "pyrtlsdr>=0.2.0",
+    "pyrtlsdr>=0.3.0",
+    "rtl-sdr>=0.1.0",
 ]
 
 [project.urls]

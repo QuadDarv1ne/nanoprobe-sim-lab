@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 SDR интерфейс для приема SSTV сигналов
-Поддержка RTL-SDR и других SDR устройств
+Поддержка RTL-SDR (V2, V3, V4), Airspy, HackRF и других SDR устройств
 """
 
 import numpy as np
@@ -11,6 +11,7 @@ from datetime import datetime
 import threading
 import queue
 import time
+import platform
 
 
 class SDRInterface:
@@ -27,27 +28,44 @@ class SDRInterface:
         'uhf_70cm': 430.000, # 70cm диапазон
     }
 
+    # Поддерживаемые устройства
+    SUPPORTED_DEVICES = {
+        'rtl2832u': 'RTL-SDR (RTL2832U)',
+        'rtl2838': 'RTL-SDR (RTL2838)',
+        'r820t': 'RTL-SDR (R820T)',
+        'r828d': 'RTL-SDR V4 (R828D)',
+        'airspy': 'Airspy',
+        'hackrf': 'HackRF',
+        'sdrplay': 'SDRplay',
+        'bladerf': 'bladeRF',
+        'unknown': 'Unknown SDR',
+    }
+
     def __init__(
         self,
         device_index: int = 0,
-        sample_rate: int = 48000,
+        sample_rate: int = 2400000,  # 2.4 MSPS для RTL-SDR V4
         center_freq: float = 145.800,
-        gain: int = 30
+        gain: int = 30,
+        device_type: str = 'auto'
     ):
         """
         Инициализирует SDR интерфейс.
 
         Args:
             device_index: Индекс SDR устройства
-            sample_rate: Частота дискретизации
+            sample_rate: Частота дискретизации (по умолчанию 2.4 MSPS)
             center_freq: Центральная частота (МГц)
             gain: Усиление (0-50 dB)
+            device_type: Тип устройства ('auto', 'rtl2832u', 'r828d', 'airspy', etc.)
         """
         self.device_index = device_index
         self.sample_rate = sample_rate
         self.center_freq = center_freq
         self.gain = gain
+        self.device_type = device_type
         self.sdr = None
+        self.device_name = None
         self.is_recording = False
         self.is_scanning = False
         self.audio_queue: queue.Queue = queue.Queue()
@@ -59,7 +77,7 @@ class SDRInterface:
 
     def initialize(self) -> bool:
         """
-        Инициализирует SDR устройство.
+        Инициализирует SDR устройство с автоопределением типа.
 
         Returns:
             bool: True если успешно
@@ -67,18 +85,24 @@ class SDRInterface:
         try:
             from rtlsdr import RtlSdr
 
+            # Пробуем открыть устройство
             self.sdr = RtlSdr(device_index=self.device_index)
-            self.sdr.sample_rate = self.sample_rate
-            self.sdr.center_freq = self.center_freq * 1e6
-            self.sdr.gain = self.gain
-
-            self.metadata['device'] = f"RTL-SDR #{self.device_index}"
+            
+            # Определяем тип устройства
+            self._detect_device_type()
+            
+            # Настраиваем параметры в зависимости от устройства
+            self._configure_device()
+            
+            self.metadata['device'] = self.device_name or f"SDR #{self.device_index}"
             self.metadata['sample_rate'] = self.sample_rate
             self.metadata['center_freq'] = self.center_freq
             self.metadata['gain'] = self.gain
             self.metadata['initialized'] = True
+            self.metadata['device_type'] = self.device_type
 
-            print(f"✓ SDR инициализирован: {self.center_freq} МГц, {self.sample_rate} sps")
+            print(f"✓ SDR инициализирован: {self.device_name}")
+            print(f"  Частота: {self.center_freq} МГц, Sample Rate: {self.sample_rate} sps, Gain: {self.gain} dB")
             return True
 
         except ImportError:
@@ -91,6 +115,90 @@ class SDRInterface:
             print(f"Ошибка инициализации SDR: {e}")
             self.metadata['error'] = str(e)
             return False
+
+    def _detect_device_type(self) -> str:
+        """
+        Определяет тип подключенного SDR устройства.
+
+        Returns:
+            str: Тип устройства
+        """
+        if self.device_type != 'auto':
+            self.device_name = self.SUPPORTED_DEVICES.get(
+                self.device_type, f"Unknown ({self.device_type})"
+            )
+            return self.device_type
+
+        try:
+            # Получаем информацию об устройстве
+            if hasattr(self.sdr, 'device_name'):
+                device_name = self.sdr.device_name.lower()
+            elif hasattr(self.sdr, 'get_device_name'):
+                device_name = self.sdr.get_device_name().lower()
+            else:
+                device_name = ''
+
+            # Определяем тип по имени
+            if 'r828d' in device_name or 'v4' in device_name:
+                self.device_type = 'r828d'
+                self.device_name = 'RTL-SDR V4 (R828D)'
+            elif 'r820t' in device_name or 'r820t2' in device_name:
+                self.device_type = 'r820t'
+                self.device_name = 'RTL-SDR (R820T/R820T2)'
+            elif 'rtl2838' in device_name:
+                self.device_type = 'rtl2838'
+                self.device_name = 'RTL-SDR (RTL2838)'
+            elif 'rtl2832' in device_name or 'rtl2832u' in device_name:
+                self.device_type = 'rtl2832u'
+                self.device_name = 'RTL-SDR (RTL2832U)'
+            elif 'airspy' in device_name:
+                self.device_type = 'airspy'
+                self.device_name = 'Airspy'
+            elif 'hackrf' in device_name:
+                self.device_type = 'hackrf'
+                self.device_name = 'HackRF'
+            else:
+                self.device_type = 'unknown'
+                self.device_name = self.SUPPORTED_DEVICES.get('unknown', 'Unknown SDR')
+
+            print(f"Обнаружено устройство: {self.device_name}")
+            return self.device_type
+
+        except Exception as e:
+            print(f"Не удалось определить тип устройства: {e}")
+            self.device_type = 'unknown'
+            self.device_name = 'Unknown SDR'
+            return self.device_type
+
+    def _configure_device(self):
+        """
+        Настраивает параметры устройства в зависимости от типа.
+        """
+        # RTL-SDR V4 (R828D) требует sample rate 2.4 MSPS
+        if self.device_type == 'r828d':
+            self.sample_rate = 2400000  # 2.4 MSPS
+            print("  Оптимизировано для RTL-SDR V4")
+        
+        # Классические RTL-SDR работают на 1-3 MSPS
+        elif self.device_type in ['rtl2832u', 'rtl2838', 'r820t']:
+            if self.sample_rate < 1000000:
+                self.sample_rate = 2000000  # 2 MSPS по умолчанию
+            print("  Оптимизировано для классического RTL-SDR")
+
+        # Применяем настройки
+        self.sdr.sample_rate = self.sample_rate
+        self.sdr.center_freq = self.center_freq * 1e6
+        self.sdr.gain = self.gain
+        
+        # Для RTL-SDR V4 включаем прямой режим (direct sampling) если нужно
+        if self.device_type == 'r828d':
+            try:
+                # Пробуем включить прямой режим для УКВ
+                if self.center_freq < 24:  # Если частота < 24 МГц
+                    self.sdr.direct_sampling = 1
+                    print("  Включен прямой режим (direct sampling)")
+            except Exception:
+                pass
 
     def set_frequency(self, freq_mhz: float) -> bool:
         """
@@ -106,6 +214,21 @@ class SDRInterface:
             print("SDR не инициализирован")
             return False
 
+        # Проверка диапазона частот для разных устройств
+        if self.device_type == 'r828d':
+            # RTL-SDR V4: 24 МГц - 1766 МГц (с прямым режимом до 28 МГц)
+            if freq_mhz < 24 or freq_mhz > 1766:
+                if freq_mhz >= 1.5 and freq_mhz < 24:
+                    print(f"Предупреждение: Частота {freq_mhz} МГц требует прямого режима")
+                else:
+                    print(f"Частота {freq_mhz} МГц вне диапазона устройства")
+                    return False
+        elif self.device_type in ['rtl2832u', 'rtl2838', 'r820t']:
+            # Классические RTL-SDR: 24 МГц - 1766 МГц
+            if freq_mhz < 24 or freq_mhz > 1766:
+                print(f"Частота {freq_mhz} МГц вне диапазона устройства")
+                return False
+
         try:
             self.sdr.center_freq = freq_mhz * 1e6
             self.center_freq = freq_mhz
@@ -114,6 +237,47 @@ class SDRInterface:
         except Exception as e:
             print(f"Ошибка установки частоты: {e}")
             return False
+
+    @staticmethod
+    def list_devices() -> List[Dict]:
+        """
+        Возвращает список доступных SDR устройств.
+
+        Returns:
+            List[Dict]: Список устройств с информацией
+        """
+        devices = []
+        try:
+            from rtlsdr import RtlSdr
+
+            # Получаем количество устройств
+            num_devices = RtlSdr.get_device_count()
+
+            for i in range(num_devices):
+                try:
+                    device = RtlSdr(device_index=i)
+                    device_info = {
+                        'index': i,
+                        'name': device.get_device_name() if hasattr(device, 'get_device_name') else 'Unknown',
+                        'serial': device.get_serial_number() if hasattr(device, 'get_serial_number') else 'Unknown',
+                        'manufacturer': device.get_manufacturer() if hasattr(device, 'get_manufacturer') else 'Unknown',
+                    }
+                    devices.append(device_info)
+                    device.close()
+                except Exception as e:
+                    devices.append({
+                        'index': i,
+                        'name': f'Error: {e}',
+                        'serial': 'Unknown',
+                        'manufacturer': 'Unknown',
+                    })
+
+        except ImportError:
+            print("rtlsdr не установлен")
+        except Exception as e:
+            print(f"Ошибка сканирования устройств: {e}")
+
+        return devices
 
     def set_gain(self, gain_db: int) -> bool:
         """
