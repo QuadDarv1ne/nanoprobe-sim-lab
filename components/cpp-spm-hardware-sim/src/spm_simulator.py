@@ -6,10 +6,31 @@
 """
 
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Non-interactive backend
 import matplotlib.pyplot as plt
-from typing import Tuple
+from typing import Tuple, Dict, Any, Optional
 import random
+import json
 from multiprocessing import Pool, cpu_count
+from datetime import datetime
+from pathlib import Path
+
+# Import database for storing results
+try:
+    sys_path_added = False
+    project_root = Path(__file__).parent.parent.parent.parent
+    utils_path = project_root / "utils"
+    if str(utils_path) not in __import__('sys').path:
+        __import__('sys').path.insert(0, str(utils_path))
+        sys_path_added = True
+    
+    from database import get_database
+    if sys_path_added:
+        __import__('sys').path.pop(0)
+    HAS_DB = True
+except (ImportError, Exception):
+    HAS_DB = False
 
 
 def _scan_line(args):
@@ -318,29 +339,74 @@ class SPMController:
         try:
             np.savetxt(filename, self.scan_data)
             print(f"Результаты сканирования сохранены в файл: {filename}")
+            
+            # Сохраняем в базу данных
+            if HAS_DB:
+                try:
+                    db = get_database()
+                    db.add_scan_result(
+                        scan_type="spm",
+                        surface_type="simulated",
+                        width=self.scan_data.shape[1] if len(self.scan_data.shape) > 1 else self.scan_data.shape[0],
+                        height=self.scan_data.shape[0],
+                        file_path=filename,
+                        metadata={
+                            'scan_speed': self.probe.scan_speed,
+                            'timestamp': datetime.now().isoformat()
+                        }
+                    )
+                    print("Результаты также сохранены в базу данных")
+                except Exception as e:
+                    print(f"Предупреждение: Не удалось сохранить в БД: {e}")
+            
             return True
         except Exception as e:
             print(f"Ошибка при сохранении результатов сканирования: {str(e)}")
             return False
 
-    def visualize_scan_results(self, title: str = "Результаты сканирования"):
+    def visualize_scan_results(self, title: str = "Результаты сканирования", save_path: str = None):
         """
         Визуализирует результаты сканирования
 
         Args:
             title: Заголовок графика
+            save_path: Путь для сохранения изображения (если None, показывается график)
         """
         if self.scan_data is None:
             print("Нет данных сканирования для визуализации")
             return
 
-        plt.figure(figsize=(10, 8))
-        plt.imshow(self.scan_data, cmap="viridis", interpolation="bilinear")
-        plt.colorbar(label="Высота зонда")
-        plt.title(title)
-        plt.xlabel("X")
-        plt.ylabel("Y")
-        plt.show()
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+
+        # 2D карта высот
+        im1 = ax1.imshow(self.scan_data, cmap="viridis", interpolation="bilinear")
+        ax1.set_title("2D карта высот")
+        ax1.set_xlabel("X")
+        ax1.set_ylabel("Y")
+        plt.colorbar(im1, ax=ax1, label="Высота")
+
+        # 3D поверхность
+        ax2 = fig.add_subplot(122, projection='3d')
+        y = np.arange(self.scan_data.shape[0])
+        x = np.arange(self.scan_data.shape[1])
+        X, Y = np.meshgrid(x, y)
+        ax2.plot_surface(X, Y, self.scan_data, cmap='viridis', alpha=0.8)
+        ax2.set_title("3D поверхность")
+        ax2.set_xlabel("X")
+        ax2.set_ylabel("Y")
+        ax2.set_zlabel("Высота")
+
+        plt.suptitle(title)
+        plt.tight_layout()
+
+        if save_path:
+            Path(save_path).parent.mkdir(parents=True, exist_ok=True)
+            plt.savefig(save_path, dpi=150, bbox_inches='tight')
+            print(f"Визуализация сохранена: {save_path}")
+        else:
+            plt.show()
+        
+        plt.close()
 
 
 def main():
@@ -349,12 +415,14 @@ def main():
 
     parser = argparse.ArgumentParser(description="Симулятор СЗМ")
     parser.add_argument(
-        "--size", "-s", type=int, default=30, help="Размер поверхности (по умолчанию: 30)"
+        "--size", "-s", type=int, default=50, help="Размер поверхности (по умолчанию: 50)"
     )
     parser.add_argument(
-        "--output", "-o", type=str, default="scan_results.txt", help="Файл для результатов"
+        "--output", "-o", type=str, default="output/scan_results.txt", help="Файл для результатов"
     )
+    parser.add_argument("--image", "-i", type=str, default="output/scan_visualization.png", help="Файл для визуализации")
     parser.add_argument("--no-visualize", action="store_true", help="Отключить визуализацию")
+    parser.add_argument("--parallel", "-p", action="store_true", help="Использовать параллельное сканирование")
 
     args = parser.parse_args()
 
@@ -367,22 +435,38 @@ def main():
     surface = SurfaceModel(size, size)
     print(f"Создана модель поверхности размером {surface.width}x{surface.height}")
 
-    surface.save_to_file("surface_model_python.txt")
+    # Сохраняем модель поверхности
+    Path("output").mkdir(parents=True, exist_ok=True)
+    surface.save_to_file("output/surface_model.txt")
 
-    if not args.no_visualize:
-        surface.visualize("Модель поверхности для сканирования")
-
+    # Контроллер и сканирование
     controller = SPMController()
     controller.set_surface(surface)
-    controller.scan_surface()
+    
+    print(f"Запуск сканирования (параллельное: {args.parallel})...")
+    controller.scan_surface(parallel=args.parallel)
 
+    # Сохранение результатов
     controller.save_scan_results(args.output)
     print(f"Результаты сохранены в: {args.output}")
 
+    # Визуализация
     if not args.no_visualize:
-        controller.visualize_scan_results("Результаты сканирования СЗМ")
+        controller.visualize_scan_results(
+            "Результаты сканирования СЗМ",
+            save_path=args.image
+        )
 
-    print("Симуляция завершена. Результаты сохранены.")
+    # Статистика
+    if HAS_DB:
+        try:
+            db = get_database()
+            stats = db.get_statistics()
+            print(f"\nСтатистика БД: {stats.get('total_scans', 0)} сканирований всего")
+        except Exception:
+            pass
+
+    print("\nСимуляция завершена. Результаты сохранены.")
 
 
 if __name__ == "__main__":
