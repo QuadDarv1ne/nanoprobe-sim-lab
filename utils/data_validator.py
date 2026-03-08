@@ -214,7 +214,16 @@ class DataValidator:
 
         Returns:
             Результат валидации
+
+        Raises:
+            ValueError: Если df не DataFrame или schema пустой
         """
+        if not isinstance(df, pd.DataFrame):
+            raise ValueError("Ожижается DataFrame")
+        
+        if not schema:
+            raise ValueError("Схема валидации не может быть пустой")
+
         errors = []
         warnings_list = []
         suggestions = []
@@ -247,11 +256,14 @@ class DataValidator:
                 # Проверяем диапазон значений для числовых столбцов
                 if expected_dtype in ["int", "float", "double"] and props.get("range"):
                     min_val, max_val = props["range"]
-                    invalid_values = df[(df[column] < min_val) | (df[column] > max_val)][column]
-                    if not invalid_values.empty:
-                        errors.append(
-                            f"Найдены значения вне диапазона [{min_val}, {max_val}] в столбце '{column}': {invalid_values.tolist()}"
-                        )
+                    try:
+                        invalid_values = df[(df[column] < min_val) | (df[column] > max_val)][column]
+                        if not invalid_values.empty:
+                            errors.append(
+                                f"Найдены значения вне диапазона [{min_val}, {max_val}] в столбце '{column}': {invalid_values.tolist()}"
+                            )
+                    except (TypeError, ValueError):
+                        warnings_list.append(f"Не удалось проверить диапазон для столбца '{column}'")
 
                 # Проверяем уникальность
                 if props.get("unique", False):
