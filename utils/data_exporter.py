@@ -46,22 +46,39 @@ class DataExporter:
 
         Returns:
             Path: Путь к сохранённому файлу
+
+        Raises:
+            ValueError: Если формат не поддерживается или данные некорректны
         """
+        if not filename:
+            raise ValueError("Имя файла не может быть пустым")
+
         if fmt not in self.SUPPORTED_FORMATS:
             raise ValueError(f"Неподдерживаемый формат: {fmt}. Доступны: {self.SUPPORTED_FORMATS}")
+
+        if data is None:
+            raise ValueError("Данные для экспорта не могут быть пустыми")
 
         filepath = self.output_dir / filename
         if not filepath.suffix:
             filepath = filepath.with_suffix(f'.{fmt}')
 
-        if fmt == 'csv':
-            self._export_csv(data, filepath, **kwargs)
-        elif fmt == 'hdf5':
-            self._export_hdf5(data, filepath, **kwargs)
-        elif fmt == 'json':
-            self._export_json(data, filepath, **kwargs)
-        elif fmt == 'npy':
-            self._export_npy(data, filepath, **kwargs)
+        # Проверяем расширение файла
+        valid_extensions = {'.csv', '.hdf5', '.h5', '.json', '.npy'}
+        if filepath.suffix.lower() not in valid_extensions:
+            raise ValueError(f"Неподдерживаемое расширение: {filepath.suffix}")
+
+        try:
+            if fmt == 'csv':
+                self._export_csv(data, filepath, **kwargs)
+            elif fmt == 'hdf5':
+                self._export_hdf5(data, filepath, **kwargs)
+            elif fmt == 'json':
+                self._export_json(data, filepath, **kwargs)
+            elif fmt == 'npy':
+                self._export_npy(data, filepath, **kwargs)
+        except Exception as e:
+            raise RuntimeError(f"Ошибка экспорта в {fmt}: {e}")
 
         return filepath
 
