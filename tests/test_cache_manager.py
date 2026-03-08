@@ -68,6 +68,11 @@ class TestCacheManager(unittest.TestCase):
         result = cache_mgr.auto_cleanup()
         self.assertIsInstance(result, dict)
 
+    def test_auto_cleanup_invalid_root(self):
+        """Тестирует автоматическую очистку с неверным root"""
+        with self.assertRaises(ValueError):
+            CacheManager(project_root="/nonexistent/path/12345")
+
     def test_optimize_memory_usage(self):
         """Тестирует оптимизацию памяти"""
         cache_mgr = CacheManager(project_root=self.temp_dir)
