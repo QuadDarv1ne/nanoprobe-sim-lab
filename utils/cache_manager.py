@@ -56,8 +56,16 @@ class CacheManager:
         Args:
             project_root: Корневая директория проекта.
             config_file: Файл конфигурации кэша.
+
+        Raises:
+            ValueError: Если project_root не существует
         """
         self.project_root: Path = Path(project_root).resolve()
+        
+        # Проверяем существование директории проекта
+        if not self.project_root.exists():
+            raise ValueError(f"Корневая директория проекта не найдена: {project_root}")
+        
         self.config_file: Path = self.project_root / "config" / config_file
         self.cache_config: Dict[str, Any] = self._load_config()
         self.cache_directories: List[Path] = self._get_cache_directories()
@@ -289,7 +297,13 @@ class CacheManager:
 
         Returns:
             Словарь с результатами очистки
+
+        Raises:
+            RuntimeError: Если проект root не найден
         """
+        if not self.project_root.exists():
+            raise RuntimeError(f"Корневая директория проекта не найдена: {self.project_root}")
+
         if not self.cache_config.get("auto_cleanup", True):
             return {"status": "auto_cleanup_disabled"}
 
