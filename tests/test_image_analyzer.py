@@ -12,36 +12,9 @@ import os
 import tempfile
 
 # Добавляем путь к исходному коду
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../py-surface-image-analyzer/src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../components/py-surface-image-analyzer/src'))
 
-try:
-    from image_processor import ImageProcessor, calculate_surface_roughness
-except ImportError:
-    # Если основной модуль недоступен, создаем тестовые заглушки
-    class ImageProcessor:
-        """Заглушка процессора изображений."""
-        def __init__(self):
-            """Инициализация процессора."""
-            self.image = None
-            self.processed_image = None
-
-        def load_image(self, filepath):
-            """Загрузка изображения."""
-            return True
-
-        def apply_noise_reduction(self, method="gaussian"):
-            """Применение шумоподавления."""
-            if method == "invalid":
-                return None
-            return np.array([[1, 2], [3, 4]])
-
-        def detect_edges(self, threshold1=100, threshold2=200):
-            """Обнаружение краев."""
-            return np.array([[0, 1], [1, 0]])
-
-    def calculate_surface_roughness(image):
-        """Вычисление шероховатости поверхности."""
-        return 1.0
+from image_processor import ImageProcessor, calculate_surface_roughness
 
 
 class TestImageProcessor(unittest.TestCase):
@@ -50,19 +23,32 @@ class TestImageProcessor(unittest.TestCase):
     def setUp(self):
         """Подготовка тестового окружения"""
         self.processor = ImageProcessor()
+        # Создаем тестовое изображение для всех тестов
+        self.test_image = np.random.randint(0, 255, (50, 50, 3), dtype=np.uint8)
+        self.temp_file = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+        from PIL import Image
+        img = Image.fromarray(self.test_image)
+        img.save(self.temp_file.name)
+        self.temp_file.close()
+        # Загружаем изображение в процессор
+        self.processor.load_image(self.temp_file.name)
+
+    def tearDown(self):
+        """Очистка после теста"""
+        try:
+            os.unlink(self.temp_file.name)
+        except:
+            pass
 
     def test_initialization(self):
         """Тестирует инициализацию процессора изображений"""
-        self.assertIsNone(self.processor.image)
-        self.assertIsNone(self.processor.processed_image)
+        processor = ImageProcessor()
+        self.assertIsNone(processor.image)
+        self.assertIsNone(processor.processed_image)
 
     def test_load_image(self):
         """Тестирует загрузку изображения"""
-        # Используем временный файл для тестирования
-        with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp:
-            result = self.processor.load_image(tmp.name)
-            # Для тестовой заглушки всегда возвращаем True
-            self.assertTrue(True)
+        self.assertTrue(self.processor.image is not None)
 
     def test_apply_noise_reduction_gaussian(self):
         """Тестирует применение гауссового фильтра"""
@@ -86,7 +72,6 @@ class TestImageProcessor(unittest.TestCase):
 
     def test_detect_edges(self):
         """Тестирует обнаружение краев"""
-        # Для тестирования нужно сначала обработать изображение
         self.processor.apply_noise_reduction("gaussian")
         result = self.processor.detect_edges()
         self.assertIsNotNone(result)
@@ -97,11 +82,108 @@ class TestUtilityFunctions(unittest.TestCase):
 
     def test_calculate_surface_roughness(self):
         """Тестирует вычисление шероховатости поверхности"""
-        test_image = np.random.rand(10, 10, 3)  # Тестовое цветное изображение
+        # Используем uint8 изображение для совместимости с cv2
+        test_image = np.random.randint(0, 255, (10, 10, 3), dtype=np.uint8)
         roughness = calculate_surface_roughness(test_image)
 
-        self.assertIsInstance(roughness, float)
-        self.assertGreaterEqual(roughness, 0)  # Шероховатость должна быть неотрицательной
+        self.assertIsInstance(roughness, dict)
+        self.assertIn('ra', roughness)
+        self.assertIn('rq', roughness)
+        self.assertIn('rz', roughness)
+        self.assertGreaterEqual(roughness['ra'], 0)
+
+    def test_calculate_surface_roughness_grayscale(self):
+        """Тестирует вычисление шероховатости для Ч/Б изображения"""
+        # Используем uint8 изображение для совместимости с cv2
+        test_image = np.random.randint(0, 255, (10, 10), dtype=np.uint8)
+        roughness = calculate_surface_roughness(test_image)
+
+        self.assertIsInstance(roughness, dict)
+        self.assertIn('ra', roughness)
+        self.assertGreaterEqual(roughness['ra'], 0)
+
+
+class TestImageProcessorExtended(unittest.TestCase):
+    """Расширенные тесты для ImageProcessor"""
+
+    def setUp(self):
+        """Подготовка тестового окружения"""
+        self.processor = ImageProcessor()
+        # Создаем тестовое изображение
+        self.test_image = np.random.randint(0, 255, (50, 50, 3), dtype=np.uint8)
+        
+        import tempfile
+        self.temp_file = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+        from PIL import Image
+        img = Image.fromarray(self.test_image)
+        img.save(self.temp_file.name)
+        self.temp_file.close()
+
+    def tearDown(self):
+        """Очистка после теста"""
+        import os
+        try:
+            os.unlink(self.temp_file.name)
+        except:
+            pass
+
+    def test_load_image_actual(self):
+        """Тестирует загрузку реального изображения"""
+        result = self.processor.load_image(self.temp_file.name)
+        self.assertTrue(result)
+        self.assertIsNotNone(self.processor.image)
+        self.assertEqual(self.processor.image.shape, (50, 50, 3))
+
+    def test_get_statistics(self):
+        """Тестирует получение статистики изображения"""
+        self.processor.load_image(self.temp_file.name)
+        stats = self.processor.get_statistics()
+        
+        self.assertIsNotNone(stats)
+        self.assertIn('mean', stats)
+        self.assertIn('std', stats)
+        self.assertIn('min', stats)
+        self.assertIn('max', stats)
+        self.assertIn('shape', stats)
+
+    def test_get_histogram(self):
+        """Тестирует получение гистограммы"""
+        self.processor.load_image(self.temp_file.name)
+        hist = self.processor.get_histogram()
+        
+        self.assertIsNotNone(hist)
+        self.assertEqual(hist.shape, (256, 1))
+
+    def test_save_image(self):
+        """Тестирует сохранение изображения"""
+        import tempfile
+        import time
+        self.processor.load_image(self.temp_file.name)
+        self.processor.apply_noise_reduction('gaussian')
+
+        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
+            save_path = tmp.name
+
+        result = self.processor.save_image(save_path)
+        self.assertTrue(result)
+
+        # Даем файлу закрыться перед удалением
+        time.sleep(0.1)
+        try:
+            os.unlink(save_path)
+        except:
+            pass
+
+    def test_get_metadata(self):
+        """Тестирует получение метаданных"""
+        self.processor.load_image(self.temp_file.name)
+        self.processor.apply_noise_reduction('median')
+        
+        metadata = self.processor.get_metadata()
+        
+        self.assertIn('filepath', metadata)
+        self.assertIn('filter_applied', metadata)
+        self.assertEqual(metadata['filter_applied'], 'median')
 
 
 def run_tests():
