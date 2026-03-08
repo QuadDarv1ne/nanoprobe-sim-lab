@@ -1,364 +1,594 @@
 # -*- coding: utf-8 -*-
 """
-Интерфейс для работы с RTL-SDR
-Модуль для приема радиосигналов через RTL-SDR V4 и другие SDR-устройства
+SDR интерфейс для приема SSTV сигналов
+Поддержка RTL-SDR и других SDR устройств
 """
 
 import numpy as np
-from typing import Optional, Tuple, List
-import wave
-import os
+from typing import Optional, Tuple, List, Dict, Callable
 from pathlib import Path
+from datetime import datetime
+import threading
+import queue
+import time
 
 
 class SDRInterface:
-    """Класс для взаимодействия с RTL-SDR устройством."""
+    """Интерфейс для работы с SDR устройствами."""
 
-    def __init__(self, device_index: int = 0):
+    # Частоты для приема SSTV (МГц)
+    FREQUENCIES = {
+        'iss': 145.800,      # МКС
+        'noaa_15': 137.620,  # NOAA 15
+        'noaa_18': 137.9125, # NOAA 18
+        'noaa_19': 137.100,  # NOAA 19
+        'meteor_m2': 137.900,# Метеор-М2
+        'vhf_2m': 144.000,   # 2m диапазон
+        'uhf_70cm': 430.000, # 70cm диапазон
+    }
+
+    def __init__(
+        self,
+        device_index: int = 0,
+        sample_rate: int = 48000,
+        center_freq: float = 145.800,
+        gain: int = 30
+    ):
         """
-        Инициализирует интерфейс RTL-SDR
+        Инициализирует SDR интерфейс.
 
         Args:
-            device_index: Индекс устройства (0 по умолчанию)
+            device_index: Индекс SDR устройства
+            sample_rate: Частота дискретизации
+            center_freq: Центральная частота (МГц)
+            gain: Усиление (0-50 dB)
         """
         self.device_index = device_index
+        self.sample_rate = sample_rate
+        self.center_freq = center_freq
+        self.gain = gain
         self.sdr = None
-        self.sample_rate = 1.024e6  # 1.024 MSPS
-        self.center_frequency = 145.800e6  # Частота МКС по умолчанию
-        self.gain = 30  # Усиление в дБ
-        self.is_initialized = False
+        self.is_recording = False
+        self.is_scanning = False
+        self.audio_queue: queue.Queue = queue.Queue()
+        self.recording_thread: Optional[threading.Thread] = None
+        self.scanning_thread: Optional[threading.Thread] = None
+        self.callback: Optional[Callable] = None
+        self.recorded_samples: List[np.ndarray] = []
+        self.metadata: Dict = {}
 
     def initialize(self) -> bool:
         """
-        Инициализирует RTL-SDR устройство
+        Инициализирует SDR устройство.
 
         Returns:
-            bool: True если успешно, иначе False
+            bool: True если успешно
         """
         try:
             from rtlsdr import RtlSdr
 
-            print(f"Инициализация RTL-SDR устройства (индекс: {self.device_index})...")
             self.sdr = RtlSdr(device_index=self.device_index)
-            self.is_initialized = True
+            self.sdr.sample_rate = self.sample_rate
+            self.sdr.center_freq = self.center_freq * 1e6
+            self.sdr.gain = self.gain
 
-            # Настройка параметров
-            self.sdr.set_sample_rate(self.sample_rate)
-            self.sdr.set_center_freq(self.center_frequency)
-            self.sdr.set_gain(self.gain)
+            self.metadata['device'] = f"RTL-SDR #{self.device_index}"
+            self.metadata['sample_rate'] = self.sample_rate
+            self.metadata['center_freq'] = self.center_freq
+            self.metadata['gain'] = self.gain
+            self.metadata['initialized'] = True
 
-            print(f"✓ RTL-SDR инициализирован")
-            print(f"  Частота: {self.center_frequency / 1e6:.3f} МГц")
-            print(f"  Частота дискретизации: {self.sample_rate / 1e6:.3f} MSPS")
-            print(f"  Усиление: {self.gain} дБ")
-
+            print(f"✓ SDR инициализирован: {self.center_freq} МГц, {self.sample_rate} sps")
             return True
 
         except ImportError:
-            print("❌ Ошибка: Библиотека rtlsdr не установлена")
-            print("   Установите: pip install rtlsdr pyrtlsdr")
+            print("rtlsdr не установлен. Установите: pip install rtlsdr")
+            print("Также установите librtlsdr драйверы")
+            self.metadata['error'] = 'rtlsdr not installed'
             return False
 
         except Exception as e:
-            print(f"❌ Ошибка инициализации RTL-SDR: {str(e)}")
-            print("   Убедитесь, что устройство подключено и драйверы установлены")
+            print(f"Ошибка инициализации SDR: {e}")
+            self.metadata['error'] = str(e)
             return False
 
-    def set_frequency(self, frequency_mhz: float) -> bool:
+    def set_frequency(self, freq_mhz: float) -> bool:
         """
-        Устанавливает частоту приема
+        Устанавливает частоту приема.
 
         Args:
-            frequency_mhz: Частота в МГц
+            freq_mhz: Частота в МГц
 
         Returns:
             bool: True если успешно
         """
-        if not self.is_initialized:
-            print("Сначала инициализируйте устройство")
+        if self.sdr is None:
+            print("SDR не инициализирован")
             return False
 
         try:
-            self.center_frequency = frequency_mhz * 1e6
-            self.sdr.set_center_freq(self.center_frequency)
-            print(f"Частота установлена: {frequency_mhz:.3f} МГц")
+            self.sdr.center_freq = freq_mhz * 1e6
+            self.center_freq = freq_mhz
+            print(f"Частота установлена: {freq_mhz} МГц")
             return True
         except Exception as e:
-            print(f"Ошибка установки частоты: {str(e)}")
+            print(f"Ошибка установки частоты: {e}")
             return False
 
     def set_gain(self, gain_db: int) -> bool:
         """
-        Устанавливает усиление
+        Устанавливает усиление.
 
         Args:
-            gain_db: Усиление в дБ (0-50)
+            gain_db: Усиление в dB (0-50)
 
         Returns:
             bool: True если успешно
         """
-        if not self.is_initialized:
-            print("Сначала инициализируйте устройство")
+        if self.sdr is None:
             return False
 
+        gain_db = max(0, min(50, gain_db))
         try:
-            gain_db = max(0, min(50, gain_db))  # Ограничение 0-50 дБ
+            self.sdr.gain = gain_db
             self.gain = gain_db
-            self.sdr.set_gain(self.gain)
-            print(f"Усиление установлено: {self.gain} дБ")
+            print(f"Усиление установлено: {gain_db} dB")
             return True
         except Exception as e:
-            print(f"Ошибка установки усиления: {str(e)}")
-            return False
-
-    def set_sample_rate(self, sample_rate_mhz: float) -> bool:
-        """
-        Устанавливает частоту дискретизации
-
-        Args:
-            sample_rate_mhz: Частота дискретизации в MSPS
-
-        Returns:
-            bool: True если успешно
-        """
-        if not self.is_initialized:
-            print("Сначала инициализируйте устройство")
-            return False
-
-        try:
-            self.sample_rate = sample_rate_mhz * 1e6
-            self.sdr.set_sample_rate(self.sample_rate)
-            print(f"Частота дискретизации: {sample_rate_mhz:.3f} MSPS")
-            return True
-        except Exception as e:
-            print(f"Ошибка установки частоты дискретизации: {str(e)}")
+            print(f"Ошибка установки усиления: {e}")
             return False
 
     def read_samples(self, num_samples: int = 1024) -> Optional[np.ndarray]:
         """
-        Читает образцы с устройства
+        Читает сэмплы с SDR.
 
         Args:
-            num_samples: Количество образцов для чтения
+            num_samples: Количество сэмплов
 
         Returns:
-            np.ndarray: Массив образцов или None при ошибке
+            np.ndarray: Сэмплы или None
         """
-        if not self.is_initialized:
-            print("Сначала инициализируйте устройство")
+        if self.sdr is None:
             return None
 
         try:
             samples = self.sdr.read_samples(num_samples)
             return samples
         except Exception as e:
-            print(f"Ошибка чтения образцов: {str(e)}")
+            print(f"Ошибка чтения сэмплов: {e}")
             return None
 
-    def record_audio(
+    def start_recording(
         self,
-        duration_sec: float = 30.0,
-        output_file: str = "sstv_recording.wav",
-        progress_callback=None,
+        duration_seconds: float = 60,
+        output_file: str = None
     ) -> bool:
         """
-        Записывает аудио сигнал с RTL-SDR и сохраняет в WAV файл
+        Начинает запись сигнала.
 
         Args:
-            duration_sec: Длительность записи в секундах
-            output_file: Путь для сохранения WAV файла
-            progress_callback: Функция обратного вызова для прогресса
+            duration_seconds: Длительность записи
+            output_file: Файл для сохранения
 
         Returns:
-            bool: True если запись успешна
+            bool: True если успешно
         """
-        if not self.is_initialized:
-            print("Сначала инициализируйте устройство")
+        if self.sdr is None:
+            print("SDR не инициализирован")
+            return False
+
+        if self.is_recording:
+            print("Запись уже идет")
+            return False
+
+        self.is_recording = True
+        self.recorded_samples = []
+
+        def record_thread():
+            start_time = time.time()
+            num_buffers = int(duration_seconds * self.sample_rate / 1024)
+
+            print(f"Начало записи на {duration_seconds}с...")
+
+            for i in range(num_buffers):
+                if not self.is_recording:
+                    break
+
+                samples = self.read_samples(1024)
+                if samples is not None:
+                    self.recorded_samples.append(samples)
+
+                    if self.callback:
+                        self.callback(samples)
+
+                time.sleep(1024 / self.sample_rate)
+
+            self.is_recording = False
+            print(f"Запись завершена. Получено сэмплов: {len(self.recorded_samples)}")
+
+            if output_file:
+                self.save_recording(output_file)
+
+        self.recording_thread = threading.Thread(target=record_thread)
+        self.recording_thread.daemon = True
+        self.recording_thread.start()
+
+        return True
+
+    def stop_recording(self) -> List[np.ndarray]:
+        """
+        Останавливает запись.
+
+        Returns:
+            List[np.ndarray]: Записанные сэмплы
+        """
+        self.is_recording = False
+        if self.recording_thread:
+            self.recording_thread.join(timeout=5)
+        return self.recorded_samples
+
+    def save_recording(self, output_file: str) -> bool:
+        """
+        Сохраняет запись в файл.
+
+        Args:
+            output_file: Путь к файлу
+
+        Returns:
+            bool: True если успешно
+        """
+        if not self.recorded_samples:
+            print("Нет данных для сохранения")
             return False
 
         try:
-            print(f"Начало записи ({duration_sec} сек)...")
-            print(f"Частота: {self.center_frequency / 1e6:.3f} МГц")
-            print(f"Нажмите Ctrl+C для остановки")
+            output_path = Path(output_file)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
 
-            # Параметры аудио
-            audio_sample_rate = 48000  # 48 kHz для аудио
-            num_channels = 1  # Моно
-            sample_width = 2  # 16 бит
+            # Конвертируем в numpy массив
+            all_samples = np.concatenate(self.recorded_samples)
 
-            # Расчет количества образцов
-            total_samples = int(self.sample_rate * duration_sec)
-            chunk_size = int(self.sample_rate * 0.1)  # 100 мс чанки
+            # Сохраняем как WAV
+            import wave
+            import struct
 
-            audio_samples = []
-            samples_read = 0
+            # Нормализуем и конвертируем в 16-bit
+            normalized = np.int16(all_samples.real / np.max(np.abs(all_samples)) * 32767)
 
-            while samples_read < total_samples:
-                # Чтение образцов с RTL-SDR
-                samples = self.read_samples(min(chunk_size, total_samples - samples_read))
-                if samples is None:
-                    break
+            with wave.open(str(output_path), 'w') as wav_file:
+                wav_file.setnchannels(1)
+                wav_file.setsampwidth(2)
+                wav_file.setframerate(self.sample_rate)
+                wav_file.writeframes(normalized.tobytes())
 
-                # Конвертация IQ в аудио (FM демодуляция)
-                audio_data = self._fm_demodulate(samples, audio_sample_rate)
-                audio_samples.append(audio_data)
-
-                samples_read += len(samples)
-
-                # Обновление прогресса
-                if progress_callback:
-                    progress = (samples_read / total_samples) * 100
-                    progress_callback(progress)
-
-                # Проверка на прерывание
-                if samples_read % (chunk_size * 10) == 0:
-                    elapsed = samples_read / self.sample_rate
-                    print(f"Записано: {elapsed:.1f} сек из {duration_sec} сек")
-
-            if not audio_samples:
-                print("Нет данных для записи")
-                return False
-
-            # Конкатенация и сохранение
-            audio_data = np.concatenate(audio_samples)
-            audio_data = np.int16(audio_data * 32767)  # Конвертация в 16-bit
-
-            # Сохранение в WAV
-            with wave.open(output_file, "w") as wav_file:
-                wav_file.setnchannels(num_channels)
-                wav_file.setsampwidth(sample_width)
-                wav_file.setframerate(audio_sample_rate)
-                wav_file.writeframes(audio_data.tobytes())
-
-            print(f"✓ Запись сохранена: {output_file}")
-            print(f"  Длительность: {len(audio_data) / audio_sample_rate:.1f} сек")
+            print(f"Запись сохранена: {output_file}")
+            self.metadata['saved_file'] = str(output_path)
             return True
 
-        except KeyboardInterrupt:
-            print("\nЗапись прервана пользователем")
-            return False
-
         except Exception as e:
-            print(f"Ошибка записи: {str(e)}")
+            print(f"Ошибка сохранения записи: {e}")
             return False
 
-    def _fm_demodulate(self, iq_samples: np.ndarray, target_sample_rate: float) -> np.ndarray:
+    def start_frequency_scan(
+        self,
+        freq_range: Tuple[float, float] = (137, 146),
+        step_mhz: float = 0.1,
+        dwell_time_ms: int = 100
+    ) -> bool:
         """
-        Выполняет FM демодуляцию IQ образцов в аудио
+        Запускает сканирование диапазона частот.
 
         Args:
-            iq_samples: IQ образцы с RTL-SDR
-            target_sample_rate: Целевая частота дискретизации аудио
-
-        Returns:
-            np.ndarray: Аудиоданные
-        """
-        # FM демодуляция через разность фаз
-        phase = np.angle(iq_samples)
-        audio = np.diff(phase)
-
-        # Нормализация
-        audio = audio / np.max(np.abs(audio)) if len(audio) > 0 else np.array([])
-
-        # Децимация до целевой частоты дискретизации
-        decimation_factor = int(self.sample_rate / target_sample_rate)
-        if decimation_factor > 1 and len(audio) > decimation_factor:
-            audio = audio[::decimation_factor]
-
-        return audio
-
-    def scan_frequencies(
-        self, start_mhz: float = 145.0, end_mhz: float = 146.0, step_mhz: float = 0.001
-    ) -> List[Tuple[float, float]]:
-        """
-        Сканирует диапазон частот для обнаружения сигналов
-
-        Args:
-            start_mhz: Начало диапазона в МГц
-            end_mhz: Конец диапазона в МГц
+            freq_range: Диапазон частот (мин, макс) в МГц
             step_mhz: Шаг сканирования в МГц
+            dwell_time_ms: Время на частоте в мс
 
         Returns:
-            List[Tuple[float, float]]: Список (частота, мощность) обнаруженных сигналов
+            bool: True если успешно
         """
-        if not self.is_initialized:
-            print("Сначала инициализируйте устройство")
-            return []
+        if self.sdr is None:
+            print("SDR не инициализирован")
+            return False
 
-        signals = []
-        current_freq = start_mhz
+        if self.is_scanning:
+            print("Сканирование уже идет")
+            return False
 
-        print(f"Сканирование диапазона {start_mhz:.3f} - {end_mhz:.3f} МГц...")
+        self.is_scanning = True
 
-        while current_freq <= end_mhz:
-            self.set_frequency(current_freq)
+        def scan_thread():
+            freq_min, freq_max = freq_range
+            current_freq = freq_min
 
-            # Чтение образцов для измерения мощности
-            samples = self.read_samples(1024)
-            if samples is not None:
-                power = np.mean(np.abs(samples) ** 2)
-                power_db = 10 * np.log10(power + 1e-10)
+            print(f"Начало сканирования: {freq_min}-{freq_max} МГц, шаг {step_mhz} МГц")
 
-                # Порог обнаружения сигнала
-                if power_db > -50:  # Порог в дБ
-                    signals.append((current_freq, power_db))
-                    print(f"  Сигнал обнаружен: {current_freq:.3f} МГц ({power_db:.1f} дБ)")
+            while self.is_scanning and current_freq <= freq_max:
+                self.set_frequency(current_freq)
+                time.sleep(dwell_time_ms / 1000)
 
-            current_freq += step_mhz
+                # Читаем сэмплы для анализа
+                samples = self.read_samples(1024)
+                if samples is not None and self.callback:
+                    signal_strength = np.mean(np.abs(samples))
+                    self.callback({
+                        'frequency': current_freq,
+                        'signal_strength': signal_strength,
+                        'timestamp': datetime.now().isoformat()
+                    })
 
-        return signals
+                current_freq += step_mhz
 
-    def close(self):
-        """Закрывает соединение с RTL-SDR."""
-        if self.sdr:
+            self.is_scanning = False
+            print("Сканирование завершено")
+
+        self.scanning_thread = threading.Thread(target=scan_thread)
+        self.scanning_thread.daemon = True
+        self.scanning_thread.start()
+
+        return True
+
+    def stop_scanning(self) -> bool:
+        """Останавливает сканирование частот."""
+        self.is_scanning = False
+        if self.scanning_thread:
+            self.scanning_thread.join(timeout=5)
+        return True
+
+    def get_signal_strength(self) -> float:
+        """
+        Получает текущую силу сигнала.
+
+        Returns:
+            float: Сила сигнала (dB)
+        """
+        if self.sdr is None:
+            return 0.0
+
+        samples = self.read_samples(1024)
+        if samples is None:
+            return 0.0
+
+        # Вычисляем среднюю мощность сигнала
+        power = np.mean(np.abs(samples) ** 2)
+        return 10 * np.log10(power + 1e-10)
+
+    def get_spectrum(self, num_bins: int = 256) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Получает спектр сигнала.
+
+        Args:
+            num_bins: Количество бинов спектра
+
+        Returns:
+            Tuple[np.ndarray, np.ndarray]: (частоты, амплитуды)
+        """
+        if self.sdr is None:
+            return np.array([]), np.array([])
+
+        samples = self.read_samples(1024)
+        if samples is None:
+            return np.array([]), np.array([])
+
+        # Вычисляем FFT
+        fft_data = np.fft.fft(samples)
+        fft_shifted = np.fft.fftshift(fft_data)
+        amplitudes = np.abs(fft_shifted)
+
+        # Вычисляем частоты
+        frequencies = np.fft.fftfreq(len(samples), 1/self.sample_rate)
+        frequencies = np.fft.fftshift(frequencies) + self.center_freq * 1e6
+
+        # Уменьшаем до num_bins
+        bin_size = len(frequencies) // num_bins
+        freq_binned = frequencies[::bin_size][:num_bins]
+        amp_binned = amplitudes[::bin_size][:num_bins]
+
+        return freq_binned, amp_binned
+
+    def set_callback(self, callback: Callable) -> None:
+        """
+        Устанавливает callback для данных.
+
+        Args:
+            callback: Функция обратного вызова
+        """
+        self.callback = callback
+
+    def close(self) -> None:
+        """Закрывает SDR устройство."""
+        self.stop_recording()
+        self.stop_scanning()
+
+        if self.sdr is not None:
             try:
                 self.sdr.close()
-                print("RTL-SDR устройство закрыто")
+                print("SDR устройство закрыто")
             except Exception as e:
-                print(f"Ошибка закрытия устройства: {str(e)}")
-        self.is_initialized = False
+                print(f"Ошибка закрытия SDR: {e}")
+            finally:
+                self.sdr = None
+
+    def get_status(self) -> Dict:
+        """Получает текущий статус SDR."""
+        return {
+            'initialized': self.sdr is not None,
+            'is_recording': self.is_recording,
+            'is_scanning': self.is_scanning,
+            'center_freq': self.center_freq,
+            'sample_rate': self.sample_rate,
+            'gain': self.gain,
+            'device_index': self.device_index,
+            'recorded_buffers': len(self.recorded_samples),
+            'metadata': self.metadata
+        }
 
     def __enter__(self):
-        """Контекстный менеджер: вход."""
+        """Контекстный менеджер - вход."""
         self.initialize()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Контекстный менеджер: выход."""
+        """Контекстный менеджер - выход."""
         self.close()
 
 
-def list_devices() -> List[dict]:
+class SDRScanner:
+    """Сканер частот для поиска SSTV сигналов."""
+
+    def __init__(self, sdr: SDRInterface = None):
+        """
+        Инициализирует сканер.
+
+        Args:
+            sdr: SDR интерфейс
+        """
+        self.sdr = sdr or SDRInterface()
+        self.found_signals: List[Dict] = []
+        self.scan_results: Dict = {}
+
+    def scan_frequencies(
+        self,
+        freq_range: Tuple[float, float],
+        step_mhz: float = 0.05,
+        threshold_db: float = -80
+    ) -> List[Dict]:
+        """
+        Сканирует диапазон для поиска сигналов.
+
+        Args:
+            freq_range: Диапазон частот
+            step_mhz: Шаг сканирования
+            threshold_db: Порог обнаружения
+
+        Returns:
+            List[Dict]: Найденные сигналы
+        """
+        self.found_signals = []
+        self.scan_results = {}
+
+        freq_min, freq_max = freq_range
+        current_freq = freq_min
+
+        print(f"Сканирование {freq_min}-{freq_max} МГц...")
+
+        while current_freq <= freq_max:
+            self.sdr.set_frequency(current_freq)
+            time.sleep(0.1)
+
+            signal_strength = self.sdr.get_signal_strength()
+            self.scan_results[current_freq] = signal_strength
+
+            if signal_strength > threshold_db:
+                signal_info = {
+                    'frequency': current_freq,
+                    'strength_db': signal_strength,
+                    'timestamp': datetime.now().isoformat()
+                }
+                self.found_signals.append(signal_info)
+                print(f"  Сигнал найден: {current_freq} МГц, {signal_strength:.1f} dB")
+
+            current_freq += step_mhz
+
+        print(f"Найдено сигналов: {len(self.found_signals)}")
+        return self.found_signals
+
+    def get_strongest_signal(self) -> Optional[Dict]:
+        """Получает самый сильный сигнал."""
+        if not self.found_signals:
+            return None
+        return max(self.found_signals, key=lambda x: x['strength_db'])
+
+    def plot_spectrum(self, output_file: str = "spectrum.png") -> bool:
+        """
+        Строит график спектра.
+
+        Args:
+            output_file: Файл для сохранения графика
+
+        Returns:
+            bool: True если успешно
+        """
+        try:
+            import matplotlib.pyplot as plt
+
+            if not self.scan_results:
+                print("Нет данных для отображения")
+                return False
+
+            frequencies = list(self.scan_results.keys())
+            strengths = list(self.scan_results.values())
+
+            plt.figure(figsize=(12, 6))
+            plt.plot(frequencies, strengths, 'b-', linewidth=1)
+            plt.xlabel('Частота (МГц)')
+            plt.ylabel('Сила сигнала (dB)')
+            plt.title('Спектр частот')
+            plt.grid(True, alpha=0.3)
+            plt.savefig(output_file, dpi=150, bbox_inches='tight')
+            plt.close()
+
+            print(f"Спектр сохранен: {output_file}")
+            return True
+
+        except Exception as e:
+            print(f"Ошибка построения спектра: {e}")
+            return False
+
+
+def create_sdr(
+    device_index: int = 0,
+    frequency: str = 'iss'
+) -> Optional[SDRInterface]:
     """
-    Выводит список доступных RTL-SDR устройств
+    Создает и инициализирует SDR интерфейс.
+
+    Args:
+        device_index: Индекс устройства
+        frequency: Предустановленная частота или значение в МГц
 
     Returns:
-        List[dict]: Список информации об устройствах
+        SDRInterface или None
     """
-    try:
-        from rtlsdr import RtlSdr
+    sdr = SDRInterface(device_index=device_index)
 
-        num_devices = RtlSdr.get_device_count()
-        devices = []
+    # Устанавливаем частоту
+    if frequency in SDRInterface.FREQUENCIES:
+        sdr.center_freq = SDRInterface.FREQUENCIES[frequency]
+    else:
+        try:
+            sdr.center_freq = float(frequency)
+        except ValueError:
+            print(f"Неизвестная частота: {frequency}")
+            return None
 
-        print(f"Найдено RTL-SDR устройств: {num_devices}")
+    if sdr.initialize():
+        return sdr
 
-        for i in range(num_devices):
-            device_info = RtlSdr.get_device_strings(i)
-            device = {
-                "index": i,
-                "manufacturer": device_info.get("manufacturer", "Unknown"),
-                "product": device_info.get("product", "Unknown"),
-                "serial": device_info.get("serial", "Unknown"),
-            }
-            devices.append(device)
-            print(f"  Устройство {i}: {device['manufacturer']} {device['product']}")
+    return None
 
-        return devices
 
-    except ImportError:
-        print("Библиотека rtlsdr не установлена")
-        return []
-    except Exception as e:
-        print(f"Ошибка получения списка устройств: {str(e)}")
-        return []
+# Пример использования
+if __name__ == '__main__':
+    print("=== SDR интерфейс для SSTV ===")
+
+    # Создаем SDR
+    sdr = create_sdr(device_index=0, frequency='iss')
+
+    if sdr:
+        print(f"Частота: {sdr.center_freq} МГц")
+        print(f"Усиление: {sdr.gain} dB")
+
+        # Получаем силу сигнала
+        strength = sdr.get_signal_strength()
+        print(f"Сила сигнала: {strength:.1f} dB")
+
+        # Записываем 10 секунд
+        print("Запись 10 секунд...")
+        sdr.start_recording(duration_seconds=10, output_file="recording.wav")
+        time.sleep(12)
+
+        # Закрываем
+        sdr.close()
+    else:
+        print("Не удалось инициализировать SDR")
+        print("Проверьте подключение RTL-SDR устройства")

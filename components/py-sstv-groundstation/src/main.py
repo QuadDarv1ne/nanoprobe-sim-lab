@@ -7,187 +7,242 @@
 import sys
 import os
 import argparse
+import time
 from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from sstv_decoder import SSTVDecoder, detect_sstv_signal
-from sdr_interface import SDRInterface, list_devices
+from sdr_interface import SDRInterface, SDRScanner, create_sdr
+
+
+def show_banner():
+    """Отображает баннер программы."""
+    print("=" * 60)
+    print("       НАЗЕМНАЯ СТАНЦИЯ SSTV")
+    print("       SSTV Ground Station")
+    print("=" * 60)
+
+
+def mode_decode_audio(args):
+    """Режим декодирования аудиофайла."""
+    audio_path = Path(args.audio)
+    if not audio_path.exists():
+        print(f"Ошибка: Файл '{audio_path}' не найден")
+        return False
+
+    print(f"Декодирование аудио: {audio_path}")
+    decoder = SSTVDecoder(mode=args.mode)
+
+    # Обнаружение сигнала
+    if args.detect:
+        found, metadata = detect_sstv_signal(str(audio_path))
+        if found:
+            print(f"✓ SSTV сигнал обнаружен")
+            print(f"  Длительность: {metadata.get('duration_seconds', 0):.1f}с")
+            print(f"  Частота дискретизации: {metadata.get('sample_rate', 0)} Гц")
+        else:
+            print("? SSTV сигнал не обнаружен или сомнительный")
+
+    # Декодирование
+    image = decoder.decode_from_audio(str(audio_path))
+
+    if image:
+        output = args.output or "decoded_sstv_image.png"
+        decoder.save_decoded_image(output)
+        print(f"Изображение сохранено: {output}")
+
+        # Показываем метаданные
+        metadata = decoder.get_metadata()
+        print(f"Режим: {metadata.get('mode', 'unknown')}")
+        print(f"Размер: {image.size[0]}x{image.size[1]}")
+        return True
+    else:
+        print("Не удалось декодировать изображение")
+        return False
+
+
+def mode_receive_sdr(args):
+    """Режим приема с SDR."""
+    print(f"Прием с SDR: {args.frequency} МГц")
+
+    sdr = create_sdr(device_index=0, frequency=args.frequency)
+    if not sdr:
+        print("Ошибка инициализации SDR")
+        return False
+
+    try:
+        # Запись сигнала
+        duration = args.duration or 60
+        output_audio = args.output_audio or "sdr_recording.wav"
+
+        print(f"Запись {duration}с... Нажмите Ctrl+C для остановки")
+        sdr.start_recording(duration_seconds=duration, output_file=output_audio)
+
+        # Ожидаем завершения или прерывания
+        try:
+            time.sleep(duration + 2)
+        except KeyboardInterrupt:
+            print("\nОстановка записи...")
+            sdr.stop_recording()
+
+        # Декодирование записанного
+        if args.auto_decode:
+            print("Декодирование записанного сигнала...")
+            decoder = SSTVDecoder()
+            image = decoder.decode_from_audio(output_audio)
+
+            if image:
+                output_image = args.output_image or "decoded_sstv.png"
+                decoder.save_decoded_image(output_image)
+                print(f"Изображение сохранено: {output_image}")
+
+        return True
+
+    finally:
+        sdr.close()
+
+
+def mode_scan(args):
+    """Режим сканирования частот."""
+    freq_min = args.freq_min or 137
+    freq_max = args.freq_max or 146
+    step = args.step or 0.1
+
+    print(f"Сканирование диапазона: {freq_min}-{freq_max} МГц, шаг {step} МГц")
+
+    sdr = SDRInterface()
+    if not sdr.initialize():
+        print("Ошибка инициализации SDR")
+        return False
+
+    try:
+        scanner = SDRScanner(sdr)
+        signals = scanner.scan_frequencies(
+            freq_range=(freq_min, freq_max),
+            step_mhz=step,
+            threshold_db=args.threshold or -80
+        )
+
+        if signals:
+            print("\nНайденные сигналы:")
+            for sig in signals:
+                print(f"  {sig['frequency']:.3f} МГц - {sig['strength_db']:.1f} dB")
+
+            # Самый сильный сигнал
+            strongest = scanner.get_strongest_signal()
+            if strongest:
+                print(f"\nСамый сильный: {strongest['frequency']:.3f} МГц")
+
+        # Сохраняем спектр
+        if args.save_spectrum:
+            scanner.plot_spectrum("spectrum.png")
+
+        return True
+
+    finally:
+        sdr.close()
+
+
+def mode_list_frequencies(args):
+    """Показывает список предустановленных частот."""
+    print("\nПредустановленные частоты:")
+    print("-" * 40)
+
+    frequencies = SDRInterface.FREQUENCIES
+    for name, freq in frequencies.items():
+        print(f"  {name:15} {freq:7.4f} МГц")
+
+    print("\nИспользование:")
+    print("  python main.py --frequency iss      # МКС")
+    print("  python main.py --frequency noaa_15  # NOAA 15")
+    print("  python main.py -f 145.800           # Своё значение")
+
+
+def mode_demo(args):
+    """Демонстрационный режим."""
+    print("Доступные режимы:")
+    print()
+    print("  Декодирование аудио:")
+    print("    python main.py --audio file.wav")
+    print("    python main.py --audio file.wav --mode 'Martin 1'")
+    print()
+    print("  Обнаружение сигнала:")
+    print("    python main.py --audio file.wav --detect")
+    print()
+    print("  Прием с SDR:")
+    print("    python main.py --sdr --frequency 145.800")
+    print("    python main.py --sdr -f iss --duration 30")
+    print()
+    print("  Сканирование частот:")
+    print("    python main.py --scan")
+    print("    python main.py --scan --freq-min 137 --freq-max 146")
+    print()
+    print("  Список частот:")
+    print("    python main.py --list-freq")
 
 
 def main():
     """Основная функция SSTV станции."""
     parser = argparse.ArgumentParser(
         description="Наземная станция SSTV",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Примеры использования:
-  %(prog)s --audio recording.wav                 Декодировать аудиофайл
-  %(prog)s --audio recording.wav --detect        Обнаружить SSTV сигнал
-  %(prog)s --sdr --frequency 145.800             Прием с RTL-SDR (МКС)
-  %(prog)s --sdr --scan                          Сканирование диапазона
-  %(prog)s --list-devices                        Список RTL-SDR устройств
-        """,
+        formatter_class=argparse.RawDescriptionHelpFormatter
     )
 
-    # Режимы работы
-    mode_group = parser.add_mutually_exclusive_group()
-    mode_group.add_argument("--audio", "-a", type=str, help="Путь к аудиофайлу")
-    mode_group.add_argument("--sdr", "-s", action="store_true", help="Режим приема с RTL-SDR")
-    mode_group.add_argument("--scan", action="store_true", help="Сканирование диапазона")
-    mode_group.add_argument("--list-devices", action="store_true", help="Список RTL-SDR устройств")
-
-    # Параметры SDR
+    # Основные опции
+    parser.add_argument("--audio", "-a", type=str, help="Путь к аудиофайлу")
+    parser.add_argument("--output", "-o", type=str, help="Путь для сохранения изображения")
     parser.add_argument(
-        "--device-index", "-d", type=int, default=0, help="Индекс RTL-SDR устройства (0 по умолчанию)"
-    )
-    parser.add_argument(
-        "--frequency",
-        "-f",
-        type=float,
-        default=145.800,
-        help="Частота приема в МГц (по умолчанию: 145.800 - МКС)",
-    )
-    parser.add_argument(
-        "--gain", "-g", type=int, default=30, help="Усиление RTL-SDR в дБ (0-50, по умолчанию: 30)"
-    )
-    parser.add_argument(
-        "--duration",
-        "-t",
-        type=float,
-        default=30.0,
-        help="Длительность записи в секундах (по умолчанию: 30)",
+        "--mode", "-m",
+        type=str,
+        default="auto",
+        help="Режим SSTV (auto, 'Martin 1', 'Scottie 1', etc.)"
     )
 
-    # Параметры сканирования
-    parser.add_argument("--scan-start", type=float, default=145.0, help="Начало сканирования в МГц")
-    parser.add_argument("--scan-end", type=float, default=146.0, help="Конец сканирования в МГц")
-    parser.add_argument("--scan-step", type=float, default=0.001, help="Шаг сканирования в МГц")
+    # SDR опции
+    parser.add_argument("--sdr", action="store_true", help="Режим приема с SDR")
+    parser.add_argument(
+        "--frequency", "-f",
+        type=str,
+        default="iss",
+        help="Частота (МГц) или название (iss, noaa_15, etc.)"
+    )
+    parser.add_argument("--device", "-d", type=int, default=0, help="Индекс SDR устройства")
+    parser.add_argument("--duration", type=int, default=60, help="Длительность записи (с)")
+    parser.add_argument("--output-audio", type=str, help="Файл для аудио записи")
+    parser.add_argument("--output-image", type=str, help="Файл для изображения")
+    parser.add_argument("--auto-decode", action="store_true", help="Авто декодирование после записи")
 
-    # Общие параметры
-    parser.add_argument("--output", "-o", type=str, help="Путь для сохранения (изображение/аудио)")
+    # Сканирование
+    parser.add_argument("--scan", action="store_true", help="Режим сканирования частот")
+    parser.add_argument("--freq-min", type=float, help="Мин. частота сканирования")
+    parser.add_argument("--freq-max", type=float, help="Макс. частота сканирования")
+    parser.add_argument("--step", type=float, default=0.1, help="Шаг сканирования (МГц)")
+    parser.add_argument("--threshold", type=float, default=-80, help="Порог обнаружения (dB)")
+    parser.add_argument("--save-spectrum", action="store_true", help="Сохранить график спектра")
+
+    # Другие опции
     parser.add_argument("--detect", action="store_true", help="Обнаружить SSTV сигнал")
-    parser.add_argument("--auto-decode", action="store_true", help="Автоматически декодировать после записи")
+    parser.add_argument("--list-freq", action="store_true", help="Список частот")
+    parser.add_argument("--demo", action="store_true", help="Демонстрационный режим")
 
     args = parser.parse_args()
 
-    print("=" * 50)
-    print("       НАЗЕМНАЯ СТАНЦИЯ SSTV")
-    print("       Поддержка RTL-SDR V4")
-    print("=" * 50)
+    show_banner()
 
-    # Список устройств
-    if args.list_devices:
-        devices = list_devices()
-        if not devices:
-            print("\nУстройства не найдены. Проверьте подключение RTL-SDR.")
-            print("Убедитесь, что драйверы установлены (Zadig для Windows).")
-        sys.exit(0)
-
-    decoder = SSTVDecoder()
-
-    # Режим декодирования аудио
-    if args.audio:
-        audio_path = Path(args.audio)
-        if not audio_path.exists():
-            print(f"Ошибка: Файл '{audio_path}' не найден")
-            sys.exit(1)
-
-        if args.detect:
-            print(f"\nОбнаружение SSTV сигнала в: {audio_path}")
-            result = detect_sstv_signal(str(audio_path))
-            if result:
-                print(f"SSTV сигнал обнаружен: {result}")
-            else:
-                print("SSTV сигнал не обнаружен")
-        else:
-            print(f"\nДекодирование аудио: {audio_path}")
-            image = decoder.decode_from_audio(str(audio_path))
-
-            if image:
-                output = args.output or "decoded_sstv_image.png"
-                decoder.save_decoded_image(output)
-                print(f"Изображение сохранено в: {output}")
-            else:
-                print("Не удалось декодировать изображение")
-
-    # Режим приема с RTL-SDR
-    elif args.sdr:
-        print(f"\nРежим приема с RTL-SDR")
-        print(f"Частота: {args.frequency:.3f} МГц")
-        print(f"Усиление: {args.gain} дБ")
-        print(f"Длительность: {args.duration} сек")
-
-        sdr = SDRInterface(device_index=args.device_index)
-
-        if not sdr.initialize():
-            print("\nНе удалось инициализировать RTL-SDR")
-            print("Проверьте:")
-            print("  1. Подключено ли устройство")
-            print("  2. Установлены ли драйверы (pip install rtlsdr pyrtlsdr)")
-            print("  3. Для Windows: используйте Zadig для установки WinUSB драйвера")
-            sys.exit(1)
-
-        try:
-            # Настройка параметров
-            sdr.set_frequency(args.frequency)
-            sdr.set_gain(args.gain)
-
-            # Запись сигнала
-            output_file = args.output or f"sstv_recording_{args.frequency:.3f}MHz.wav"
-            success = sdr.record_audio(duration_sec=args.duration, output_file=output_file)
-
-            if success and args.auto_decode:
-                print("\nАвтоматическое декодирование...")
-                image = decoder.decode_from_audio(output_file)
-                if image:
-                    img_output = output_file.replace(".wav", "_decoded.png")
-                    decoder.save_decoded_image(img_output)
-                    print(f"Декодированное изображение: {img_output}")
-
-        except KeyboardInterrupt:
-            print("\nПрием прерван")
-        finally:
-            sdr.close()
-
-    # Режим сканирования
+    # Определяем режим работы
+    if args.list_freq:
+        mode_list_frequencies(args)
+    elif args.demo:
+        mode_demo(args)
     elif args.scan:
-        print(f"\nРежим сканирования диапазона")
-        print(f"Диапазон: {args.scan_start:.3f} - {args.scan_end:.3f} МГц")
-        print(f"Шаг: {args.scan_step:.3f} МГц")
-
-        sdr = SDRInterface(device_index=args.device_index)
-
-        if not sdr.initialize():
-            print("Не удалось инициализировать RTL-SDR")
-            sys.exit(1)
-
-        try:
-            signals = sdr.scan_frequencies(
-                start_mhz=args.scan_start, end_mhz=args.scan_end, step_mhz=args.scan_step
-            )
-
-            if signals:
-                print(f"\nНайдено сигналов: {len(signals)}")
-                for freq, power in signals:
-                    print(f"  {freq:.3f} МГц - {power:.1f} дБ")
-            else:
-                print("\nСигналы не обнаружены")
-
-        finally:
-            sdr.close()
-
-    # Режим по умолчанию - справка
+        mode_scan(args)
+    elif args.sdr:
+        mode_receive_sdr(args)
+    elif args.audio:
+        mode_decode_audio(args)
     else:
-        print("\nРежимы работы:")
-        print("  --audio <файл>           Декодировать аудиофайл")
-        print("  --audio <файл> --detect  Обнаружить SSTV сигнал в аудио")
-        print("  --sdr --frequency <МГц>  Прием с RTL-SDR")
-        print("  --scan                   Сканирование диапазона")
-        print("  --list-devices           Показать доступные RTL-SDR устройства")
-        print("\nБыстрый старт с RTL-SDR:")
-        print("  python main.py --sdr --frequency 145.800 --duration 60")
-        print("  python main.py --sdr --frequency 145.800 --auto-decode")
+        mode_demo(args)
 
 
 if __name__ == "__main__":

@@ -33,6 +33,7 @@ from utils.config_manager import ConfigManager
 from utils.cache_manager import CacheManager
 from utils.data_manager import DataManager
 from utils.data_exporter import DataExporter
+from utils.database import DatabaseManager, get_database
 from utils.cli_utils import Colors
 
 
@@ -71,6 +72,7 @@ class WebDashboard:
         self.cache_manager = CacheManager()
         self.data_manager = DataManager()
         self.data_exporter = DataExporter(output_dir="output")
+        self.database = DatabaseManager(db_path="data/nanoprobe.db")
 
         # Время запуска
         self._start_time = datetime.now()
@@ -257,6 +259,83 @@ class WebDashboard:
                 self.error_handler.log_error(f"Ошибка экспорта поверхности: {e}")
                 return jsonify({"error": str(e)}), 500
 
+        @self.app.route("/api/database/stats")
+        def api_database_stats():
+            """API для получения статистики базы данных"""
+            try:
+                db = get_database()
+                stats = db.get_statistics()
+                return jsonify(stats)
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка получения статистики БД: {e}")
+                return jsonify({"error": str(e)}), 500
+
+        @self.app.route("/api/database/scans", methods=["GET"])
+        def api_database_scans():
+            """API для получения списка сканирований"""
+            try:
+                db = get_database()
+                scan_type = request.args.get('type')
+                limit = int(request.args.get('limit', 50))
+                offset = int(request.args.get('offset', 0))
+
+                scans = db.get_scan_results(scan_type=scan_type, limit=limit, offset=offset)
+                return jsonify({"scans": scans, "count": len(scans)})
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка получения сканирований: {e}")
+                return jsonify({"error": str(e)}), 500
+
+        @self.app.route("/api/database/simulations", methods=["GET"])
+        def api_database_simulations():
+            """API для получения списка симуляций"""
+            try:
+                db = get_database()
+                status = request.args.get('status')
+                limit = int(request.args.get('limit', 50))
+
+                simulations = db.get_simulations(status=status, limit=limit)
+                return jsonify({"simulations": simulations, "count": len(simulations)})
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка получения симуляций: {e}")
+                return jsonify({"error": str(e)}), 500
+
+        @self.app.route("/api/database/images", methods=["GET"])
+        def api_database_images():
+            """API для получения списка изображений"""
+            try:
+                db = get_database()
+                image_type = request.args.get('type')
+                source = request.args.get('source')
+                limit = int(request.args.get('limit', 100))
+
+                images = db.get_images(image_type=image_type, source=source, limit=limit)
+                return jsonify({"images": images, "count": len(images)})
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка получения изображений: {e}")
+                return jsonify({"error": str(e)}), 500
+
+        @self.app.route("/api/database/export", methods=["POST"])
+        def api_database_export():
+            """API для экспорта базы данных"""
+            try:
+                import json
+                from datetime import datetime
+
+                db = get_database()
+                output_dir = request.json.get('output_dir', 'output')
+                output_path = Path(output_dir) / f"db_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+
+                result_path = db.export_to_json(str(output_path))
+
+                return jsonify({
+                    "status": "success",
+                    "filepath": str(result_path),
+                    "size_bytes": result_path.stat().st_size
+                })
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка экспорта БД: {e}")
+                return jsonify({"error": str(e)}), 500
+
     def _register_socket_handlers(self):
         """Регистрация обработчиков SocketIO событий"""
 
@@ -354,6 +433,10 @@ class WebDashboard:
                     result = self._execute_cleanup_cache(params)
                 elif command == "export_surface":
                     result = self._execute_export_surface(params)
+                elif command == "db_add_scan":
+                    result = self._execute_db_add_scan(params)
+                elif command == "db_get_stats":
+                    result = self._execute_db_get_stats(params)
                 else:
                     result = {"status": "error", "message": f"Неизвестная команда: {command}"}
 
@@ -480,9 +563,9 @@ class WebDashboard:
                 return {"status": "error", "message": "Данные поверхности пусты"}
 
             filepath = self.data_exporter.export_surface_data(surface_data, metadata, filename, fmt)
-            
+
             self.logger.log_system_event(f"Экспорт поверхности: {filepath}", "INFO")
-            
+
             return {
                 "status": "success",
                 "message": f"Поверхность экспортирована: {filepath}",
@@ -490,6 +573,46 @@ class WebDashboard:
             }
         except Exception as e:
             self.error_handler.log_error(f"Ошибка экспорта поверхности: {e}")
+            return {"status": "error", "message": str(e)}
+
+    def _execute_db_add_scan(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Выполнение команды добавления сканирования в БД"""
+        try:
+            db = get_database()
+
+            scan_id = db.add_scan_result(
+                scan_type=params.get('scan_type', 'unknown'),
+                surface_type=params.get('surface_type'),
+                width=params.get('width'),
+                height=params.get('height'),
+                file_path=params.get('file_path'),
+                metadata=params.get('metadata')
+            )
+
+            self.logger.log_system_event(f"Добавлено сканирование: {scan_id}", "INFO")
+
+            return {
+                "status": "success",
+                "message": f"Сканирование добавлено",
+                "scan_id": scan_id
+            }
+        except Exception as e:
+            self.error_handler.log_error(f"Ошибка добавления сканирования: {e}")
+            return {"status": "error", "message": str(e)}
+
+    def _execute_db_get_stats(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Выполнение команды получения статистики БД"""
+        try:
+            db = get_database()
+            stats = db.get_statistics()
+
+            return {
+                "status": "success",
+                "message": "Статистика получена",
+                "stats": stats
+            }
+        except Exception as e:
+            self.error_handler.log_error(f"Ошибка получения статистики: {e}")
             return {"status": "error", "message": str(e)}
 
     def start_server(self, open_browser: bool = True):
