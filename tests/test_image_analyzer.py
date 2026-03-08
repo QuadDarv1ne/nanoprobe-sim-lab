@@ -76,6 +76,29 @@ class TestImageProcessor(unittest.TestCase):
         result = self.processor.detect_edges()
         self.assertIsNotNone(result)
 
+    def test_detect_edges_invalid_thresholds(self):
+        """Тестирует обнаружение краев с некорректными порогами"""
+        self.processor.apply_noise_reduction("gaussian")
+        result = self.processor.detect_edges(threshold1=200, threshold2=100)
+        self.assertIsNone(result)
+
+    def test_load_image_nonexistent_file(self):
+        """Тестирует загрузку несуществующего файла"""
+        result = self.processor.load_image("/nonexistent/path/image.png")
+        self.assertFalse(result)
+
+    def test_load_image_invalid_format(self):
+        """Тестирует загрузку файла с неподдерживаемым форматом"""
+        with tempfile.NamedTemporaryFile(suffix='.txt', delete=False) as tmp:
+            tmp.write(b"test")
+            tmp_name = tmp.name
+        result = self.processor.load_image(tmp_name)
+        self.assertFalse(result)
+        try:
+            os.unlink(tmp_name)
+        except:
+            pass
+
 
 class TestUtilityFunctions(unittest.TestCase):
     """Тесты для вспомогательных функций"""
@@ -101,6 +124,18 @@ class TestUtilityFunctions(unittest.TestCase):
         self.assertIsInstance(roughness, dict)
         self.assertIn('ra', roughness)
         self.assertGreaterEqual(roughness['ra'], 0)
+
+    def test_calculate_surface_roughness_empty_image(self):
+        """Тестирует обработку пустого изображения"""
+        empty_image = np.array([])
+        with self.assertRaises(ValueError):
+            calculate_surface_roughness(empty_image)
+
+    def test_calculate_surface_roughness_invalid_channels(self):
+        """Тестирует обработку изображения с неверным количеством каналов"""
+        invalid_image = np.random.randint(0, 255, (10, 10, 2), dtype=np.uint8)
+        with self.assertRaises(ValueError):
+            calculate_surface_roughness(invalid_image)
 
 
 class TestImageProcessorExtended(unittest.TestCase):
