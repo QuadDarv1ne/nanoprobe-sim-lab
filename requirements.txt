@@ -1,6 +1,6 @@
 # Python requirements for Nanoprobe Simulation Lab
 # Core dependencies for the main project
-# Updated: 2026-03-01
+# Updated: 2026-03-10
 
 # For image processing and analysis
 numpy>=1.24.0
@@ -35,3 +35,11 @@ seaborn>=0.13.0
 
 # Additional dependencies
 requests>=2.31.0
+
+# For PDF reports
+reportlab>=4.0.0
+pdfkit>=1.0.0
+wkhtmltopdf>=0.2.0
+
+# For Docker support
+docker>=7.0.0

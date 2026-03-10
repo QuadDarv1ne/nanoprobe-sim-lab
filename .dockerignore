@@ -1,0 +1,60 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Данные и логи
+data/*.db
+data/*.sqlite
+logs/*.log
+output/*
+!output/.gitkeep
+reports/*
+!reports/.gitkeep
+
+# Временные файлы
+*.tmp
+.cache/
+temp/
+
+# Тесты
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Документация
+docs/_build/
+
+# Конфигурации
+.env
+.env.local
+*.ini
+
+# Docker
+deployment/Dockerfile
+deployment/docker-compose.yml
+!deployment/monitoring/
+
+# OS
+.DS_Store
+Thumbs.db
