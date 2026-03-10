@@ -47,8 +47,8 @@ class ProjectManager:
 
         self.components = {
             "spm_simulator": self.config["components"]["spm_simulator"],
-            "surface_analyzer": self.config["components"]["surface_analyzer"],
-            "sstv_groundstation": self.config["components"]["sstv_groundstation"],
+            "image_analyzer": self.config["components"]["image_analyzer"],
+            "sstv_station": self.config["components"]["sstv_station"],
         }
 
         atexit.register(self._auto_cleanup_on_exit)
@@ -100,10 +100,10 @@ class ProjectManager:
                     "cd build && cmake .. && make"
                 )
 
-    def run_surface_analyzer(self):
+    def run_image_analyzer(self):
         """Запускает анализатор изображений поверхности."""
         analyzer_path = (
-            project_root / self.components["surface_analyzer"]["path"] / "src" / "main.py"
+            project_root / self.components["image_analyzer"]["path"] / "src" / "main.py"
         )
 
         if analyzer_path.exists():
@@ -111,11 +111,11 @@ class ProjectManager:
             subprocess.run([sys.executable, str(analyzer_path)])
         else:
             print(f"Файл анализатора изображений не найден: {analyzer_path}")
-            self.create_sample_analyzer()
+            self.create_sample_image_analyzer()
 
-    def create_sample_analyzer(self):
+    def create_sample_image_analyzer(self):
         """Создает пример скрипта анализатора изображений."""
-        analyzer_path = project_root / self.components["surface_analyzer"]["path"]
+        analyzer_path = project_root / self.components["image_analyzer"]["path"]
         main_py_path = analyzer_path / "src" / "main.py"
 
         sample_code = '''#!/usr/bin/env python3
@@ -319,7 +319,7 @@ if __name__ == "__main__":
                 elif choice == "2":
                     self.run_spm_simulator(use_python=False)
                 elif choice == "3":
-                    self.run_surface_analyzer()
+                    self.run_image_analyzer()
                 elif choice == "4":
                     self.run_sstv_station()
                 elif choice == "5":
@@ -353,7 +353,7 @@ def main():
         elif command == "spm-cpp":
             manager.run_spm_simulator(use_python=False)
         elif command == "analyzer":
-            manager.run_surface_analyzer()
+            manager.run_image_analyzer()
         elif command == "sstv":
             manager.run_sstv_station()
         elif command == "build":
