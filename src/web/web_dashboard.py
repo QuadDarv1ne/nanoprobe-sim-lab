@@ -25,7 +25,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 # Project root for component paths
 project_root = Path(__file__).parent.parent.parent
 
-from utils.logger import Logger
+from utils.logger import NanoprobeLogger
 from utils.error_handler import ErrorHandler
 from utils.performance_monitor import PerformanceMonitor
 from utils.system_monitor import SystemMonitor
@@ -64,7 +64,7 @@ class WebDashboard:
         )
 
         # Инициализация служебных компонентов
-        self.logger = Logger("WebDashboard")
+        self.logger = NanoprobeLogger()
         self.error_handler = ErrorHandler()
         self.performance_monitor = PerformanceMonitor()
         self.system_monitor = SystemMonitor()
