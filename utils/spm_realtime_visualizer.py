@@ -75,7 +75,7 @@ class RealTimeSPMVisualizer:
         }
 
         # Статистика в реальном времени
-        self实时 metrics = {
+        self.runtime_metrics = {
             'frames_displayed': 0,
             'last_update': None,
             'fps': 0,
@@ -197,8 +197,8 @@ class RealTimeSPMVisualizer:
         self._update_stats(stats)
 
         # Обновление метрик
-        self.实时 metrics['frames_displayed'] += 1
-        self.实时 metrics['last_update'] = datetime.now()
+        self.runtime_metrics['frames_displayed'] += 1
+        self.runtime_metrics['last_update'] = datetime.now()
 
         return [self.im, self.profile_line, self.stats_text]
 
@@ -226,8 +226,8 @@ class RealTimeSPMVisualizer:
                 f"Макс:        {stats.get('max', 0):.4f} нм\n"
                 f"RMS:         {stats.get('rms', 0):.4f} нм\n"
                 f"─────────────────────\n"
-                f"Кадры:       {self.实时 metrics['frames_displayed']}\n"
-                f"FPS:         {self.实时 metrics['fps']:.1f}"
+                f"Кадры:       {self.runtime_metrics['frames_displayed']}\n"
+                f"FPS:         {self.runtime_metrics['fps']:.1f}"
             )
 
         self.stats_text.set_text(stats_text)
