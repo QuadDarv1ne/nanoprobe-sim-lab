@@ -1,9 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Скрипт форматирования кода проекта Nanoprobe Simulation Lab
-Этот скрипт применяет единый стиль кодирования ко всему проекту.
-"""
+"""Скрипт форматирования кода проекта Nanoprobe Simulation Lab."""
 
 import os
 import re

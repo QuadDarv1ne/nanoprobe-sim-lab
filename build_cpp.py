@@ -1,9 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Скрипт сборки C++ компонентов для проекта Nanoprobe Simulation Lab
-Автоматическая сборка симулятора СЗМ на C++
-"""
+"""Скрипт сборки C++ компонентов для проекта Nanoprobe Simulation Lab."""
 
 import os
 import sys

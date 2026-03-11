@@ -1,8 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Простой тест проекта Nanoprobe Simulation Lab
-"""
+"""Простой тест проекта Nanoprobe Simulation Lab."""
 
 import sys
 import os

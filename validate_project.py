@@ -1,9 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Скрипт валидации проекта Nanoprobe Simulation Lab
-Этот скрипт выполняет комплексную проверку проекта на корректность.
-"""
+"""Скрипт валидации проекта Nanoprobe Simulation Lab."""
 
 import os
 import sys
