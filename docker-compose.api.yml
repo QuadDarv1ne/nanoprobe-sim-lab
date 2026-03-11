@@ -1,0 +1,80 @@
+# Docker Compose для Nanoprobe Sim Lab с FastAPI
+version: '3.8'
+
+services:
+  # FastAPI API
+  api:
+    build:
+      context: .
+      dockerfile: deployment/Dockerfile
+    container_name: nanoprobe-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///data/nanoprobe.db
+      - JWT_SECRET=your-secret-key-change-in-production
+      - LOG_LEVEL=info
+    volumes:
+      - ./data:/app/data
+      - ./reports:/app/reports
+      - ./output:/app/output
+      - ./logs:/app/logs
+    working_dir: /app
+    command: >
+      uvicorn api.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+    networks:
+      - nanoprobe-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Flask веб-интерфейс
+  web:
+    build:
+      context: .
+      dockerfile: deployment/Dockerfile
+    container_name: nanoprobe-web
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_PATH=/app/data/nanoprobe.db
+      - API_URL=http://api:8000
+    volumes:
+      - ./data:/app/data
+      - ./templates:/app/templates
+      - ./logs:/app/logs
+    working_dir: /app
+    command: python src/web/web_dashboard.py
+    depends_on:
+      - api
+    networks:
+      - nanoprobe-network
+    restart: unless-stopped
+
+  # Redis для кэширования (опционально)
+  redis:
+    image: redis:7-alpine
+    container_name: nanoprobe-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - nanoprobe-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+networks:
+  nanoprobe-network:
+    driver: bridge
+
+volumes:
+  redis_data:

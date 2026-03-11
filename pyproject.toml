@@ -57,6 +57,10 @@ dependencies = [
     "plotly>=5.17.0",
     "seaborn>=0.13.0",
     "requests>=2.31.0",
+    "scikit-image>=0.21.0",
+    "opencv-python>=4.8.0",
+    "reportlab>=4.0.0",
+    "docker>=7.0.0",
 ]
 
 [project.optional-dependencies]
