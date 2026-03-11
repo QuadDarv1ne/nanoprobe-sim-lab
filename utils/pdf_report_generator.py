@@ -500,6 +500,229 @@ class ScientificPDFReport:
         doc.build(content)
         return str(filepath)
 
+    def generate_comparison_report(
+        self,
+        comparison_data: Dict[str, Any],
+        comparison_images: List[str] = None,
+        title: str = "Сравнение поверхностей",
+        author: str = "Nanoprobe Simulation Lab"
+    ) -> str:
+        """Генерация отчёта о сравнении поверхностей"""
+        filename = f"comparison_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        filepath = self.output_dir / filename
+
+        doc = SimpleDocTemplate(str(filepath), pagesize=A4, rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
+        content = []
+        content.extend(self._create_title_page(title, author, "Nanoprobe Simulation Lab"))
+        content.append(PageBreak())
+
+        content.append(Paragraph("1. Метрики сравнения", self.styles['SectionHeader']))
+        content.append(Spacer(1, 0.2*inch))
+        content.extend(self._create_comparison_table(comparison_data))
+        content.append(Spacer(1, 0.3*inch))
+
+        content.append(Paragraph("2. Анализ различий", self.styles['SectionHeader']))
+        content.extend(self._create_difference_analysis(comparison_data))
+        content.append(Spacer(1, 0.3*inch))
+
+        if comparison_images:
+            content.append(Paragraph("3. Визуализация", self.styles['SectionHeader']))
+            content.extend(self._add_images(comparison_images))
+
+        content.append(PageBreak())
+        content.append(Paragraph("4. Выводы", self.styles['SectionHeader']))
+        content.extend(self._create_comparison_conclusions(comparison_data))
+
+        doc.build(content)
+        return str(filepath)
+
+    def generate_simulation_report(
+        self,
+        simulation_data: Dict[str, Any],
+        result_images: List[str] = None,
+        title: str = "Отчёт о симуляции",
+        author: str = "Nanoprobe Simulation Lab"
+    ) -> str:
+        """Генерация отчёта о симуляции СЗМ"""
+        filename = f"simulation_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        filepath = self.output_dir / filename
+
+        doc = SimpleDocTemplate(str(filepath), pagesize=A4, rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
+        content = []
+        content.extend(self._create_title_page(title, author, "Nanoprobe Simulation Lab"))
+        content.append(PageBreak())
+
+        content.append(Paragraph("1. Параметры симуляции", self.styles['SectionHeader']))
+        content.append(Spacer(1, 0.2*inch))
+        content.extend(self._create_simulation_params_table(simulation_data))
+        content.append(Spacer(1, 0.3*inch))
+
+        content.append(Paragraph("2. Результаты", self.styles['SectionHeader']))
+        content.extend(self._create_simulation_results(simulation_data))
+        content.append(Spacer(1, 0.3*inch))
+
+        if result_images:
+            content.append(Paragraph("3. Визуализация результатов", self.styles['SectionHeader']))
+            content.extend(self._add_images(result_images))
+
+        content.append(PageBreak())
+        content.append(Paragraph("4. Статистика", self.styles['SectionHeader']))
+        content.extend(self._create_simulation_stats(simulation_data))
+
+        doc.build(content)
+        return str(filepath)
+
+    def generate_batch_report(
+        self,
+        batch_data: Dict[str, Any],
+        title: str = "Отчёт о пакетной обработке"
+    ) -> str:
+        """Генерация сводного отчёта о пакетной обработке"""
+        filename = f"batch_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        filepath = self.output_dir / filename
+
+        doc = SimpleDocTemplate(str(filepath), pagesize=A4, rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
+        content = []
+        content.extend(self._create_title_page(title, "Nanoprobe Simulation Lab", "Batch Processing System"))
+        content.append(PageBreak())
+
+        content.append(Paragraph("1. Сводка пакетной обработки", self.styles['SectionHeader']))
+        content.append(Spacer(1, 0.2*inch))
+        content.extend(self._create_batch_summary(batch_data))
+        content.append(Spacer(1, 0.3*inch))
+
+        content.append(Paragraph("2. Статистика", self.styles['SectionHeader']))
+        content.extend(self._create_batch_statistics(batch_data))
+
+        doc.build(content)
+        return str(filepath)
+
+    def _create_comparison_table(self, data: Dict[str, Any]) -> List:
+        """Таблица метрик сравнения"""
+        content = []
+        table_data = [['Метрика', 'Значение', 'Интерпретация']]
+        metrics = [
+            ('SSIM', f"{data.get('ssim', 0):.4f}", 'Высокое сходство' if data.get('ssim', 0) > 0.8 else 'Различия'),
+            ('PSNR (dB)', f"{data.get('psnr', 0):.2f}", 'Высокое' if data.get('psnr', 0) > 30 else 'Низкое'),
+            ('Similarity', f"{data.get('similarity', 0):.4f}", 'Похожи' if data.get('similarity', 0) > 0.7 else 'Различаются'),
+            ('MSE', f"{data.get('mse', 0):.6f}", 'Малая ошибка' if data.get('mse', 0) < 0.01 else 'Заметная ошибка'),
+            ('Pearson', f"{data.get('pearson', 0):.4f}", 'Коррелируют' if abs(data.get('pearson', 0)) > 0.7 else 'Слабая корреляция'),
+        ]
+        table_data.extend([[name, val, interp] for name, val, interp in metrics])
+        table = Table(table_data, colWidths=[3*cm, 3.5*cm, 5*cm])
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#16213e')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f5f5f5')]),
+        ]))
+        content.append(table)
+        return content
+
+    def _create_difference_analysis(self, data: Dict[str, Any]) -> List:
+        """Анализ различий"""
+        content = []
+        mean_diff, max_diff, std_diff = data.get('mean_diff', 0), data.get('max_diff', 0), data.get('std_diff', 0)
+        content.append(Paragraph(f"<b>Средняя разница:</b> {mean_diff:.4f}", self.styles['BodyText']))
+        content.append(Spacer(1, 0.1*inch))
+        content.append(Paragraph(f"<b>Максимальная разница:</b> {max_diff:.4f}", self.styles['BodyText']))
+        content.append(Spacer(1, 0.1*inch))
+        content.append(Paragraph(f"<b>Стандартное отклонение:</b> {std_diff:.4f}", self.styles['BodyText']))
+        content.append(Spacer(1, 0.2*inch))
+        if mean_diff < 0.05:
+            content.append(Paragraph("<b>Оценка:</b> Поверхности практически идентичны", self.styles['BodyText']))
+        elif mean_diff < 0.15:
+            content.append(Paragraph("<b>Оценка:</b> Поверхности имеют небольшие различия", self.styles['BodyText']))
+        else:
+            content.append(Paragraph("<b>Оценка:</b> Поверхности существенно различаются", self.styles['BodyText']))
+        return content
+
+    def _create_comparison_conclusions(self, data: Dict[str, Any]) -> List:
+        """Выводы по сравнению"""
+        content = []
+        similarity, ssim = data.get('similarity', 0), data.get('ssim', 0)
+        if similarity > 0.8 and ssim > 0.8:
+            content.append(Paragraph("• Поверхности имеют высокую степень сходства", self.styles['BodyText']))
+            content.append(Paragraph("• Могут считаться эквивалентными для большинства задач", self.styles['BodyText']))
+        elif similarity > 0.5:
+            content.append(Paragraph("• Поверхности имеют умеренное сходство", self.styles['BodyText']))
+            content.append(Paragraph("• Требуется дополнительный анализ для критичных применений", self.styles['BodyText']))
+        else:
+            content.append(Paragraph("• Поверхности существенно различаются", self.styles['BodyText']))
+            content.append(Paragraph("• Не рекомендуются для взаимозаменяемого использования", self.styles['BodyText']))
+        return content
+
+    def _create_simulation_params_table(self, data: Dict[str, Any]) -> List:
+        """Таблица параметров симуляции"""
+        content = []
+        table_data = [['Параметр', 'Значение']]
+        params_map = {'simulation_type': 'Тип', 'scan_size': 'Размер', 'resolution': 'Разрешение', 'probe_radius': 'Радиус зонда', 'scan_speed': 'Скорость'}
+        for key, label in params_map.items():
+            table_data.append([label, str(data.get(key, 'Не указано'))])
+        table = Table(table_data, colWidths=[5*cm, 6*cm])
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#16213e')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f5f5f5')]),
+        ]))
+        content.append(table)
+        return content
+
+    def _create_simulation_results(self, data: Dict[str, Any]) -> List:
+        """Результаты симуляции"""
+        content = []
+        content.append(Paragraph(data.get('results_summary', "Симуляция завершена успешно"), self.styles['BodyText']))
+        return content
+
+    def _create_simulation_stats(self, data: Dict[str, Any]) -> List:
+        """Статистика симуляции"""
+        content = []
+        table_data = [['Метрика', 'Значение']]
+        stats = [('Время выполнения', data.get('duration', 'Не указано')), ('Количество точек', data.get('points_count', 'Не указано')), ('Объём данных', data.get('data_size', 'Не указано'))]
+        table_data.extend(stats)
+        table = Table(table_data, colWidths=[5*cm, 6*cm])
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#16213e')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f5f5f5')]),
+        ]))
+        content.append(table)
+        return content
+
+    def _create_batch_summary(self, data: Dict[str, Any]) -> List:
+        """Сводка пакетной обработки"""
+        content = []
+        table_data = [['Параметр', 'Значение']]
+        params = [('Всего элементов', data.get('total_items', 0)), ('Обработано', data.get('processed_items', 0)), ('Успешно', data.get('success_count', 0)), ('Ошибки', data.get('error_count', 0)), ('Время', data.get('duration', 'Не указано'))]
+        table_data.extend(params)
+        table = Table(table_data, colWidths=[5*cm, 6*cm])
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#16213e')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f5f5f5')]),
+        ]))
+        content.append(table)
+        return content
+
+    def _create_batch_statistics(self, data: Dict[str, Any]) -> List:
+        """Статистика пакетной обработки"""
+        content = []
+        success_rate = (data.get('success_count', 0) / data.get('total_items', 1)) * 100 if data.get('total_items', 0) > 0 else 0
+        content.append(Paragraph(f"<b>Процент успеха:</b> {success_rate:.1f}%", self.styles['BodyText']))
+        if data.get('error_details'):
+            content.append(Spacer(1, 0.2*inch))
+            content.append(Paragraph("<b>Ошибки:</b>", self.styles['SubSectionHeader']))
+            for error in data['error_details']:
+                content.append(Paragraph(f"• {error}", self.styles['BodyText']))
+        return content
+
 
 # Глобальная функция для быстрой генерации отчётов
 def generate_pdf_report(
@@ -512,7 +735,7 @@ def generate_pdf_report(
     Быстрая генерация PDF отчёта
 
     Args:
-        report_type: Тип отчёта ('surface', 'defect', 'comparison')
+        report_type: Тип отчёта ('surface', 'defect', 'comparison', 'simulation', 'batch')
         data: Данные для отчёта
         images: Изображения
         output_dir: Директория вывода
@@ -526,6 +749,12 @@ def generate_pdf_report(
         return generator.generate_surface_analysis_report(data, images)
     elif report_type == 'defect':
         return generator.generate_defect_analysis_report(data, images)
+    elif report_type == 'comparison':
+        return generator.generate_comparison_report(data, images)
+    elif report_type == 'simulation':
+        return generator.generate_simulation_report(data, images)
+    elif report_type == 'batch':
+        return generator.generate_batch_report(data)
     else:
         raise ValueError(f"Неизвестный тип отчёта: {report_type}")
 
