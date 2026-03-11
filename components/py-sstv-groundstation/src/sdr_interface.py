@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-SDR интерфейс для приема SSTV сигналов
-Поддержка RTL-SDR (V2, V3, V4), Airspy, HackRF и других SDR устройств
-"""
+"""SDR интерфейс для приема SSTV сигналов."""
 
 import numpy as np
 from typing import Optional, Tuple, List, Dict, Callable

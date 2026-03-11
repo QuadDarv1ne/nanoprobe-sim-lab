@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Модуль декодирования SSTV
-Этот модуль содержит функции для декодирования SSTV-сигналов
-в изображения с использованием библиотеки pysstv.
-"""
+"""Модуль декодирования SSTV."""
 
 import numpy as np
 from typing import Optional, Tuple, List, Dict
