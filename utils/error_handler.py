@@ -190,7 +190,7 @@ class ErrorHandler:
 
         @wraps(func)
         def wrapper(*args, **kwargs):
-            """TODO: Add description"""
+            """Декоратор для обработки ошибок в функциях."""
             try:
                 return func(*args, **kwargs)
             except Exception as e:
@@ -204,8 +204,7 @@ class ErrorHandler:
 
                 if suppress_exception:
                     return fallback_return
-                else:
-                    raise e
+                raise
 
         return wrapper
 
@@ -472,7 +471,7 @@ class SafeExecutor:
         """
 
         def target(queue_obj):
-            """TODO: Add description"""
+            """Вспомогательная функция для выполнения в отдельном потоке."""
             try:
                 result = func()
                 queue_obj.put(("success", result))
@@ -486,7 +485,6 @@ class SafeExecutor:
         thread.join(timeout)
 
         if thread.is_alive():
-            # Таймаут
             self.error_handler.log_error(
                 f"Таймаут выполнения функции {func.__name__} (>{timeout}s)",
                 component=component,
@@ -535,7 +533,7 @@ def main():
 
     @error_handler.handle_exception(component="TestFunction", fallback_return="default_value")
     def test_function():
-        """TODO: Add description"""
+        """Тестовая функция с ошибкой."""
         raise ValueError("Тестовая ошибка в функции")
 
     result = test_function()
@@ -547,7 +545,7 @@ def main():
     counter = 0
 
     def flaky_function():
-        """TODO: Add description"""
+        """Нестабильная функция для теста повторных попыток."""
         nonlocal counter
         counter += 1
         if counter < 3:
@@ -564,7 +562,7 @@ def main():
     print("\nТестирование безопасного исполнителя с таймаутом...")
 
     def slow_function():
-        """TODO: Add description"""
+        """Медленная функция для теста таймаута."""
         time.sleep(2)
         return "Медленный результат"
 

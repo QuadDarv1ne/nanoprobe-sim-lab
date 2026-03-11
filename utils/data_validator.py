@@ -573,7 +573,7 @@ class DataValidator:
         suggestions = []
 
         def validate_recursive(data_item, schema_item, path=""):
-            """TODO: Add description"""
+            """Рекурсивная проверка данных по схеме."""
             current_path = path
 
             # Проверяем тип
@@ -582,9 +582,9 @@ class DataValidator:
                 actual_type = type(data_item).__name__
 
                 if expected_type == "array" and isinstance(data_item, (list, tuple)):
-                    pass  # Массивы допустимы
+                    pass
                 elif expected_type == "object" and isinstance(data_item, dict):
-                    pass  # Объекты допустимы
+                    pass
                 elif expected_type != actual_type:
                     errors.append(
                         f"Неверный тип по пути {current_path}: ожидается {expected_type}, получено {actual_type}"
@@ -639,27 +639,22 @@ def validate_data(validation_level: ValidationLevel = ValidationLevel.STANDARD):
     """
 
     def decorator(func):
-        """TODO: Add description"""
+        """Декоратор для автоматической валидации данных функции."""
         @wraps(func)
         def wrapper(*args, **kwargs):
-            """TODO: Add description"""
+            """Обертка для валидации входных и выходных данных."""
             validator = DataValidator(validation_level)
-
-            # Здесь мы могли бы добавить логику проверки входных данных
-            # в зависимости от сигнатуры функции
 
             result = func(*args, **kwargs)
 
-            # Валидируем результат если он является структурой данных
             if isinstance(result, (pd.DataFrame, np.ndarray, dict)):
                 if isinstance(result, pd.DataFrame):
                     validation_result = validator.validate_dataframe(
-                        result, {}  # Пустая схема для базовой валидации
+                        result, {}
                     )
                 elif isinstance(result, np.ndarray):
                     validation_result = validator.validate_numpy_array(result)
                 else:
-                    # Для словарей пока просто проверяем целостность
                     validation_result = ValidationResult(
                         is_valid=True, errors=[], warnings=[], suggestions=[], metadata={}
                     )
@@ -751,7 +746,7 @@ def main():
 
     @validate_data(ValidationLevel.STANDARD)
     def sample_data_processing():
-        """TODO: Add description"""
+        """Пример функции обработки данных с валидацией."""
         return pd.DataFrame({"value": [1, 2, 3]})
 
     result = sample_data_processing()
