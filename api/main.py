@@ -40,7 +40,7 @@ async def lifespan(app: FastAPI):
 
     # Инициализация БД
     db_manager = DatabaseManager("data/nanoprobe.db")
-    print("✅ База данных инициализирована")
+    print("[OK] Database initialized")
 
     # Инициализация Redis кэша
     redis_host = os.getenv("REDIS_HOST", "localhost")
@@ -48,14 +48,14 @@ async def lifespan(app: FastAPI):
     redis_cache = RedisCache(host=redis_host, port=redis_port)
     
     if redis_cache.is_available():
-        print(f"✅ Redis кэш подключён: {redis_host}:{redis_port}")
+        print(f"[OK] Redis cache connected: {redis_host}:{redis_port}")
     else:
-        print("⚠️  Redis кэш недоступен (работаем без кэширования)")
+        print("[WARN] Redis cache unavailable (running without caching)")
 
     yield
 
     # Очистка при остановке
-    print("👋 Приложение остановлено")
+    print("[INFO] Application stopped")
 
 
 # Создание FastAPI приложения
