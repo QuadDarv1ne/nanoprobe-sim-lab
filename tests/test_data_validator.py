@@ -1,8 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Модуль тестирования для валидатора данных
-"""
+"""Тесты для валидатора данных."""
 
 import unittest
 import sys

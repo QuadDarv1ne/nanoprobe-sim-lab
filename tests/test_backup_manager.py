@@ -1,8 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Модуль тестирования для backup_manager
-"""
+"""Тесты для backup_manager."""
 
 import unittest
 import sys

@@ -1,8 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Тесты для модуля обработки ошибок
-"""
+"""Тесты для модуля обработки ошибок."""
 
 import unittest
 import tempfile

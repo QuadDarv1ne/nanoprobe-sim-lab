@@ -1,8 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Модуль тестирования для SDR интерфейса
-"""
+"""Тесты для SDR интерфейса."""
 
 import unittest
 import numpy as np
