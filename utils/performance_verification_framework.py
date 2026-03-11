@@ -213,7 +213,7 @@ class PerformanceVerificationFramework:
         """Бенчмарк CPU-интенсивной задачи"""
 
         def cpu_intensive_task():
-            """TODO: Add description"""
+            """Вычисляет сумму квадратов чисел для нагрузки CPU"""
             result = 0
             for i in range(100000):
                 result += i**2
@@ -658,7 +658,7 @@ class PerformanceVerificationFramework:
             # Сравниваем время выполнения базовой операции до и после "оптимизации"
 
             def baseline_operation():
-                """TODO: Add description"""
+                """Базовая операция для сравнения производительности"""
                 return sum(i**2 for i in range(10000))
 
             # Время до

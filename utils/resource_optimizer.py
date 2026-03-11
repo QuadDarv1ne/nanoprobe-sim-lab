@@ -281,7 +281,7 @@ class ResourceManager:
         self.monitoring = True
 
         def monitor():
-            """TODO: Add description"""
+            """Мониторинг ресурсов с автоматической оптимизацией"""
             while self.monitoring:
                 try:
                     # Получаем текущие ресурсы
@@ -577,7 +577,7 @@ class AdaptiveResourceOptimizer:
         """
 
         def adaptive_loop():
-            """TODO: Add description"""
+            """Цикл адаптивной оптимизации ресурсов"""
             while True:
                 try:
                     self.adapt_resources()

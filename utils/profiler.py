@@ -68,7 +68,7 @@ class Profiler:
         self.cpu_monitoring = True
 
         def monitor():
-            """TODO: Add description"""
+            """Мониторит CPU и память в фоновом режиме"""
             while self.cpu_monitoring:
                 self.monitoring_data["timestamps"].append(datetime.now())
                 self.monitoring_data["cpu_percent"].append(psutil.cpu_percent())
@@ -175,7 +175,7 @@ class Profiler:
         # Создаем временную функцию для профилирования
 
         def temp_func():
-            """TODO: Add description"""
+            """Выполняет функцию и возвращает результат"""
             return func(*args, **kwargs)
 
         # Используем line_profiler
@@ -395,7 +395,7 @@ def profile_performance(func: Callable) -> Callable:
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        """TODO: Add description"""
+        """Выполняет функцию с профилированием и генерирует отчет"""
         profiler = Profiler()
 
         print(f"Начинаем профилирование функции {func.__name__}...")
@@ -431,10 +431,10 @@ def benchmark_function(iterations: int = 100):
     """
 
     def decorator(func: Callable) -> Callable:
-        """TODO: Add description"""
+        """Декоратор для бенчмаркинга функции"""
         @wraps(func)
         def wrapper(*args, **kwargs):
-            """TODO: Add description"""
+            """Выполняет бенчмаркинг функции и выводит статистику"""
             profiler = Profiler()
 
             print(f"Запускаем бенчмарк функции {func.__name__} ({iterations} итераций)...")
@@ -559,7 +559,7 @@ def main():
 
     @profile_performance
     def decorated_function():
-        """TODO: Add description"""
+        """Тестовая функция для профилирования"""
         time.sleep(0.1)  # Имитация работы
         return "Результат функции"
 
@@ -570,7 +570,7 @@ def main():
 
     @benchmark_function(iterations=5)
     def benchmarked_function():
-        """TODO: Add description"""
+        """Тестовая функция для бенчмаркинга"""
         return sum(i**2 for i in range(1000))
 
     benchmarked_function()

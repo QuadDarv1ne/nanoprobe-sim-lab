@@ -634,7 +634,7 @@ class SelfHealingSystem:
         self.active = True
 
         def healing_loop():
-            """TODO: Add description"""
+            """Цикл автоматического самоисцеления системы"""
             while self.active:
                 try:
                     self.run_self_healing_cycle()
@@ -644,7 +644,7 @@ class SelfHealingSystem:
                     time.sleep(interval)
 
         def monitoring_loop():
-            """TODO: Add description"""
+            """Цикл мониторинга здоровья системы"""
             while self.active:
                 try:
                     # Периодическая проверка здоровья системы

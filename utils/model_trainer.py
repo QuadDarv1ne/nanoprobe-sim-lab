@@ -550,7 +550,7 @@ def model_training_pipeline(func):
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        """TODO: Add description"""
+        """Декоратор для пайплайна обучения модели"""
         trainer = ModelTrainer()
         print(f"Запуск пайплайна обучения модели: {func.__name__}")
 
@@ -662,7 +662,7 @@ def main():
     @model_training_pipeline
     def sample_training_pipeline(trainer_instance):
         # Создаем простую модель
-        """TODO: Add description"""
+        """Пример пайплайна обучения для тестирования"""
         X_simple = np.random.randn(100, 2)
         y_simple = X_simple[:, 0] + X_simple[:, 1] + np.random.randn(100) * 0.1
 

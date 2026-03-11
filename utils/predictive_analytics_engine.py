@@ -553,7 +553,7 @@ class PredictiveAnalyticsEngine:
         self.active = True
 
         def data_collection_loop():
-            """TODO: Add description"""
+            """Цикл сбора данных о метриках и обнаружения аномалий"""
             while self.active:
                 try:
                     # Собираем текущие метрики
@@ -577,7 +577,7 @@ class PredictiveAnalyticsEngine:
                     time.sleep(collection_interval)
 
         def prediction_loop():
-            """TODO: Add description"""
+            """Цикл применения рекомендаций на основе прогнозов"""
             while self.active:
                 try:
                     # Применяем рекомендации на основе прогнозов
