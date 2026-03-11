@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Модуль экспорта данных для проекта Nanoprobe Simulation Lab
-Поддерживает экспорт в CSV, HDF5, JSON форматы
-"""
+"""Модуль экспорта данных для проекта Nanoprobe Simulation Lab."""
 
 import json
 import csv
