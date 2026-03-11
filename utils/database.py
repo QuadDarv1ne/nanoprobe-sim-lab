@@ -295,21 +295,40 @@ class DatabaseManager:
         """
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            
+
             query = "SELECT * FROM scan_results"
             params = []
-            
+
             if scan_type:
                 query += " WHERE scan_type = ?"
                 params.append(scan_type)
-            
+
             query += " ORDER BY timestamp DESC LIMIT ? OFFSET ?"
             params.extend([limit, offset])
-            
+
             cursor.execute(query, params)
             rows = cursor.fetchall()
-            
+
             return [self._row_to_dict(row) for row in rows]
+
+    def get_scan_by_id(self, scan_id: int) -> Optional[Dict]:
+        """
+        Получает результат сканирования по ID.
+
+        Args:
+            scan_id: ID записи
+
+        Returns:
+            Запись или None
+        """
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT * FROM scan_results WHERE id = ?",
+                (scan_id,)
+            )
+            row = cursor.fetchone()
+            return self._row_to_dict(row) if row else None
 
     def add_simulation(
         self,
