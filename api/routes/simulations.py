@@ -76,8 +76,16 @@ async def get_simulation(
     db: DatabaseManager = Depends(get_db),
 ):
     """Получить симуляцию по ID"""
-    simulations = db.get_simulations(limit=100)
+    from api.main import redis_cache
     
+    cache_key = f"simulation:{simulation_id}"
+    
+    if redis_cache and redis_cache.is_available():
+        cached = redis_cache.get(cache_key)
+        if cached:
+            return SimulationResponse(**cached)
+    
+    simulations = db.get_simulations(limit=100)
     sim = next((s for s in simulations if s.get('simulation_id') == simulation_id), None)
     
     if not sim:
@@ -86,7 +94,12 @@ async def get_simulation(
             detail=f"Симуляция с ID {simulation_id} не найдена",
         )
     
-    return SimulationResponse.model_validate(sim)
+    result = SimulationResponse.model_validate(sim)
+    
+    if redis_cache and redis_cache.is_available():
+        redis_cache.set(cache_key, result.model_dump(), expire=600)
+    
+    return result
 
 
 @router.post(
@@ -135,24 +148,25 @@ async def update_simulation(
     db: DatabaseManager = Depends(get_db),
 ):
     """Обновить статус симуляции"""
-    try:
-        db.update_simulation(
-            simulation_id=simulation_id,
-            status=status,
-        )
-        
-        simulations = db.get_simulations(limit=100)
-        sim = next((s for s in simulations if s.get('simulation_id') == simulation_id), None)
-        
-        if not sim:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Симуляция с ID {simulation_id} не найдена",
-            )
-        
-        return SimulationResponse.model_validate(sim)
-    except Exception as e:
+    from api.main import redis_cache
+    
+    db.update_simulation(
+        simulation_id=simulation_id,
+        status=status,
+    )
+
+    # Инвалидация кэша
+    if redis_cache and redis_cache.is_available():
+        redis_cache.clear_pattern("simulations:*")
+        redis_cache.delete(f"simulation:{simulation_id}")
+
+    simulations = db.get_simulations(limit=100)
+    sim = next((s for s in simulations if s.get('simulation_id') == simulation_id), None)
+
+    if not sim:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка обновления симуляции: {str(e)}",
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Симуляция с ID {simulation_id} не найдена",
         )
+
+    return SimulationResponse.model_validate(sim)

@@ -99,6 +99,16 @@ async def get_scan(
     db: DatabaseManager = Depends(get_db),
 ):
     """Получить сканирование по ID"""
+    from api.main import redis_cache
+    
+    cache_key = f"scan:{scan_id}"
+    
+    # Проверка кэша
+    if redis_cache and redis_cache.is_available():
+        cached = redis_cache.get(cache_key)
+        if cached:
+            return ScanResponse(**cached)
+    
     scan = db.get_scan_by_id(scan_id)
     
     if not scan:
@@ -107,7 +117,13 @@ async def get_scan(
             detail=f"Сканирование с ID {scan_id} не найдено",
         )
     
-    return ScanResponse.model_validate(scan)
+    result = ScanResponse.model_validate(scan)
+    
+    # Сохранение в кэш
+    if redis_cache and redis_cache.is_available():
+        redis_cache.set(cache_key, result.model_dump(), expire=600)
+    
+    return result
 
 
 @router.post(
