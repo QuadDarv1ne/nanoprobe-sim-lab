@@ -4,7 +4,7 @@
 import numpy as np
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, Any
+from typing import Dict, Any, Optional, Tuple, List
 import json
 
 try:
@@ -89,6 +89,17 @@ class SurfaceComparator:
         metrics["mse"] = mse_val
         metrics["pearson"] = float(pearsonr(img1.flatten(), img2.flatten())[0])
         metrics["mean_diff"] = float(np.mean(np.abs(img1 - img2)))
+        
+        # Дополнительные метрики
+        metrics["max_diff"] = float(np.max(np.abs(img1 - img2)))
+        metrics["std_diff"] = float(np.std(np.abs(img1 - img2)))
+        metrics["rms_error"] = float(np.sqrt(np.mean((img1 - img2) ** 2)))
+        
+        # Гистограммное сравнение
+        hist1, _ = np.histogram(img1.flatten(), bins=64, range=(0, 1))
+        hist2, _ = np.histogram(img2.flatten(), bins=64, range=(0, 1))
+        hist_corr = float(np.corrcoef(hist1, hist2)[0, 1])
+        metrics["histogram_correlation"] = hist_corr if not np.isnan(hist_corr) else 0.0
 
         scores = []
         if "ssim" in metrics:
@@ -105,49 +116,147 @@ class SurfaceComparator:
         """Compare two image files"""
         if not PIL_AVAILABLE:
             raise ImportError("PIL not installed")
-        
+
         img1 = Image.open(path1)
         img2 = Image.open(path2)
-        
+
         arr1 = np.array(img1)
         arr2 = np.array(img2)
-        
+
         if len(arr1.shape) == 3:
             arr1 = arr1.mean(axis=2)
         if len(arr2.shape) == 3:
             arr2 = arr2.mean(axis=2)
-        
+
         metrics = self.compare_surfaces(arr1, arr2)
-        
+
         cid = f"comp_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         results = {"id": cid, "path1": path1, "path2": path2, **metrics}
-        
+
         if save:
             with open(self.output_dir / f"{cid}.json", "w", encoding="utf-8") as f:
                 json.dump(results, f, indent=2, default=str)
-            
+
             if MATPLOTLIB_AVAILABLE:
                 self._save_visualization(arr1, arr2, metrics, cid)
-        
+
         return results
 
-    def _save_visualization(self, img1, img2, metrics: Dict, cid: str):
-        """Save comparison visualization"""
-        fig, axes = plt.subplots(1, 3, figsize=(18, 5))
-        axes[0].imshow(img1, cmap="viridis")
-        axes[0].set_title("Image 1")
-        axes[0].axis("off")
-        axes[1].imshow(img2, cmap="viridis")
-        axes[1].set_title("Image 2")
-        axes[1].axis("off")
-        diff = np.abs(img1 - img2)
-        axes[2].imshow(diff, cmap="hot")
-        axes[2].set_title(f"Diff (mean={metrics['mean_diff']:.4f})")
-        axes[2].axis("off")
-        plt.suptitle(f"SSIM: {metrics.get('ssim', 0):.4f}, Similarity: {metrics.get('similarity', 0):.4f}")
-        plt.tight_layout()
+    def _save_visualization(
+        self, 
+        img1: np.ndarray, 
+        img2: np.ndarray, 
+        metrics: Dict, 
+        cid: str,
+        save_difference_map: bool = True
+    ):
+        """Save comprehensive comparison visualization"""
+        fig = plt.figure(figsize=(20, 12))
+        gs = fig.add_gridspec(3, 4, hspace=0.3, wspace=0.25)
+        
+        # Основные изображения
+        ax1 = fig.add_subplot(gs[0, 0])
+        im1 = ax1.imshow(img1, cmap="viridis", aspect='equal')
+        ax1.set_title("Image 1", fontsize=11, fontweight='bold')
+        ax1.axis("off")
+        plt.colorbar(im1, ax=ax1, shrink=0.8)
+        
+        ax2 = fig.add_subplot(gs[0, 1])
+        im2 = ax2.imshow(img2, cmap="viridis", aspect='equal')
+        ax2.set_title("Image 2", fontsize=11, fontweight='bold')
+        ax2.axis("off")
+        plt.colorbar(im2, ax=ax2, shrink=0.8)
+        
+        # Разница
+        diff = img2 - img1
+        ax3 = fig.add_subplot(gs[0, 2])
+        im3 = ax3.imshow(diff, cmap="RdBu", aspect='equal', 
+                        vmin=-max(abs(diff.min()), diff.max()),
+                        vmax=max(abs(diff.min()), diff.max()))
+        ax3.set_title(f"Difference\n(mean={metrics['mean_diff']:.4f})", fontsize=10)
+        ax3.axis("off")
+        plt.colorbar(im3, ax=ax3, shrink=0.8)
+        
+        # Абсолютная разница (тепловая карта)
+        abs_diff = np.abs(diff)
+        ax4 = fig.add_subplot(gs[0, 3])
+        im4 = ax4.imshow(abs_diff, cmap="hot", aspect='equal')
+        ax4.set_title(f"Absolute Diff\n(max={metrics['max_diff']:.4f})", fontsize=10)
+        ax4.axis("off")
+        plt.colorbar(im4, ax=ax4, shrink=0.8)
+        
+        # 3D визуализация
+        ax5 = fig.add_subplot(gs[1, 0], projection='3d')
+        x = np.arange(img1.shape[1])
+        y = np.arange(img1.shape[0])
+        X, Y = np.meshgrid(x, y)
+        ax5.plot_surface(X, Y, img1, cmap='viridis', alpha=0.9, linewidth=0, antialiased=True)
+        ax5.set_title("Image 1 (3D)", fontsize=10, fontweight='bold')
+        ax5.set_xticks([])
+        ax5.set_yticks([])
+        
+        ax6 = fig.add_subplot(gs[1, 1], projection='3d')
+        ax6.plot_surface(X, Y, img2, cmap='viridis', alpha=0.9, linewidth=0, antialiased=True)
+        ax6.set_title("Image 2 (3D)", fontsize=10, fontweight='bold')
+        ax6.set_xticks([])
+        ax6.set_yticks([])
+        
+        ax7 = fig.add_subplot(gs[1, 2], projection='3d')
+        ax7.plot_surface(X, Y, diff, cmap='RdBu', alpha=0.9, linewidth=0, antialiased=True)
+        ax7.set_title("Difference (3D)", fontsize=10, fontweight='bold')
+        ax7.set_xticks([])
+        ax7.set_yticks([])
+        
+        # Гистограммы
+        ax8 = fig.add_subplot(gs[1, 3])
+        ax8.hist(img1.flatten(), bins=50, alpha=0.6, label='Image 1', color='blue', density=True)
+        ax8.hist(img2.flatten(), bins=50, alpha=0.6, label='Image 2', color='red', density=True)
+        ax8.set_title("Intensity Distribution", fontsize=10, fontweight='bold')
+        ax8.legend(fontsize=8)
+        ax8.grid(True, alpha=0.3)
+        
+        # Профили интенсивности
+        ax9 = fig.add_subplot(gs[2, :2])
+        mid_y = img1.shape[0] // 2
+        ax9.plot(img1[mid_y, :], label='Image 1', color='blue', linewidth=1.5)
+        ax9.plot(img2[mid_y, :], label='Image 2', color='red', linewidth=1.5, linestyle='--')
+        ax9.set_title(f"Horizontal Profile (row {mid_y})", fontsize=10, fontweight='bold')
+        ax9.set_xlabel("X position")
+        ax9.set_ylabel("Intensity")
+        ax9.legend(fontsize=8)
+        ax9.grid(True, alpha=0.3)
+        
+        # Корреляция
+        ax10 = fig.add_subplot(gs[2, 2:])
+        ax10.scatter(img1.flatten()[::100], img2.flatten()[::100], alpha=0.3, s=5)
+        ax10.plot([0, 1], [0, 1], 'r--', linewidth=2)
+        ax10.set_title(f"Pixel Correlation\n(Pearson: {metrics['pearson']:.4f})", fontsize=10, fontweight='bold')
+        ax10.set_xlabel("Image 1")
+        ax10.set_ylabel("Image 2")
+        ax10.grid(True, alpha=0.3)
+        
+        # Общий заголовок
+        fig.suptitle(
+            f"Surface Comparison: SSIM={metrics.get('ssim', 0):.4f} | "
+            f"PSNR={metrics.get('psnr', 0):.2f} dB | "
+            f"Similarity={metrics.get('similarity', 0):.4f}",
+            fontsize=14, fontweight='bold', y=0.98
+        )
+        
         plt.savefig(self.output_dir / f"{cid}_viz.png", dpi=150, bbox_inches="tight")
         plt.close()
+        
+        # Сохранение карты разницы отдельно
+        if save_difference_map and MATPLOTLIB_AVAILABLE:
+            fig_diff, ax_diff = plt.subplots(figsize=(10, 8))
+            im_diff = ax_diff.imshow(abs_diff, cmap="hot", aspect='equal')
+            ax_diff.set_title(f"Absolute Difference Map\nMax: {metrics['max_diff']:.4f}, Mean: {metrics['mean_diff']:.4f}", 
+                            fontsize=12, fontweight='bold')
+            ax_diff.axis("off")
+            plt.colorbar(im_diff, ax=ax_diff, shrink=0.8)
+            plt.tight_layout()
+            plt.savefig(self.output_dir / f"{cid}_diffmap.png", dpi=150, bbox_inches="tight")
+            plt.close()
 
 
 def compare_surfaces(path1: str, path2: str, out: str = "output/surface_comparisons") -> Dict[str, Any]:

@@ -30,8 +30,14 @@ class DatabaseManager:
     @contextmanager
     def get_connection(self):
         """Контекстный менеджер для подключения к БД."""
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, timeout=30.0)
         conn.row_factory = sqlite3.Row
+        # Оптимизация производительности SQLite
+        conn.execute("PRAGMA journal_mode = WAL")
+        conn.execute("PRAGMA synchronous = NORMAL")
+        conn.execute("PRAGMA cache_size = -64000")  # 64MB cache
+        conn.execute("PRAGMA temp_store = MEMORY")
+        conn.execute("PRAGMA mmap_size = 268435456")  # 256MB mmap
         try:
             yield conn
             conn.commit()
@@ -115,6 +121,15 @@ class DatabaseManager:
                 CREATE INDEX IF NOT EXISTS idx_scan_type
                 ON scan_results(scan_type)
             """)
+            # Составные индексы для сложных запросов
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_scan_type_timestamp
+                ON scan_results(scan_type, timestamp DESC)
+            """)
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_simulations_status_created
+                ON simulations(status, created_at DESC)
+            """)
             cursor.execute("""
                 CREATE INDEX IF NOT EXISTS idx_simulation_status
                 ON simulations(status)
@@ -122,6 +137,11 @@ class DatabaseManager:
             cursor.execute("""
                 CREATE INDEX IF NOT EXISTS idx_image_type
                 ON images(image_type)
+            """)
+            # Индекс для поиска по путям
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_scan_file_path
+                ON scan_results(file_path)
             """)
 
             # Таблица сравнения изображений поверхностей
@@ -1057,6 +1077,91 @@ class DatabaseManager:
                 json.dump(data, f, indent=2, ensure_ascii=False)
             
             return output
+
+    def optimize_database(self) -> Dict[str, Any]:
+        """
+        Оптимизирует базу данных (VACUUM, ANALYZE).
+
+        Returns:
+            Статистика оптимизации
+        """
+        stats = {"vacuum": False, "analyze": False, "size_before": 0, "size_after": 0}
+        
+        try:
+            stats["size_before"] = self.db_path.stat().st_size if self.db_path.exists() else 0
+            
+            with self.get_connection() as conn:
+                # Анализ таблиц для оптимизации запросов
+                conn.execute("ANALYZE")
+                stats["analyze"] = True
+                
+                # Очистка и дефрагментация
+                conn.execute("VACUUM")
+                stats["vacuum"] = True
+            
+            stats["size_after"] = self.db_path.stat().st_size if self.db_path.exists() else 0
+            stats["space_saved"] = stats["size_before"] - stats["size_after"]
+            
+        except Exception as e:
+            stats["error"] = str(e)
+        
+        return stats
+
+    def get_database_stats(self) -> Dict[str, Any]:
+        """
+        Получает статистику базы данных.
+
+        Returns:
+            Статистика по таблицам
+        """
+        stats = {"tables": {}, "total_size": 0}
+        
+        with self.get_connection() as conn:
+            tables = ["scan_results", "simulations", "images", "exports", 
+                     "surface_comparisons", "defect_analysis", "pdf_reports", 
+                     "batch_jobs", "performance_metrics"]
+            
+            for table in tables:
+                try:
+                    cursor = conn.execute(f"SELECT COUNT(*) FROM {table}")
+                    count = cursor.fetchone()[0]
+                    stats["tables"][table] = count
+                except Exception:
+                    stats["tables"][table] = 0
+            
+            stats["total_size"] = self.db_path.stat().st_size if self.db_path.exists() else 0
+            stats["size_mb"] = round(stats["total_size"] / (1024 * 1024), 2)
+        
+        return stats
+
+    def cleanup_old_records(
+        self, 
+        table: str, 
+        days: int = 30,
+        date_column: str = "created_at"
+    ) -> int:
+        """
+        Удаляет старые записи из таблицы.
+
+        Args:
+            table: Имя таблицы
+            days: Возраст записей в днях
+            date_column: Имя колонки с датой
+
+        Returns:
+            Количество удалённых записей
+        """
+        from datetime import timedelta
+        
+        cutoff_date = (datetime.now() - timedelta(days=days)).isoformat()
+        
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                f"DELETE FROM {table} WHERE {date_column} < ?",
+                (cutoff_date,)
+            )
+            return cursor.rowcount
 
 
 # Глобальный экземляр для удобства
