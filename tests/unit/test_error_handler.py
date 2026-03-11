@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Unit-тесты для модуля обработки ошибок
-"""
+"""Unit-тесты для модуля обработки ошибок."""
 
 import unittest
 import tempfile
@@ -15,7 +13,7 @@ from datetime import datetime
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from utils.error_handler import (
-    ErrorHandler, ErrorSeverity, ErrorInfo, 
+    ErrorHandler, ErrorSeverity, ErrorInfo,
     RecoveryManager, SafeExecutor
 )
 
