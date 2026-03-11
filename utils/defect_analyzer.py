@@ -548,6 +548,212 @@ def analyze_defects(
     return pipeline.analyze_image(image_path, model_name)
 
 
+class AdvancedDefectAnalyzer:
+    """
+    Продвинутый анализатор дефектов с использованием ансамбля моделей
+    Комбинирует различные методы для повышения точности детектирования
+    """
+
+    def __init__(self, confidence_threshold: float = 0.7):
+        """
+        Инициализация продвинутого анализатора
+
+        Args:
+            confidence_threshold: Порог уверенности для детектирования
+        """
+        self.confidence_threshold = confidence_threshold
+        self.output_dir = Path("output/advanced_defect_analysis")
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+
+    def ensemble_detect(self, image: np.ndarray) -> Dict[str, Any]:
+        """
+        Ансамблевое детектирование дефектов
+
+        Args:
+            image: Изображение поверхности
+
+        Returns:
+            Результаты детектирования
+        """
+        # Детектирование разными методами
+        if_detector = DefectDetector('isolation_forest')
+        km_detector = DefectDetector('kmeans')
+        
+        if_result = if_detector.detect_defects(image)
+        km_result = km_detector.detect_defects(image)
+
+        # Объединение результатов
+        combined_defects = self._combine_detections(if_result.get('defects', []),
+                                                     km_result.get('defects', []))
+
+        # Фильтрация по порогу уверенности
+        filtered_defects = [d for d in combined_defects
+                          if d.get('confidence', 0) >= self.confidence_threshold]
+
+        return {
+            'defects': filtered_defects,
+            'defects_count': len(filtered_defects),
+            'if_defects_count': len(if_result.get('defects', [])),
+            'km_defects_count': len(km_result.get('defects', [])),
+            'confidence_threshold': self.confidence_threshold,
+            'ensemble': True,
+        }
+
+    def _combine_detections(self, defects1: List[Dict], defects2: List[Dict]) -> List[Dict]:
+        """Объединение результатов детектирования"""
+        all_defects = []
+        used_indices = set()
+
+        for d1 in defects1:
+            x1, y1 = d1.get('x', 0), d1.get('y', 0)
+            matched = False
+
+            for i, d2 in enumerate(defects2):
+                if i in used_indices:
+                    continue
+                x2, y2 = d2.get('x', 0), d2.get('y', 0)
+                dist = np.sqrt((x1 - x2)**2 + (y1 - y2)**2)
+
+                if dist < 20:  # Близкие детектирования
+                    # Усреднение координат и уверенности
+                    combined = {
+                        'x': (x1 + x2) / 2,
+                        'y': (y1 + y2) / 2,
+                        'width': (d1.get('width', 0) + d2.get('width', 0)) / 2,
+                        'height': (d1.get('height', 0) + d2.get('height', 0)) / 2,
+                        'confidence': (d1.get('confidence', 0) + d2.get('confidence', 0)) / 2,
+                        'type': d1.get('type', 'unknown'),
+                    }
+                    all_defects.append(combined)
+                    used_indices.add(i)
+                    matched = True
+                    break
+
+            if not matched:
+                d1['confidence'] = d1.get('confidence', 0) * 0.8  # Снижаем уверенность
+                all_defects.append(d1)
+
+        # Добавляем unmatched детектирования из второго набора
+        for i, d2 in enumerate(defects2):
+            if i not in used_indices:
+                d2['confidence'] = d2.get('confidence', 0) * 0.8
+                all_defects.append(d2)
+
+        return all_defects
+
+    def analyze_with_stats(self, image: np.ndarray) -> Dict[str, Any]:
+        """
+        Анализ с расширенной статистикой
+
+        Args:
+            image: Изображение поверхности
+
+        Returns:
+            Результаты анализа со статистикой
+        """
+        ensemble_result = self.ensemble_detect(image)
+
+        # Расширенная статистика
+        defects = ensemble_result.get('defects', [])
+        stats = {
+            'total_area': image.shape[0] * image.shape[1] if len(image.shape) == 2 else 0,
+            'defect_density': len(defects) / (image.shape[0] * image.shape[1]) * 10000 if len(image.shape) == 2 else 0,
+            'avg_defect_size': np.mean([d.get('width', 0) * d.get('height', 0) for d in defects]) if defects else 0,
+            'max_defect_size': max([d.get('width', 0) * d.get('height', 0) for d in defects]) if defects else 0,
+            'defect_types': {},
+            'severity': 'low',
+        }
+
+        # Подсчёт типов дефектов
+        for defect in defects:
+            defect_type = defect.get('type', 'unknown')
+            stats['defect_types'][defect_type] = stats['defect_types'].get(defect_type, 0) + 1
+
+        # Оценка серьёзности
+        if stats['defect_density'] > 5:
+            stats['severity'] = 'high'
+        elif stats['defect_density'] > 2:
+            stats['severity'] = 'medium'
+
+        return {**ensemble_result, 'statistics': stats}
+
+    def generate_defect_map(self, image: np.ndarray, defects: List[Dict]) -> np.ndarray:
+        """
+        Генерация карты дефектов
+
+        Args:
+            image: Исходное изображение
+            defects: Список дефектов
+
+        Returns:
+            Карта дефектов
+        """
+        defect_map = np.zeros_like(image, dtype=np.uint8)
+
+        for defect in defects:
+            x, y = int(defect.get('x', 0)), int(defect.get('y', 0))
+            w, h = int(defect.get('width', 0)) // 2, int(defect.get('height', 0)) // 2
+
+            if w > 0 and h > 0:
+                y1, y2 = max(0, y - h), min(image.shape[0], y + h)
+                x1, x2 = max(0, x - w), min(image.shape[1], x + w)
+                defect_map[y1:y2, x1:x2] = 255
+
+        return defect_map
+
+    def save_analysis_report(self, result: Dict[str, Any], image_path: str = "") -> str:
+        """
+        Сохранение отчёта об анализе
+
+        Args:
+            result: Результаты анализа
+            image_path: Путь к изображению
+
+        Returns:
+            Путь к отчёту
+        """
+        report_id = f"adv_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        report_path = self.output_dir / f"{report_id}_report.json"
+
+        report = {
+            'id': report_id,
+            'timestamp': datetime.now().isoformat(),
+            'image_path': image_path,
+            'analysis': result,
+            'recommendations': self._generate_recommendations(result),
+        }
+
+        with open(report_path, 'w', encoding='utf-8') as f:
+            json.dump(report, f, indent=2, ensure_ascii=False)
+
+        return str(report_path)
+
+    def _generate_recommendations(self, result: Dict[str, Any]) -> List[str]:
+        """Генерация рекомендаций на основе анализа"""
+        recommendations = []
+        stats = result.get('statistics', {})
+        severity = stats.get('severity', 'low')
+
+        if severity == 'high':
+            recommendations.append("Критический уровень дефектов - требуется немедленная проверка")
+            recommendations.append("Рекомендуется повторное сканирование области")
+        elif severity == 'medium':
+            recommendations.append("Обнаружены заметные дефекты - рекомендуется дополнительный анализ")
+
+        defect_types = stats.get('defect_types', {})
+        if defect_types.get('scratch', 0) > 2:
+            recommendations.append("Множественные царапины - проверить оборудование")
+        if defect_types.get('particle', 0) > 5:
+            recommendations.append("Загрязнение поверхности - требуется очистка")
+        if defect_types.get('crack', 0) > 0:
+            recommendations.append("Обнаружены трещины - критический дефект")
+
+        if not recommendations:
+            recommendations.append("Поверхность соответствует требованиям качества")
+
+        return recommendations
+
+
 if __name__ == "__main__":
     # Тестирование
     print("=== Тестирование AI анализа дефектов ===")
