@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Main entry point for Nanoprobe Simulation Lab
-This script provides access to all project components through a unified interface.
-"""
+"""Main entry point for Nanoprobe Simulation Lab."""
 
 import sys
 import os
