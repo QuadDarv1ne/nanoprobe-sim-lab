@@ -31,7 +31,8 @@ class BatchJob:
         job_type: str,
         items: List[Any],
         processor: Callable,
-        parameters: Dict = None
+        parameters: Dict = None,
+        priority: int = 0
     ):
         """
         Инициализация задания
@@ -42,12 +43,14 @@ class BatchJob:
             items: Список элементов для обработки
             processor: Функция обработки
             parameters: Параметры обработки
+            priority: Приоритет (чем выше, тем важнее)
         """
         self.job_id = job_id
         self.job_type = job_type
         self.items = items
         self.processor = processor
         self.parameters = parameters or {}
+        self.priority = priority
 
         self.status = 'pending'
         self.total_items = len(items)
@@ -57,6 +60,19 @@ class BatchJob:
         self.errors = []
         self.started_at = None
         self.completed_at = None
+        self.progress_callback = None
+
+    def set_progress_callback(self, callback: Callable):
+        """Установка callback для обновления прогресса"""
+        self.progress_callback = callback
+
+    def update_progress(self, processed: int, success: bool = True):
+        """Обновление прогресса"""
+        self.processed_items = processed
+        if not success:
+            self.failed_items += 1
+        if self.progress_callback:
+            self.progress_callback(self.job_id, self.progress_percent)
 
     def to_dict(self) -> Dict[str, Any]:
         """Конвертация в словарь"""
@@ -70,6 +86,8 @@ class BatchJob:
             'started_at': self.started_at.isoformat() if self.started_at else None,
             'completed_at': self.completed_at.isoformat() if self.completed_at else None,
             'progress': self.progress_percent,
+            'priority': self.priority,
+            'success_rate': self.success_rate,
         }
 
     @property
@@ -78,6 +96,13 @@ class BatchJob:
         if self.total_items == 0:
             return 0
         return 100 * self.processed_items / self.total_items
+
+    @property
+    def success_rate(self) -> float:
+        """Процент успешных операций"""
+        if self.processed_items == 0:
+            return 0
+        return 100 * (self.processed_items - self.failed_items) / self.processed_items
 
 
 class BatchProcessor:
@@ -119,7 +144,8 @@ class BatchProcessor:
         job_type: str,
         items: List[Any],
         processor: Callable,
-        parameters: Dict = None
+        parameters: Dict = None,
+        priority: int = 0
     ) -> str:
         """
         Создание нового задания
@@ -129,13 +155,14 @@ class BatchProcessor:
             items: Элементы для обработки
             processor: Функция обработки
             parameters: Параметры
+            priority: Приоритет (чем выше, тем важнее)
 
         Returns:
             ID созданного задания
         """
         job_id = f"batch_{job_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
-        job = BatchJob(job_id, job_type, items, processor, parameters)
+        job = BatchJob(job_id, job_type, items, processor, parameters, priority)
 
         with self.lock:
             self.jobs[job_id] = job
@@ -403,8 +430,122 @@ class BatchProcessor:
                 if job.status == 'pending' and job_id not in self.active_jobs
             ]
 
+        # Сортировка по приоритету
+        pending_jobs.sort(key=lambda jid: self.jobs[jid].priority, reverse=True)
+
         for job_id in pending_jobs:
             self.run_job(job_id, parallel)
+
+    def get_enhanced_report(self, job_id: str) -> Dict[str, Any]:
+        """
+        Получение расширенного отчёта по заданию
+
+        Args:
+            job_id: ID задания
+
+        Returns:
+            Расширенный отчёт
+        """
+        job = self.jobs.get(job_id)
+        if not job:
+            return {'error': 'Job not found'}
+
+        # Детальная статистика
+        error_types = {}
+        for err in job.errors:
+            error_type = type(err).__name__ if isinstance(err, Exception) else 'Unknown'
+            error_types[error_type] = error_types.get(error_type, 0) + 1
+
+        # Распределение результатов по времени
+        processing_time = None
+        if job.started_at and job.completed_at:
+            processing_time = (job.completed_at - job.started_at).total_seconds()
+
+        return {
+            **job.to_dict(),
+            'detailed_stats': {
+                'processing_time_sec': processing_time,
+                'avg_time_per_item': processing_time / job.total_items if processing_time and job.total_items > 0 else None,
+                'error_types': error_types,
+                'errors_list': job.errors[:10],  # Первые 10 ошибок
+            },
+            'sample_results': job.results[:5],  # Первые 5 результатов
+            'recommendations': self._generate_job_recommendations(job),
+        }
+
+    def _generate_job_recommendations(self, job: BatchJob) -> List[str]:
+        """Генерация рекомендаций по заданию"""
+        recommendations = []
+
+        if job.failed_items > 0:
+            fail_rate = job.failed_items / job.total_items * 100
+            if fail_rate > 20:
+                recommendations.append(f"Высокий процент ошибок ({fail_rate:.1f}%) - проверьте входные данные")
+            elif fail_rate > 5:
+                recommendations.append(f"Замечены ошибки ({fail_rate:.1f}%) - рекомендуется анализ логов")
+
+        if job.progress_percent < 100 and job.status == 'running':
+            recommendations.append("Задание выполняется - ожидайте завершения")
+
+        if job.priority < 5 and job.total_items > 100:
+            recommendations.append("Для больших заданий рассмотрите увеличение приоритета")
+
+        if not recommendations:
+            recommendations.append("Задание выполнено успешно - рекомендаций нет")
+
+        return recommendations
+
+    def get_queue_summary(self) -> Dict[str, Any]:
+        """
+        Получение сводки по очереди заданий
+
+        Returns:
+            Сводка по очереди
+        """
+        with self.lock:
+            jobs_by_status = {}
+            jobs_by_priority = {}
+            total_items = 0
+
+            for job in self.jobs.values():
+                status = job.status
+                priority = job.priority
+
+                jobs_by_status[status] = jobs_by_status.get(status, 0) + 1
+                jobs_by_priority[priority] = jobs_by_priority.get(priority, 0) + 1
+                total_items += job.total_items
+
+            return {
+                'total_jobs': len(self.jobs),
+                'jobs_by_status': jobs_by_status,
+                'jobs_by_priority': jobs_by_priority,
+                'total_items': total_items,
+                'active_jobs': len(self.active_jobs),
+                'queue_size': self.job_queue.qsize(),
+            }
+
+    def export_job_report(self, job_id: str, output_path: str = None) -> str:
+        """
+        Экспорт отчёта по заданию в JSON
+
+        Args:
+            job_id: ID задания
+            output_path: Путь для сохранения
+
+        Returns:
+            Путь к файлу отчёта
+        """
+        report = self.get_enhanced_report(job_id)
+
+        if output_path is None:
+            output_path = self.output_dir / f"report_{job_id}.json"
+        else:
+            output_path = Path(output_path)
+
+        with open(output_path, 'w', encoding='utf-8') as f:
+            json.dump(report, f, indent=2, ensure_ascii=False, default=str)
+
+        return str(output_path)
 
     def get_job_status(self, job_id: str) -> Dict[str, Any]:
         """Получение статуса задания"""
