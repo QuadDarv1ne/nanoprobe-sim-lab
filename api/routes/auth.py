@@ -4,12 +4,13 @@ API роуты для аутентификации
 JWT токен, логин, регистрация
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from datetime import datetime, timedelta
 from typing import Optional
 import jwt
 import hashlib
+import os
 
 from api.schemas import (
     LoginRequest,
@@ -17,18 +18,17 @@ from api.schemas import (
     Token,
     ErrorResponse,
 )
+from utils.rate_limiter import rate_limit
 
 
 router = APIRouter()
 security = HTTPBearer()
 
-# Конфигурация JWT
-JWT_SECRET = "your-secret-key-change-in-production"  # Заменить на переменную окружения!
+JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key-change-in-production")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_MINUTES = 60
 JWT_REFRESH_EXPIRATION_DAYS = 7
 
-# Временная база пользователей (в реальности использовать БД)
 USERS_DB = {
     "admin": {
         "id": 1,
@@ -110,26 +110,27 @@ async def get_current_user(
     responses={
         200: {"description": "Успешный вход"},
         401: {"model": ErrorResponse, "description": "Неверный логин или пароль"},
+        429: {"model": ErrorResponse, "description": "Слишком много запросов"},
     },
 )
-async def login(login_data: LoginRequest):
+@rate_limit(max_requests=5, window_seconds=60)
+async def login(request: Request, login_data: LoginRequest):
     """Вход в систему"""
     user = USERS_DB.get(login_data.username)
-    
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Неверное имя пользователя или пароль",
         )
-    
+
     password_hash = hash_password(login_data.password)
     if user["password_hash"] != password_hash:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Неверное имя пользователя или пароль",
         )
-    
-    # Создание токенов
+
     access_token = create_access_token(
         data={"sub": user["username"], "user_id": user["id"]}
     )
