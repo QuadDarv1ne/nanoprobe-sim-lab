@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Unit-тесты для модуля логирования
-"""
+"""Unit-тесты для модуля логирования."""
 
 import unittest
 import tempfile

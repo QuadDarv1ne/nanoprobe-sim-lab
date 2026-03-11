@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Конфигурация pytest для unit-тестов
-"""
+"""Конфигурация pytest для unit-тестов."""
 
 import sys
 from pathlib import Path
