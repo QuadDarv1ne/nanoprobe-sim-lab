@@ -48,24 +48,40 @@ async def get_scans(
     db: DatabaseManager = Depends(get_db),
 ):
     """Получить список сканирований"""
-    try:
-        scans = db.get_scan_results(scan_type=scan_type, limit=limit, offset=offset)
-        
-        # Получение общего количества
-        stats = db.get_statistics()
-        total = stats.get('total_scans', 0)
-        
-        return ScanListResponse(
-            items=[ScanResponse.model_validate(scan) for scan in scans],
-            total=total,
-            limit=limit,
-            offset=offset,
+    from api.main import redis_cache
+    
+    # Генерация ключа кэша
+    cache_key = f"scans:{scan_type or 'all'}:{limit}:{offset}"
+    
+    # Попытка получить из кэша
+    if redis_cache and redis_cache.is_available():
+        cached_result = redis_cache.get(cache_key)
+        if cached_result:
+            return ScanListResponse(**cached_result)
+    
+    # Получение данных из БД
+    scans = db.get_scan_results(scan_type=scan_type, limit=limit, offset=offset)
+    
+    # Получение общего количества
+    stats = db.get_statistics()
+    total = stats.get('total_scans', 0)
+    
+    result = ScanListResponse(
+        items=[ScanResponse.model_validate(scan) for scan in scans],
+        total=total,
+        limit=limit,
+        offset=offset,
+    )
+    
+    # Сохранение в кэш (5 минут)
+    if redis_cache and redis_cache.is_available():
+        redis_cache.set(
+            cache_key, 
+            result.model_dump(), 
+            expire=300
         )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка получения сканирований: {str(e)}",
-        )
+    
+    return result
 
 
 @router.get(
@@ -110,29 +126,29 @@ async def create_scan(
     db: DatabaseManager = Depends(get_db),
 ):
     """Создать новое сканирование"""
-    try:
-        scan_id = db.add_scan_result(
-            scan_type=scan.scan_type.value,
-            surface_type=scan.surface_type,
-            width=scan.width,
-            height=scan.height,
-            metadata=scan.metadata,
-        )
-        
-        # Получение созданной записи
-        scans = db.get_scan_results(limit=1)
-        if not scans:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Не удалось получить созданную запись",
-            )
-        
-        return ScanResponse.model_validate(scans[0])
-    except Exception as e:
+    from api.main import redis_cache
+    
+    scan_id = db.add_scan_result(
+        scan_type=scan.scan_type.value,
+        surface_type=scan.surface_type,
+        width=scan.width,
+        height=scan.height,
+        metadata=scan.metadata,
+    )
+
+    # Получение созданной записи
+    scans = db.get_scan_results(limit=1)
+    if not scans:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка создания сканирования: {str(e)}",
+            detail="Не удалось получить созданную запись",
         )
+
+    # Инвалидация кэша
+    if redis_cache and redis_cache.is_available():
+        redis_cache.clear_pattern("scans:*")
+
+    return ScanResponse.model_validate(scans[0])
 
 
 @router.delete(
@@ -150,14 +166,20 @@ async def delete_scan(
     db: DatabaseManager = Depends(get_db),
 ):
     """Удалить сканирование"""
-    success = db.delete_scan(scan_id)
+    from api.main import redis_cache
     
+    success = db.delete_scan(scan_id)
+
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Сканирование с ID {scan_id} не найдено",
         )
-    
+
+    # Инвалидация кэша
+    if redis_cache and redis_cache.is_available():
+        redis_cache.clear_pattern("scans:*")
+
     return None
 
 
