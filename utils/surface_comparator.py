@@ -16,40 +16,37 @@ except ImportError:
 from scipy import ndimage
 from scipy.stats import pearsonr
 
-SKIMAGE_AVAILABLE = False
-
-MATPLOTLIB_AVAILABLE = False
 try:
     import matplotlib.pyplot as plt
     MATPLOTLIB_AVAILABLE = True
 except ImportError:
-    pass
+    MATPLOTLIB_AVAILABLE = False
 
 
 def _calculate_ssim(img1: np.ndarray, img2: np.ndarray, win_size: int = 7) -> float:
     """Calculate SSIM manually (simplified version)"""
     if img1.shape != img2.shape:
         raise ValueError("Images must have the same shape")
-    
+
     K1, K2 = 0.01, 0.03
     L = 1.0
     C1 = (K1 * L) ** 2
     C2 = (K2 * L) ** 2
-    
+
     mu1 = ndimage.uniform_filter(img1, size=win_size)
     mu2 = ndimage.uniform_filter(img2, size=win_size)
-    
+
     mu1_sq = mu1 ** 2
     mu2_sq = mu2 ** 2
     mu1_mu2 = mu1 * mu2
-    
+
     sigma1_sq = ndimage.uniform_filter(img1 ** 2, size=win_size) - mu1_sq
     sigma2_sq = ndimage.uniform_filter(img2 ** 2, size=win_size) - mu2_sq
     sigma12 = ndimage.uniform_filter(img1 * img2, size=win_size) - mu1_mu2
-    
+
     ssim_map = ((2 * mu1_mu2 + C1) * (2 * sigma12 + C2)) / \
                ((mu1_sq + mu2_sq + C1) * (sigma1_sq + sigma2_sq + C2))
-    
+
     return float(np.mean(ssim_map))
 
 
@@ -73,27 +70,26 @@ class SurfaceComparator:
         """Compare two surface images"""
         if image1.shape != image2.shape:
             raise ValueError(f"Shape mismatch: {image1.shape} vs {image2.shape}")
-        
+
         if normalize:
             img1 = (image1 - image1.min()) / (image1.max() - image1.min() + 1e-10)
             img2 = (image2 - image2.min()) / (image2.max() - image2.min() + 1e-10)
         else:
             img1, img2 = image1, image2
-        
+
         metrics = {}
-        
+
         try:
             metrics["ssim"] = _calculate_ssim(img1, img2)
             metrics["psnr"] = _calculate_psnr(img1, img2)
-            SKIMAGE_AVAILABLE = True
-        except Exception as e:
-            SKIMAGE_AVAILABLE = False
-        
+        except Exception:
+            pass
+
         mse_val = float(np.mean((img1 - img2) ** 2))
         metrics["mse"] = mse_val
         metrics["pearson"] = float(pearsonr(img1.flatten(), img2.flatten())[0])
         metrics["mean_diff"] = float(np.mean(np.abs(img1 - img2)))
-        
+
         scores = []
         if "ssim" in metrics:
             scores.append(metrics["ssim"] * 0.4)
@@ -102,7 +98,7 @@ class SurfaceComparator:
         if "pearson" in metrics:
             scores.append(((metrics["pearson"] + 1) / 2) * 0.3)
         metrics["similarity"] = float(np.sum(scores)) if scores else 0.0
-        
+
         return metrics
 
     def compare_files(self, path1: str, path2: str, save: bool = True) -> Dict[str, Any]:
