@@ -33,7 +33,7 @@ class TestImageProcessor(unittest.TestCase):
         """Очистка после теста"""
         try:
             os.unlink(self.temp_file.name)
-        except:
+        except Exception:
             pass
 
     def test_initialization(self):
@@ -92,7 +92,7 @@ class TestImageProcessor(unittest.TestCase):
         self.assertFalse(result)
         try:
             os.unlink(tmp_name)
-        except:
+        except Exception:
             pass
 
 
@@ -155,7 +155,7 @@ class TestImageProcessorExtended(unittest.TestCase):
         import os
         try:
             os.unlink(self.temp_file.name)
-        except:
+        except Exception:
             pass
 
     def test_load_image_actual(self):
@@ -202,7 +202,7 @@ class TestImageProcessorExtended(unittest.TestCase):
         time.sleep(0.1)
         try:
             os.unlink(save_path)
-        except:
+        except Exception:
             pass
 
     def test_get_metadata(self):

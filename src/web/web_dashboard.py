@@ -13,10 +13,10 @@ import threading
 import webbrowser
 import subprocess
 from datetime import datetime
-from typing import Dict, Any
+from typing import Dict, Any, Optional, Tuple
 from pathlib import Path
 
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, Response
 from flask_socketio import SocketIO, emit
 
 # Добавляем путь к utils для импорта служебных модулей
@@ -45,7 +45,9 @@ class WebDashboard:
     Предоставляет веб-интерфейс для управления всеми компонентами проекта
     """
 
-    def __init__(self, host: str = "127.0.0.1", port: int = 5000):
+    _active_processes: Dict[str, subprocess.Popen]
+
+    def __init__(self, host: str = "127.0.0.1", port: int = 5000) -> None:
         """
         Инициализация веб-панели
 
@@ -61,11 +63,11 @@ class WebDashboard:
 
         # Инициализация Flask приложения
         self.app = Flask(__name__, template_folder=str(template_folder))
-        self.app.config["SECRET_KEY"] = "nanoprobe_simulation_lab_secret_key"
+        self.app.config["SECRET_KEY"] = os.environ.get("NANOPROBE_SECRET_KEY", "nanoprobe_simulation_lab_secret_key_dev_change_in_production")
 
         # Инициализация SocketIO
         self.socketio = SocketIO(
-            self.app, cors_allowed_origins="*", ping_timeout=60, ping_interval=25
+            self.app, cors_allowed_origins=["http://localhost:5000", "http://127.0.0.1:5000"], ping_timeout=60, ping_interval=25
         )
 
         # Инициализация служебных компонентов
@@ -90,7 +92,7 @@ class WebDashboard:
 
         self.logger.log_system_event("Веб-панель инициализирована", "INFO")
 
-    def _register_routes(self):
+    def _register_routes(self) -> None:
         """Регистрация HTTP маршрутов"""
 
         @self.app.route("/")
@@ -984,6 +986,7 @@ class WebDashboard:
                 self.error_handler.log_error(f"Ошибка получения истории анализов: {e}")
                 return jsonify({"error": str(e)}), 500
 
+<<<<<<< HEAD
         @self.app.route("/api/batch/jobs", methods=["GET"])
         def api_batch_jobs():
             """API для получения заданий пакетной обработки"""
@@ -1010,6 +1013,9 @@ class WebDashboard:
                 return jsonify({"error": str(e)}), 500
 
     def _register_socket_handlers(self):
+=======
+    def _register_socket_handlers(self) -> None:
+>>>>>>> 44b223b (refactor: code quality improvements)
         """Регистрация обработчиков SocketIO событий"""
 
         @self.socketio.on("connect")
@@ -1403,7 +1409,7 @@ class WebDashboard:
             self.error_handler.log_error(f"Ошибка получения статистики: {e}")
             return {"status": "error", "message": str(e)}
 
-    def start_server(self, open_browser: bool = True):
+    def start_server(self, open_browser: bool = True) -> None:
         """
         Запуск веб-сервера
 
@@ -1470,7 +1476,7 @@ class WebDashboard:
             self._active_processes.clear()
 
 
-def main():
+def main() -> None:
     """Главная функция запуска веб-панели"""
     import argparse
 

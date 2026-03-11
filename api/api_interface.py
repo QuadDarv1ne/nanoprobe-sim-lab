@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
 """API интерфейс для проекта Лаборатория моделирования нанозонда."""
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 import json
 import uuid
 from datetime import datetime
 from pathlib import Path
 import numpy as np
-from typing import Dict, Any
+from typing import Dict, Any, Optional, Tuple, List
 import threading
 import time
 
 from utils.config_manager import ConfigManager
 from utils.data_manager import DataManager
-from utils.logger import setup_project_logging
+from utils.logger import NanoprobeLogger, setup_project_logging
 from cpp_spm_hardware_sim.src.spm_simulator import SurfaceModel, SPMController
 from py_surface_image_analyzer.src.image_processor import ImageProcessor
 from py_sstv_groundstation.src.sstv_decoder import SSTVDecoder
@@ -26,8 +26,10 @@ class NanoprobeAPI:
     Обеспечивает REST API для взаимодействия между компонентами и внешними системами.
     """
 
+    active_simulations: Dict[str, Dict[str, Any]]
+    results_cache: Dict[str, Dict[str, Any]]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Инициализирует API интерфейс"""
         self.app = Flask(__name__)
         CORS(self.app)  # Разрешаем кросс-доменные запросы
@@ -35,7 +37,7 @@ class NanoprobeAPI:
         # Инициализация компонентов
         self.config_manager = ConfigManager()
         self.data_manager = DataManager()
-        self.logger_manager = setup_project_logging(self.config_manager)
+        self.logger_manager: NanoprobeLogger = setup_project_logging(self.config_manager)
 
         # Компоненты симуляции
         self.spm_controller = SPMController()
@@ -50,7 +52,7 @@ class NanoprobeAPI:
         self.setup_routes()
 
 
-    def setup_routes(self):
+    def setup_routes(self) -> None:
         """Настраивает маршруты API"""
         # Маршруты для СЗМ симуляции
         self.app.add_url_rule('/api/spm/create-surface', 'create_surface', self.create_surface, methods=['POST'])
@@ -82,16 +84,16 @@ class NanoprobeAPI:
         self.app.add_url_rule('/api/system/status', 'get_system_status', self.get_system_status, methods=['GET'])
 
 
-    def create_surface(self):
+    def create_surface(self) -> Tuple[Response, int]:
         """
         Создает новую поверхность для симуляции.
-        
+
         Returns:
             JSON ответ с результатом операции
         """
         try:
             data = request.get_json()
-            
+
             # Валидация входных данных
             is_valid, error_message = DataValidator.validate_surface_params(data)
             if not is_valid:
@@ -127,10 +129,10 @@ class NanoprobeAPI:
             return jsonify(ResponseBuilder.error(str(e), "INTERNAL_ERROR")), 500
 
 
-    def scan_surface(self):
+    def scan_surface(self) -> Tuple[Response, int]:
         """
         Выполняет сканирование поверхности СЗМ.
-        
+
         Returns:
             JSON ответ с результатом сканирования
         """
@@ -184,10 +186,10 @@ class NanoprobeAPI:
             return jsonify(ResponseBuilder.error(str(e), "SCAN_ERROR")), 500
 
 
-    def process_image(self):
+    def process_image(self) -> Tuple[Response, int]:
         """
         Обрабатывает изображение.
-        
+
         Returns:
             JSON ответ с результатом обработки
         """
@@ -236,10 +238,10 @@ class NanoprobeAPI:
             return jsonify(ResponseBuilder.error(str(e), "IMAGE_PROCESSING_ERROR")), 500
 
 
-    def decode_sstv(self):
+    def decode_sstv(self) -> Tuple[Response, int]:
         """
         Декодирует SSTV сигнал.
-        
+
         Returns:
             JSON ответ с результатом декодирования
         """
@@ -287,9 +289,12 @@ class NanoprobeAPI:
             return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
-    def start_simulation(self):
+    def start_simulation(self) -> Tuple[Response, int]:
         """
         Запускает новую симуляцию
+        
+        Returns:
+            JSON ответ с результатом запуска
         """
         try:
             data = request.get_json()
@@ -329,7 +334,7 @@ class NanoprobeAPI:
             return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
-    def _run_simulation(self, simulation_id: str, simulation_type: str, parameters: Dict[str, Any]):
+    def _run_simulation(self, simulation_id: str, simulation_type: str, parameters: Dict[str, Any]) -> None:
         """
         Выполняет симуляцию в отдельном потоке
 
@@ -407,12 +412,15 @@ class NanoprobeAPI:
             return {'general_results': 'Simulation completed successfully'}
 
 
-    def get_simulation_status(self, simulation_id: str):
+    def get_simulation_status(self, simulation_id: str) -> Tuple[Response, int]:
         """
         Возвращает статус симуляции
 
         Args:
             simulation_id: ID симуляции
+            
+        Returns:
+            JSON ответ со статусом симуляции
         """
         if simulation_id not in self.active_simulations:
             return jsonify({'status': 'error', 'message': 'Simulation not found'}), 404
@@ -420,12 +428,15 @@ class NanoprobeAPI:
         return jsonify(self.active_simulations[simulation_id])
 
 
-    def get_simulation_results(self, simulation_id: str):
+    def get_simulation_results(self, simulation_id: str) -> Tuple[Response, int]:
         """
         Возвращает результаты симуляции
 
         Args:
             simulation_id: ID симуляции
+            
+        Returns:
+            JSON ответ с результатами симуляции
         """
         if simulation_id in self.results_cache:
             return jsonify(self.results_cache[simulation_id])
@@ -441,9 +452,12 @@ class NanoprobeAPI:
                 return jsonify({'status': 'error', 'message': 'Simulation not found'}), 404
 
 
-    def upload_data(self):
+    def upload_data(self) -> Tuple[Response, int]:
         """
         Загружает данные в систему
+        
+        Returns:
+            JSON ответ с результатом загрузки
         """
         try:
             if 'file' not in request.files:
@@ -472,9 +486,12 @@ class NanoprobeAPI:
             return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
-    def list_data(self):
+    def list_data(self) -> Tuple[Response, int]:
         """
         Возвращает список доступных данных
+        
+        Returns:
+            JSON ответ со списком файлов
         """
         try:
             # Собираем список файлов из различных директорий
@@ -504,9 +521,12 @@ class NanoprobeAPI:
             return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
-    def get_system_info(self):
+    def get_system_info(self) -> Response:
         """
         Возвращает информацию о системе
+        
+        Returns:
+            JSON ответ с информацией о системе
         """
         import platform
         import psutil
@@ -538,9 +558,12 @@ class NanoprobeAPI:
         return jsonify(info)
 
 
-    def get_system_status(self):
+    def get_system_status(self) -> Response:
         """
         Возвращает статус системы
+        
+        Returns:
+            JSON ответ со статусом системы
         """
         active_count = len([s for s in self.active_simulations.values() if s['status'] == 'running'])
 
@@ -559,7 +582,7 @@ class NanoprobeAPI:
         return jsonify(status)
 
 
-    def run(self, host: str = 'localhost', port: int = 5000, debug: bool = False):
+    def run(self, host: str = 'localhost', port: int = 5000, debug: bool = False) -> None:
         """
         Запускает API сервер
 

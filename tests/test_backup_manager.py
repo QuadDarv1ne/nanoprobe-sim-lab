@@ -25,7 +25,7 @@ class TestBackupManager(unittest.TestCase):
         """Очистка после теста"""
         try:
             shutil.rmtree(self.temp_dir)
-        except:
+        except Exception:
             pass
 
     def test_create_backup_invalid_name(self):

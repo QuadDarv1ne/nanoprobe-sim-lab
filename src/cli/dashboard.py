@@ -5,13 +5,14 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox, filedialog
 import threading
 from datetime import datetime
+from typing import Optional, Any, Dict
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
 
 from utils.config_manager import ConfigManager
-from utils.logger import setup_project_logging
+from utils.logger import NanoprobeLogger, setup_project_logging
 from utils.data_manager import DataManager
 from utils.visualizer import ProjectVisualizer
 from utils.simulator_orchestrator import SimulationOrchestrator
@@ -25,7 +26,7 @@ class NanoprobeDashboard:
     проекта Лаборатории моделирования нанозонда.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Инициализирует панель управления"""
         self.root = tk.Tk()
         self.root.title("Лаборатория моделирования нанозонда - Панель управления")
@@ -33,21 +34,21 @@ class NanoprobeDashboard:
 
         # Инициализируем компоненты
         self.config_manager = ConfigManager()
-        self.logger_manager = setup_project_logging(self.config_manager)
+        self.logger_manager: NanoprobeLogger = setup_project_logging(self.config_manager)
         self.data_manager = DataManager()
         self.visualizer = ProjectVisualizer()
         self.orchestrator = SimulationOrchestrator(self.config_manager)
 
         # Состояния
         self.simulation_running = False
-        self.background_thread = None
+        self.background_thread: Optional[threading.Thread] = None
 
         # Создаем интерфейс
         self.create_widgets()
 
         self.logger_manager.log_system_event("Панель управления запущена", "INFO")
 
-    def create_widgets(self):
+    def create_widgets(self) -> None:
         """Создает виджеты интерфейса"""
         # Главный фрейм
         main_frame = ttk.Frame(self.root)
@@ -69,7 +70,7 @@ class NanoprobeDashboard:
         # Вкладка настроек
         self.create_settings_tab(notebook)
 
-    def create_control_tab(self, parent):
+    def create_control_tab(self, parent: ttk.Notebook) -> None:
         """Создает вкладку управления"""
         frame = ttk.Frame(parent)
         parent.add(frame, text="Управление")
@@ -114,7 +115,7 @@ class NanoprobeDashboard:
         # Добавляем начальную информацию
         self.update_status_info()
 
-    def create_visualization_tab(self, parent):
+    def create_visualization_tab(self, parent: ttk.Notebook) -> None:
         """Создает вкладку визуализации."""
         frame = ttk.Frame(parent)
         parent.add(frame, text="Визуализация")
@@ -141,7 +142,7 @@ class NanoprobeDashboard:
         self.canvas = FigureCanvasTkAgg(self.fig, canvas_frame)
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
-    def create_logs_tab(self, parent):
+    def create_logs_tab(self, parent: ttk.Notebook) -> None:
         """Создает вкладку логов."""
         frame = ttk.Frame(parent)
         parent.add(frame, text="Логи")
@@ -151,7 +152,7 @@ class NanoprobeDashboard:
 
         ttk.Button(frame, text="Обновить логи", command=self.refresh_logs).pack(pady=5)
 
-    def create_settings_tab(self, parent):
+    def create_settings_tab(self, parent: ttk.Notebook) -> None:
         """Создает вкладку настроек."""
         frame = ttk.Frame(parent)
         parent.add(frame, text="Настройки")
@@ -173,7 +174,7 @@ class NanoprobeDashboard:
             pady=10
         )
 
-    def update_status_info(self):
+    def update_status_info(self) -> None:
         """Обновляет информацию о состоянии."""
         self.status_text.delete(1.0, tk.END)
 
@@ -199,7 +200,7 @@ class NanoprobeDashboard:
         self.status_text.insert(tk.END, status_info)
         self.status_text.see(tk.END)
 
-    def run_spm_simulation(self):
+    def run_spm_simulation(self) -> None:
         """Запускает симуляцию СЗМ."""
 
         def worker():
@@ -224,7 +225,7 @@ class NanoprobeDashboard:
 
         threading.Thread(target=worker, daemon=True).start()
 
-    def run_image_analysis(self):
+    def run_image_analysis(self) -> None:
         """Запускает анализ изображений."""
 
         def worker():
@@ -264,7 +265,7 @@ class NanoprobeDashboard:
 
         threading.Thread(target=worker, daemon=True).start()
 
-    def run_sstv_decoding(self):
+    def run_sstv_decoding(self) -> None:
         """Запускает декодирование SSTV."""
 
         def worker():
@@ -301,7 +302,7 @@ class NanoprobeDashboard:
 
         threading.Thread(target=worker, daemon=True).start()
 
-    def run_comprehensive_simulation(self):
+    def run_comprehensive_simulation(self) -> None:
         """Запускает комплексную симуляцию."""
 
         def worker():
@@ -327,7 +328,7 @@ class NanoprobeDashboard:
 
         threading.Thread(target=worker, daemon=True).start()
 
-    def run_continuous_simulation(self):
+    def run_continuous_simulation(self) -> None:
         """Запускает непрерывную симуляцию."""
 
         def worker():
@@ -349,14 +350,14 @@ class NanoprobeDashboard:
 
         threading.Thread(target=worker, daemon=True).start()
 
-    def stop_simulation(self):
+    def stop_simulation(self) -> None:
         """Останавливает симуляцию."""
         self.orchestrator.stop_simulation()
         self.simulation_running = False
         messagebox.showinfo("Остановка", "Симуляция остановлена")
         self.update_status_info()
 
-    def load_and_visualize_data(self):
+    def load_and_visualize_data(self) -> None:
         """Загружает и визуализирует данные."""
         try:
             file_path = filedialog.askopenfilename(
@@ -386,7 +387,7 @@ class NanoprobeDashboard:
         except Exception as e:
             messagebox.showerror("Ошибка", f"Ошибка загрузки данных: {e}")
 
-    def create_visualization_report(self):
+    def create_visualization_report(self) -> None:
         """Создает отчет визуализации."""
         try:
             sample_data = np.random.rand(50, 50)
@@ -402,7 +403,7 @@ class NanoprobeDashboard:
         except Exception as e:
             messagebox.showerror("Ошибка", f"Ошибка создания отчета: {e}")
 
-    def refresh_logs(self):
+    def refresh_logs(self) -> None:
         """Обновляет отображение логов."""
         self.logs_text.delete(1.0, tk.END)
         self.logs_text.insert(tk.END, "Логи обновляются...\n")
@@ -410,7 +411,7 @@ class NanoprobeDashboard:
             tk.END, f"Время обновления: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
         )
 
-    def save_settings(self):
+    def save_settings(self) -> None:
         """Сохраняет настройки."""
         try:
             self.config_manager.set("paths.data_dir", self.data_dir_var.get())
@@ -423,12 +424,12 @@ class NanoprobeDashboard:
         except Exception as e:
             messagebox.showerror("Ошибка", f"Ошибка сохранения настроек: {e}")
 
-    def run(self):
+    def run(self) -> None:
         """Запускает панель управления."""
         self.root.mainloop()
 
 
-def main():
+def main() -> None:
     """Главная функция запуска панели управления."""
     print("ЗАПУСК ИНТЕРАКТИВНОЙ ПАНЕЛИ УПРАВЛЕНИЯ")
     print("Инициализация компонентов...")

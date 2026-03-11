@@ -27,7 +27,7 @@ class TestDataExporter(unittest.TestCase):
         import shutil
         try:
             shutil.rmtree(self.temp_dir)
-        except:
+        except Exception:
             pass
 
     def test_export_csv(self):

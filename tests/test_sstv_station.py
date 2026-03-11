@@ -30,6 +30,11 @@ class TestSSTVDecoder(unittest.TestCase):
         result = self.decoder.decode_from_audio("/nonexistent/file.wav")
         self.assertIsNone(result)
 
+    def test_decode_from_audio_nonexistent_file(self):
+        """Тестирует декодирование несуществующего файла"""
+        result = self.decoder.decode_from_audio("/nonexistent/file.wav")
+        self.assertIsNone(result)
+
     def test_decode_from_audio_invalid_format(self):
         """Тестирует декодирование файла с неподдерживаемым форматом"""
         with tempfile.NamedTemporaryFile(suffix='.txt', delete=False) as tmp:
@@ -39,7 +44,7 @@ class TestSSTVDecoder(unittest.TestCase):
         self.assertIsNone(result)
         try:
             os.unlink(tmp_name)
-        except:
+        except Exception:
             pass
 
     def test_decode_from_audio_wav(self):
@@ -52,7 +57,7 @@ class TestSSTVDecoder(unittest.TestCase):
         self.assertIsInstance(result, (type(None), object))
         try:
             os.unlink(tmp_name)
-        except:
+        except Exception:
             pass
 
     def test_decode_invalid_mode(self):
@@ -64,7 +69,7 @@ class TestSSTVDecoder(unittest.TestCase):
         self.assertIsNone(result)
         try:
             os.unlink(tmp_name)
-        except:
+        except Exception:
             pass
 
     def test_save_decoded_image_no_image(self):
@@ -94,7 +99,7 @@ class TestSSTVDecoder(unittest.TestCase):
         self.assertTrue(result)
         try:
             os.unlink(tmp_name)
-        except:
+        except Exception:
             pass
 
 

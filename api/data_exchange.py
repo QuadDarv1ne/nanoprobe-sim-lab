@@ -2,9 +2,11 @@
 """Модуль форматов обмена данными для проекта Лаборатория моделирования нанозонда."""
 
 import numpy as np
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Tuple, Optional
 from datetime import datetime
 import base64
+from abc import ABC, abstractmethod
+
 
 class DataFormatSpec:
     """
@@ -102,16 +104,76 @@ class DataFormatSpec:
 
         return schemas.get(format_type, {})
 
-class SurfaceDataConverter:
+
+class BaseDataConverter(ABC):
+    """
+    Базовый класс для конвертеров данных
+    Предоставляет общую функциональность для всех конвертеров
+    """
+
+    format_type: str = "base_format"
+    data_key: str = "data"
+
+    @classmethod
+    def validate(cls, data: Dict[str, Any]) -> bool:
+        """Проверяет соответствие данных формату"""
+        return DataFormatSpec.validate_format(data, cls.format_type)
+
+    @classmethod
+    @abstractmethod
+    def numpy_to_standard(cls, array: np.ndarray, **kwargs) -> Dict[str, Any]:
+        """Преобразует numpy массив в стандартный формат"""
+        pass
+
+    @classmethod
+    @abstractmethod
+    def standard_to_numpy(cls, data: Dict[str, Any]) -> np.ndarray:
+        """Преобразует стандартный формат в numpy массив"""
+        pass
+
+    @staticmethod
+    def encode_base64(array: np.ndarray) -> str:
+        """
+        Кодирует массив в base64
+
+        Args:
+            array: Numpy массив
+
+        Returns:
+            Строка в формате base64
+        """
+        return base64.b64encode(array.tobytes()).decode('utf-8')
+
+    @staticmethod
+    def decode_base64(encoded_data: str, shape: Tuple[int, ...], dtype: str = 'float64') -> np.ndarray:
+        """
+        Декодирует base64 строку в массив
+
+        Args:
+            encoded_data: Закодированные данные в base64
+            shape: Форма массива
+            dtype: Тип данных
+
+        Returns:
+            Numpy массив
+        """
+        surface_bytes = base64.b64decode(encoded_data.encode('utf-8'))
+        surface_array = np.frombuffer(surface_bytes, dtype=dtype)
+        return surface_array.reshape(shape)
+
+
+class SurfaceDataConverter(BaseDataConverter):
     """
     Класс для конвертации данных поверхности
     Обеспечивает преобразование данных поверхности между
     различными форматами.
     """
 
-    @staticmethod
+    format_type = DataFormatSpec.FORMAT_SURFACE_DATA
+    data_key = 'data'
 
-    def numpy_to_standard(surface_array: np.ndarray) -> Dict[str, Any]:
+    @classmethod
+    def numpy_to_standard(cls, surface_array: np.ndarray) -> Dict[str, Any]:
         """
         Преобразует numpy массив поверхности в стандартный формат
 
@@ -133,9 +195,8 @@ class SurfaceDataConverter:
             'format_version': DataFormatSpec.FORMAT_SURFACE_DATA
         }
 
-    @staticmethod
-
-    def standard_to_numpy(surface_data: Dict[str, Any]) -> np.ndarray:
+    @classmethod
+    def standard_to_numpy(cls, surface_data: Dict[str, Any]) -> np.ndarray:
         """
         Преобразует стандартный формат в numpy массив
 
@@ -145,14 +206,12 @@ class SurfaceDataConverter:
         Returns:
             Numpy массив поверхности
         """
-        if not DataFormatSpec.validate_format(surface_data, DataFormatSpec.FORMAT_SURFACE_DATA):
+        if not cls.validate(surface_data):
             raise ValueError("Invalid surface data format")
 
-        data = surface_data['data']
-        return np.array(data)
+        return np.array(surface_data[cls.data_key])
 
     @staticmethod
-
     def encode_base64(surface_array: np.ndarray) -> str:
         """
         Кодирует массив поверхности в base64
@@ -190,16 +249,18 @@ class SurfaceDataConverter:
         # Изменяем форму
         return surface_array.reshape(shape)
 
-class ScanResultsConverter:
+class ScanResultsConverter(BaseDataConverter):
     """
     Класс для конвертации результатов сканирования
     Обеспечивает преобразование результатов сканирования между
     различными форматами.
     """
 
-    @staticmethod
+    format_type = DataFormatSpec.FORMAT_SCAN_RESULTS
+    data_key = 'scan_data'
 
-    def numpy_to_standard(scan_array: np.ndarray, surface_id: str) -> Dict[str, Any]:
+    @classmethod
+    def numpy_to_standard(cls, scan_array: np.ndarray, surface_id: str = "unknown") -> Dict[str, Any]:
         """
         Преобразует numpy массив результатов сканирования в стандартный формат
 
@@ -221,9 +282,8 @@ class ScanResultsConverter:
             'format_version': DataFormatSpec.FORMAT_SCAN_RESULTS
         }
 
-    @staticmethod
-
-    def standard_to_numpy(scan_data: Dict[str, Any]) -> np.ndarray:
+    @classmethod
+    def standard_to_numpy(cls, scan_data: Dict[str, Any]) -> np.ndarray:
         """
         Преобразует стандартный формат результатов сканирования в numpy массив
 
@@ -233,22 +293,23 @@ class ScanResultsConverter:
         Returns:
             Numpy массив результатов сканирования
         """
-        if not DataFormatSpec.validate_format(scan_data, DataFormatSpec.FORMAT_SCAN_RESULTS):
+        if not cls.validate(scan_data):
             raise ValueError("Invalid scan results format")
 
-        data = scan_data['scan_data']
-        return np.array(data)
+        return np.array(scan_data[cls.data_key])
 
-class ImageDataConverter:
+class ImageDataConverter(BaseDataConverter):
     """
     Класс для конвертации данных изображений
     Обеспечивает преобразование данных изображений между
     различными форматами.
     """
 
-    @staticmethod
+    format_type = DataFormatSpec.FORMAT_IMAGE_DATA
+    data_key = 'image'
 
-    def numpy_to_standard(image_array: np.ndarray) -> Dict[str, Any]:
+    @classmethod
+    def numpy_to_standard(cls, image_array: np.ndarray) -> Dict[str, Any]:
         """
         Преобразует numpy массив изображения в стандартный формат
 
@@ -269,9 +330,8 @@ class ImageDataConverter:
             'format_version': DataFormatSpec.FORMAT_IMAGE_DATA
         }
 
-    @staticmethod
-
-    def standard_to_numpy(image_data: Dict[str, Any]) -> np.ndarray:
+    @classmethod
+    def standard_to_numpy(cls, image_data: Dict[str, Any]) -> np.ndarray:
         """
         Преобразует стандартный формат изображения в numpy массив
 
@@ -281,21 +341,24 @@ class ImageDataConverter:
         Returns:
             Numpy массив изображения
         """
-        if not DataFormatSpec.validate_format(image_data, DataFormatSpec.FORMAT_IMAGE_DATA):
+        if not cls.validate(image_data):
             raise ValueError("Invalid image data format")
 
-        return np.array(image_data['image'])
+        return np.array(image_data[cls.data_key])
 
-class SSTVSignalConverter:
+
+class SSTVSignalConverter(BaseDataConverter):
     """
     Класс для конвертации данных SSTV сигналов
     Обеспечивает преобразование данных SSTV сигналов между
     различными форматами.
     """
 
-    @staticmethod
+    format_type = DataFormatSpec.FORMAT_SSTV_SIGNAL
+    data_key = 'signal_data'
 
-    def numpy_to_standard(signal_array: np.ndarray, sample_rate: int = 44100) -> Dict[str, Any]:
+    @classmethod
+    def numpy_to_standard(cls, signal_array: np.ndarray, sample_rate: int = 44100) -> Dict[str, Any]:
         """
         Преобразует numpy массив сигнала в стандартный формат
 
@@ -315,9 +378,8 @@ class SSTVSignalConverter:
             'format_version': DataFormatSpec.FORMAT_SSTV_SIGNAL
         }
 
-    @staticmethod
-
-    def standard_to_numpy(signal_data: Dict[str, Any]) -> np.ndarray:
+    @classmethod
+    def standard_to_numpy(cls, signal_data: Dict[str, Any]) -> np.ndarray:
         """
         Преобразует стандартный формат сигнала в numpy массив
 
@@ -327,10 +389,10 @@ class SSTVSignalConverter:
         Returns:
             Numpy массив аудиосигнала
         """
-        if not DataFormatSpec.validate_format(signal_data, DataFormatSpec.FORMAT_SSTV_SIGNAL):
+        if not cls.validate(signal_data):
             raise ValueError("Invalid SSTV signal format")
 
-        return np.array(signal_data['signal_data'])
+        return np.array(signal_data[cls.data_key])
 
 class SimulationConfigConverter:
     """
