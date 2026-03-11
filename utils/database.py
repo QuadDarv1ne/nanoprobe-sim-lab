@@ -312,23 +312,25 @@ class DatabaseManager:
             return [self._row_to_dict(row) for row in rows]
 
     def get_scan_by_id(self, scan_id: int) -> Optional[Dict]:
-        """
-        Получает результат сканирования по ID.
-
-        Args:
-            scan_id: ID записи
-
-        Returns:
-            Запись или None
-        """
+        """Получает результат сканирования по ID."""
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(
-                "SELECT * FROM scan_results WHERE id = ?",
-                (scan_id,)
-            )
+            cursor.execute("SELECT * FROM scan_results WHERE id = ?", (scan_id,))
             row = cursor.fetchone()
             return self._row_to_dict(row) if row else None
+
+    def count_scans(self, scan_type: str = None) -> int:
+        """Подсчитывает количество сканирований."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            if scan_type:
+                cursor.execute(
+                    "SELECT COUNT(*) FROM scan_results WHERE scan_type = ?",
+                    (scan_type,)
+                )
+            else:
+                cursor.execute("SELECT COUNT(*) FROM scan_results")
+            return cursor.fetchone()[0]
 
     def add_simulation(
         self,

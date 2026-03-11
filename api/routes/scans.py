@@ -50,21 +50,15 @@ async def get_scans(
     """Получить список сканирований"""
     from api.main import redis_cache
     
-    # Генерация ключа кэша
     cache_key = f"scans:{scan_type or 'all'}:{limit}:{offset}"
     
-    # Попытка получить из кэша
     if redis_cache and redis_cache.is_available():
         cached_result = redis_cache.get(cache_key)
         if cached_result:
             return ScanListResponse(**cached_result)
     
-    # Получение данных из БД
     scans = db.get_scan_results(scan_type=scan_type, limit=limit, offset=offset)
-    
-    # Получение общего количества
-    stats = db.get_statistics()
-    total = stats.get('total_scans', 0)
+    total = db.count_scans(scan_type)
     
     result = ScanListResponse(
         items=[ScanResponse.model_validate(scan) for scan in scans],
@@ -73,13 +67,8 @@ async def get_scans(
         offset=offset,
     )
     
-    # Сохранение в кэш (5 минут)
     if redis_cache and redis_cache.is_available():
-        redis_cache.set(
-            cache_key, 
-            result.model_dump(), 
-            expire=300
-        )
+        redis_cache.set(cache_key, result.model_dump(), expire=300)
     
     return result
 
