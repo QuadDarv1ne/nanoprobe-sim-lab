@@ -1,13 +1,9 @@
 # -*- coding: utf-8 -*-
-"""
-Модуль симулятора сканирующего зондового микроскопа (СЗМ)
-Этот модуль содержит классы и функции для симуляции работы
-сканирующего зондового микроскопа.
-"""
+"""Модуль симулятора сканирующего зондового микроскопа (СЗМ)."""
 
 import numpy as np
 import matplotlib
-matplotlib.use('Agg')  # Non-interactive backend
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from typing import Tuple, Dict, Any, Optional
 import random
@@ -24,7 +20,7 @@ try:
     if str(utils_path) not in __import__('sys').path:
         __import__('sys').path.insert(0, str(utils_path))
         sys_path_added = True
-    
+
     from database import get_database
     if sys_path_added:
         __import__('sys').path.pop(0)

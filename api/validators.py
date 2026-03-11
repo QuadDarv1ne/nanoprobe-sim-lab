@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Модуль валидации данных для API проекта Nanoprobe Simulation Lab
-"""
+"""Модуль валидации данных для API проекта Nanoprobe Simulation Lab."""
 
 from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime
