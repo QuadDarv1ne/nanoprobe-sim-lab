@@ -1,9 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Скрипт очистки и организации проекта Nanoprobe Simulation Lab
-Этот скрипт выполняет комплексную очистку и организацию проекта.
-"""
+"""Скрипт очистки и организации проекта Nanoprobe Simulation Lab."""
 
 import os
 import shutil

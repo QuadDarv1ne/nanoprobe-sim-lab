@@ -1,9 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Fixed version of the web dashboard that avoids issues with damaged packages
-This version implements a minimal web server with basic functionality
-"""
+"""Fixed version of the web dashboard that avoids issues with damaged packages."""
 
 import os
 import sys

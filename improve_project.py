@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Скрипт улучшения проекта Nanoprobe Simulation Lab
-Этот скрипт автоматически применяет улучшения и исправления проекта.
-"""
+"""Скрипт улучшения проекта Nanoprobe Simulation Lab."""
 
 import os
 import sys
