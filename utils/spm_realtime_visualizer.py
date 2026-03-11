@@ -11,6 +11,8 @@ from typing import Dict, List, Any, Optional, Tuple, Callable
 from threading import Lock
 import json
 import time
+import base64
+from io import BytesIO
 
 try:
     import matplotlib.pyplot as plt
@@ -26,6 +28,90 @@ try:
     PIL_AVAILABLE = True
 except ImportError:
     PIL_AVAILABLE = False
+
+
+class StreamingDataBuffer:
+    """
+    Буфер для потоковой передачи данных сканирования
+    Оптимизирован для работы с большими объёмами данных в реальном времени
+    """
+
+    def __init__(self, max_size: int = 1000):
+        """
+        Инициализация буфера
+
+        Args:
+            max_size: Максимальный размер буфера
+        """
+        self.max_size = max_size
+        self.buffer = []
+        self.lock = Lock()
+        self.total_items_added = 0
+
+    def add_frame(self, frame_data: np.ndarray, timestamp: float = None):
+        """
+        Добавление кадра в буфер
+
+        Args:
+            frame_data: Данные кадра
+            timestamp: Временная метка
+        """
+        with self.lock:
+            if timestamp is None:
+                timestamp = time.time()
+
+            self.buffer.append({
+                'data': frame_data.copy(),
+                'timestamp': timestamp,
+                'frame_id': self.total_items_added
+            })
+
+            self.total_items_added += 1
+
+            # Ограничение размера буфера
+            if len(self.buffer) > self.max_size:
+                self.buffer.pop(0)
+
+    def get_latest_frame(self) -> Optional[Dict[str, Any]]:
+        """Получение последнего кадра"""
+        with self.lock:
+            if not self.buffer:
+                return None
+            return self.buffer[-1].copy()
+
+    def get_frames(self, count: int = 10) -> List[Dict[str, Any]]:
+        """Получение последних кадров"""
+        with self.lock:
+            return self.buffer[-count:].copy()
+
+    def get_fps(self) -> float:
+        """Расчёт FPS"""
+        with self.lock:
+            if len(self.buffer) < 2:
+                return 0
+
+            time_diff = self.buffer[-1]['timestamp'] - self.buffer[0]['timestamp']
+            if time_diff <= 0:
+                return 0
+
+            return len(self.buffer) / time_diff
+
+    def clear(self):
+        """Очистка буфера"""
+        with self.lock:
+            self.buffer = []
+            self.total_items_added = 0
+
+    def get_stats(self) -> Dict[str, Any]:
+        """Получение статистики буфера"""
+        with self.lock:
+            return {
+                'current_size': len(self.buffer),
+                'max_size': self.max_size,
+                'total_frames': self.total_items_added,
+                'fps': self.get_fps(),
+                'buffer_usage': len(self.buffer) / self.max_size * 100 if self.max_size > 0 else 0
+            }
 
 
 class RealTimeSPMVisualizer:
@@ -582,3 +668,126 @@ if __name__ == "__main__":
         # Запуск с симулятором
         visualizer.create_figure("СЗМ Real-time Визуализация (Тест)")
         visualizer.start_animation(lambda f: simulator.get_next_frame())
+
+
+class RealTimeSPMWebSocketAdapter:
+    """
+    Адаптер для передачи данных СЗМ через WebSocket
+    Конвертация данных в формат для веб-клиентов
+    """
+
+    def __init__(self, visualizer: RealTimeSPMVisualizer = None):
+        """
+        Инициализация адаптера
+
+        Args:
+            visualizer: Визуализатор для подключения
+        """
+        self.visualizer = visualizer
+        self.buffer = StreamingDataBuffer(max_size=500)
+        self.connected_clients = set()
+
+    def attach_visualizer(self, visualizer: RealTimeSPMVisualizer):
+        """Подключение визуализатора"""
+        self.visualizer = visualizer
+
+    def process_frame(self, frame_data: np.ndarray, timestamp: float = None):
+        """
+        Обработка кадра для передачи
+
+        Args:
+            frame_data: Данные кадра
+            timestamp: Временная метка
+        """
+        # Добавление в буфер
+        self.buffer.add_frame(frame_data, timestamp)
+
+        # Отправка клиентам
+        if self.connected_clients:
+            message = self._create_frame_message(frame_data, timestamp)
+            self._broadcast(message)
+
+    def _create_frame_message(self, frame_data: np.ndarray, timestamp: float) -> Dict[str, Any]:
+        """Создание сообщения для клиента"""
+        # Сжатие данных (уменьшение разрешения для передачи)
+        if frame_data.shape[0] > 128:
+            step = frame_data.shape[0] // 128
+            compressed = frame_data[::step, ::step]
+        else:
+            compressed = frame_data
+
+        # Нормализация
+        normalized = (compressed - compressed.min()) / (compressed.max() - compressed.min() + 1e-10)
+
+        # Конвертация в base64 для передачи
+        img_buffer = BytesIO()
+        img = Image.fromarray((normalized * 255).astype(np.uint8))
+        img.save(img_buffer, format='PNG')
+        img_base64 = base64.b64encode(img_buffer.getvalue()).decode('utf-8')
+
+        return {
+            'type': 'spm_frame',
+            'timestamp': timestamp or time.time(),
+            'frame_id': self.buffer.total_items_added - 1,
+            'image_base64': img_base64,
+            'shape': list(compressed.shape),
+            'min_value': float(compressed.min()),
+            'max_value': float(compressed.max()),
+            'stats': {
+                'mean': float(np.mean(compressed)),
+                'std': float(np.std(compressed)),
+                'rms': float(np.sqrt(np.mean(compressed ** 2))),
+            }
+        }
+
+    def _broadcast(self, message: Dict[str, Any]):
+        """Рассылка сообщения клиентам"""
+        # Заглушка для реальной реализации WebSocket
+        pass
+
+    def add_client(self, client_id: str):
+        """Добавление клиента"""
+        self.connected_clients.add(client_id)
+
+    def remove_client(self, client_id: str):
+        """Удаление клиента"""
+        self.connected_clients.discard(client_id)
+
+    def get_buffer_stats(self) -> Dict[str, Any]:
+        """Получение статистики буфера"""
+        return self.buffer.get_stats()
+
+    def get_latest_frame_data(self) -> Optional[Dict[str, Any]]:
+        """Получение последнего кадра"""
+        return self.buffer.get_latest_frame()
+
+    def export_frame_to_json(self, frame_id: int = None) -> Optional[str]:
+        """
+        Экспорт кадра в JSON
+
+        Args:
+            frame_id: ID кадра (None для последнего)
+
+        Returns:
+            JSON строка
+        """
+        if frame_id is None:
+            frame = self.buffer.get_latest_frame()
+        else:
+            frames = self.buffer.get_frames(frame_id + 1)
+            frame = frames[0] if frames and frames[0]['frame_id'] == frame_id else None
+
+        if not frame:
+            return None
+
+        result = {
+            'frame_id': frame['frame_id'],
+            'timestamp': frame['timestamp'],
+            'shape': list(frame['data'].shape),
+            'min': float(frame['data'].min()),
+            'max': float(frame['data'].max()),
+            'mean': float(np.mean(frame['data'])),
+            'std': float(np.std(frame['data'])),
+        }
+
+        return json.dumps(result, indent=2)
