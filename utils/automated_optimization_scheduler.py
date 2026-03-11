@@ -336,7 +336,7 @@ class AutomatedOptimizationScheduler:
         self.running = True
 
         def scheduler_loop():
-            """TODO: Add description"""
+            """Основной цикл планировщика."""
             while self.running:
                 try:
                     self.run_scheduler_cycle()
@@ -349,7 +349,7 @@ class AutomatedOptimizationScheduler:
         self.scheduler_thread = threading.Thread(target=scheduler_loop, daemon=True)
         self.scheduler_thread.start()
 
-        print("⏰ Планировщик оптимизации запущен")
+        print("Планировщик оптимизации запущен")
         self.logger.info("Планировщик оптимизации запущен")
 
     def stop_scheduler(self):
@@ -358,7 +358,7 @@ class AutomatedOptimizationScheduler:
         if self.scheduler_thread:
             self.scheduler_thread.join(timeout=2.0)
 
-        print("🛑 Планировщик оптимизации остановлен")
+        print("Планировщик оптимизации остановлен")
         self.logger.info("Планировщик оптимизации остановлен")
 
     def setup_default_rules(self):
@@ -366,11 +366,11 @@ class AutomatedOptimizationScheduler:
         # Правило 1: Высокая загрузка CPU -> оптимизация CPU
 
         def cpu_high_condition(metrics):
-            """TODO: Add description"""
+            """Проверка высокой загрузки CPU."""
             return metrics.get("cpu_percent", 0) > 80
 
         def cpu_optimization():
-            """TODO: Add description"""
+            """Оптимизация использования CPU."""
             return self.resource_manager.optimize_cpu_usage()
 
         self.add_auto_rule(
@@ -383,11 +383,11 @@ class AutomatedOptimizationScheduler:
 
         # Правило 2: Высокое использование памяти -> оптимизация памяти
         def memory_high_condition(metrics):
-            """TODO: Add description"""
+            """Проверка высокого использования памяти."""
             return metrics.get("memory_percent", 0) > 85
 
         def memory_optimization():
-            """TODO: Add description"""
+            """Оптимизация использования памяти."""
             return self.memory_tracker.perform_memory_optimization()
 
         self.add_auto_rule(
@@ -400,11 +400,11 @@ class AutomatedOptimizationScheduler:
 
         # Правило 3: Низкая эффективность ресурсов -> комплексная оптимизация
         def low_efficiency_condition(metrics):
-            """TODO: Add description"""
+            """Проверка низкой эффективности ресурсов."""
             return metrics.get("resource_efficiency", 100) < 70
 
         def efficiency_optimization():
-            """TODO: Add description"""
+            """Комплексная оптимизация эффективности."""
             return self.orchestrator.start_comprehensive_optimization(["core_utils"])
 
         self.add_auto_rule(
@@ -417,15 +417,15 @@ class AutomatedOptimizationScheduler:
 
         # Правило 4: Подозрительная активность -> профилирование
         def suspicious_activity_condition(metrics):
-            """TODO: Add description"""
+            """Проверка подозрительной активности."""
             return (
                 metrics.get("cpu_percent", 0) > 90
                 or metrics.get("memory_percent", 0) > 95
                 or metrics.get("active_processes", 0) > 200
-            )  # Подозрительное количество процессов
+            )
 
         def diagnostic_optimization():
-            """TODO: Add description"""
+            """Диагностическое профилирование."""
             return self.performance_profiler.profile_function(lambda: print("Diagnostic scan"))()
 
         self.add_auto_rule(
@@ -436,7 +436,7 @@ class AutomatedOptimizationScheduler:
             description="Диагностическое профилирование при подозрительной активности",
         )
 
-        print(f"✅ Установлено {len(self.auto_rules)} стандартных правил автоматической оптимизации")
+        print(f"Установлено {len(self.auto_rules)} стандартных правил автоматической оптимизации")
 
     def get_scheduler_status(self) -> Dict[str, Any]:
         """
@@ -565,16 +565,14 @@ class AutomatedOptimizationScheduler:
         """
 
         def predictive_monitoring():
-            """TODO: Add description"""
+            """Мониторинг предиктивных прогнозов."""
             while self.running:
                 try:
-                    # Получаем предиктивные инсайты
                     insights = self.predictive_engine.get_predictive_insights()
 
-                    # Обрабатываем прогнозы и создаем задания
                     for metric, predictions in insights.get("predictions", {}).items():
                         for timeframe, pred_data in predictions.items():
-                            if pred_data["confidence"] > 0.7:  # Высокая достоверность
+                            if pred_data["confidence"] > 0.7:
                                 prediction_result = {
                                     "metric": metric,
                                     "predicted_value": pred_data["predicted_value"],
@@ -584,17 +582,16 @@ class AutomatedOptimizationScheduler:
 
                                 self.add_predictive_optimization_job(prediction_result)
 
-                    time.sleep(120)  # Проверяем прогнозы каждые 2 минуты
+                    time.sleep(120)
 
                 except Exception as e:
                     self.logger.error(f"Ошибка в предиктивном мониторинге: {str(e)}")
                     time.sleep(120)
 
-        # Запускаем предиктивный мониторинг в отдельном потоке
         pred_thread = threading.Thread(target=predictive_monitoring, daemon=True)
         pred_thread.start()
 
-        print("🔮 Интеграция с предиктивным движком завершена")
+        print("Интеграция с предиктивным движком завершена")
 
 
 def main():

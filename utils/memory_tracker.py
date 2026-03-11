@@ -133,12 +133,11 @@ class MemoryTracker:
         self.tracking = True
 
         def track():
-            """TODO: Add description"""
+            """Цикл отслеживания использования памяти."""
             while self.tracking:
                 try:
                     snapshot = self.take_snapshot()
 
-                    # Сохраняем в историю для мониторинга
                     self.monitoring_history["timestamps"].append(snapshot.timestamp)
                     self.monitoring_history["rss_mb"].append(snapshot.rss_mb)
                     self.monitoring_history["vms_mb"].append(snapshot.vms_mb)

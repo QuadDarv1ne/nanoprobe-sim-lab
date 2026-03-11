@@ -688,7 +688,7 @@ class AIResourceOptimizer:
         self.active = True
 
         def ai_optimization_loop():
-            """TODO: Add description"""
+            """Основной цикл ИИ-оптимизации."""
             while self.active:
                 try:
                     self.run_ai_optimization_cycle()
@@ -698,15 +698,13 @@ class AIResourceOptimizer:
                     time.sleep(interval)
 
         def learning_loop():
-            """TODO: Add description"""
+            """Цикл обучения модели."""
             while self.active:
                 try:
-                    # Периодическое обновление модели
-                    time.sleep(300)  # Каждые 5 минут
+                    time.sleep(300)
                 except Exception as e:
                     print(f"Ошибка в цикле обучения: {e}")
 
-        # Запускаем потоки
         self.optimizer_thread = threading.Thread(target=ai_optimization_loop, daemon=True)
         self.learning_thread = threading.Thread(target=learning_loop, daemon=True)
 
