@@ -1,8 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Тесты для модуля базы данных
-"""
+"""Тесты для модуля базы данных."""
 
 import unittest
 import sys

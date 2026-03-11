@@ -1,8 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Тесты для API проекта Nanoprobe Simulation Lab
-"""
+"""Тесты для API проекта Nanoprobe Simulation Lab."""
 
 import unittest
 import sys

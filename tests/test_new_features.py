@@ -1,8 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Тесты для новых функций проекта
-"""
+"""Тесты для новых функций проекта."""
 
 import unittest
 import sys

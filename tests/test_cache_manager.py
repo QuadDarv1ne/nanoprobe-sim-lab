@@ -1,8 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Тесты для модуля управления кэшем
-"""
+"""Тесты для модуля управления кэшем."""
 
 import unittest
 import tempfile
