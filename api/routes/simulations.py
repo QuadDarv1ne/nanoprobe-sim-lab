@@ -24,6 +24,11 @@ router = APIRouter()
 def get_db() -> DatabaseManager:
     """Зависимость для получения менеджера БД"""
     from api.main import db_manager
+    if db_manager is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="База данных недоступна"
+        )
     return db_manager
 
 
@@ -38,19 +43,27 @@ async def get_simulations(
     db: DatabaseManager = Depends(get_db),
 ):
     """Получить список симуляций"""
-    try:
-        simulations = db.get_simulations(status=status, limit=limit)
-        
-        return SimulationListResponse(
-            items=[SimulationResponse.model_validate(sim) for sim in simulations],
-            total=len(simulations),
-            limit=limit,
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка получения симуляций: {str(e)}",
-        )
+    from api.main import redis_cache
+    
+    cache_key = f"simulations:{status or 'all'}:{limit}"
+    
+    if redis_cache and redis_cache.is_available():
+        cached = redis_cache.get(cache_key)
+        if cached:
+            return SimulationListResponse(**cached)
+    
+    simulations = db.get_simulations(status=status, limit=limit)
+    
+    result = SimulationListResponse(
+        items=[SimulationResponse.model_validate(sim) for sim in simulations],
+        total=len(simulations),
+        limit=limit,
+    )
+    
+    if redis_cache and redis_cache.is_available():
+        redis_cache.set(cache_key, result.model_dump(), expire=300)
+    
+    return result
 
 
 @router.get(
@@ -87,28 +100,28 @@ async def create_simulation(
     db: DatabaseManager = Depends(get_db),
 ):
     """Создать новую симуляцию"""
-    try:
-        sim_id = f"sim_{uuid.uuid4().hex[:8]}"
-        
-        db.add_simulation(
-            simulation_id=sim_id,
-            simulation_type=simulation.simulation_type,
-            parameters=simulation.parameters,
-        )
-        
-        simulations = db.get_simulations(limit=1)
-        if not simulations:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Не удалось получить созданную симуляцию",
-            )
-        
-        return SimulationResponse.model_validate(simulations[0])
-    except Exception as e:
+    from api.main import redis_cache
+    
+    sim_id = f"sim_{uuid.uuid4().hex[:8]}"
+
+    db.add_simulation(
+        simulation_id=sim_id,
+        simulation_type=simulation.simulation_type,
+        parameters=simulation.parameters,
+    )
+
+    # Инвалидация кэша
+    if redis_cache and redis_cache.is_available():
+        redis_cache.clear_pattern("simulations:*")
+
+    simulations = db.get_simulations(limit=1)
+    if not simulations:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка создания симуляции: {str(e)}",
+            detail="Не удалось получить созданную симуляцию",
         )
+
+    return SimulationResponse.model_validate(simulations[0])
 
 
 @router.patch(
