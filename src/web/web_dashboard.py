@@ -34,6 +34,8 @@ from utils.cache_manager import CacheManager
 from utils.data_manager import DataManager
 from utils.data_exporter import DataExporter
 from utils.database import DatabaseManager, get_database
+from utils.surface_comparator import compare_surfaces as compare_surfaces_util
+from utils.defect_analyzer import analyze_defects as analyze_defects_util
 from utils.cli_utils import Colors
 
 
@@ -334,6 +336,82 @@ class WebDashboard:
                 })
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка экспорта БД: {e}")
+                return jsonify({"error": str(e)}), 500
+
+        @self.app.route("/api/surface/compare", methods=["POST"])
+        def api_surface_compare():
+            """API для сравнения поверхностей"""
+            try:
+                data = request.json
+                image1_path = data.get('image1_path')
+                image2_path = data.get('image2_path')
+                output_dir = data.get('output_dir', 'output/surface_comparisons')
+
+                if not image1_path or not image2_path:
+                    return jsonify({"error": "image1_path и image2_path обязательны"}), 400
+
+                result = compare_surfaces_util(image1_path, image2_path, output_dir)
+
+                return jsonify({
+                    "status": "success",
+                    "result": result
+                })
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка сравнения поверхностей: {e}")
+                return jsonify({"error": str(e)}), 500
+
+        @self.app.route("/api/defect/analyze", methods=["POST"])
+        def api_defect_analyze():
+            """API для анализа дефектов"""
+            try:
+                data = request.json
+                image_path = data.get('image_path')
+                model_name = data.get('model_name', 'isolation_forest')
+                output_dir = data.get('output_dir', 'output/defect_analysis')
+
+                if not image_path:
+                    return jsonify({"error": "image_path обязателен"}), 400
+
+                result = analyze_defects_util(image_path, model_name, output_dir)
+
+                return jsonify({
+                    "status": "success",
+                    "result": result
+                })
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка анализа дефектов: {e}")
+                return jsonify({"error": str(e)}), 500
+
+        @self.app.route("/api/surface/history", methods=["GET"])
+        def api_surface_history():
+            """API для получения истории сравнений поверхностей"""
+            try:
+                db = get_database()
+                limit = request.args.get('limit', 50, type=int)
+                comparisons = db.get_surface_comparisons(limit)
+
+                return jsonify({
+                    "status": "success",
+                    "comparisons": comparisons
+                })
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка получения истории сравнений: {e}")
+                return jsonify({"error": str(e)}), 500
+
+        @self.app.route("/api/defect/history", methods=["GET"])
+        def api_defect_history():
+            """API для получения истории анализов дефектов"""
+            try:
+                db = get_database()
+                limit = request.args.get('limit', 50, type=int)
+                analyses = db.get_defect_analyses(limit=limit)
+
+                return jsonify({
+                    "status": "success",
+                    "analyses": analyses
+                })
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка получения истории анализов: {e}")
                 return jsonify({"error": str(e)}), 500
 
     def _register_socket_handlers(self):
