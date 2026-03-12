@@ -207,7 +207,89 @@ def mode_demo(args):
     print("  Спутники:")
     print("    python main.py --satellites           # Список спутников")
     print("    python main.py --schedule             # Расписание пролётов")
-    print("    python main.py --schedule --lat 55.75 --lon 37.61")
+    print()
+    print("  Waterfall дисплей:")
+    print("    python main.py --waterfall -f iss --duration 60")
+    print("    python main.py --waterfall --save-waterfall")
+
+
+def mode_waterfall(args):
+    """Waterfall дисплей спектра."""
+    from waterfall_display import WaterfallDisplay, WaterfallRecorder
+    
+    print(f"\nWATERFALL ДИСПЛЕЙ")
+    print(f"Частота: {args.frequency} МГц")
+    print(f"Длительность: {args.duration}с")
+    print("-" * 40)
+
+    sdr = create_sdr(
+        device_index=args.device,
+        frequency=args.frequency,
+        sample_rate=args.sample_rate,
+        gain=args.gain,
+        bias_tee=args.bias_tee,
+        agc=args.agc
+    )
+    if not sdr:
+        print("Ошибка инициализации SDR")
+        return False
+
+    # Инициализация waterfall
+    waterfall = WaterfallDisplay(
+        width=512,
+        height=256,
+        sample_rate=sdr.sample_rate,
+        center_freq=sdr.center_freq * 1e6
+    )
+    
+    recorder = WaterfallRecorder() if args.save_waterfall else None
+    if recorder:
+        recorder.start()
+
+    try:
+        print(f"Приём... Нажмите Ctrl+C для остановки")
+        
+        # Callback для обработки сэмплов
+        def sample_callback(samples):
+            rgb_row = waterfall.push_samples(samples)
+            if rgb_row is not None and recorder:
+                recorder.add_frame(rgb_row)
+        
+        # Запускаем приём
+        sdr.start_recording(
+            duration_seconds=args.duration,
+            realtime_callback=sample_callback
+        )
+        
+        # Ожидаем завершения
+        while sdr.is_recording:
+            time.sleep(1)
+            # Показываем прогресс
+            elapsed = args.duration - sum(1 for _ in range(int(sdr.sample_rate / 1024)))
+            print(f"\rОсталось: {max(0, elapsed)}с ", end='', flush=True)
+        
+        print("\n")
+        
+        # Сохраняем waterfall
+        if args.save_waterfall and recorder:
+            output_path = recorder.stop()
+            if output_path:
+                print(f"Waterfall сохранён: {output_path}")
+        
+        # Сохраняем статическое изображение
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        waterfall.save_image(f"output/waterfall/waterfall_{timestamp}.png")
+        
+        return True
+
+    except KeyboardInterrupt:
+        print("\nОстановка по пользователю...")
+        sdr.stop_recording()
+        if recorder:
+            recorder.stop()
+        return True
+    finally:
+        sdr.close()
 
 
 def mode_list_satellites(args):
@@ -455,6 +537,8 @@ def main():
     parser.add_argument("--output-image", type=str, help="Файл для изображения")
     parser.add_argument("--auto-decode", action="store_true", help="Авто декодирование после записи")
     parser.add_argument("--realtime-sstv", action="store_true", help="Real-time декодирование SSTV")
+    parser.add_argument("--waterfall", action="store_true", help="Waterfall дисплей спектра")
+    parser.add_argument("--save-waterfall", action="store_true", help="Сохранить waterfall")
 
     # Сканирование
     parser.add_argument("--scan", action="store_true", help="Режим сканирования частот")
@@ -483,6 +567,8 @@ def main():
         mode_satellite_schedule(args)
     elif args.satellites:
         mode_list_satellites(args)
+    elif args.waterfall:
+        mode_waterfall(args)
     elif args.check:
         mode_check_device(args)
     elif args.list_freq:
