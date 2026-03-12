@@ -94,12 +94,25 @@ def mode_receive_sdr(args):
         if args.auto_decode:
             print("Декодирование записанного сигнала...")
             decoder = SSTVDecoder()
-            image = decoder.decode_from_audio(output_audio)
+            
+            # Пробуем декодировать из сэмплов если есть
+            if hasattr(sdr, 'recorded_samples') and sdr.recorded_samples:
+                import numpy as np
+                all_samples = np.concatenate(sdr.recorded_samples)
+                image = decoder.decode_from_samples(all_samples, sample_rate=sdr.sample_rate)
+            else:
+                image = decoder.decode_from_audio(output_audio)
 
             if image:
                 output_image = args.output_image or "decoded_sstv.png"
                 decoder.save_decoded_image(output_image)
                 print(f"Изображение сохранено: {output_image}")
+                
+                # Показываем метаданные
+                metadata = decoder.metadata
+                if metadata:
+                    print(f"Режим: {metadata.get('mode', 'unknown')}")
+                    print(f"Размер: {image.size[0]}x{image.size[1]}")
 
         return True
 
