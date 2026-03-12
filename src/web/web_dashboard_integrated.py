@@ -348,6 +348,7 @@ class IntegratedWebDashboard:
                 self.error_handler.log_error(f"Ошибка получения информации о системе: {e}")
                 return jsonify({'error': str(e)}), 500
 
+<<<<<<< HEAD
         @self.app.route("/api/health")
         def api_health():
             """Health check endpoint"""
@@ -365,6 +366,8 @@ class IntegratedWebDashboard:
             except Exception as e:
                 return jsonify({"status": "unhealthy", "error": str(e)}), 500
 
+=======
+>>>>>>> 779a924 (Local improvements and conflict resolution)
         @self.app.route("/api/performance_data")
         def api_performance_data():
             """API для получения данных о производительности"""
@@ -517,6 +520,7 @@ class IntegratedWebDashboard:
                 self.error_handler.log_error(f"Ошибка получения статуса процессов: {e}")
                 return jsonify({'error': str(e)}), 500
 
+<<<<<<< HEAD
         @self.app.route("/api/logs/component/<component_name>", methods=["GET"])
         def api_component_logs(component_name):
             """API для получения логов компонента"""
@@ -621,6 +625,8 @@ class IntegratedWebDashboard:
             
             return {"restarted": restarted, "failed": failed}
 
+=======
+>>>>>>> 779a924 (Local improvements and conflict resolution)
         @self.app.route("/api/logs")
         def api_logs():
             """API для получения логов"""
@@ -683,6 +689,7 @@ class IntegratedWebDashboard:
                 import time
                 time.sleep(0.5)
                 if process.poll() is not None:
+<<<<<<< HEAD
                     # WebSocket уведомление об ошибке
                     if hasattr(self, 'socketio'):
                         from flask_socketio import emit
@@ -692,12 +699,15 @@ class IntegratedWebDashboard:
                             'message': f'Завершился с кодом {process.returncode}'
                         }, broadcast=True)
                     
+=======
+>>>>>>> 779a924 (Local improvements and conflict resolution)
                     return jsonify({
                         "success": False,
                         "error": f"Завершился с кодом {process.returncode}",
                         "log": str(log_dir / f"{component}_stderr.log")
                     }), 500
 
+<<<<<<< HEAD
                 # WebSocket уведомление об успешном запуске
                 if hasattr(self, 'socketio'):
                     from flask_socketio import emit
@@ -707,6 +717,8 @@ class IntegratedWebDashboard:
                         'pid': process.pid
                     }, broadcast=True)
 
+=======
+>>>>>>> 779a924 (Local improvements and conflict resolution)
                 return jsonify({"success": True, "message": f"{component} запущен", "pid": process.pid})
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка запуска: {e}")
@@ -736,6 +748,7 @@ class IntegratedWebDashboard:
 
                 del self._active_processes[component]
                 self.logger.log_system_event(f"Остановка: {component}", "INFO")
+<<<<<<< HEAD
 
                 # WebSocket уведомление
                 if hasattr(self, 'socketio'):
@@ -745,11 +758,14 @@ class IntegratedWebDashboard:
                         'status': 'stopped'
                     }, broadcast=True)
 
+=======
+>>>>>>> 779a924 (Local improvements and conflict resolution)
                 return jsonify({"success": True, "message": f"{component} остановлен"})
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка остановки: {e}")
                 return jsonify({"success": False, "error": str(e)}), 500
 
+<<<<<<< HEAD
         @self.app.route("/api/actions/restart_component", methods=["POST"])
         def api_restart_component_action():
             """API для перезапуска компонента"""
@@ -839,6 +855,8 @@ class IntegratedWebDashboard:
                 self.error_handler.log_error(f"Ошибка перезапуска: {e}")
                 return jsonify({"success": False, "error": str(e)}), 500
 
+=======
+>>>>>>> 779a924 (Local improvements and conflict resolution)
         @self.app.route("/api/config", methods=["GET", "POST"])
         def api_config():
             """API для управления конфигурацией"""
@@ -992,6 +1010,7 @@ class IntegratedWebDashboard:
                 self.error_handler.log_error(f"Ошибка анализа дефектов: {e}")
                 return jsonify({'error': str(e)}), 500
 
+<<<<<<< HEAD
         @self.app.route("/api/batch/jobs", methods=["GET"])
         def api_batch_jobs():
             """API для получения заданий пакетной обработки"""
@@ -1017,6 +1036,8 @@ class IntegratedWebDashboard:
                 self.error_handler.log_error(f"Ошибка получения статистики: {e}")
                 return jsonify({'error': str(e)}), 500
 
+=======
+>>>>>>> 779a924 (Local improvements and conflict resolution)
     def _register_socket_handlers(self):
         """Регистрация обработчиков SocketIO событий"""
 
