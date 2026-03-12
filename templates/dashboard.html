@@ -1513,7 +1513,7 @@
                                     </div>
                                 </div>
                                 <div class="btn-group">
-                                    ${isRunning ? 
+                                    ${isRunning ?
                                         `<button class="btn btn-warning btn-sm" onclick="restartComponent('${component.name}')">
                                             <i class="fas fa-redo"></i> Перезапуск
                                         </button>
@@ -1527,6 +1527,9 @@
                                             <i class="fas fa-stop"></i> Стоп
                                         </button>`
                                     }
+                                    <button class="btn btn-info btn-sm" onclick="viewComponentLogs('${component.name}')" style="margin-left: 5px;">
+                                        <i class="fas fa-file-alt"></i> Логи
+                                    </button>
                                 </div>
                             </li>
                         `;
@@ -1949,6 +1952,27 @@
             stopComponent(name);
         }
 
+        function viewComponentLogs(name) {
+            fetch(`/api/logs/component/${name}`)
+                .then(response => response.json())
+                .then(data => {
+                    const stdout = data.stdout || 'Пусто';
+                    const stderr = data.stderr || 'Пусто';
+                    const hasErrors = stderr !== 'Пусто' && stderr.trim().length > 0;
+
+                    let message = `<strong>${name}</strong><br><br>`;
+                    message += `<strong>STDOUT:</strong><pre style="max-height: 200px; overflow-y: auto; background: #1e293b; padding: 10px; border-radius: 5px; font-size: 12px;">${stdout}</pre>`;
+                    if (hasErrors) {
+                        message += `<strong style="color: #ef4444;">STDERR:</strong><pre style="max-height: 200px; overflow-y: auto; background: #1e293b; padding: 10px; border-radius: 5px; font-size: 12px; color: #ef4444;">${stderr}</pre>`;
+                    }
+
+                    showNotification(message, 'info', 0);
+                })
+                .catch(error => {
+                    showNotification(`Ошибка чтения логов: ${error.message}`, 'error');
+                });
+        }
+
         // Quick Actions
         function runSpmSimulator() {
             startComponent('spm_simulator');
@@ -2030,13 +2054,13 @@
         }
 
         // ==================== Notifications ====================
-        function showNotification(message, type = 'info') {
-            if (!settings.notifications) return;
+        function showNotification(message, type = 'info', duration = 4000, allowHtml = false) {
+            if (!settings.notifications && type !== 'info') return;
 
             const container = document.getElementById('notification-container');
             const notification = document.createElement('div');
             notification.className = `notification ${type}`;
-            
+
             const icons = {
                 success: 'fa-check-circle',
                 error: 'fa-exclamation-circle',
@@ -2044,18 +2068,21 @@
                 info: 'fa-info-circle'
             };
 
+            const content = allowHtml ? message : escapeHtml(message);
             notification.innerHTML = `
                 <i class="fas ${icons[type] || icons.info}"></i>
-                <span>${escapeHtml(message)}</span>
+                <span>${content}</span>
             `;
 
             container.appendChild(notification);
 
-            // Auto remove after 4 seconds
-            setTimeout(() => {
-                notification.classList.add('exit');
-                setTimeout(() => notification.remove(), 300);
-            }, 4000);
+            // Auto remove after duration
+            if (duration > 0) {
+                setTimeout(() => {
+                    notification.classList.add('exit');
+                    setTimeout(() => notification.remove(), 300);
+                }, duration);
+            }
         }
 
         // ==================== Utilities ====================
