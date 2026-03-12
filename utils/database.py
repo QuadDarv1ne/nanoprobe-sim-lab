@@ -9,10 +9,12 @@ import json
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Optional, Any, Tuple
-from contextlib import contextmanager
+from contextlib import contextmanager, asynccontextmanager
 from queue import Queue
 import threading
+import asyncio
 import numpy as np
+from functools import wraps
 
 
 class ConnectionPool:
@@ -24,17 +26,22 @@ class ConnectionPool:
         self._pool: Queue = Queue(maxsize=pool_size)
         self._lock = threading.Lock()
         self._created = 0
+        self._stats = {"hits": 0, "misses": 0, "created": 0}
 
     def get_connection(self, timeout: float = 30.0) -> sqlite3.Connection:
         """Получение соединения из пула"""
         try:
-            return self._pool.get_nowait()
+            conn = self._pool.get_nowait()
+            self._stats["hits"] += 1
+            return conn
         except:
             with self._lock:
                 if self._created < self.pool_size:
                     conn = self._create_connection()
                     self._created += 1
+                    self._stats["created"] += 1
                     return conn
+            self._stats["misses"] += 1
             return self._pool.get(timeout=timeout)
 
     def return_connection(self, conn: sqlite3.Connection):
@@ -45,17 +52,74 @@ class ConnectionPool:
             conn.close()
 
     def _create_connection(self) -> sqlite3.Connection:
-        """Создание нового соединения"""
-        conn = sqlite3.connect(self.db_path, timeout=30.0)
+        """Создание нового соединения с оптимизациями"""
+        conn = sqlite3.connect(self.db_path, timeout=30.0, check_same_thread=False)
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA journal_mode = WAL")
         conn.execute("PRAGMA synchronous = NORMAL")
         conn.execute("PRAGMA cache_size = -64000")
         conn.execute("PRAGMA temp_store = MEMORY")
         conn.execute("PRAGMA mmap_size = 268435456")
+        conn.execute("PRAGMA busy_timeout = 5000")
         return conn
 
     def close_all(self):
+        """Закрытие всех соединений"""
+        while not self._pool.empty():
+            try:
+                conn = self._pool.get_nowait()
+                conn.close()
+            except:
+                break
+
+    def get_stats(self) -> Dict[str, int]:
+        """Получение статистики пула"""
+        return {
+            **self._stats,
+            "pool_size": self.pool_size,
+            "current_size": self._pool.qsize(),
+        }
+
+
+class AsyncConnectionPool:
+    """Асинхронный пул соединений для SQLite"""
+
+    def __init__(self, db_path: str, pool_size: int = 5):
+        self.db_path = db_path
+        self.pool_size = pool_size
+        self._pool: asyncio.Queue = asyncio.Queue(maxsize=pool_size)
+        self._lock = asyncio.Lock()
+        self._created = 0
+
+    async def get_connection(self, timeout: float = 30.0) -> sqlite3.Connection:
+        """Получение соединения из пула"""
+        try:
+            return self._pool.get_nowait()
+        except:
+            async with self._lock:
+                if self._created < self.pool_size:
+                    conn = self._create_connection()
+                    self._created += 1
+                    return conn
+            return await asyncio.wait_for(self._pool.get(), timeout=timeout)
+
+    def return_connection(self, conn: sqlite3.Connection):
+        """Возврат соединения в пул"""
+        try:
+            self._pool.put_nowait(conn)
+        except:
+            conn.close()
+
+    def _create_connection(self) -> sqlite3.Connection:
+        """Создание нового соединения"""
+        conn = sqlite3.connect(self.db_path, timeout=30.0, check_same_thread=False)
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA journal_mode = WAL")
+        conn.execute("PRAGMA synchronous = NORMAL")
+        conn.execute("PRAGMA cache_size = -64000")
+        return conn
+
+    async def close_all(self):
         """Закрытие всех соединений"""
         while not self._pool.empty():
             try:
@@ -118,6 +182,24 @@ class DatabaseManager:
             raise e
         finally:
             self._pool.return_connection(conn)
+
+    @asynccontextmanager
+    async def get_connection_async(self):
+        """Асинхронный контекстный менеджер для подключения к БД."""
+        loop = asyncio.get_event_loop()
+        conn = await loop.run_in_executor(None, self._pool.get_connection)
+        try:
+            yield conn
+            await loop.run_in_executor(None, conn.commit)
+        except Exception as e:
+            await loop.run_in_executor(None, conn.rollback)
+            raise e
+        finally:
+            await loop.run_in_executor(None, self._pool.return_connection, conn)
+
+    def get_pool_stats(self) -> Dict[str, Any]:
+        """Получение статистики пула соединений"""
+        return self._pool.get_stats()
 
     def _init_database(self):
         """Инициализация схемы базы данных."""
@@ -453,6 +535,78 @@ class DatabaseManager:
             return cached
 
         with self.get_connection() as conn:
+            cursor = conn.cursor()
+            if scan_type:
+                cursor.execute(
+                    "SELECT COUNT(*) FROM scan_results WHERE scan_type = ?",
+                    (scan_type,)
+                )
+            else:
+                cursor.execute("SELECT COUNT(*) FROM scan_results")
+            result = cursor.fetchone()[0]
+
+            self._set_cache(cache_key, result)
+            return result
+
+    # ==================== Async Methods ====================
+
+    async def get_scan_results_async(
+        self,
+        scan_type: str = None,
+        limit: int = 100,
+        offset: int = 0
+    ) -> List[Dict]:
+        """Асинхронное получение результатов сканирований"""
+        cache_key = self._get_cache_key(f"scans:{scan_type}:{limit}:{offset}")
+        cached = self._get_from_cache(cache_key)
+        if cached is not None:
+            return cached
+
+        async with self.get_connection_async() as conn:
+            cursor = conn.cursor()
+
+            query = "SELECT * FROM scan_results"
+            params = []
+
+            if scan_type:
+                query += " WHERE scan_type = ?"
+                params.append(scan_type)
+
+            query += " ORDER BY timestamp DESC LIMIT ? OFFSET ?"
+            params.extend([limit, offset])
+
+            cursor.execute(query, params)
+            rows = cursor.fetchall()
+            result = [self._row_to_dict(row) for row in rows]
+
+            self._set_cache(cache_key, result)
+            return result
+
+    async def get_scan_by_id_async(self, scan_id: int) -> Optional[Dict]:
+        """Асинхронное получение сканирования по ID"""
+        cache_key = self._get_cache_key(f"scan:id:{scan_id}")
+        cached = self._get_from_cache(cache_key)
+        if cached is not None:
+            return cached
+
+        async with self.get_connection_async() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM scan_results WHERE id = ?", (scan_id,))
+            row = cursor.fetchone()
+            result = self._row_to_dict(row) if row else None
+
+            if result:
+                self._set_cache(cache_key, result)
+            return result
+
+    async def count_scans_async(self, scan_type: str = None) -> int:
+        """Асинхронный подсчёт количества сканирований"""
+        cache_key = self._get_cache_key(f"scans:count:{scan_type or 'all'}")
+        cached = self._get_from_cache(cache_key)
+        if cached is not None:
+            return cached
+
+        async with self.get_connection_async() as conn:
             cursor = conn.cursor()
             if scan_type:
                 cursor.execute(
