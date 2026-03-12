@@ -593,9 +593,18 @@ class WebDashboard:
                 stdout_log = log_dir / f"{component}_stdout.log"
                 stderr_log = log_dir / f"{component}_stderr.log"
 
+                # Аргументы для запуска компонента в фоновом режиме
+                component_args = {
+                    "spm_simulator": ["--size", "10", "--no-visualize"],
+                    "image_analyzer": ["--stats"],
+                    "sstv_station": ["--check"],
+                }
+
+                args = component_args.get(component, [])
+
                 with open(stdout_log, "ab") as out_f, open(stderr_log, "ab") as err_f:
                     process = subprocess.Popen(
-                        [sys.executable, str(component_path)],
+                        [sys.executable, str(component_path)] + args,
                         cwd=str(project_root),
                         stdout=out_f,
                         stderr=err_f,

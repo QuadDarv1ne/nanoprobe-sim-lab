@@ -668,10 +668,19 @@ class IntegratedWebDashboard:
                 log_dir = project_root / "logs" / "components"
                 log_dir.mkdir(parents=True, exist_ok=True)
 
+                # Аргументы для запуска компонента в фоновом режиме
+                component_args = {
+                    "spm_simulator": ["--size", "10", "--no-visualize"],
+                    "image_analyzer": ["--stats"],
+                    "sstv_station": ["--check"],
+                }
+
+                args = component_args.get(component, [])
+
                 with open(log_dir / f"{component}_stdout.log", "ab") as out_f, \
                      open(log_dir / f"{component}_stderr.log", "ab") as err_f:
                     process = subprocess.Popen(
-                        [sys.executable, str(component_path)],
+                        [sys.executable, str(component_path)] + args,
                         cwd=str(project_root),
                         stdout=out_f, stderr=err_f,
                         creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
