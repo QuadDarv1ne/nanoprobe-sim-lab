@@ -344,14 +344,57 @@ class WebDashboard:
             try:
                 data = request.json
                 component = data.get("component", "unknown")
-                
-                # В реальности здесь был бы запуск процесса
-                self.logger.log_system_event(f"Запуск компонента: {component}", "INFO")
-                
+
+                # Маппинг компонентов на пути
+                component_paths = {
+                    "spm_simulator": project_root / "components" / "cpp-spm-hardware-sim" / "src" / "spm_simulator.py",
+                    "image_analyzer": project_root / "components" / "py-surface-image-analyzer" / "src" / "main.py",
+                    "sstv_station": project_root / "components" / "py-sstv-groundstation" / "src" / "main.py",
+                }
+
+                if component not in component_paths:
+                    return jsonify({
+                        "success": False,
+                        "error": f"Компонент '{component}' не найден"
+                    }), 404
+
+                component_path = component_paths[component]
+
+                if not component_path.exists():
+                    return jsonify({
+                        "success": False,
+                        "error": f"Файл компонента не найден: {component_path}"
+                    }), 404
+
+                # Проверка, запущен ли уже компонент
+                if not hasattr(self, "_active_processes"):
+                    self._active_processes = {}
+                    
+                if component in self._active_processes:
+                    process = self._active_processes[component]
+                    if process.poll() is None:
+                        return jsonify({
+                            "success": False,
+                            "error": f"Компонент '{component}' уже запущен (PID: {process.pid})"
+                        }), 409
+
+                # Запуск процесса
+                process = subprocess.Popen(
+                    [sys.executable, str(component_path)],
+                    cwd=str(project_root),
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+                )
+
+                self._active_processes[component] = process
+                self.logger.log_system_event(f"Запуск компонента: {component} (PID: {process.pid})", "INFO")
+
                 return jsonify({
                     "success": True,
                     "message": f"Компонент '{component}' запущен",
-                    "component": component
+                    "component": component,
+                    "pid": process.pid
                 })
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка запуска компонента: {e}")
@@ -366,10 +409,30 @@ class WebDashboard:
             try:
                 data = request.json
                 component = data.get("component", "unknown")
-                
-                # В реальности здесь была бы остановка процесса
+
+                if not hasattr(self, "_active_processes"):
+                    self._active_processes = {}
+
+                if component not in self._active_processes:
+                    return jsonify({
+                        "success": False,
+                        "error": f"Компонент '{component}' не запущен"
+                    }), 404
+
+                process = self._active_processes[component]
+
+                if process.poll() is None:
+                    # Процесс ещё работает, останавливаем
+                    process.terminate()
+                    try:
+                        process.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
+                        process.wait(timeout=2)
+
+                del self._active_processes[component]
                 self.logger.log_system_event(f"Остановка компонента: {component}", "INFO")
-                
+
                 return jsonify({
                     "success": True,
                     "message": f"Компонент '{component}' остановлен",
