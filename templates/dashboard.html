@@ -1363,6 +1363,20 @@
                 updateDashboard(data);
             });
 
+            socket.on('stats_update', function(data) {
+                // Обновление статистики в реальном времени
+                if (data.components) {
+                    const activeEl = document.getElementById('stat-components-active');
+                    if (activeEl) activeEl.textContent = data.components.active;
+                }
+                if (data.system) {
+                    const cpuEl = document.getElementById('stat-cpu');
+                    const memEl = document.getElementById('stat-memory');
+                    if (cpuEl) cpuEl.textContent = data.system.cpu_percent.toFixed(1) + '%';
+                    if (memEl) memEl.textContent = data.system.memory_percent.toFixed(1) + '%';
+                }
+            });
+
             socket.on('component_status', function(data) {
                 const { component, status, message, pid } = data;
                 if (status === 'running') {

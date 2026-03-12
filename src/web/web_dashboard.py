@@ -631,11 +631,11 @@ class WebDashboard:
                 }
 
                 if component not in component_paths:
-                    return jsonify({"success": False, "error": f"Компонент не найден"}), 404
+                    return jsonify({"success": False, "error": "Компонент не найден"}), 404
 
                 component_path = component_paths[component]
                 if not component_path.exists():
-                    return jsonify({"success": False, "error": f"Файл не найден"}), 404
+                    return jsonify({"success": False, "error": "Файл не найден"}), 404
 
                 log_dir = project_root / "logs" / "components"
                 log_dir.mkdir(parents=True, exist_ok=True)
@@ -654,10 +654,29 @@ class WebDashboard:
 
                 time.sleep(0.5)
                 if process.poll() is not None:
+                    # WebSocket уведомление об ошибке
+                    if hasattr(self, 'socketio'):
+                        from flask_socketio import emit
+                        emit('component_status', {
+                            'component': component,
+                            'status': 'error',
+                            'message': f'Не удалось запустить (код {process.returncode})'
+                        }, broadcast=True)
+                    
                     return jsonify({
                         "success": False,
                         "error": f"Не удалось запустить (код {process.returncode})"
                     }), 500
+
+                # WebSocket уведомление об успешном перезапуске
+                if hasattr(self, 'socketio'):
+                    from flask_socketio import emit
+                    emit('component_status', {
+                        'component': component,
+                        'status': 'running',
+                        'pid': process.pid,
+                        'restarted': True
+                    }, broadcast=True)
 
                 return jsonify({
                     "success": True,
@@ -882,6 +901,79 @@ class WebDashboard:
         def handle_disconnect():
             """Обработка отключения клиента"""
             self.logger.log_system_event("Клиент отключен от веб-панели", "INFO")
+
+        @self.socketio.on("request_update")
+        def handle_request_update():
+            """Запрос обновления данных"""
+            try:
+                import psutil
+                
+                # Статистика процессов
+                active_count = 0
+                if hasattr(self, "_active_processes"):
+                    for proc in self._active_processes.values():
+                        if proc.poll() is None:
+                            active_count += 1
+
+                # Системная статистика
+                cpu_percent = psutil.cpu_percent(interval=0.1)
+                memory = psutil.virtual_memory()
+
+                emit("status_update", {
+                    "components": {"active": active_count},
+                    "system": {
+                        "cpu_percent": cpu_percent,
+                        "memory_percent": memory.percent
+                    },
+                    "timestamp": datetime.now().isoformat()
+                })
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка обновления статуса: {e}")
+
+        # Фоновая задача для периодической отправки обновлений
+        def background_stats_updater():
+            """Фоновая отправка статистики каждые 5 секунд"""
+            import time
+            while True:
+                time.sleep(5)
+                try:
+                    import psutil
+                    
+                    active_count = 0
+                    if hasattr(self, "_active_processes"):
+                        for comp, proc in list(self._active_processes.items()):
+                            if proc.poll() is not None:
+                                # Процесс завершился
+                                del self._active_processes[comp]
+                                emit("component_status", {
+                                    'component': comp,
+                                    'status': 'stopped',
+                                    'exit_code': proc.returncode
+                                }, broadcast=True)
+                            else:
+                                active_count += 1
+
+                    cpu_percent = psutil.cpu_percent(interval=0.1)
+                    memory = psutil.virtual_memory()
+                    
+                    emit("stats_update", {
+                        "components": {
+                            "active": active_count,
+                            "total": len(getattr(self, "_active_processes", {}))
+                        },
+                        "system": {
+                            "cpu_percent": cpu_percent,
+                            "memory_percent": memory.percent,
+                            "memory_available_mb": memory.available // (1024 * 1024)
+                        },
+                        "timestamp": datetime.now().isoformat()
+                    })
+                except Exception as e:
+                    self.error_handler.log_error(f"Ошибка фоновой статистики: {e}")
+
+        # Запуск фонового потока
+        stats_thread = threading.Thread(target=background_stats_updater, daemon=True)
+        stats_thread.start()
 
         @self.socketio.on("request_metrics")
         def handle_request_metrics():
