@@ -38,6 +38,7 @@ USERS_DB = {
         "password_hash": pwd_context.hash("admin123"),
         "role": "admin",
         "created_at": "2026-03-11T00:00:00",
+        "last_login": None,
     },
     "user": {
         "id": 2,
@@ -45,8 +46,20 @@ USERS_DB = {
         "password_hash": pwd_context.hash("user123"),
         "role": "user",
         "created_at": "2026-03-11T00:00:00",
+        "last_login": None,
     },
 }
+
+
+def validate_password_strength(password: str) -> tuple[bool, str]:
+    """Проверка надёжности пароля"""
+    if len(password) < 8:
+        return False, "Пароль должен быть не менее 8 символов"
+    if not any(c.isupper() for c in password):
+        return False, "Пароль должен содержать заглавную букву"
+    if not any(c.isdigit() for c in password):
+        return False, "Пароль должен содержать цифру"
+    return True, ""
 
 
 def hash_password(password: str) -> str:
@@ -137,13 +150,16 @@ async def login(request: Request, login_data: LoginRequest):
             detail="Неверное имя пользователя или пароль",
         )
 
+    # Обновление last_login
+    user["last_login"] = datetime.now().isoformat()
+
     access_token = create_access_token(
         data={"sub": user["username"], "user_id": user["id"]}
     )
     refresh_token = create_refresh_token(
         data={"sub": user["username"], "user_id": user["id"]}
     )
-    
+
     return LoginResponse(
         access_token=access_token,
         refresh_token=refresh_token,
