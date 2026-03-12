@@ -6,6 +6,7 @@ FastAPI REST API для Nanoprobe Simulation Lab
 
 from fastapi import FastAPI, HTTPException, Depends, status, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -106,6 +107,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# GZip сжатие для уменьшения размера ответов
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Prometheus middleware для сбора метрик
 try:
