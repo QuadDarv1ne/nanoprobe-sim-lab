@@ -24,9 +24,12 @@ try:
         multiprocess,
         start_http_server,
     )
+    from prometheus_client import REGISTRY
     PROMETHEUS_AVAILABLE = True
 except ImportError:
     PROMETHEUS_AVAILABLE = False
+    CONTENT_TYPE_LATEST = "text/plain"
+    REGISTRY = None
     # Заглушки если prometheus_client не установлен
     class Counter:
         def __init__(self, *args, **kwargs): pass
@@ -355,29 +358,26 @@ class BusinessMetrics:
 
 # ==================== Endpoint для метрик ====================
 
-def get_metrics_endpoint():
+async def get_metrics():
     """
-    Создание endpoint для метрик Prometheus
+    Endpoint для метрик Prometheus
     Использование в FastAPI:
-        from api.metrics import get_metrics_endpoint
-        app.add_api_route('/metrics', get_metrics_endpoint())
+        from api.metrics import get_metrics
+        app.add_api_route('/metrics', get_metrics)
     """
     from fastapi import Response
     from fastapi.responses import PlainTextResponse
 
-    async def metrics():
-        if not PROMETHEUS_AVAILABLE:
-            return PlainTextResponse(
-                "Prometheus client not installed. Install with: pip install prometheus-client",
-                status_code=503
-            )
-
+    if not PROMETHEUS_AVAILABLE:
         return PlainTextResponse(
-            generate_latest(),
-            media_type=CONTENT_TYPE_LATEST
+            "Prometheus client not installed. Install with: pip install prometheus-client",
+            status_code=503
         )
 
-    return metrics
+    return PlainTextResponse(
+        generate_latest(),
+        media_type=CONTENT_TYPE_LATEST
+    )
 
 
 # ==================== Инициализация ====================

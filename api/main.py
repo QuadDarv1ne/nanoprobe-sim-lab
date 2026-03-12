@@ -104,6 +104,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Prometheus middleware для сбора метрик
+try:
+    from api.metrics import PrometheusMiddleware
+    app.add_middleware(PrometheusMiddleware)
+except ImportError:
+    pass
+
 
 # Health check
 @app.get("/health", tags=["Health"])
@@ -137,6 +144,14 @@ app.include_router(analysis.router, prefix="/api/v1/analysis", tags=["Анали
 app.include_router(comparison.router, prefix="/api/v1/comparison", tags=["Сравнение"])
 app.include_router(reports.router, prefix="/api/v1/reports", tags=["Отчёты"])
 app.include_router(admin.router, prefix="/api/v1", tags=["Администрирование"])
+
+
+# Metrics endpoint для Prometheus
+@app.get("/metrics", tags=["Monitoring"])
+async def metrics():
+    """Prometheus метрики"""
+    from api.metrics import get_metrics
+    return await get_metrics()
 
 
 # WebSocket эндпоинт для real-time обновлений
