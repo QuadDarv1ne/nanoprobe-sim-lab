@@ -586,6 +586,65 @@ class SDRInterface:
             print(f"Ошибка сохранения записи: {e}")
             return False
 
+    def save_recording_wav(self, output_file: str, sample_rate: int = None) -> bool:
+        """
+        Сохраняет запись в WAV файл с расширенными метаданными.
+
+        Args:
+            output_file: Путь к файлу
+            sample_rate: Частота дискретизации (по умолчанию self.sample_rate)
+
+        Returns:
+            bool: True если успешно
+        """
+        if not self.recorded_samples:
+            print("Нет данных для сохранения")
+            return False
+
+        try:
+            output_path = Path(output_file)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+
+            all_samples = np.concatenate(self.recorded_samples)
+            sr = sample_rate or self.sample_rate
+
+            # Нормализуем и конвертируем в 16-bit PCM
+            max_val = np.max(np.abs(all_samples.real))
+            if max_val > 0:
+                normalized = np.int16(all_samples.real / max_val * 32767)
+            else:
+                normalized = np.int16(all_samples.real * 32767)
+
+            with wave.open(str(output_path), 'w') as wav_file:
+                wav_file.setnchannels(1)
+                wav_file.setsampwidth(2)  # 16-bit
+                wav_file.setframerate(sr)
+                wav_file.writeframes(normalized.tobytes())
+
+            # Сохраняем метаданные
+            metadata_file = output_path.with_suffix('.json')
+            import json
+            metadata = {
+                'sample_rate': sr,
+                'duration_seconds': len(all_samples) / sr,
+                'device': self.device_name,
+                'center_freq_mhz': self.center_freq,
+                'gain_db': self.gain,
+                'samples_count': len(all_samples),
+                'timestamp': datetime.now().isoformat()
+            }
+            with open(metadata_file, 'w') as f:
+                json.dump(metadata, f, indent=2)
+
+            print(f"Запись сохранена: {output_file} ({metadata['duration_seconds']:.1f}с)")
+            print(f"Метаданные: {metadata_file}")
+            self.metadata['saved_file'] = str(output_path)
+            return True
+
+        except Exception as e:
+            print(f"Ошибка сохранения записи: {e}")
+            return False
+
     def start_frequency_scan(
         self,
         freq_range: Tuple[float, float] = (137, 146),
