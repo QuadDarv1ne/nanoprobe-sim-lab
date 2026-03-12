@@ -322,6 +322,47 @@ class SDRInterface:
             print(f"Ошибка установки усиления: {e}")
             return False
 
+    def set_agc_mode(self, enabled: bool) -> bool:
+        """
+        Включает/выключает автоматическую регулировку усиления (AGC).
+
+        Args:
+            enabled: True для включения AGC
+
+        Returns:
+            bool: True если успешно
+        """
+        if self.sdr is None:
+            return False
+        try:
+            self.sdr.gain = 'auto' if enabled else self.gain
+            print(f"AGC {'включен' if enabled else 'выключен'}")
+            return True
+        except Exception as e:
+            print(f"Ошибка установки AGC: {e}")
+            return False
+
+    def set_bias_tee(self, enabled: bool) -> bool:
+        """
+        Включает/выключает Bias-T для питания антенны.
+
+        Args:
+            enabled: True для включения Bias-T
+
+        Returns:
+            bool: True если успешно
+        """
+        if self.sdr is None:
+            return False
+        try:
+            # RTL-SDR V4 и новые версии поддерживают Bias-T
+            self.sdr.bias_tee = enabled
+            print(f"Bias-T {'включен' if enabled else 'выключен'}")
+            return True
+        except Exception as e:
+            print(f"Bias-T не поддерживается устройством: {e}")
+            return False
+
     def read_samples(self, num_samples: int = 1024) -> Optional[np.ndarray]:
         """
         Читает сэмплы с SDR.
@@ -341,6 +382,98 @@ class SDRInterface:
         except Exception as e:
             print(f"Ошибка чтения сэмплов: {e}")
             return None
+
+    def read_samples_batch(self, num_batches: int = 10, batch_size: int = 8192) -> Optional[np.ndarray]:
+        """
+        Читает пакет сэмплов с SDR (для RTL-SDR V4 с высокой скоростью).
+
+        Args:
+            num_batches: Количество пакетов
+            batch_size: Размер одного пакета
+
+        Returns:
+            np.ndarray: Объединенные сэмплы или None
+        """
+        if self.sdr is None:
+            return None
+
+        try:
+            all_samples = []
+            for i in range(num_batches):
+                samples = self.sdr.read_samples(batch_size)
+                if samples is not None:
+                    all_samples.append(samples)
+            
+            if all_samples:
+                return np.concatenate(all_samples)
+            return None
+        except Exception as e:
+            print(f"Ошибка чтения пакета сэмплов: {e}")
+            return None
+
+    def set_direct_sampling(self, enabled: bool, mode: int = 1) -> bool:
+        """
+        Включает/выключает прямой режим (direct sampling) для УКВ диапазона.
+
+        Args:
+            enabled: True для включения
+            mode: 0 = выключено, 1 = I-канал, 2 = Q-канал
+
+        Returns:
+            bool: True если успешно
+        """
+        if self.sdr is None:
+            return False
+        try:
+            self.sdr.direct_sampling = mode if enabled else 0
+            print(f"Direct sampling: {'включен (mode=' + str(mode) + ')' if enabled else 'выключен'}")
+            return True
+        except Exception as e:
+            print(f"Direct sampling не поддерживается: {e}")
+            return False
+
+    def set_frequency_correction(self, ppm: float) -> bool:
+        """
+        Устанавливает коррекцию частоты (для TCXO обычно 0).
+
+        Args:
+            ppm: Коррекция в ppm
+
+        Returns:
+            bool: True если успешно
+        """
+        if self.sdr is None:
+            return False
+        try:
+            self.sdr.freq_correction = ppm
+            print(f"Коррекция частоты: {ppm} ppm")
+            return True
+        except Exception as e:
+            print(f"Ошибка установки коррекции: {e}")
+            return False
+
+    def set_manual_gain_mode(self, enabled: bool) -> bool:
+        """
+        Включает ручной режим усиления.
+
+        Args:
+            enabled: True для ручного режима
+
+        Returns:
+            bool: True если успешно
+        """
+        if self.sdr is None:
+            return False
+        try:
+            if enabled:
+                self.sdr.gain = self.gain
+            else:
+                self.sdr.gain = 'auto'
+            print(f"Режим усиления: {'ручной' if enabled else 'авто'}")
+            return True
+        except Exception as e:
+            print(f"Ошибка установки режима усиления: {e}")
+            return False
 
     def start_recording(
         self,
