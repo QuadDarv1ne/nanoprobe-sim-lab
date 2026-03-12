@@ -9,8 +9,9 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from datetime import datetime, timedelta
 from typing import Optional
 import jwt
-import hashlib
 import os
+
+from passlib.context import CryptContext
 
 from api.schemas import (
     LoginRequest,
@@ -20,7 +21,6 @@ from api.schemas import (
 )
 from utils.rate_limiter import rate_limit
 
-
 router = APIRouter()
 security = HTTPBearer()
 
@@ -29,18 +29,20 @@ JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_MINUTES = 60
 JWT_REFRESH_EXPIRATION_DAYS = 7
 
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 USERS_DB = {
     "admin": {
         "id": 1,
         "username": "admin",
-        "password_hash": hashlib.sha256("admin123".encode()).hexdigest(),
+        "password_hash": pwd_context.hash("admin123"),
         "role": "admin",
         "created_at": "2026-03-11T00:00:00",
     },
     "user": {
         "id": 2,
         "username": "user",
-        "password_hash": hashlib.sha256("user123".encode()).hexdigest(),
+        "password_hash": pwd_context.hash("user123"),
         "role": "user",
         "created_at": "2026-03-11T00:00:00",
     },
@@ -48,8 +50,13 @@ USERS_DB = {
 
 
 def hash_password(password: str) -> str:
-    """Хеширование пароля"""
-    return hashlib.sha256(password.encode()).hexdigest()
+    """Хеширование пароля с bcrypt"""
+    return pwd_context.hash(password)
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Проверка пароля"""
+    return pwd_context.verify(plain_password, hashed_password)
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -124,8 +131,7 @@ async def login(request: Request, login_data: LoginRequest):
             detail="Неверное имя пользователя или пароль",
         )
 
-    password_hash = hash_password(login_data.password)
-    if user["password_hash"] != password_hash:
+    if not verify_password(login_data.password, user["password_hash"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Неверное имя пользователя или пароль",
