@@ -92,6 +92,50 @@ class SSTVDecoder:
             print(f"Ошибка при декодировании SSTV-сигнала: {e}")
             return self._fallback_decode(audio_file)
 
+    def decode_from_samples(self, samples: np.ndarray, sample_rate: int = 44100) -> Optional[Image.Image]:
+        """
+        Декодирует SSTV из numpy массива сэмплов (для RTL-SDR V4).
+
+        Args:
+            samples: numpy массив сэмплов
+            sample_rate: частота дискретизации
+
+        Returns:
+            Image.Image: Декодированное изображение или None
+        """
+        try:
+            # Сохраняем временный WAV файл
+            import wave
+            import tempfile
+            
+            temp_file = tempfile.NamedTemporaryFile(suffix='.wav', delete=False)
+            temp_path = temp_file.name
+            
+            # Нормализуем и конвертируем в 16-bit
+            max_val = np.max(np.abs(samples.real))
+            if max_val > 0:
+                normalized = np.int16(samples.real / max_val * 32767)
+            else:
+                normalized = np.int16(samples.real * 32767)
+
+            with wave.open(temp_path, 'w') as wav_file:
+                wav_file.setnchannels(1)
+                wav_file.setsampwidth(2)
+                wav_file.setframerate(sample_rate)
+                wav_file.writeframes(normalized.tobytes())
+
+            # Декодируем
+            image = self.decode_from_audio(temp_path)
+            
+            # Удаляем временный файл
+            import os
+            os.unlink(temp_path)
+            
+            return image
+        except Exception as e:
+            print(f"Ошибка декодирования из сэмплов: {e}")
+            return None
+
     def _decode_with_mode(self, audio_file: str, mode: str) -> Optional[Image.Image]:
         """
         Декодирует SSTV в конкретном режиме.
