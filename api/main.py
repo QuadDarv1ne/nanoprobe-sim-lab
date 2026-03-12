@@ -7,6 +7,8 @@ FastAPI REST API для Nanoprobe Simulation Lab
 from fastapi import FastAPI, HTTPException, Depends, status, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import uvicorn
 from pathlib import Path
@@ -14,6 +16,7 @@ from datetime import datetime
 from typing import List, Optional
 import json
 import os
+import traceback
 
 # Импорт существующих утилит
 from utils.database import DatabaseManager
@@ -144,6 +147,54 @@ app.include_router(analysis.router, prefix="/api/v1/analysis", tags=["Анали
 app.include_router(comparison.router, prefix="/api/v1/comparison", tags=["Сравнение"])
 app.include_router(reports.router, prefix="/api/v1/reports", tags=["Отчёты"])
 app.include_router(admin.router, prefix="/api/v1", tags=["Администрирование"])
+
+
+# ==================== Exception Handlers ====================
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request, exc: HTTPException):
+    """Обработка HTTP исключений"""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": True,
+            "status_code": exc.status_code,
+            "detail": exc.detail,
+            "path": str(request.url.path)
+        }
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc: RequestValidationError):
+    """Обработка ошибок валидации"""
+    return JSONResponse(
+        status_code=422,
+        content={
+            "error": True,
+            "status_code": 422,
+            "detail": "Validation error",
+            "errors": exc.errors()
+        }
+    )
+
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request, exc: Exception):
+    """Обработка общих исключений"""
+    # Логирование ошибки
+    error_trace = traceback.format_exc()
+    print(f"[ERROR] {datetime.now().isoformat()} - {exc}\n{error_trace}")
+
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": True,
+            "status_code": 500,
+            "detail": "Internal server error",
+            "type": exc.__class__.__name__
+        }
+    )
 
 
 # Metrics endpoint для Prometheus
