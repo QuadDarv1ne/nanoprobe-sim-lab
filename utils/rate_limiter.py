@@ -6,14 +6,23 @@ Rate Limiter для Nanoprobe Sim Lab API
 
 import time
 from collections import defaultdict
-from typing import Dict, Tuple, Optional
+from typing import Dict, Tuple, Optional, List
 from functools import wraps
 from fastapi import HTTPException, status, Request
 import threading
+from dataclasses import dataclass, field
+
+
+@dataclass
+class RateLimitInfo:
+    """Информация о rate limit"""
+    requests: List[float] = field(default_factory=list)
+    blocked_until: float = 0.0
+    violation_count: int = 0
 
 
 class RateLimiter:
-    """Rate limiter с скользящим окном и автоматической очисткой"""
+    """Rate limiter с скользящим окном, прогрессивной блокировкой и автоматической очисткой"""
 
     _instance: Optional['RateLimiter'] = None
     _lock = threading.Lock()
@@ -21,37 +30,63 @@ class RateLimiter:
     def __new__(cls) -> 'RateLimiter':
         """Singleton паттерн"""
         if cls._instance is None:
-            cls._instance = super().__new__(cls)
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self):
         if hasattr(self, '_initialized') and self._initialized:
             return
-        self.requests: Dict[str, list] = defaultdict(list)
+        self.requests: Dict[str, RateLimitInfo] = defaultdict(RateLimitInfo)
         self._cleanup_lock = threading.Lock()
         self._initialized = True
+        
+        # Конфигурация прогрессивной блокировки
+        self.progressive_blocking = True
+        self.block_multipliers = [2, 5, 15, 60]  # множители блокировки в минутах
 
     def is_allowed(self, key: str, max_requests: int, window_seconds: int) -> bool:
         now = time.time()
         window_start = now - window_seconds
 
         with self._cleanup_lock:
-            self.requests[key] = [
-                ts for ts in self.requests[key]
-                if ts > window_start
-            ]
+            info = self.requests[key]
+            
+            # Проверка блокировки
+            if info.blocked_until > now:
+                return False
+            
+            # Очистка старых запросов
+            info.requests = [ts for ts in info.requests if ts > window_start]
 
-            if len(self.requests[key]) >= max_requests:
+            if len(info.requests) >= max_requests:
+                # Прогрессивная блокировка при нарушениях
+                if self.progressive_blocking:
+                    info.violation_count += 1
+                    multiplier_idx = min(info.violation_count - 1, len(self.block_multipliers) - 1)
+                    block_minutes = self.block_multipliers[multiplier_idx]
+                    info.blocked_until = now + (block_minutes * 60)
                 return False
 
-            self.requests[key].append(now)
+            info.requests.append(now)
             return True
 
     def get_retry_after(self, key: str, max_requests: int, window_seconds: int) -> int:
-        if not self.requests[key]:
+        info = self.requests.get(key)
+        if not info:
+            return 0
+        
+        now = time.time()
+        
+        # Если заблокирован
+        if info.blocked_until > now:
+            return int(info.blocked_until - now)
+        
+        if not info.requests:
             return 0
 
-        oldest = min(self.requests[key])
+        oldest = min(info.requests)
         retry_after = int(oldest + window_seconds - time.time())
         return max(0, retry_after)
 
@@ -62,9 +97,14 @@ class RateLimiter:
 
         with self._cleanup_lock:
             empty_keys = []
-            for key in self.requests:
-                self.requests[key] = [ts for ts in self.requests[key] if ts > cutoff]
-                if not self.requests[key]:
+            for key, info in self.requests.items():
+                # Сброс блокировки если истекла
+                if info.blocked_until < now:
+                    info.blocked_until = 0.0
+                    info.violation_count = 0
+                
+                info.requests = [ts for ts in info.requests if ts > cutoff]
+                if not info.requests and info.blocked_until == 0:
                     empty_keys.append(key)
 
             for key in empty_keys:
@@ -74,34 +114,69 @@ class RateLimiter:
         """Получение количества запросов за окно"""
         now = time.time()
         window_start = now - window_seconds
-        return len([ts for ts in self.requests.get(key, []) if ts > window_start])
+        info = self.requests.get(key)
+        if not info:
+            return 0
+        return len([ts for ts in info.requests if ts > window_start])
+
+    def get_status(self, key: str, max_requests: int, window_seconds: int) -> Dict:
+        """Получение статуса rate limiting"""
+        now = time.time()
+        info = self.requests.get(key)
+        
+        if not info:
+            return {
+                "requests_made": 0,
+                "requests_remaining": max_requests,
+                "blocked": False,
+                "retry_after": 0,
+            }
+        
+        window_start = now - window_seconds
+        requests_in_window = len([ts for ts in info.requests if ts > window_start])
+        blocked = info.blocked_until > now
+        
+        return {
+            "requests_made": requests_in_window,
+            "requests_remaining": max(0, max_requests - requests_in_window),
+            "blocked": blocked,
+            "retry_after": int(info.blocked_until - now) if blocked else 0,
+            "violation_count": info.violation_count,
+        }
+
+    def reset(self, key: str):
+        """Сброс rate limit для ключа"""
+        with self._cleanup_lock:
+            if key in self.requests:
+                del self.requests[key]
 
 
 limiter = RateLimiter()
 
 
-def rate_limit(max_requests: int = 10, window_seconds: int = 60):
+def rate_limit(max_requests: int = 10, window_seconds: int = 60, block_message: str = "Слишком много запросов"):
     """
-    Декоратор для rate limiting.
-    
+    Декоратор для rate limiting с прогрессивной блокировкой.
+
     Args:
         max_requests: Максимум запросов в окно
         window_seconds: Размер окна в секундах
+        block_message: Сообщение при блокировке
     """
     def decorator(func):
         @wraps(func)
         async def wrapper(request: Request, *args, **kwargs):
             client_ip = request.client.host
             key = f"{func.__name__}:{client_ip}"
-            
+
             if not limiter.is_allowed(key, max_requests, window_seconds):
                 retry_after = limiter.get_retry_after(key, max_requests, window_seconds)
                 raise HTTPException(
                     status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                    detail="Слишком много запросов",
+                    detail=block_message,
                     headers={"Retry-After": str(retry_after)},
                 )
-            
+
             return await func(request, *args, **kwargs)
         return wrapper
     return decorator

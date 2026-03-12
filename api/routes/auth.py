@@ -241,3 +241,23 @@ async def logout():
     """Выход из системы"""
     # На клиенте нужно удалить токены
     return {"message": "Успешный выход. Удалите токены на клиенте."}
+
+
+@router.get(
+    "/rate-limit-status",
+    summary="Статус rate limiting",
+    description="Получение статуса rate limiting для текущего IP",
+)
+async def get_rate_limit_status(request: Request):
+    """Получение статуса rate limiting"""
+    from utils.rate_limiter import limiter
+    
+    client_ip = request.client.host
+    login_key = f"login:{client_ip}"
+    
+    status = limiter.get_status(login_key, max_requests=5, window_seconds=300)
+    return {
+        "ip": client_ip,
+        "endpoint": "login",
+        **status,
+    }
