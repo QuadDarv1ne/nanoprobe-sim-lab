@@ -4,7 +4,7 @@ API роуты для управления сканированиями
 CRUD операции для результатов сканирований
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Response
 from typing import List, Optional
 from datetime import datetime
 
@@ -43,15 +43,16 @@ def get_db() -> DatabaseManager:
 )
 async def get_scans(
     scan_type: Optional[str] = Query(None, description="Фильтр по типу сканирования"),
-    limit: int = Query(100, ge=1, le=1000, description="Лимит записей"),
-    offset: int = Query(0, ge=0, description="Смещение"),
+    page: int = Query(1, ge=1, description="Номер страницы"),
+    page_size: int = Query(20, ge=1, le=100, description="Размер страницы"),
     db: DatabaseManager = Depends(get_db),
 ):
-    """Получить список сканирований"""
+    """Получить список сканирований с пагинацией по страницам"""
     from api.main import redis_cache
     from api.metrics import BusinessMetrics
 
-    cache_key = f"scans:{scan_type or 'all'}:{limit}:{offset}"
+    offset = (page - 1) * page_size
+    cache_key = f"scans:{scan_type or 'all'}:{page}:{page_size}"
 
     if redis_cache and redis_cache.is_available():
         cached_result = redis_cache.get(cache_key)
@@ -60,13 +61,13 @@ async def get_scans(
             return ScanListResponse(**cached_result)
         BusinessMetrics.inc_cache_miss("scans")
 
-    scans = db.get_scan_results(scan_type=scan_type, limit=limit, offset=offset)
+    scans = db.get_scan_results(scan_type=scan_type, limit=page_size, offset=offset)
     total = db.count_scans(scan_type)
 
     result = ScanListResponse(
         items=[ScanResponse.model_validate(scan) for scan in scans],
         total=total,
-        limit=limit,
+        limit=page_size,
         offset=offset,
     )
 
