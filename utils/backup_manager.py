@@ -503,6 +503,52 @@ class BackupManager:
             self.logger_manager.log_system_event(f"Ошибка очистки резервных копий: {e}", "ERROR")
             return 0
 
+    def create_backup_strategy(
+        self,
+        strategy: str = "daily",
+        auto_cleanup: bool = True
+    ) -> Optional[str]:
+        """
+        Создание резервной копии по стратегии
+
+        Args:
+            strategy: Стратегия (daily, weekly, monthly)
+            auto_cleanup: Автоматическая очистка старых копий
+
+        Returns:
+            Путь к созданной копии или None
+        """
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        if strategy == "daily":
+            backup_name = f"backup_daily_{timestamp}"
+            include_outputs = False
+        elif strategy == "weekly":
+            backup_name = f"backup_weekly_{timestamp}"
+            include_outputs = True
+        elif strategy == "monthly":
+            backup_name = f"backup_monthly_{timestamp}"
+            include_outputs = True
+        else:
+            backup_name = f"backup_{strategy}_{timestamp}"
+            include_outputs = True
+
+        backup_path = self.create_backup(
+            backup_name=backup_name,
+            include_outputs=include_outputs,
+            compress=True
+        )
+
+        if backup_path and auto_cleanup:
+            if strategy == "daily":
+                self.cleanup_old_backups(keep_days=7, keep_count=7)
+            elif strategy == "weekly":
+                self.cleanup_old_backups(keep_days=30, keep_count=4)
+            elif strategy == "monthly":
+                self.cleanup_old_backups(keep_days=365, keep_count=12)
+
+        return backup_path
+
 
 def main():
     """Главная функция для демонстрации возможностей менеджера резервного копирования"""
