@@ -29,8 +29,18 @@ class TokenData(BaseModel):
 
 class LoginRequest(BaseModel):
     """Запрос на логин"""
-    username: str = Field(..., min_length=3, max_length=50)
-    password: str = Field(..., min_length=6)
+    username: str = Field(..., min_length=3, max_length=50, pattern=r'^[a-zA-Z0-9_]+$')
+    password: str = Field(..., min_length=8)
+
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError('Пароль должен быть не менее 8 символов')
+        if not any(c.isupper() for c in v):
+            raise ValueError('Пароль должен содержать заглавную букву')
+        if not any(c.isdigit() for c in v):
+            raise ValueError('Пароль должен содержать цифру')
+        return v
 
 
 class LoginResponse(BaseModel):
