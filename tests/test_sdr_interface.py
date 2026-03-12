@@ -78,6 +78,52 @@ class TestSDRInterface(unittest.TestCase):
         self.assertIsInstance(devices, list)
         # Метод должен возвращать список (пустой если нет устройств)
 
+    def test_get_frequency_range(self):
+        """Тестирует получение диапазона частот"""
+        freq_range = self.sdr.get_frequency_range()
+        self.assertIsInstance(freq_range, tuple)
+        self.assertEqual(len(freq_range), 2)
+        self.assertGreater(freq_range[1], freq_range[0])
+
+    def test_get_frequency_range_v4(self):
+        """Тестирует диапазон частот для RTL-SDR V4"""
+        sdr_v4 = SDRInterface(device_type='r828d')
+        freq_range = sdr_v4.get_frequency_range()
+        # RTL-SDR V4: 24-1766 МГц
+        self.assertEqual(freq_range[0], 24e6)
+        self.assertEqual(freq_range[1], 1766e6)
+
+    def test_set_bias_tee_before_init(self):
+        """Тестирует установку Bias-T до инициализации"""
+        result = self.sdr.set_bias_tee(True)
+        self.assertFalse(result)
+
+    def test_set_agc_mode_before_init(self):
+        """Тестирует установку AGC до инициализации"""
+        result = self.sdr.set_agc_mode(True)
+        self.assertFalse(result)
+
+    def test_set_direct_sampling_before_init(self):
+        """Тестирует установку direct sampling до инициализации"""
+        result = self.sdr.set_direct_sampling(True)
+        self.assertFalse(result)
+
+    def test_set_frequency_correction_before_init(self):
+        """Тестирует установку коррекции частоты до инициализации"""
+        result = self.sdr.set_frequency_correction(0)
+        self.assertFalse(result)
+
+    def test_read_samples_batch_before_init(self):
+        """Тестирует пакетное чтение сэмплов до инициализации"""
+        result = self.sdr.read_samples_batch()
+        self.assertIsNone(result)
+
+    def test_metadata_structure(self):
+        """Тестирует структуру метаданных"""
+        self.assertIn('device', self.sdr.metadata)
+        self.assertIn('initialized', self.sdr.metadata)
+        self.assertFalse(self.sdr.metadata['initialized'])
+
     def test_metadata_initialization(self):
         """Тестирует инициализацию метаданных"""
         self.assertIsInstance(self.sdr.metadata, dict)
