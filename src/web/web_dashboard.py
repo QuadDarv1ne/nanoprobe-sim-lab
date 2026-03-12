@@ -395,7 +395,7 @@ class WebDashboard:
                 # Проверка, запущен ли уже компонент
                 if not hasattr(self, "_active_processes"):
                     self._active_processes = {}
-                    
+
                 if component in self._active_processes:
                     process = self._active_processes[component]
                     if process.poll() is None:
@@ -404,17 +404,37 @@ class WebDashboard:
                             "error": f"Компонент '{component}' уже запущен (PID: {process.pid})"
                         }), 409
 
-                # Запуск процесса
-                process = subprocess.Popen(
-                    [sys.executable, str(component_path)],
-                    cwd=str(project_root),
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
-                )
+                # Запуск процесса с логами
+                log_dir = project_root / "logs" / "components"
+                log_dir.mkdir(parents=True, exist_ok=True)
+                
+                stdout_log = log_dir / f"{component}_stdout.log"
+                stderr_log = log_dir / f"{component}_stderr.log"
+
+                with open(stdout_log, "ab") as out_f, open(stderr_log, "ab") as err_f:
+                    process = subprocess.Popen(
+                        [sys.executable, str(component_path)],
+                        cwd=str(project_root),
+                        stdout=out_f,
+                        stderr=err_f,
+                        creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+                    )
 
                 self._active_processes[component] = process
                 self.logger.log_system_event(f"Запуск компонента: {component} (PID: {process.pid})", "INFO")
+
+                # Проверка что процесс запустился успешно
+                import time
+                time.sleep(0.5)
+                if process.poll() is not None:
+                    # Процесс завершился сразу с ошибкой
+                    error_msg = f"Компонент завершился с кодом {process.returncode}"
+                    self.logger.log_system_event(error_msg, "ERROR")
+                    return jsonify({
+                        "success": False,
+                        "error": error_msg,
+                        "log_file": str(stderr_log)
+                    }), 500
 
                 return jsonify({
                     "success": True,
