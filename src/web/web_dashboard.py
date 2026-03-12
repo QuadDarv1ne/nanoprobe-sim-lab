@@ -452,37 +452,55 @@ class WebDashboard:
             """Перезапустить все активные компоненты"""
             restarted = []
             failed = []
-            
+
             # Сначала останавливаем все
             self._stop_all_components()
-            
+
             import time
             time.sleep(1)
-            
+
             # Затем запускаем заново
             component_paths = {
                 "spm_simulator": project_root / "components" / "cpp-spm-hardware-sim" / "src" / "spm_simulator.py",
                 "image_analyzer": project_root / "components" / "py-surface-image-analyzer" / "src" / "main.py",
                 "sstv_station": project_root / "components" / "py-sstv-groundstation" / "src" / "main.py",
             }
-            
+
             for component, path in component_paths.items():
                 if path.exists():
                     try:
-                        process = subprocess.Popen(
-                            [sys.executable, str(path)],
-                            cwd=str(project_root),
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE,
-                            creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
-                        )
+                        log_dir = project_root / "logs" / "components"
+                        log_dir.mkdir(parents=True, exist_ok=True)
+
+                        with open(log_dir / f"{component}_stdout.log", "ab") as out_f, \
+                             open(log_dir / f"{component}_stderr.log", "ab") as err_f:
+                            process = subprocess.Popen(
+                                [sys.executable, str(path)],
+                                cwd=str(project_root),
+                                stdout=out_f,
+                                stderr=err_f,
+                                creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+                            )
+
                         if not hasattr(self, "_active_processes"):
                             self._active_processes = {}
                         self._active_processes[component] = process
                         restarted.append(component)
+                        self.logger.log_system_event(f"Перезапущен: {component} (PID: {process.pid})", "INFO")
+
+                        # WebSocket уведомление
+                        if hasattr(self, 'socketio'):
+                            from flask_socketio import emit
+                            emit('component_status', {
+                                'component': component,
+                                'status': 'running',
+                                'pid': process.pid,
+                                'restarted': True
+                            }, broadcast=True)
                     except Exception as e:
                         failed.append({"component": component, "error": str(e)})
-            
+                        self.logger.log_system_event(f"Ошибка перезапуска {component}: {e}", "ERROR")
+
             return {"restarted": restarted, "failed": failed}
 
         @self.app.route("/api/config", methods=["GET", "POST"])
