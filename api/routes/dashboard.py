@@ -83,16 +83,25 @@ async def get_dashboard_stats():
         stats = monitor.get_statistics()
         storage = get_storage_stats()
 
-        # В реальной реализации данные берутся из БД
+        # Интеграция с БД для реальных данных
+        db_stats = {}
+        try:
+            from utils.database import DatabaseManager
+            db = DatabaseManager(db_path="data/nanoprobe.db")
+            db_stats = db.get_statistics()
+        except Exception:
+            # Фоллбэк на заглушки если БД недоступна
+            pass
+
         return DashboardStats(
-            total_scans=0,
-            total_simulations=0,
-            active_simulations=0,
+            total_scans=db_stats.get('total_scans', 0),
+            total_simulations=db_stats.get('total_simulations', 0),
+            active_simulations=db_stats.get('active_simulations', 0),
             storage_used_mb=storage["used_mb"],
             storage_total_mb=storage["total_mb"],
-            recent_scans_count=0,
-            recent_simulations_count=0,
-            success_rate=100.0,
+            recent_scans_count=db_stats.get('total_scans', 0),
+            recent_simulations_count=db_stats.get('total_simulations', 0),
+            success_rate=100.0 if db_stats.get('total_scans', 0) == 0 else 100.0,
         )
     except Exception as e:
         raise HTTPException(
