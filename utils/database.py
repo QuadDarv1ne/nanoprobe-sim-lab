@@ -343,6 +343,39 @@ class DatabaseManager:
             ))
             return cursor.lastrowid
 
+    def add_scan_result_batch(
+        self,
+        scan_results: List[Dict]
+    ) -> int:
+        """
+        Добавляет несколько результатов сканирования пакетно.
+
+        Args:
+            scan_results: Список словарей с параметрами сканирования
+
+        Returns:
+            Количество добавленных записей
+        """
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            data = []
+            for scan in scan_results:
+                data.append((
+                    datetime.now().isoformat(),
+                    scan.get('scan_type'),
+                    scan.get('surface_type'),
+                    scan.get('width'),
+                    scan.get('height'),
+                    scan.get('file_path'),
+                    json.dumps(scan.get('metadata')) if scan.get('metadata') else None
+                ))
+            cursor.executemany("""
+                INSERT INTO scan_results
+                (timestamp, scan_type, surface_type, width, height, file_path, metadata)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, data)
+            return len(data)
+
     def get_scan_results(
         self,
         scan_type: str = None,
