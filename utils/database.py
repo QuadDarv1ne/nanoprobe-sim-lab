@@ -10,34 +10,101 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Optional, Any, Tuple
 from contextlib import contextmanager
+from queue import Queue
+import threading
 import numpy as np
+
+
+class ConnectionPool:
+    """Пул соединений для SQLite"""
+
+    def __init__(self, db_path: str, pool_size: int = 5):
+        self.db_path = db_path
+        self.pool_size = pool_size
+        self._pool: Queue = Queue(maxsize=pool_size)
+        self._lock = threading.Lock()
+        self._created = 0
+
+    def get_connection(self, timeout: float = 30.0) -> sqlite3.Connection:
+        """Получение соединения из пула"""
+        try:
+            return self._pool.get_nowait()
+        except:
+            with self._lock:
+                if self._created < self.pool_size:
+                    conn = self._create_connection()
+                    self._created += 1
+                    return conn
+            return self._pool.get(timeout=timeout)
+
+    def return_connection(self, conn: sqlite3.Connection):
+        """Возврат соединения в пул"""
+        try:
+            self._pool.put_nowait(conn)
+        except:
+            conn.close()
+
+    def _create_connection(self) -> sqlite3.Connection:
+        """Создание нового соединения"""
+        conn = sqlite3.connect(self.db_path, timeout=30.0)
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA journal_mode = WAL")
+        conn.execute("PRAGMA synchronous = NORMAL")
+        conn.execute("PRAGMA cache_size = -64000")
+        conn.execute("PRAGMA temp_store = MEMORY")
+        conn.execute("PRAGMA mmap_size = 268435456")
+        return conn
+
+    def close_all(self):
+        """Закрытие всех соединений"""
+        while not self._pool.empty():
+            try:
+                conn = self._pool.get_nowait()
+                conn.close()
+            except:
+                break
 
 
 class DatabaseManager:
     """Менеджер базы данных SQLite."""
 
-    def __init__(self, db_path: str = "data/nanoprobe.db"):
+    _pools: Dict[str, ConnectionPool] = {}
+    _pool_lock = threading.Lock()
+
+    def __init__(self, db_path: str = "data/nanoprobe.db", pool_size: int = 5):
         """
         Инициализирует менеджер базы данных.
 
         Args:
             db_path: Путь к файлу базы данных
+            pool_size: Размер пула соединений
         """
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        self.pool_size = pool_size
+        self._init_pool()
         self._init_database()
+
+    def _init_pool(self):
+        """Инициализация пула соединений"""
+        db_path_str = str(self.db_path)
+        with self._pool_lock:
+            if db_path_str not in self._pools:
+                self._pools[db_path_str] = ConnectionPool(db_path_str, self.pool_size)
+            self._pool = self._pools[db_path_str]
+
+    @classmethod
+    def close_all_pools(cls):
+        """Закрыть все пулы соединений"""
+        with cls._pool_lock:
+            for pool in cls._pools.values():
+                pool.close_all()
+            cls._pools.clear()
 
     @contextmanager
     def get_connection(self):
-        """Контекстный менеджер для подключения к БД."""
-        conn = sqlite3.connect(self.db_path, timeout=30.0)
-        conn.row_factory = sqlite3.Row
-        # Оптимизация производительности SQLite
-        conn.execute("PRAGMA journal_mode = WAL")
-        conn.execute("PRAGMA synchronous = NORMAL")
-        conn.execute("PRAGMA cache_size = -64000")  # 64MB cache
-        conn.execute("PRAGMA temp_store = MEMORY")
-        conn.execute("PRAGMA mmap_size = 268435456")  # 256MB mmap
+        """Контекстный менеджер для подключения к БД с пулом соединений."""
+        conn = self._pool.get_connection(timeout=30.0)
         try:
             yield conn
             conn.commit()
@@ -45,7 +112,7 @@ class DatabaseManager:
             conn.rollback()
             raise e
         finally:
-            conn.close()
+            self._pool.return_connection(conn)
 
     def _init_database(self):
         """Инициализация схемы базы данных."""
