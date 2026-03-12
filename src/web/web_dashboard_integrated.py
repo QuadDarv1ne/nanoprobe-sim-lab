@@ -500,6 +500,29 @@ class IntegratedWebDashboard:
                 self.error_handler.log_error(f"Ошибка получения статуса процессов: {e}")
                 return jsonify({'error': str(e)}), 500
 
+        @self.app.route("/api/logs/component/<component_name>", methods=["GET"])
+        def api_component_logs(component_name):
+            """API для получения логов компонента"""
+            try:
+                log_dir = project_root / "logs" / "components"
+                stdout_log = log_dir / f"{component_name}_stdout.log"
+                stderr_log = log_dir / f"{component_name}_stderr.log"
+
+                logs = {"stdout": "", "stderr": ""}
+
+                if stdout_log.exists():
+                    with open(stdout_log, "r", encoding="utf-8", errors="ignore") as f:
+                        logs["stdout"] = f.read()[-5000:]
+
+                if stderr_log.exists():
+                    with open(stderr_log, "r", encoding="utf-8", errors="ignore") as f:
+                        logs["stderr"] = f.read()[-5000:]
+
+                return jsonify(logs)
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка чтения логов: {e}")
+                return jsonify({'error': str(e)}), 500
+
         @self.app.route("/api/logs")
         def api_logs():
             """API для получения логов"""
