@@ -487,7 +487,7 @@ class WebDashboard:
                 # Запуск процесса с логами
                 log_dir = project_root / "logs" / "components"
                 log_dir.mkdir(parents=True, exist_ok=True)
-                
+
                 stdout_log = log_dir / f"{component}_stdout.log"
                 stderr_log = log_dir / f"{component}_stderr.log"
 
@@ -510,11 +510,30 @@ class WebDashboard:
                     # Процесс завершился сразу с ошибкой
                     error_msg = f"Компонент завершился с кодом {process.returncode}"
                     self.logger.log_system_event(error_msg, "ERROR")
+                    
+                    # WebSocket уведомление
+                    if hasattr(self, 'socketio'):
+                        from flask_socketio import emit
+                        emit('component_status', {
+                            'component': component,
+                            'status': 'error',
+                            'message': error_msg
+                        }, broadcast=True)
+                    
                     return jsonify({
                         "success": False,
                         "error": error_msg,
                         "log_file": str(stderr_log)
                     }), 500
+
+                # WebSocket уведомление об успешном запуске
+                if hasattr(self, 'socketio'):
+                    from flask_socketio import emit
+                    emit('component_status', {
+                        'component': component,
+                        'status': 'running',
+                        'pid': process.pid
+                    }, broadcast=True)
 
                 return jsonify({
                     "success": True,
@@ -558,6 +577,14 @@ class WebDashboard:
 
                 del self._active_processes[component]
                 self.logger.log_system_event(f"Остановка компонента: {component}", "INFO")
+
+                # WebSocket уведомление
+                if hasattr(self, 'socketio'):
+                    from flask_socketio import emit
+                    emit('component_status', {
+                        'component': component,
+                        'status': 'stopped'
+                    }, broadcast=True)
 
                 return jsonify({
                     "success": True,

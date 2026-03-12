@@ -1363,6 +1363,19 @@
                 updateDashboard(data);
             });
 
+            socket.on('component_status', function(data) {
+                const { component, status, message, pid } = data;
+                if (status === 'running') {
+                    showNotification(`Компонент ${component} запущен (PID: ${pid})`, 'success');
+                } else if (status === 'stopped') {
+                    showNotification(`Компонент ${component} остановлен`, 'info');
+                } else if (status === 'error') {
+                    showNotification(`Ошибка ${component}: ${message}`, 'error');
+                }
+                loadComponents();
+                loadDashboardData();
+            });
+
             socket.on('disconnect', function() {
                 showNotification('Потеряно соединение с сервером', 'error');
             });
