@@ -703,6 +703,66 @@ class SDRInterface:
 
         return True
 
+    def get_signal_strength(self) -> float:
+        """
+        Получает текущую силу сигнала.
+
+        Returns:
+            float: Сила сигнала в dB (приблизительно)
+        """
+        if self.sdr is None:
+            return -100.0
+
+        try:
+            samples = self.read_samples(1024)
+            if samples is None or len(samples) == 0:
+                return -100.0
+
+            # Вычисляем среднюю мощность сигнала
+            power = np.mean(np.abs(samples) ** 2)
+            
+            # Конвертируем в dB (приблизительно)
+            if power > 0:
+                strength_db = 10 * np.log10(power)
+                # Нормализуем к диапазону -100 до 0 dB
+                strength_db = max(-100, min(0, strength_db + 50))
+                return strength_db
+            return -100.0
+        except Exception:
+            return -100.0
+
+    def get_spectrum(self, num_samples: int = 8192) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Получает спектр сигнала (FFT).
+
+        Args:
+            num_samples: Количество сэмплов для FFT
+
+        Returns:
+            Tuple[np.ndarray, np.ndarray]: (frequencies, magnitudes)
+        """
+        if self.sdr is None:
+            return np.array([]), np.array([])
+
+        try:
+            samples = self.read_samples(num_samples)
+            if samples is None:
+                return np.array([]), np.array([])
+
+            # Вычисляем FFT
+            fft_data = np.fft.fft(samples.real)
+            fft_shifted = np.fft.fftshift(fft_data)
+            magnitudes = np.abs(fft_shifted)
+
+            # Частоты
+            frequencies = np.fft.fftfreq(len(samples), 1/self.sample_rate)
+            frequencies = np.fft.fftshift(frequencies) + self.center_freq * 1e6
+
+            return frequencies, magnitudes
+        except Exception as e:
+            print(f"Ошибка получения спектра: {e}")
+            return np.array([]), np.array([])
+
     def stop_scanning(self) -> bool:
         """Останавливает сканирование частот."""
         self.is_scanning = False
