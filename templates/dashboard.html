@@ -883,6 +883,9 @@
             <div class="tab" data-tab="components">
                 <i class="fas fa-microchip"></i> Компоненты
             </div>
+            <div class="tab" data-tab="waterfall">
+                <i class="fas fa-chart-area"></i> Waterfall
+            </div>
             <div class="tab" data-tab="analytics">
                 <i class="fas fa-chart-line"></i> Аналитика
             </div>
@@ -1147,6 +1150,37 @@
                         </div>
                     </li>
                 </ul>
+            </div>
+        </div>
+
+        <!-- Waterfall Tab -->
+        <div class="tab-content" id="waterfall">
+            <div class="card full-width">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-chart-area"></i>
+                        Waterfall Дисплей
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-success btn-sm" onclick="startWaterfall()">
+                            <i class="fas fa-play"></i> Старт
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="stopWaterfall()">
+                            <i class="fas fa-stop"></i> Стоп
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="saveWaterfall()">
+                            <i class="fas fa-save"></i> Сохранить
+                        </button>
+                    </div>
+                </div>
+                <div class="waterfall-container" style="padding: 20px;">
+                    <canvas id="waterfall-canvas" width="1024" height="512" style="width: 100%; height: 512px; background: #000; border-radius: 8px;"></canvas>
+                    <div style="margin-top: 10px; display: flex; justify-content: space-between; color: var(--text-secondary); font-size: 12px;">
+                        <span>Частота: <span id="waterfall-freq">0</span> МГц</span>
+                        <span>Sample Rate: <span id="waterfall-sample-rate">2.4</span> MSPS</span>
+                        <span>FFT: <span id="waterfall-fft">512</span> bins</span>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -2268,7 +2302,104 @@
                 notification.classList.add('exit');
                 setTimeout(() => notification.remove(), 300);
             }, 4000);
->>>>>>> 779a924 (Local improvements and conflict resolution)
+        }
+
+        // ==================== Waterfall ====================
+        let waterfallCanvas, waterfallCtx;
+        let waterfallRunning = false;
+        let waterfallData = [];
+        const MAX_WATERFALL_ROWS = 256;
+
+        function initWaterfall() {
+            waterfallCanvas = document.getElementById('waterfall-canvas');
+            waterfallCtx = waterfallCanvas.getContext('2d');
+            waterfallCtx.fillStyle = '#000';
+            waterfallCtx.fillRect(0, 0, waterfallCanvas.width, waterfallCanvas.height);
+        }
+
+        function startWaterfall() {
+            if (waterfallRunning) return;
+            
+            initWaterfall();
+            waterfallRunning = true;
+            waterfallData = [];
+            
+            // Подключаемся к WebSocket
+            socket.emit('start_waterfall', { fft_size: 512, sample_rate: 2400000 });
+            
+            showNotification('Waterfall запущен', 'success');
+        }
+
+        function stopWaterfall() {
+            if (!waterfallRunning) return;
+            
+            waterfallRunning = false;
+            socket.emit('stop_waterfall');
+            
+            showNotification('Waterfall остановлен', 'info');
+        }
+
+        function saveWaterfall() {
+            if (!waterfallCanvas) return;
+            
+            const link = document.createElement('a');
+            link.download = `waterfall_${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
+            link.href = waterfallCanvas.toDataURL('image/png');
+            link.click();
+            
+            showNotification('Waterfall сохранён', 'success');
+        }
+
+        // Обработчик спектра от сервера
+        if (typeof socket !== 'undefined') {
+            socket.on('waterfall_spectrum', function(data) {
+                if (!waterfallRunning || !waterfallCtx) return;
+                
+                const spectrum = data.spectrum;
+                const width = waterfallCanvas.width;
+                const height = waterfallCanvas.height;
+                
+                // Сдвигаем изображение вниз на 1 пиксель
+                const imageData = waterfallCtx.getImageData(0, 0, width, height - 1);
+                waterfallCtx.putImageData(imageData, 0, 1);
+                
+                // Рисуем новую строку спектра сверху
+                const rowHeight = 1;
+                const binWidth = width / spectrum.length;
+                
+                for (let i = 0; i < spectrum.length; i++) {
+                    const power = spectrum[i];
+                    const x = i * binWidth;
+                    
+                    // Цветовая схема (чёрный -> синий -> зелёный -> красный -> белый)
+                    let r, g, b;
+                    if (power < 64) {
+                        r = 0; g = 0; b = power * 4;
+                    } else if (power < 128) {
+                        r = 0; g = (power - 64) * 4; b = 255;
+                    } else if (power < 192) {
+                        r = (power - 128) * 4; g = 255; b = 255 - (power - 128) * 4;
+                    } else {
+                        r = 255; g = 255; b = 255 - (255 - power) * 4;
+                    }
+                    
+                    waterfallCtx.fillStyle = `rgb(${r},${g},${b})`;
+                    waterfallCtx.fillRect(x, 0, binWidth + 1, rowHeight);
+                }
+                
+                // Обновляем информацию
+                document.getElementById('waterfall-fft').textContent = data.fft_size;
+                document.getElementById('waterfall-sample-rate').textContent = (data.sample_rate / 1e6).toFixed(1);
+            });
+
+            socket.on('waterfall_stopped', function(data) {
+                waterfallRunning = false;
+            });
+
+            socket.on('waterfall_error', function(data) {
+                showNotification('Ошибка waterfall: ' + data.error, 'error');
+                stopWaterfall();
+            });
         }
 
         // ==================== Utilities ====================

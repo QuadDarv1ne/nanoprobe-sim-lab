@@ -318,11 +318,6 @@ class WebDashboard:
             """API для получения статуса всех процессов компонентов"""
             try:
                 processes = {}
-<<<<<<< HEAD
-
-=======
-                
->>>>>>> 779a924 (Local improvements and conflict resolution)
                 if hasattr(self, "_active_processes"):
                     for component, proc in self._active_processes.items():
                         poll_result = proc.poll()
@@ -343,7 +338,6 @@ class WebDashboard:
                 self.error_handler.log_error(f"Ошибка получения статуса процессов: {e}")
                 return jsonify({"error": str(e)}), 500
 
-<<<<<<< HEAD
         @self.app.route("/api/logs/component/<component_name>", methods=["GET"])
         def api_component_logs(component_name):
             """API для получения логов компонента"""
@@ -510,8 +504,6 @@ class WebDashboard:
 
             return {"restarted": restarted, "failed": failed}
 
-=======
->>>>>>> 779a924 (Local improvements and conflict resolution)
         @self.app.route("/api/config", methods=["GET", "POST"])
         def api_config():
             """API для управления конфигурацией"""
@@ -598,11 +590,6 @@ class WebDashboard:
                 # Запуск процесса с логами
                 log_dir = project_root / "logs" / "components"
                 log_dir.mkdir(parents=True, exist_ok=True)
-<<<<<<< HEAD
-
-=======
-                
->>>>>>> 779a924 (Local improvements and conflict resolution)
                 stdout_log = log_dir / f"{component}_stdout.log"
                 stderr_log = log_dir / f"{component}_stderr.log"
 
@@ -625,8 +612,7 @@ class WebDashboard:
                     # Процесс завершился сразу с ошибкой
                     error_msg = f"Компонент завершился с кодом {process.returncode}"
                     self.logger.log_system_event(error_msg, "ERROR")
-<<<<<<< HEAD
-                    
+
                     # WebSocket уведомление
                     if hasattr(self, 'socketio'):
                         from flask_socketio import emit
@@ -635,16 +621,13 @@ class WebDashboard:
                             'status': 'error',
                             'message': error_msg
                         }, broadcast=True)
-                    
-=======
->>>>>>> 779a924 (Local improvements and conflict resolution)
+
                     return jsonify({
                         "success": False,
                         "error": error_msg,
                         "log_file": str(stderr_log)
                     }), 500
 
-<<<<<<< HEAD
                 # WebSocket уведомление об успешном запуске
                 if hasattr(self, 'socketio'):
                     from flask_socketio import emit
@@ -654,8 +637,6 @@ class WebDashboard:
                         'pid': process.pid
                     }, broadcast=True)
 
-=======
->>>>>>> 779a924 (Local improvements and conflict resolution)
                 return jsonify({
                     "success": True,
                     "message": f"Компонент '{component}' запущен",
@@ -699,7 +680,6 @@ class WebDashboard:
                 del self._active_processes[component]
                 self.logger.log_system_event(f"Остановка компонента: {component}", "INFO")
 
-<<<<<<< HEAD
                 # WebSocket уведомление
                 if hasattr(self, 'socketio'):
                     from flask_socketio import emit
@@ -708,8 +688,6 @@ class WebDashboard:
                         'status': 'stopped'
                     }, broadcast=True)
 
-=======
->>>>>>> 779a924 (Local improvements and conflict resolution)
                 return jsonify({
                     "success": True,
                     "message": f"Компонент '{component}' остановлен",
@@ -722,7 +700,6 @@ class WebDashboard:
                     "error": str(e)
                 }), 500
 
-<<<<<<< HEAD
         @self.app.route("/api/actions/restart_component", methods=["POST"])
         def api_restart_component_action():
             """API для перезапуска компонента"""
@@ -812,8 +789,6 @@ class WebDashboard:
                 self.error_handler.log_error(f"Ошибка перезапуска: {e}")
                 return jsonify({"success": False, "error": str(e)}), 500
 
-=======
->>>>>>> 779a924 (Local improvements and conflict resolution)
         @self.app.route("/api/export/data", methods=["POST"])
         def api_export_data():
             """API для экспорта данных"""
@@ -1009,7 +984,6 @@ class WebDashboard:
                 self.error_handler.log_error(f"Ошибка получения истории анализов: {e}")
                 return jsonify({"error": str(e)}), 500
 
-<<<<<<< HEAD
         @self.app.route("/api/batch/jobs", methods=["GET"])
         def api_batch_jobs():
             """API для получения заданий пакетной обработки"""
@@ -1035,10 +1009,7 @@ class WebDashboard:
                 self.error_handler.log_error(f"Ошибка получения статистики: {e}")
                 return jsonify({"error": str(e)}), 500
 
-    def _register_socket_handlers(self):
-=======
     def _register_socket_handlers(self) -> None:
->>>>>>> 44b223b (refactor: code quality improvements)
         """Регистрация обработчиков SocketIO событий"""
 
         @self.socketio.on("connect")
