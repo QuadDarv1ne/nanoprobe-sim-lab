@@ -9,6 +9,8 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Any, Tuple, Optional
 import json
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 try:
     from PIL import Image
@@ -383,6 +385,7 @@ class DefectAnalysisPipeline:
         self.detector = DefectDetector()
         self.output_dir = Path("output/defect_analysis")
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        self._executor = ThreadPoolExecutor(max_workers=4)
 
     def analyze_image(
         self,
@@ -447,6 +450,80 @@ class DefectAnalysisPipeline:
             full_report['visualization_path'] = viz_path
 
         return full_report
+
+    async def analyze_image_async(
+        self,
+        image_path: str,
+        model_name: str = "isolation_forest",
+        save_results: bool = True
+    ) -> Dict[str, Any]:
+        """Асинхронный анализ изображения"""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            self._executor,
+            self.analyze_image,
+            image_path,
+            model_name,
+            save_results
+        )
+
+    async def analyze_batch_async(
+        self,
+        image_paths: List[str],
+        model_name: str = "isolation_forest",
+        save_results: bool = True,
+        max_concurrent: int = 4
+    ) -> List[Dict[str, Any]]:
+        """
+        Асинхронный пакетный анализ изображений
+
+        Args:
+            image_paths: Список путей к изображениям
+            model_name: Название модели
+            save_results: Сохранить результаты
+            max_concurrent: Максимум одновременных задач
+
+        Returns:
+            Список результатов анализа
+        """
+        semaphore = asyncio.Semaphore(max_concurrent)
+
+        async def analyze_with_semaphore(path: str) -> Dict[str, Any]:
+            async with semaphore:
+                return await self.analyze_image_async(path, model_name, save_results)
+
+        tasks = [analyze_with_semaphore(path) for path in image_paths]
+        return await asyncio.gather(*tasks, return_exceptions=True)
+
+    def analyze_batch(
+        self,
+        image_paths: List[str],
+        model_name: str = "isolation_forest",
+        save_results: bool = True
+    ) -> List[Dict[str, Any]]:
+        """
+        Пакетный анализ изображений
+
+        Args:
+            image_paths: Список путей к изображениям
+            model_name: Название модели
+            save_results: Сохранить результаты
+
+        Returns:
+            Список результатов анализа
+        """
+        results = []
+        for path in image_paths:
+            try:
+                result = self.analyze_image(path, model_name, save_results)
+                results.append(result)
+            except Exception as e:
+                results.append({
+                    'image_path': path,
+                    'error': str(e),
+                    'success': False
+                })
+        return results
 
     def _visualize_defects(
         self,
