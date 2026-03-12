@@ -1100,6 +1100,20 @@
                         <span>API Документация</span>
                     </div>
                 </div>
+                <div class="quick-actions" style="margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                    <div class="quick-action-btn" onclick="quickAction('clean_cache')" style="background: var(--bg-hover);">
+                        <i class="fas fa-broom"></i>
+                        <span>Очистить кэш</span>
+                    </div>
+                    <div class="quick-action-btn" onclick="quickAction('stop_all')" style="background: rgba(239, 68, 68, 0.2);">
+                        <i class="fas fa-stop-circle"></i>
+                        <span>Остановить все</span>
+                    </div>
+                    <div class="quick-action-btn" onclick="quickAction('restart_all')" style="background: rgba(245, 158, 11, 0.2);">
+                        <i class="fas fa-redo-alt"></i>
+                        <span>Перезапустить все</span>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -2027,6 +2041,33 @@
         }
 
         // Quick Actions
+        function quickAction(action) {
+            showNotification(`Выполнение: ${action}...`, 'info');
+            fetch('/api/actions/quick', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: action })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const result = data.result || {};
+                    let msg = data.message;
+                    if (result.stopped) msg += ` (остановлено: ${result.stopped.length})`;
+                    if (result.restarted) msg += ` (перезапущено: ${result.restarted.length})`;
+                    if (result.count !== undefined) msg += ` (${result.count})`;
+                    showNotification(msg, 'success');
+                    loadComponents();
+                    loadDashboardData();
+                } else {
+                    showNotification(data.error || 'Ошибка выполнения', 'error');
+                }
+            })
+            .catch(error => {
+                showNotification(`Ошибка: ${error.message}`, 'error');
+            });
+        }
+
         function runSpmSimulator() {
             startComponent('spm_simulator');
         }
