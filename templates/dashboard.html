@@ -1049,6 +1049,20 @@
                             <div class="stat-label">Часов работы</div>
                         </div>
                     </div>
+                    <div class="stats-grid" style="margin-top: 1rem;">
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-components-active" style="color: var(--success);">0</div>
+                            <div class="stat-label">Активных компонентов</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-cpu" style="color: var(--primary);">0%</div>
+                            <div class="stat-label">CPU</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-memory" style="color: var(--warning);">0%</div>
+                            <div class="stat-label">Память</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1359,9 +1373,10 @@
             Promise.all([
                 fetch('/api/system_info').then(r => r.json()),
                 fetch('/api/component_status').then(r => r.json()),
-                fetch('/api/logs').then(r => r.json())
-            ]).then(([systemInfo, components, logs]) => {
-                updateDashboard({ ...systemInfo, components, logs });
+                fetch('/api/logs').then(r => r.json()),
+                fetch('/api/stats').then(r => r.json()).catch(() => ({}))
+            ]).then(([systemInfo, components, logs, stats]) => {
+                updateDashboard({ ...systemInfo, components, logs, stats });
             }).catch(error => {
                 console.error('Ошибка загрузки данных:', error);
             });
@@ -1397,11 +1412,22 @@
 
                 document.getElementById('memory-progress').style.width = memoryPercent + '%';
                 document.getElementById('memory-value').textContent = memoryPercent.toFixed(1) + '%';
-                
+
                 if (data.system_metrics?.memory_used && data.system_metrics?.memory_total) {
                     const used = (data.system_metrics.memory_used / 1024 ** 3).toFixed(1);
                     const total = (data.system_metrics.memory_total / 1024 ** 3).toFixed(1);
                     document.getElementById('memory-detail').textContent = `${used} / ${total} GB`;
+                }
+            }
+
+            // Stats from /api/stats
+            if (data.stats) {
+                if (data.stats.components) {
+                    document.getElementById('stat-components-active').textContent = data.stats.components.active;
+                }
+                if (data.stats.system) {
+                    document.getElementById('stat-cpu').textContent = data.stats.system.cpu_percent.toFixed(1) + '%';
+                    document.getElementById('stat-memory').textContent = data.stats.system.memory_percent.toFixed(1) + '%';
                 }
             }
 
