@@ -197,6 +197,29 @@ class SDRInterface:
             except Exception:
                 pass
 
+    def get_frequency_range(self) -> Tuple[float, float]:
+        """
+        Возвращает диапазон частот устройства.
+
+        Returns:
+            Tuple[float, float]: (min_freq_hz, max_freq_hz)
+        """
+        if self.device_type == 'r828d':
+            # RTL-SDR V4: 24 МГц - 1766 МГц (с прямым режимом до 28 МГц)
+            return (24e6, 1766e6)
+        elif self.device_type in ['rtl2832u', 'rtl2838', 'r820t']:
+            # Классические RTL-SDR: 24 МГц - 1766 МГц
+            return (24e6, 1766e6)
+        elif self.device_type == 'airspy':
+            # Airspy: 24 МГц - 1800 МГц
+            return (24e6, 1800e6)
+        elif self.device_type == 'hackrf':
+            # HackRF: 1 МГц - 6000 МГц
+            return (1e6, 6000e6)
+        else:
+            # По умолчанию
+            return (24e6, 1766e6)
+
     def set_frequency(self, freq_mhz: float) -> bool:
         """
         Устанавливает частоту приема.
