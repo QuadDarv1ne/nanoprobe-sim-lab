@@ -1324,10 +1324,16 @@
             loadSettings();
             initializeSocket();
             loadDashboardData();
+            loadComponents();
             setupTabs();
             setupAutoRefresh();
             initializeAnalyticsChart();
             applyTheme(settings.theme);
+            
+            // Автообновление статуса компонентов каждые 5 секунд
+            setInterval(() => {
+                loadComponents();
+            }, 5000);
         });
 
         // ==================== WebSocket ====================
@@ -1879,12 +1885,16 @@
                     showNotification(data.message || `Компонент ${name} запущен`, 'success');
                     loadComponents();
                     loadDashboardData();
+                } else if (data.error && data.error.includes('уже запущен')) {
+                    showNotification(`Компонент ${name} уже запущен`, 'warning');
+                    loadComponents();
                 } else {
                     showNotification(data.error || `Ошибка запуска ${name}`, 'error');
                 }
             })
             .catch(error => {
-                showNotification(`Ошибка запуска компонента`, 'error');
+                showNotification(`Ошибка соединения с сервером`, 'error');
+                console.error(error);
             });
         }
 
@@ -1900,12 +1910,16 @@
                     showNotification(data.message || `Компонент ${name} остановлен`, 'success');
                     loadComponents();
                     loadDashboardData();
+                } else if (data.error && data.error.includes('не запущен')) {
+                    showNotification(`Компонент ${name} не запущен`, 'warning');
+                    loadComponents();
                 } else {
                     showNotification(data.error || `Ошибка остановки ${name}`, 'error');
                 }
             })
             .catch(error => {
-                showNotification(`Ошибка остановки компонента`, 'error');
+                showNotification(`Ошибка соединения с сервером`, 'error');
+                console.error(error);
             });
         }
 
