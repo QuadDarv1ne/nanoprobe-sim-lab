@@ -1016,7 +1016,7 @@ class WebDashboard:
             """Запрос обновления данных"""
             try:
                 import psutil
-                
+
                 # Статистика процессов
                 active_count = 0
                 if hasattr(self, "_active_processes"):
@@ -1038,6 +1038,45 @@ class WebDashboard:
                 })
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка обновления статуса: {e}")
+
+        @self.socketio.on("quick_action")
+        def handle_quick_action(data):
+            """Обработка быстрого действия через WebSocket"""
+            try:
+                action = data.get("action", "")
+                
+                if action == "clean_cache":
+                    result = self.cache_manager.auto_cleanup()
+                    emit("quick_action_result", {
+                        "success": True,
+                        "action": action,
+                        "result": result
+                    })
+                elif action == "stop_all":
+                    result = self._stop_all_components()
+                    emit("quick_action_result", {
+                        "success": True,
+                        "action": action,
+                        "result": result
+                    })
+                elif action == "restart_all":
+                    result = self._restart_all_components()
+                    emit("quick_action_result", {
+                        "success": True,
+                        "action": action,
+                        "result": result
+                    })
+                else:
+                    emit("quick_action_result", {
+                        "success": False,
+                        "error": f"Неизвестное действие: {action}"
+                    })
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка быстрого действия: {e}")
+                emit("quick_action_result", {
+                    "success": False,
+                    "error": str(e)
+                })
 
         # Фоновая задача для периодической отправки обновлений
         def background_stats_updater():

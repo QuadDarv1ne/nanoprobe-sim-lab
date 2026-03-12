@@ -2043,29 +2043,42 @@
         // Quick Actions
         function quickAction(action) {
             showNotification(`Выполнение: ${action}...`, 'info');
-            fetch('/api/actions/quick', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: action })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const result = data.result || {};
-                    let msg = data.message;
-                    if (result.stopped) msg += ` (остановлено: ${result.stopped.length})`;
-                    if (result.restarted) msg += ` (перезапущено: ${result.restarted.length})`;
-                    if (result.count !== undefined) msg += ` (${result.count})`;
-                    showNotification(msg, 'success');
-                    loadComponents();
-                    loadDashboardData();
-                } else {
-                    showNotification(data.error || 'Ошибка выполнения', 'error');
-                }
-            })
-            .catch(error => {
-                showNotification(`Ошибка: ${error.message}`, 'error');
+            
+            // Используем WebSocket для быстрого действия
+            if (typeof socket !== 'undefined' && socket.connected) {
+                socket.emit('quick_action', { action: action });
+            } else {
+                // Фоллбэк на HTTP
+                fetch('/api/actions/quick', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: action })
+                })
+                .then(response => response.json())
+                .then(data => handleQuickActionResult(data));
+            }
+        }
+
+        // Обработчик результатов быстрого действия
+        if (typeof socket !== 'undefined') {
+            socket.on('quick_action_result', function(data) {
+                handleQuickActionResult(data);
             });
+        }
+
+        function handleQuickActionResult(data) {
+            if (data.success) {
+                const result = data.result || {};
+                let msg = data.message || `Действие '${data.action}' выполнено`;
+                if (result.stopped) msg += ` (остановлено: ${result.stopped.length})`;
+                if (result.restarted) msg += ` (перезапущено: ${result.restarted.length})`;
+                if (result.count !== undefined) msg += ` (${result.count})`;
+                showNotification(msg, 'success');
+                loadComponents();
+                loadDashboardData();
+            } else {
+                showNotification(data.error || 'Ошибка выполнения', 'error');
+            }
         }
 
         function runSpmSimulator() {
