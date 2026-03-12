@@ -38,32 +38,37 @@ async def compare_surfaces(
     db: DatabaseManager = Depends(get_db),
 ):
     """Сравнить две поверхности"""
+    from api.metrics import BusinessMetrics
+
     try:
         # Проверка существования файлов
         image1_path = Path(request.image1_path)
         image2_path = Path(request.image2_path)
-        
+
         if not image1_path.exists():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Файл не найден: {request.image1_path}",
             )
-        
+
         if not image2_path.exists():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Файл не найден: {request.image2_path}",
             )
-        
+
         # Создание компаратора
         comparator = SurfaceComparator()
-        
+
         # Сравнение
         result = comparator.compare(
             str(image1_path),
             str(image2_path),
             save_results=True,
         )
+
+        # Бизнес-метрики
+        BusinessMetrics.inc_comparison()
         
         # Генерация ID
         comparison_id = f"comp_{uuid.uuid4().hex[:8]}"

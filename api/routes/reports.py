@@ -39,13 +39,15 @@ async def generate_pdf_report(
     db: DatabaseManager = Depends(get_db),
 ):
     """Сгенерировать PDF отчёт"""
+    from api.metrics import BusinessMetrics
+
     try:
         # Создание генератора отчётов
         report_generator = ScientificPDFReport(output_dir="reports/pdf")
-        
+
         report_id = f"report_{uuid.uuid4().hex[:8]}"
         report_path = None
-        
+
         # Генерация отчёта в зависимости от типа
         if request.report_type == ReportType.SURFACE_ANALYSIS:
             report_path = report_generator.generate_surface_analysis_report(
@@ -54,7 +56,7 @@ async def generate_pdf_report(
                 title=request.title,
                 author=request.author,
             )
-        
+
         elif request.report_type == ReportType.DEFECT_ANALYSIS:
             report_path = report_generator.generate_defect_analysis_report(
                 defect_data=request.data,
@@ -62,7 +64,7 @@ async def generate_pdf_report(
                 title=request.title,
                 author=request.author,
             )
-        
+
         elif request.report_type == ReportType.COMPARISON:
             report_path = report_generator.generate_comparison_report(
                 comparison_data=request.data,
@@ -70,7 +72,7 @@ async def generate_pdf_report(
                 title=request.title,
                 author=request.author,
             )
-        
+
         elif request.report_type == ReportType.SIMULATION:
             report_path = report_generator.generate_simulation_report(
                 simulation_data=request.data,
@@ -78,6 +80,10 @@ async def generate_pdf_report(
                 title=request.title,
                 author=request.author,
             )
+
+        # Бизнес-метрики
+        if report_path:
+            BusinessMetrics.inc_report_generated(request.report_type.value)
         
         elif request.report_type == ReportType.BATCH:
             report_path = report_generator.generate_batch_report(

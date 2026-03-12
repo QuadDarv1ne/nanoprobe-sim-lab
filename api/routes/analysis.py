@@ -39,6 +39,8 @@ async def analyze_image_defects(
     db: DatabaseManager = Depends(get_db),
 ):
     """Анализ дефектов на изображении"""
+    from api.metrics import BusinessMetrics
+
     try:
         # Проверка существования файла
         image_path = Path(request.image_path)
@@ -47,16 +49,20 @@ async def analyze_image_defects(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Файл не найден: {request.image_path}",
             )
-        
+
         # Создание пайплайна
         pipeline = DefectAnalysisPipeline(db_manager=db)
-        
+
         # Анализ
         result = pipeline.analyze_image(
             image_path=str(image_path),
             model_name=request.model_name,
             save_results=True,
         )
+
+        # Бизнес-метрики
+        defects_list = result.get('defects', [])
+        BusinessMetrics.inc_defect_analysis(request.model_name, defects_list)
         
         # Конвертация дефектов в формат схемы
         defects = [
