@@ -7,19 +7,50 @@
 import os
 import json
 import time
+import asyncio
 import threading
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Any, Callable, Optional
+from typing import Dict, List, Any, Callable, Optional, Union
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
 from queue import Queue, Empty
 import traceback
+from dataclasses import dataclass, field
+from enum import Enum
 
 try:
     from PIL import Image
     PIL_AVAILABLE = True
 except ImportError:
     PIL_AVAILABLE = False
+
+
+class JobStatus(Enum):
+    """Статусы задания"""
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+    PAUSED = "paused"
+
+
+@dataclass
+class BatchJobStats:
+    """Статистика задания"""
+    job_id: str
+    job_type: str
+    status: str
+    total_items: int
+    processed_items: int
+    failed_items: int
+    progress_percent: float
+    success_rate: float
+    started_at: Optional[str]
+    completed_at: Optional[str]
+    duration_seconds: Optional[float]
+    priority: int
+    errors_count: int
 
 
 class BatchJob:
@@ -554,6 +585,32 @@ class BatchProcessor:
                 return {'error': f'Задание {job_id} не найдено'}
             return self.jobs[job_id].to_dict()
 
+    def get_job_stats(self, job_id: str) -> Optional[BatchJobStats]:
+        """Получение статистики задания"""
+        with self.lock:
+            if job_id not in self.jobs:
+                return None
+            job = self.jobs[job_id]
+            duration = None
+            if job.started_at:
+                end = job.completed_at or datetime.now()
+                duration = (end - job.started_at).total_seconds()
+            return BatchJobStats(
+                job_id=job.job_id,
+                job_type=job.job_type,
+                status=job.status,
+                total_items=job.total_items,
+                processed_items=job.processed_items,
+                failed_items=job.failed_items,
+                progress_percent=job.progress_percent,
+                success_rate=job.success_rate,
+                started_at=job.started_at.isoformat() if job.started_at else None,
+                completed_at=job.completed_at.isoformat() if job.completed_at else None,
+                duration_seconds=duration,
+                priority=job.priority,
+                errors_count=len(job.errors),
+            )
+
     def get_all_jobs(self, status: str = None) -> List[Dict[str, Any]]:
         """Получение списка заданий"""
         with self.lock:
@@ -583,6 +640,29 @@ class BatchProcessor:
 
             return True
 
+    def pause_job(self, job_id: str) -> bool:
+        """Приостановка задания"""
+        with self.lock:
+            if job_id not in self.jobs:
+                return False
+            job = self.jobs[job_id]
+            if job.status != 'running':
+                return False
+            job.status = 'paused'
+            return True
+
+    def resume_job(self, job_id: str) -> bool:
+        """Возобновление задания"""
+        with self.lock:
+            if job_id not in self.jobs:
+                return False
+            job = self.jobs[job_id]
+            if job.status != 'paused':
+                return False
+            job.status = 'running'
+            self.job_queue.put(job)
+            return True
+
     def _save_job_results(self, job: BatchJob):
         """Сохранение результатов задания"""
         results_path = self.output_dir / f"{job.job_id}_results.json"
@@ -604,6 +684,7 @@ class BatchProcessor:
             failed = sum(1 for j in self.jobs.values() if j.status == 'failed')
             running = len(self.active_jobs)
             pending = total_jobs - completed - failed - running
+            paused = sum(1 for j in self.jobs.values() if j.status == 'paused')
 
             return {
                 'total_jobs': total_jobs,
@@ -611,9 +692,41 @@ class BatchProcessor:
                 'failed': failed,
                 'running': running,
                 'pending': pending,
+                'paused': paused,
                 'total_items_processed': self.total_items_processed,
                 'success_rate': completed / (completed + failed) * 100 if (completed + failed) > 0 else 0,
             }
+
+    async def process_item_async(self, item: Any, processor: Callable) -> Any:
+        """Асинхронная обработка одного элемента"""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, processor, item)
+
+    async def process_batch_async(
+        self,
+        items: List[Any],
+        processor: Callable,
+        max_concurrent: int = 4
+    ) -> List[Any]:
+        """
+        Асинхронная пакетная обработка
+
+        Args:
+            items: Элементы для обработки
+            processor: Функция обработки
+            max_concurrent: Максимум одновременных задач
+
+        Returns:
+            Список результатов
+        """
+        semaphore = asyncio.Semaphore(max_concurrent)
+
+        async def process_with_semaphore(item: Any) -> Any:
+            async with semaphore:
+                return await self.process_item_async(item, processor)
+
+        tasks = [process_with_semaphore(item) for item in items]
+        return await asyncio.gather(*tasks, return_exceptions=True)
 
 
 class FolderWatcher:
