@@ -882,6 +882,31 @@ class WebDashboard:
                 self.error_handler.log_error(f"Ошибка получения истории анализов: {e}")
                 return jsonify({"error": str(e)}), 500
 
+        @self.app.route("/api/batch/jobs", methods=["GET"])
+        def api_batch_jobs():
+            """API для получения заданий пакетной обработки"""
+            try:
+                from utils.batch_processor import BatchProcessor
+                processor = BatchProcessor()
+                status_filter = request.args.get('status', None)
+                jobs = processor.get_all_jobs(status=status_filter)
+                return jsonify({"jobs": jobs, "total": len(jobs)})
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка получения заданий: {e}")
+                return jsonify({"error": str(e)}), 500
+
+        @self.app.route("/api/batch/statistics", methods=["GET"])
+        def api_batch_statistics():
+            """API для получения статистики пакетной обработки"""
+            try:
+                from utils.batch_processor import BatchProcessor
+                processor = BatchProcessor()
+                stats = processor.get_statistics()
+                return jsonify(stats)
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка получения статистики: {e}")
+                return jsonify({"error": str(e)}), 500
+
     def _register_socket_handlers(self):
         """Регистрация обработчиков SocketIO событий"""
 
