@@ -286,13 +286,39 @@ class WebDashboard:
                 if os.path.exists(log_file):
                     with open(log_file, "r", encoding="utf-8") as f:
                         lines = f.readlines()
-                        recent_logs = lines[-50:]  # Последние 50 строк
+                        recent_logs = lines[-50:]
                 else:
                     recent_logs = ["Лог-файл не найден"]
 
                 return jsonify({"logs": recent_logs})
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка получения логов: {e}")
+                return jsonify({"error": str(e)}), 500
+
+        @self.app.route("/api/processes", methods=["GET"])
+        def api_processes():
+            """API для получения статуса всех процессов компонентов"""
+            try:
+                processes = {}
+                
+                if hasattr(self, "_active_processes"):
+                    for component, proc in self._active_processes.items():
+                        poll_result = proc.poll()
+                        processes[component] = {
+                            "pid": proc.pid,
+                            "status": "running" if poll_result is None else "stopped",
+                            "exit_code": poll_result,
+                            "returncode": proc.returncode
+                        }
+                else:
+                    self._active_processes = {}
+
+                return jsonify({
+                    "active_count": len(self._active_processes),
+                    "processes": processes
+                })
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка получения статуса процессов: {e}")
                 return jsonify({"error": str(e)}), 500
 
         @self.app.route("/api/config", methods=["GET", "POST"])
