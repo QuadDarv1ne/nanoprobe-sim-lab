@@ -640,7 +640,7 @@ class DatabaseManager:
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO simulations 
+                INSERT INTO simulations
                 (simulation_id, simulation_type, start_time, status, parameters)
                 VALUES (?, ?, ?, 'running', ?)
             """, (
@@ -649,7 +649,38 @@ class DatabaseManager:
                 datetime.now().isoformat(),
                 json.dumps(parameters) if parameters else None
             ))
-            return cursor.lastrowid
+            sim_id = cursor.lastrowid
+
+        # Инвалидация кэша симуляций
+        self.invalidate_cache("simulations:")
+
+        return sim_id
+
+    async def add_simulation_async(
+        self,
+        simulation_id: str,
+        simulation_type: str,
+        parameters: Dict = None
+    ) -> int:
+        """Асинхронное добавление записи о симуляции"""
+        async with self.get_connection_async() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO simulations
+                (simulation_id, simulation_type, start_time, status, parameters)
+                VALUES (?, ?, ?, 'running', ?)
+            """, (
+                simulation_id,
+                simulation_type,
+                datetime.now().isoformat(),
+                json.dumps(parameters) if parameters else None
+            ))
+            sim_id = cursor.lastrowid
+
+        # Инвалидация кэша
+        self.invalidate_cache("simulations:")
+
+        return sim_id
 
     def update_simulation(
         self,
@@ -667,22 +698,22 @@ class DatabaseManager:
         """
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            
+
             updates = []
             params = []
-            
+
             if status:
                 updates.append("status = ?")
                 params.append(status)
-            
+
             if results_summary:
                 updates.append("results_summary = ?")
                 params.append(json.dumps(results_summary))
-            
+
             if status in ('completed', 'failed', 'stopped'):
                 updates.append("end_time = ?")
                 params.append(datetime.now().isoformat())
-                
+
                 # Рассчитываем длительность
                 cursor.execute(
                     "SELECT start_time FROM simulations WHERE simulation_id = ?",
@@ -694,10 +725,56 @@ class DatabaseManager:
                     duration = (datetime.now() - start).total_seconds()
                     updates.append("duration_seconds = ?")
                     params.append(duration)
-            
+
             params.append(simulation_id)
             query = f"UPDATE simulations SET {', '.join(updates)} WHERE simulation_id = ?"
             cursor.execute(query, params)
+
+        # Инвалидация кэша
+        self.invalidate_cache("simulations:")
+
+    async def update_simulation_async(
+        self,
+        simulation_id: str,
+        status: str = None,
+        results_summary: Dict = None
+    ):
+        """Асинхронное обновление записи о симуляции"""
+        async with self.get_connection_async() as conn:
+            cursor = conn.cursor()
+
+            updates = []
+            params = []
+
+            if status:
+                updates.append("status = ?")
+                params.append(status)
+
+            if results_summary:
+                updates.append("results_summary = ?")
+                params.append(json.dumps(results_summary))
+
+            if status in ('completed', 'failed', 'stopped'):
+                updates.append("end_time = ?")
+                params.append(datetime.now().isoformat())
+
+                cursor.execute(
+                    "SELECT start_time FROM simulations WHERE simulation_id = ?",
+                    (simulation_id,)
+                )
+                row = cursor.fetchone()
+                if row and row['start_time']:
+                    start = datetime.fromisoformat(row['start_time'])
+                    duration = (datetime.now() - start).total_seconds()
+                    updates.append("duration_seconds = ?")
+                    params.append(duration)
+
+            params.append(simulation_id)
+            query = f"UPDATE simulations SET {', '.join(updates)} WHERE simulation_id = ?"
+            cursor.execute(query, params)
+
+        # Инвалидация кэша
+        self.invalidate_cache("simulations:")
 
     def get_simulations(
         self,
