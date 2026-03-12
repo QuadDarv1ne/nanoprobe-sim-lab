@@ -360,6 +360,47 @@ class WebDashboard:
                 self.error_handler.log_error(f"Ошибка чтения логов: {e}")
                 return jsonify({"error": str(e)}), 500
 
+        @self.app.route("/api/stats", methods=["GET"])
+        def api_stats():
+            """API для получения сводной статистики"""
+            try:
+                import psutil
+                
+                # Статистика процессов
+                active_count = 0
+                stopped_count = 0
+                if hasattr(self, "_active_processes"):
+                    for proc in self._active_processes.values():
+                        if proc.poll() is None:
+                            active_count += 1
+                        else:
+                            stopped_count += 1
+
+                # Системная статистика
+                cpu_percent = psutil.cpu_percent(interval=0.1)
+                memory = psutil.virtual_memory()
+                disk = psutil.disk_usage(str(project_root))
+
+                return jsonify({
+                    "components": {
+                        "active": active_count,
+                        "stopped": stopped_count,
+                        "total": active_count + stopped_count
+                    },
+                    "system": {
+                        "cpu_percent": cpu_percent,
+                        "memory_percent": memory.percent,
+                        "memory_available_mb": memory.available // (1024 * 1024),
+                        "disk_percent": disk.percent,
+                        "disk_free_gb": disk.free // (1024 * 1024 * 1024)
+                    },
+                    "uptime": self._get_uptime(),
+                    "timestamp": datetime.now().isoformat()
+                })
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка получения статистики: {e}")
+                return jsonify({"error": str(e)}), 500
+
         @self.app.route("/api/config", methods=["GET", "POST"])
         def api_config():
             """API для управления конфигурацией"""
