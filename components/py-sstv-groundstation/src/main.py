@@ -63,7 +63,14 @@ def mode_receive_sdr(args):
     """Режим приема с SDR."""
     print(f"Прием с SDR: {args.frequency} МГц")
 
-    sdr = create_sdr(device_index=0, frequency=args.frequency)
+    sdr = create_sdr(
+        device_index=args.device,
+        frequency=args.frequency,
+        sample_rate=args.sample_rate,
+        gain=args.gain,
+        bias_tee=args.bias_tee,
+        agc=args.agc
+    )
     if not sdr:
         print("Ошибка инициализации SDR")
         return False
@@ -205,6 +212,10 @@ def main():
         help="Частота (МГц) или название (iss, noaa_15, etc.)"
     )
     parser.add_argument("--device", "-d", type=int, default=0, help="Индекс SDR устройства")
+    parser.add_argument("--sample-rate", type=int, default=2400000, help="Частота дискретизации (по умолчанию 2.4 MSPS)")
+    parser.add_argument("--gain", type=int, default=30, help="Усиление в dB (0-50)")
+    parser.add_argument("--bias-tee", action="store_true", help="Включить Bias-T для питания антенны")
+    parser.add_argument("--agc", action="store_true", help="Включить автоматическую регулировку усиления")
     parser.add_argument("--duration", type=int, default=60, help="Длительность записи (с)")
     parser.add_argument("--output-audio", type=str, help="Файл для аудио записи")
     parser.add_argument("--output-image", type=str, help="Файл для изображения")

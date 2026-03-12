@@ -854,7 +854,11 @@ class SDRScanner:
 
 def create_sdr(
     device_index: int = 0,
-    frequency: str = 'iss'
+    frequency: str = 'iss',
+    sample_rate: int = 2400000,
+    gain: int = 30,
+    bias_tee: bool = False,
+    agc: bool = False
 ) -> Optional[SDRInterface]:
     """
     Создает и инициализирует SDR интерфейс.
@@ -862,11 +866,21 @@ def create_sdr(
     Args:
         device_index: Индекс устройства
         frequency: Предустановленная частота или значение в МГц
+        sample_rate: Частота дискретизации (по умолчанию 2.4 MSPS для V4)
+        gain: Усиление в dB (0-50)
+        bias_tee: Включить Bias-T для питания антенны
+        agc: Включить автоматическую регулировку усиления
 
     Returns:
         SDRInterface или None
     """
-    sdr = SDRInterface(device_index=device_index)
+    sdr = SDRInterface(
+        device_index=device_index,
+        sample_rate=sample_rate,
+        center_freq=145.8 if frequency not in SDRInterface.FREQUENCIES else SDRInterface.FREQUENCIES[frequency],
+        gain=gain,
+        device_type='auto'
+    )
 
     # Устанавливаем частоту
     if frequency in SDRInterface.FREQUENCIES:
@@ -879,6 +893,11 @@ def create_sdr(
             return None
 
     if sdr.initialize():
+        # Применяем дополнительные настройки для RTL-SDR V4
+        if bias_tee:
+            sdr.set_bias_tee(True)
+        if agc:
+            sdr.set_agc_mode(True)
         return sdr
 
     return None
