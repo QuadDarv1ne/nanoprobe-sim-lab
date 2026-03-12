@@ -396,8 +396,87 @@ def mode_realtime_sstv(args):
         sdr.close()
 
 
+def mode_auto_record(args):
+    """Автоматическая запись при пролёте спутника."""
+    from auto_recorder import AutoRecordingScheduler
+    
+    print(f"\nАВТОЗАПИСЬ СПУТНИКОВ")
+    print(f"Наземная станция: {args.lat}°N, {args.lon}°E")
+    print(f"Расписание: {args.schedule_hours} часов")
+    print(f"Начало за {args.pre_pass} мин до AOS, окончание через {args.post_pass} мин после LOS")
+    print("-" * 60)
+
+    scheduler = AutoRecordingScheduler(
+        ground_station_lat=args.lat,
+        ground_station_lon=args.lon,
+        pre_pass_minutes=args.pre_pass,
+        post_pass_minutes=args.post_pass
+    )
+    
+    # Callback для уведомлений
+    def recording_callback(event_type: str, data: dict):
+        timestamp = datetime.now().strftime('%H:%M:%S')
+        
+        if event_type == 'schedule_loaded':
+            print(f"[{timestamp}] Загружено расписание: {data['count']} пролётов")
+            if data['next_pass']:
+                print(f"[{timestamp}]    Следующий: {data['next_pass']}")
+        
+        elif event_type == 'monitoring_started':
+            print(f"[{timestamp}] Мониторинг запущен")
+        
+        elif event_type == 'recording_started':
+            print(f"[{timestamp}] ЗАПИСЬ: {data['satellite']} на {data['frequency']} MHz")
+            print(f"[{timestamp}]    Путь: {data['output_dir']}")
+        
+        elif event_type == 'recording_completed':
+            print(f"[{timestamp}] ЗАПИСЬ ЗАВЕРШЕНА: {data['satellite']}")
+            print(f"[{timestamp}]    Путь: {data['output_dir']}")
+        
+        elif event_type == 'recording_failed':
+            print(f"[{timestamp}] ОШИБКА: {data['satellite']} - {data['error']}")
+        
+        elif event_type == 'monitoring_stopped':
+            print(f"[{timestamp}] Мониторинг остановлен")
+    
+    scheduler.set_callback(recording_callback)
+    
+    # Загружаем расписание
+    recordings = scheduler.load_schedule(hours_ahead=args.schedule_hours)
+    
+    if not recordings:
+        print("Нет запланированных пролётов")
+        return
+    
+    # Показываем ближайшие пролёты
+    print("\nБлижайшие пролёты:")
+    for i, rec in enumerate(recordings[:5]):
+        print(f"  {i+1}. {rec.satellite} - {rec.aos.strftime('%d.%m %H:%M')} ({rec.frequency} MHz)")
+    
+    print("\nЗапуск мониторинга... Нажмите Ctrl+C для остановки")
+    print("=" * 60)
+    
+    try:
+        scheduler.start_monitoring()
+        
+        # Основной цикл
+        while True:
+            time.sleep(1)
+            
+            # Показываем статус каждые 60 секунд
+            if int(time.time()) % 60 == 0:
+                status = scheduler.get_status()
+                if status['active_recordings'] > 0:
+                    print(f"\rИдёт запись: {status['active_recordings']} спутник(ов)   ", end='', flush=True)
+        
+    except KeyboardInterrupt:
+        print("\n\nОстановка по пользователю...")
+        scheduler.stop_monitoring()
+        print("Автозапись остановлена")
+
+
 def main():
-    """Проверка подключения RTL-SDR устройства."""
+    """Основная функция SSTV станции."""
     print("\nПРОВЕРКА RTL-SDR УСТРОЙСТВА")
     print("-" * 40)
     
@@ -539,6 +618,10 @@ def main():
     parser.add_argument("--realtime-sstv", action="store_true", help="Real-time декодирование SSTV")
     parser.add_argument("--waterfall", action="store_true", help="Waterfall дисплей спектра")
     parser.add_argument("--save-waterfall", action="store_true", help="Сохранить waterfall")
+    parser.add_argument("--auto-record", action="store_true", help="Автозапись при пролёте спутника")
+    parser.add_argument("--schedule-hours", type=int, default=24, help="На сколько часов загружать расписание")
+    parser.add_argument("--pre-pass", type=int, default=5, help="Начинать за N минут до AOS")
+    parser.add_argument("--post-pass", type=int, default=2, help="Заканчивать через N минут после LOS")
 
     # Сканирование
     parser.add_argument("--scan", action="store_true", help="Режим сканирования частот")
@@ -563,7 +646,9 @@ def main():
     show_banner()
 
     # Определяем режим работы
-    if args.schedule:
+    if args.auto_record:
+        mode_auto_record(args)
+    elif args.schedule:
         mode_satellite_schedule(args)
     elif args.satellites:
         mode_list_satellites(args)
