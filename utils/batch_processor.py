@@ -63,7 +63,8 @@ class BatchJob:
         items: List[Any],
         processor: Callable,
         parameters: Dict = None,
-        priority: int = 0
+        priority: int = 0,
+        callback: Optional[Callable] = None
     ):
         """
         Инициализация задания
@@ -75,6 +76,7 @@ class BatchJob:
             processor: Функция обработки
             parameters: Параметры обработки
             priority: Приоритет (чем выше, тем важнее)
+            callback: Callback для обновления прогресса
         """
         self.job_id = job_id
         self.job_type = job_type
@@ -82,6 +84,7 @@ class BatchJob:
         self.processor = processor
         self.parameters = parameters or {}
         self.priority = priority
+        self.callback = callback
 
         self.status = 'pending'
         self.total_items = len(items)
@@ -91,11 +94,12 @@ class BatchJob:
         self.errors = []
         self.started_at = None
         self.completed_at = None
-        self.progress_callback = None
+        self.progress_callback = callback
 
     def set_progress_callback(self, callback: Callable):
         """Установка callback для обновления прогресса"""
         self.progress_callback = callback
+        self.callback = callback
 
     def update_progress(self, processed: int, success: bool = True):
         """Обновление прогресса"""
@@ -104,6 +108,13 @@ class BatchJob:
             self.failed_items += 1
         if self.progress_callback:
             self.progress_callback(self.job_id, self.progress_percent)
+        if self.callback:
+            self.callback(self.job_id, {
+                'processed': processed,
+                'total': self.total_items,
+                'percent': self.progress_percent,
+                'status': self.status
+            })
 
     def to_dict(self) -> Dict[str, Any]:
         """Конвертация в словарь"""
@@ -193,7 +204,7 @@ class BatchProcessor:
         """
         job_id = f"batch_{job_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
-        job = BatchJob(job_id, job_type, items, processor, parameters, priority)
+        job = BatchJob(job_id, job_type, items, processor, parameters, priority, callback)
 
         with self.lock:
             self.jobs[job_id] = job
@@ -209,6 +220,129 @@ class BatchProcessor:
             )
 
         return job_id
+
+    def process_sstv_batch(
+        self,
+        audio_files: List[str],
+        output_dir: str = "output/sstv_batch",
+        parameters: Dict = None,
+        callback: Callable = None
+    ) -> str:
+        """
+        Пакетное декодирование SSTV файлов
+
+        Args:
+            audio_files: Пути к аудио файлам
+            output_dir: Директория для результатов
+            parameters: Параметры
+            callback: Callback для прогресса
+
+        Returns:
+            ID задания
+        """
+        from components.py_sstv_groundstation.src.sstv_decoder import SSTVDecoder
+        
+        def decode_sstv_file(path: str) -> Dict:
+            """Декодирование одного SSTV файла"""
+            result = {
+                'path': path,
+                'name': Path(path).name,
+                'status': 'success',
+                'image_path': None,
+                'mode': None,
+                'error': None
+            }
+            
+            try:
+                decoder = SSTVDecoder()
+                image = decoder.decode_from_audio(path)
+                
+                if image:
+                    Path(output_dir).mkdir(parents=True, exist_ok=True)
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    output_path = f"{output_dir}/sstv_{Path(path).stem}_{timestamp}.png"
+                    image.save(output_path)
+                    
+                    result['image_path'] = output_path
+                    result['mode'] = decoder.metadata.get('mode', 'unknown')
+                else:
+                    result['status'] = 'failed'
+                    result['error'] = 'Decoding failed'
+                    
+            except Exception as e:
+                result['status'] = 'failed'
+                result['error'] = str(e)
+            
+            return result
+        
+        return self.create_job(
+            job_type='sstv_decode',
+            items=audio_files,
+            processor=decode_sstv_file,
+            parameters={'output_dir': output_dir, **(parameters or {})},
+            callback=callback
+        )
+
+    def process_satellite_passes(
+        self,
+        satellite_names: List[str],
+        hours_ahead: int = 24,
+        ground_station_lat: float = 55.75,
+        ground_station_lon: float = 37.61,
+        callback: Callable = None
+    ) -> str:
+        """
+        Пакетный расчёт пролётов спутников
+
+        Args:
+            satellite_names: Названия спутников
+            hours_ahead: На сколько часов вперёд
+            ground_station_lat: Широта наземной станции
+            ground_station_lon: Долгота наземной станции
+            callback: Callback для прогресса
+
+        Returns:
+            ID задания
+        """
+        from components.py_sstv_groundstation.src.satellite_tracker import SatelliteTracker
+        
+        def calculate_passes(sat_name: str) -> Dict:
+            """Расчёт пролётов для одного спутника"""
+            result = {
+                'satellite': sat_name,
+                'status': 'success',
+                'passes': [],
+                'error': None
+            }
+            
+            try:
+                tracker = SatelliteTracker(
+                    ground_station_lat=ground_station_lat,
+                    ground_station_lon=ground_station_lon
+                )
+                passes = tracker.get_pass_predictions(
+                    sat_name,
+                    hours_ahead=hours_ahead
+                )
+                result['passes'] = passes
+                
+            except Exception as e:
+                result['status'] = 'failed'
+                result['error'] = str(e)
+            
+            return result
+        
+        return self.create_job(
+            job_type='satellite_passes',
+            items=satellite_names,
+            processor=calculate_passes,
+            parameters={
+                'hours_ahead': hours_ahead,
+                'ground_station_lat': ground_station_lat,
+                'ground_station_lon': ground_station_lon
+            },
+            callback=callback
+        )
 
     def process_image_batch(
         self,
