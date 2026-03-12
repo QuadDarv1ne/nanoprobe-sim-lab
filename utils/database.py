@@ -66,22 +66,27 @@ class ConnectionPool:
 
 
 class DatabaseManager:
-    """Менеджер базы данных SQLite."""
+    """Менеджер базы данных SQLite с connection pooling и query caching."""
 
     _pools: Dict[str, ConnectionPool] = {}
     _pool_lock = threading.Lock()
 
-    def __init__(self, db_path: str = "data/nanoprobe.db", pool_size: int = 5):
+    def __init__(self, db_path: str = "data/nanoprobe.db", pool_size: int = 5, enable_cache: bool = True):
         """
         Инициализирует менеджер базы данных.
 
         Args:
             db_path: Путь к файлу базы данных
             pool_size: Размер пула соединений
+            enable_cache: Включить кэширование запросов
         """
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self.pool_size = pool_size
+        self.enable_cache = enable_cache
+        self._query_cache: Dict[str, Tuple[Any, datetime]] = {}
+        self._cache_ttl = 60  # секунд
+        self._cache_max_size = 100
         self._init_pool()
         self._init_database()
 
@@ -329,7 +334,7 @@ class DatabaseManager:
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO scan_results 
+                INSERT INTO scan_results
                 (timestamp, scan_type, surface_type, width, height, file_path, metadata)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (
@@ -341,7 +346,12 @@ class DatabaseManager:
                 file_path,
                 json.dumps(metadata) if metadata else None
             ))
-            return cursor.lastrowid
+            scan_id = cursor.lastrowid
+
+        # Инвалидация кэша сканирований
+        self.invalidate_cache("scans:")
+
+        return scan_id
 
     def add_scan_result_batch(
         self,
@@ -383,7 +393,7 @@ class DatabaseManager:
         offset: int = 0
     ) -> List[Dict]:
         """
-        Получает результаты сканирований.
+        Получает результаты сканирований с кэшированием.
 
         Args:
             scan_type: Фильтр по типу сканирования
@@ -393,6 +403,11 @@ class DatabaseManager:
         Returns:
             Список записей
         """
+        cache_key = self._get_cache_key(f"scans:{scan_type}:{limit}:{offset}")
+        cached = self._get_from_cache(cache_key)
+        if cached is not None:
+            return cached
+
         with self.get_connection() as conn:
             cursor = conn.cursor()
 
@@ -408,19 +423,35 @@ class DatabaseManager:
 
             cursor.execute(query, params)
             rows = cursor.fetchall()
+            result = [self._row_to_dict(row) for row in rows]
 
-            return [self._row_to_dict(row) for row in rows]
+            self._set_cache(cache_key, result)
+            return result
 
     def get_scan_by_id(self, scan_id: int) -> Optional[Dict]:
-        """Получает результат сканирования по ID."""
+        """Получает результат сканирования по ID с кэшированием."""
+        cache_key = self._get_cache_key(f"scan:id:{scan_id}")
+        cached = self._get_from_cache(cache_key)
+        if cached is not None:
+            return cached
+
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM scan_results WHERE id = ?", (scan_id,))
             row = cursor.fetchone()
-            return self._row_to_dict(row) if row else None
+            result = self._row_to_dict(row) if row else None
+
+            if result:
+                self._set_cache(cache_key, result)
+            return result
 
     def count_scans(self, scan_type: str = None) -> int:
-        """Подсчитывает количество сканирований."""
+        """Подсчитывает количество сканирований с кэшированием."""
+        cache_key = self._get_cache_key(f"scans:count:{scan_type or 'all'}")
+        cached = self._get_from_cache(cache_key)
+        if cached is not None:
+            return cached
+
         with self.get_connection() as conn:
             cursor = conn.cursor()
             if scan_type:
@@ -430,7 +461,10 @@ class DatabaseManager:
                 )
             else:
                 cursor.execute("SELECT COUNT(*) FROM scan_results")
-            return cursor.fetchone()[0]
+            result = cursor.fetchone()[0]
+
+            self._set_cache(cache_key, result)
+            return result
 
     def add_simulation(
         self,
@@ -780,7 +814,14 @@ class DatabaseManager:
                 "DELETE FROM scan_results WHERE id = ?",
                 (scan_id,)
             )
-            return cursor.rowcount > 0
+            success = cursor.rowcount > 0
+
+        # Инвалидация кэша сканирований
+        if success:
+            self.invalidate_cache("scans:")
+            self.invalidate_cache(f"scan:id:{scan_id}")
+
+        return success
 
     def _row_to_dict(self, row: sqlite3.Row) -> Dict:
         """Конвертирует строку результата в словарь."""
@@ -795,6 +836,71 @@ class DatabaseManager:
                     pass
 
         return result
+
+    # ==================== Query Cache Methods ====================
+
+    def _get_cache_key(self, query: str, params: tuple = None) -> str:
+        """Создание ключа кэша для запроса"""
+        return f"{query}:{params}" if params else query
+
+    def _get_from_cache(self, key: str) -> Optional[Any]:
+        """Получение из кэша"""
+        if not self.enable_cache:
+            return None
+
+        if key in self._query_cache:
+            value, timestamp = self._query_cache[key]
+            if (datetime.now() - timestamp).total_seconds() < self._cache_ttl:
+                return value
+            else:
+                del self._query_cache[key]
+        return None
+
+    def _set_cache(self, key: str, value: Any):
+        """Сохранение в кэш"""
+        if not self.enable_cache:
+            return
+
+        if len(self._query_cache) >= self._cache_max_size:
+            # Удаляем oldest entry
+            oldest_key = min(self._query_cache.keys(),
+                           key=lambda k: self._query_cache[k][1])
+            del self._query_cache[oldest_key]
+
+        self._query_cache[key] = (value, datetime.now())
+
+    def invalidate_cache(self, pattern: str = None):
+        """
+        Инвалидация кэша
+
+        Args:
+            pattern: Шаблон для фильтрации ключей (если None, очищается весь кэш)
+        """
+        if pattern:
+            keys_to_delete = [k for k in self._query_cache.keys() if pattern in k]
+            for key in keys_to_delete:
+                del self._query_cache[key]
+        else:
+            self._query_cache.clear()
+
+    def set_cache_ttl(self, ttl_seconds: int):
+        """Установка времени жизни кэша"""
+        self._cache_ttl = ttl_seconds
+
+    def get_cache_stats(self) -> Dict:
+        """Получение статистики кэша"""
+        now = datetime.now()
+        valid_entries = sum(
+            1 for _, ts in self._query_cache.values()
+            if (now - ts).total_seconds() < self._cache_ttl
+        )
+        return {
+            "total_entries": len(self._query_cache),
+            "valid_entries": valid_entries,
+            "max_size": self._cache_max_size,
+            "ttl_seconds": self._cache_ttl
+        }
+
 
     # Методы для сравнения изображений поверхностей
     def add_surface_comparison(

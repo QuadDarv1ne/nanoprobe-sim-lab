@@ -294,8 +294,17 @@ async def general_exception_handler(request, exc: Exception):
 @app.get("/metrics", tags=["Monitoring"])
 async def metrics():
     """Prometheus метрики"""
-    from api.metrics import get_metrics
-    return await get_metrics()
+    from utils.enhanced_monitor import get_monitor
+    
+    # Получаем метрики из enhanced monitor
+    monitor = get_monitor()
+    prometheus_metrics = monitor.export_prometheus_metrics()
+    
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse(
+        content=prometheus_metrics,
+        media_type="text/plain"
+    )
 
 
 # WebSocket эндпоинт для real-time обновлений

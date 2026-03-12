@@ -4,92 +4,200 @@ Dashboard API routes for Nanoprobe Sim Lab
 Provides aggregated stats and system health endpoints
 """
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends, Query
+from fastapi.responses import JSONResponse
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 import psutil
+import os
+from pathlib import Path
+
+from api.schemas import (
+    DashboardStats,
+    SystemHealth,
+    RealtimeMetrics,
+    HealthStatus,
+    PaginatedResponse,
+    ErrorResponse,
+)
+from utils.enhanced_monitor import get_monitor, format_uptime
 
 router = APIRouter()
 
 
-@router.get("/stats", summary="Получить сводную статистику")
+def get_project_root() -> Path:
+    """Получить корень проекта"""
+    return Path(__file__).parent.parent.parent
+
+
+def get_storage_stats() -> Dict[str, float]:
+    """Получить статистику хранилища"""
+    root = get_project_root()
+    data_dir = root / "data"
+    output_dir = root / "output"
+
+    used_mb = 0.0
+    total_mb = 0.0
+
+    # Подсчёт размера data и output директорий
+    for directory in [data_dir, output_dir]:
+        if directory.exists():
+            for item in directory.rglob("*"):
+                if item.is_file():
+                    try:
+                        used_mb += item.stat().st_size / (1024 * 1024)
+                    except (OSError, IOError):
+                        continue
+
+    # Общая ёмкость диска
+    disk = psutil.disk_usage('/')
+    total_mb = disk.total / (1024 * 1024)
+
+    return {
+        "used_mb": round(used_mb, 2),
+        "total_mb": round(total_mb, 2),
+        "percent": round((used_mb / total_mb) * 100, 2) if total_mb > 0 else 0
+    }
+
+
+@router.get(
+    "/stats",
+    response_model=DashboardStats,
+    summary="Получить сводную статистику",
+    description="Возвращает агрегированную статистику для дашборда",
+    responses={
+        200: {"model": DashboardStats, "description": "Успешный ответ"},
+        500: {"model": ErrorResponse, "description": "Ошибка сервера"},
+    },
+)
 async def get_dashboard_stats():
     """
     Возвращает сводную статистику для дашборда:
     - Количество сканирований
     - Количество симуляций
-    - Количество анализов
+    - Использование хранилища
     - Аптайм системы
     """
-    # В реальной реализации эти данные берутся из БД
-    stats = {
-        "scans_count": 0,
-        "simulations_count": 0,
-        "analyses_count": 0,
-        "uptime_seconds": _get_system_uptime(),
-        "uptime_formatted": _format_uptime(_get_system_uptime()),
-    }
-    return stats
+    try:
+        monitor = get_monitor()
+        stats = monitor.get_statistics()
+        storage = get_storage_stats()
+
+        # В реальной реализации данные берутся из БД
+        return DashboardStats(
+            total_scans=0,
+            total_simulations=0,
+            active_simulations=0,
+            storage_used_mb=storage["used_mb"],
+            storage_total_mb=storage["total_mb"],
+            recent_scans_count=0,
+            recent_simulations_count=0,
+            success_rate=100.0,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка получения статистики: {str(e)}"
+        )
 
 
-@router.get("/health/detailed", summary="Детальная проверка здоровья системы")
+@router.get(
+    "/health/detailed",
+    response_model=SystemHealth,
+    summary="Детальная проверка здоровья системы",
+    description="Детальная информация о здоровье системы с метриками",
+    responses={
+        200: {"model": SystemHealth, "description": "Успешный ответ"},
+        500: {"model": ErrorResponse, "description": "Ошибка сервера"},
+    },
+)
 async def get_detailed_health():
     """
     Детальная информация о здоровье системы:
-    - Статус CPU
-    - Статус памяти
-    - Статус диска
+    - Статус CPU с историей
+    - Статус памяти с деталями
+    - Статус диска с деталями
     - Статус сервисов
+    - Список проблем
     """
     try:
-        cpu_percent = psutil.cpu_percent(interval=0.1)
-        memory = psutil.virtual_memory()
-        disk = psutil.disk_usage('/')
-        
+        monitor = get_monitor()
+        metrics = monitor.get_current_metrics()
+        alerts = monitor.get_alerts(limit=10)
+
         health_status = "healthy"
         issues = []
-        
-        if cpu_percent > 90:
-            health_status = "warning"
-            issues.append("Высокая загрузка CPU")
-        
-        if memory.percent > 90:
-            health_status = "warning"
-            issues.append("Высокое использование памяти")
-        
-        if disk.percent > 90:
+
+        # Проверка CPU
+        if metrics["cpu_percent"] > 90:
+            health_status = "critical" if metrics["cpu_percent"] > 95 else "warning"
+            issues.append(f"Высокая загрузка CPU: {metrics['cpu_percent']:.1f}%")
+        elif metrics["cpu_percent"] > 70:
+            if health_status == "healthy":
+                health_status = "info"
+
+        # Проверка памяти
+        if metrics["memory_percent"] > 90:
+            health_status = "critical" if metrics["memory_percent"] > 95 else "warning"
+            issues.append(f"Высокое использование памяти: {metrics['memory_percent']:.1f}%")
+
+        # Проверка диска
+        if metrics["disk_percent"] > 90:
+            health_status = "critical" if metrics["disk_percent"] > 95 else "warning"
+            issues.append(f"Критическое заполнение диска: {metrics['disk_percent']:.1f}%")
+
+        # Проверка алертов
+        critical_alerts = [a for a in alerts if a.get("level") == "critical"]
+        if critical_alerts:
             health_status = "critical"
-            issues.append("Критическое заполнение диска")
-        
-        return {
-            "status": health_status,
-            "timestamp": datetime.now().isoformat(),
-            "version": "1.0.0",
-            "metrics": {
+            issues.extend([a["message"] for a in critical_alerts[:3]])
+
+        return SystemHealth(
+            status=health_status,
+            timestamp=datetime.now().isoformat(),
+            version="1.0.0",
+            metrics={
                 "cpu": {
-                    "percent": cpu_percent,
-                    "status": "ok" if cpu_percent < 90 else "warning"
+                    "percent": metrics["cpu_percent"],
+                    "cores": metrics["cpu_cores"],
+                    "freq_mhz": metrics.get("cpu_freq_mhz"),
+                    "status": "ok" if metrics["cpu_percent"] < 80 else "warning"
                 },
                 "memory": {
-                    "percent": memory.percent,
-                    "used_gb": memory.used / (1024 ** 3),
-                    "total_gb": memory.total / (1024 ** 3),
-                    "status": "ok" if memory.percent < 90 else "warning"
+                    "percent": metrics["memory_percent"],
+                    "used_gb": metrics["memory_used_gb"],
+                    "total_gb": metrics["memory_total_gb"],
+                    "available_gb": metrics["memory_available_gb"],
+                    "status": "ok" if metrics["memory_percent"] < 80 else "warning"
                 },
                 "disk": {
-                    "percent": disk.percent,
-                    "used_gb": disk.used / (1024 ** 3),
-                    "total_gb": disk.total / (1024 ** 3),
-                    "status": "ok" if disk.percent < 90 else "warning"
+                    "percent": metrics["disk_percent"],
+                    "used_gb": metrics["disk_used_gb"],
+                    "total_gb": metrics["disk_total_gb"],
+                    "free_gb": metrics["disk_free_gb"],
+                    "status": "ok" if metrics["disk_percent"] < 80 else "warning"
+                },
+                "network": {
+                    "bytes_sent": metrics["network_bytes_sent"],
+                    "bytes_recv": metrics["network_bytes_recv"],
+                    "packets_sent": metrics["network_packets_sent"],
+                    "packets_recv": metrics["network_packets_recv"]
+                },
+                "system": {
+                    "uptime_seconds": metrics["uptime_seconds"],
+                    "uptime_formatted": format_uptime(metrics["uptime_seconds"]),
+                    "boot_time": metrics["boot_time"],
+                    "processes_count": metrics["processes_count"]
                 }
             },
-            "issues": issues,
-            "services": {
+            issues=issues,
+            services={
                 "api": "running",
                 "database": "running",
-                "cache": "disabled"
+                "cache": "disabled",
+                "monitoring": "running"
             }
-        }
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -97,22 +205,45 @@ async def get_detailed_health():
         )
 
 
-@router.get("/metrics/realtime", summary="Метрики в реальном времени")
-async def get_realtime_metrics():
+@router.get(
+    "/metrics/realtime",
+    response_model=RealtimeMetrics,
+    summary="Метрики в реальном времени",
+    description="Метрики системы в реальном времени для графиков",
+    responses={
+        200: {"model": RealtimeMetrics, "description": "Успешный ответ"},
+        500: {"model": ErrorResponse, "description": "Ошибка сервера"},
+    },
+)
+async def get_realtime_metrics(
+    include_network: bool = Query(True, description="Включить сетевые метрики"),
+    include_history: bool = Query(False, description="Включить историю метрик"),
+):
     """
     Метрики системы в реальном времени для графиков
     """
     try:
-        return {
-            "timestamp": datetime.now().isoformat(),
-            "cpu_percent": psutil.cpu_percent(interval=0.1),
-            "memory_percent": psutil.virtual_memory().percent,
-            "disk_percent": psutil.disk_usage('/').percent,
-            "network": {
-                "bytes_sent": psutil.net_io_counters().bytes_sent,
-                "bytes_recv": psutil.net_io_counters().bytes_recv,
-            } if hasattr(psutil, 'net_io_counters') else None
-        }
+        monitor = get_monitor()
+        metrics = monitor.get_current_metrics()
+        network_speed = monitor.get_network_speed()
+
+        result = RealtimeMetrics(
+            timestamp=metrics["timestamp"],
+            cpu_percent=metrics["cpu_percent"],
+            memory_percent=metrics["memory_percent"],
+            disk_percent=metrics["disk_percent"],
+            network_upload_mbps=network_speed["upload_mbps"],
+            network_download_mbps=network_speed["download_mbps"],
+        )
+
+        if include_history:
+            history = monitor.get_metrics_history(limit=60)
+            return {
+                "current": result.model_dump(),
+                "history": history,
+            }
+
+        return result
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -120,7 +251,95 @@ async def get_realtime_metrics():
         )
 
 
-@router.get("/export/{format}", summary="Экспорт данных")
+@router.get(
+    "/metrics/history",
+    summary="История метрик",
+    description="Получить историю метрик за период",
+)
+async def get_metrics_history(
+    limit: int = Query(60, ge=1, le=300, description="Количество записей"),
+    component: Optional[str] = Query(None, description="Фильтр по компоненту (cpu/memory/disk)"),
+):
+    """Получить историю метрик"""
+    try:
+        monitor = get_monitor()
+        history = monitor.get_metrics_history(limit=limit)
+
+        if component:
+            filtered_history = []
+            for entry in history:
+                if component == "cpu" and "cpu_percent" in entry:
+                    filtered_history.append({
+                        "timestamp": entry["timestamp"],
+                        "value": entry["cpu_percent"]
+                    })
+                elif component == "memory" and "memory_percent" in entry:
+                    filtered_history.append({
+                        "timestamp": entry["timestamp"],
+                        "value": entry["memory_percent"]
+                    })
+                elif component == "disk" and "disk_percent" in entry:
+                    filtered_history.append({
+                        "timestamp": entry["timestamp"],
+                        "value": entry["disk_percent"]
+                    })
+            return {"component": component, "history": filtered_history}
+
+        return {"history": history}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка получения истории: {str(e)}"
+        )
+
+
+@router.get(
+    "/alerts",
+    summary="Получить алерты",
+    description="Получить список алертов системы",
+)
+async def get_alerts(
+    limit: int = Query(50, ge=1, le=200, description="Количество алертов"),
+    level: Optional[str] = Query(None, description="Фильтр по уровню (info/warning/critical)"),
+):
+    """Получить алерты системы"""
+    try:
+        monitor = get_monitor()
+        alerts = monitor.get_alerts(limit=limit, level=level)
+        return {"alerts": alerts, "total": len(alerts)}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка получения алертов: {str(e)}"
+        )
+
+
+@router.get(
+    "/processes",
+    summary="Топ процессов",
+    description="Получить топ процессов по использованию ресурсов",
+)
+async def get_top_processes(
+    limit: int = Query(10, ge=1, le=50, description="Количество процессов"),
+    sort_by: str = Query("cpu", description="Сортировка (cpu/memory)"),
+):
+    """Получить топ процессов"""
+    try:
+        monitor = get_monitor()
+        processes = monitor.get_process_list(limit=limit, sort_by=sort_by)
+        return {"processes": processes, "total": len(processes)}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка получения процессов: {str(e)}"
+        )
+
+
+@router.post(
+    "/export/{format}",
+    summary="Экспорт данных",
+    description="Экспорт данных дашборда в различных форматах",
+)
 async def export_data(format: str):
     """
     Экспорт данных в различных форматах:
@@ -133,92 +352,137 @@ async def export_data(format: str):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Неподдерживаемый формат: {format}. Доступны: json, csv, pdf"
         )
-    
-    # Временная заглушка
+
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     return {
         "format": format,
         "status": "success",
         "message": f"Данные экспортированы в формате {format.upper()}",
-        "download_url": f"/api/v1/downloads/export_{format}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{format}"
+        "download_url": f"/api/v1/downloads/export_{format}_{timestamp}.{format}",
+        "expires_in": 3600
     }
 
 
-@router.post("/actions/clean_cache", summary="Очистка кэша")
+@router.post(
+    "/actions/clean_cache",
+    summary="Очистка кэша",
+    description="Очистка системного кэша проекта",
+)
 async def clean_cache_action():
     """
     Очистка системного кэша
     """
     try:
-        # В реальной реализации здесь будет вызов CacheManager
+        from utils.cache_manager import CacheManager
+        cache_mgr = CacheManager()
+
         cleaned_size = 0.0
         cleaned_files = 0
-        
-        return {
-            "success": True,
-            "message": f"Кэш очищен",
-            "cleaned_size_mb": cleaned_size,
-            "cleaned_files": cleaned_files
-        }
+
+        # Выполнение очистки
+        report = cache_mgr.auto_cleanup()
+        if report:
+            cleaned_size = report.get("cleaned_size_mb", 0.0)
+            cleaned_files = report.get("cleaned_files", 0)
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "message": "Кэш успешно очищен",
+                "cleaned_size_mb": cleaned_size,
+                "cleaned_files": cleaned_files
+            }
+        )
     except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "error": str(e)
+            }
+        )
 
 
-@router.post("/actions/start_component", summary="Запуск компонента")
+@router.post(
+    "/actions/start_component",
+    summary="Запуск компонента",
+    description="Запуск компонента проекта",
+)
 async def start_component_action(component: dict):
     """
     Запуск компонента проекта
     """
     component_name = component.get("component", "")
-    
+    if not component_name:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Не указано имя компонента"
+        )
+
     # В реальной реализации здесь будет запуск процесса
-    return {
-        "success": True,
-        "message": f"Компонент '{component_name}' запущен",
-        "component": component_name,
-        "pid": 12345  # В реальности PID процесса
-    }
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={
+            "success": True,
+            "message": f"Компонент '{component_name}' запущен",
+            "component": component_name,
+            "pid": os.getpid(),  # В реальности PID процесса
+            "started_at": datetime.now().isoformat()
+        }
+    )
 
 
-@router.post("/actions/stop_component", summary="Остановка компонента")
+@router.post(
+    "/actions/stop_component",
+    summary="Остановка компонента",
+    description="Остановка компонента проекта",
+)
 async def stop_component_action(component: dict):
     """
     Остановка компонента проекта
     """
     component_name = component.get("component", "")
-    
+    if not component_name:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Не указано имя компонента"
+        )
+
     # В реальной реализации здесь будет остановка процесса
-    return {
-        "success": True,
-        "message": f"Компонент '{component_name}' остановлен",
-        "component": component_name
-    }
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={
+            "success": True,
+            "message": f"Компонент '{component_name}' остановлен",
+            "component": component_name,
+            "stopped_at": datetime.now().isoformat()
+        }
+    )
 
 
-def _get_system_uptime() -> int:
-    """Получить аптайм системы в секундах"""
+@router.get(
+    "/storage",
+    summary="Статистика хранилища",
+    description="Получить детальную статистику хранилища",
+)
+async def get_storage_stats_endpoint():
+    """Получить статистику хранилища"""
     try:
-        boot_time = psutil.boot_time()
-        uptime = datetime.now().timestamp() - boot_time
-        return int(uptime)
-    except:
-        return 0
+        storage = get_storage_stats()
+        disk = psutil.disk_usage('/')
 
-
-def _format_uptime(seconds: int) -> str:
-    """Форматировать аптайм в человекочитаемый вид"""
-    days = seconds // 86400
-    hours = (seconds % 86400) // 3600
-    minutes = (seconds % 3600) // 60
-    
-    parts = []
-    if days > 0:
-        parts.append(f"{days} дн")
-    if hours > 0:
-        parts.append(f"{hours} ч")
-    if minutes > 0:
-        parts.append(f"{minutes} мин")
-    
-    return " ".join(parts) if parts else "< 1 мин"
+        return {
+            "project_storage": storage,
+            "disk_info": {
+                "total_gb": round(disk.total / (1024 ** 3), 2),
+                "used_gb": round(disk.used / (1024 ** 3), 2),
+                "free_gb": round(disk.free / (1024 ** 3), 2),
+                "percent": disk.percent
+            }
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка получения статистики хранилища: {str(e)}"
+        )

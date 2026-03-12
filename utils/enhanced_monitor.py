@@ -370,6 +370,75 @@ class EnhancedSystemMonitor:
         self.alerts.clear()
         logger.info("Alerts cleared")
 
+    def export_prometheus_metrics(self) -> str:
+        """
+        Экспорт метрик в формате Prometheus
+        Returns:
+            Строка с метриками в формате Prometheus
+        """
+        metrics = self.get_current_metrics()
+        stats = self.get_statistics()
+
+        lines = [
+            "# HELP nanoprobe_cpu_percent Текущая загрузка CPU в процентах",
+            "# TYPE nanoprobe_cpu_percent gauge",
+            f"nanoprobe_cpu_percent {metrics['cpu_percent']}",
+            "",
+            "# HELP nanoprobe_cpu_cores Количество ядер CPU",
+            "# TYPE nanoprobe_cpu_cores gauge",
+            f"nanoprobe_cpu_cores {metrics['cpu_cores']}",
+            "",
+            "# HELP nanoprobe_memory_percent Использование памяти в процентах",
+            "# TYPE nanoprobe_memory_percent gauge",
+            f"nanoprobe_memory_percent {metrics['memory_percent']}",
+            "",
+            "# HELP nanoprobe_memory_used_gb Использовано памяти (GB)",
+            "# TYPE nanoprobe_memory_used_gb gauge",
+            f"nanoprobe_memory_used_gb {metrics['memory_used_gb']}",
+            "",
+            "# HELP nanoprobe_memory_total_gb Всего памяти (GB)",
+            "# TYPE nanoprobe_memory_total_gb gauge",
+            f"nanoprobe_memory_total_gb {metrics['memory_total_gb']}",
+            "",
+            "# HELP nanoprobe_disk_percent Использование диска в процентах",
+            "# TYPE nanoprobe_disk_percent gauge",
+            f"nanoprobe_disk_percent {metrics['disk_percent']}",
+            "",
+            "# HELP nanoprobe_disk_used_gb Использовано места на диске (GB)",
+            "# TYPE nanoprobe_disk_used_gb gauge",
+            f"nanoprobe_disk_used_gb {metrics['disk_used_gb']}",
+            "",
+            "# HELP nanoprobe_disk_total_gb Всего места на диске (GB)",
+            "# TYPE nanoprobe_disk_total_gb gauge",
+            f"nanoprobe_disk_total_gb {metrics['disk_total_gb']}",
+            "",
+            "# HELP nanoprobe_uptime_seconds Аптайм системы в секундах",
+            "# TYPE nanoprobe_uptime_seconds counter",
+            f"nanoprobe_uptime_seconds {metrics['uptime_seconds']}",
+            "",
+            "# HELP nanoprobe_processes_count Количество процессов",
+            "# TYPE nanoprobe_processes_count gauge",
+            f"nanoprobe_processes_count {metrics['processes_count']}",
+            "",
+            "# HELP nanoprobe_network_bytes_sent Отправлено байт по сети",
+            "# TYPE nanoprobe_network_bytes_sent counter",
+            f"nanoprobe_network_bytes_sent {metrics['network_bytes_sent']}",
+            "",
+            "# HELP nanoprobe_network_bytes_recv Получено байт из сети",
+            "# TYPE nanoprobe_network_bytes_recv counter",
+            f"nanoprobe_network_bytes_recv {metrics['network_bytes_recv']}",
+            "",
+            "# HELP nanoprobe_alerts_count Количество алертов",
+            "# TYPE nanoprobe_alerts_count gauge",
+            f"nanoprobe_alerts_count {len(self.alerts)}",
+            "",
+            "# HELP nanoprobe_samples_count Количество собранных сэмплов",
+            "# TYPE nanoprobe_samples_count counter",
+            f"nanoprobe_samples_count {self.total_samples}",
+        ]
+
+        return "\n".join(lines)
+
 
 # Singleton instance
 _monitor_instance: Optional[EnhancedSystemMonitor] = None

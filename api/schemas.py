@@ -4,10 +4,11 @@ Pydantic схемы для Nanoprobe Sim Lab API
 Валидация данных запросов и ответов
 """
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl, field_validator
 from typing import Optional, Dict, Any, List
 from datetime import datetime
 from enum import Enum
+import re
 
 
 # ==================== Аутентификация ====================
@@ -30,16 +31,22 @@ class TokenData(BaseModel):
 class LoginRequest(BaseModel):
     """Запрос на логин"""
     username: str = Field(..., min_length=3, max_length=50, pattern=r'^[a-zA-Z0-9_]+$')
-    password: str = Field(..., min_length=8)
+    password: str = Field(..., min_length=8, max_length=128)
 
+    @field_validator('password')
     @classmethod
-    def validate_password(cls, v: str) -> str:
+    def validate_password_strength(cls, v: str) -> str:
+        """Валидация сложности пароля"""
         if len(v) < 8:
             raise ValueError('Пароль должен быть не менее 8 символов')
-        if not any(c.isupper() for c in v):
+        if len(v) > 128:
+            raise ValueError('Пароль не должен превышать 128 символов')
+        if not re.search(r'[A-ZА-ЯЁ]', v):
             raise ValueError('Пароль должен содержать заглавную букву')
-        if not any(c.isdigit() for c in v):
+        if not re.search(r'\d', v):
             raise ValueError('Пароль должен содержать цифру')
+        if not re.search(r'[a-zа-яё]', v):
+            raise ValueError('Пароль должен содержать строчную букву')
         return v
 
 
@@ -262,6 +269,7 @@ class ErrorResponse(BaseModel):
     detail: str
     error_code: Optional[str] = None
     timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
+    path: Optional[str] = None
 
 
 class StatisticsResponse(BaseModel):
@@ -276,3 +284,94 @@ class StatisticsResponse(BaseModel):
     total_pdf_reports: int
     total_batch_jobs: int
     scans_by_type: Dict[str, int]
+
+
+# ==================== Пагинация ====================
+
+class PaginationParams(BaseModel):
+    """Параметры пагинации"""
+    page: int = Field(1, ge=1, description="Номер страницы")
+    page_size: int = Field(20, ge=1, le=100, description="Размер страницы")
+
+    @property
+    def offset(self) -> int:
+        return (self.page - 1) * self.page_size
+
+    @property
+    def limit(self) -> int:
+        return self.page_size
+
+
+class PaginatedResponse(BaseModel):
+    """Пагинированный ответ"""
+    items: List[Any]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+    has_next: bool
+    has_prev: bool
+
+
+# ==================== Дашборд ====================
+
+class DashboardStats(BaseModel):
+    """Статистика дашборда"""
+    total_scans: int
+    total_simulations: int
+    active_simulations: int
+    storage_used_mb: float
+    storage_total_mb: float
+    recent_scans_count: int
+    recent_simulations_count: int
+    success_rate: float
+
+
+class HealthStatus(BaseModel):
+    """Статус здоровья"""
+    status: str
+    timestamp: str
+    version: str
+    uptime_seconds: int
+    services: Dict[str, str]
+
+
+class SystemHealth(BaseModel):
+    """Системное здоровье"""
+    status: str
+    timestamp: str
+    version: str
+    metrics: Dict[str, Any]
+    issues: List[str]
+    services: Dict[str, str]
+
+
+class RealtimeMetrics(BaseModel):
+    """Метрики в реальном времени"""
+    timestamp: str
+    cpu_percent: float
+    memory_percent: float
+    disk_percent: float
+    network_upload_mbps: float
+    network_download_mbps: float
+
+
+# ==================== Экспорт ====================
+
+class ExportRequest(BaseModel):
+    """Запрос на экспорт"""
+    format: str = Field(..., pattern="^(json|csv|pdf|xlsx)$")
+    scan_ids: Optional[List[int]] = None
+    include_metadata: bool = True
+
+
+class ExportResponse(BaseModel):
+    """Ответ экспорта"""
+    export_id: str
+    format: str
+    status: str
+    file_path: Optional[str]
+    download_url: Optional[str]
+    file_size_bytes: Optional[int]
+    created_at: str
+    expires_at: str
