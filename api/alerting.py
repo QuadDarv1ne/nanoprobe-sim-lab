@@ -7,12 +7,47 @@ Alerting система для Nanoprobe Simulation Lab
 import os
 import smtplib
 import requests
+import asyncio
+import aiohttp
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from datetime import datetime
-from typing import Dict, List, Optional
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Callable, Any
 from pathlib import Path
 import json
+import hashlib
+from dataclasses import dataclass, asdict
+from enum import Enum
+
+
+class AlertSeverity(Enum):
+    """Уровни серьёзности алертов"""
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"
+    CRITICAL = "critical"
+
+
+class AlertStatus(Enum):
+    """Статусы алертов"""
+    FIRING = "firing"
+    RESOLVED = "resolved"
+    SILENCED = "silenced"
+
+
+@dataclass
+class Alert:
+    """Модель алерта"""
+    alert_id: str
+    timestamp: str
+    alert_name: str
+    severity: str
+    description: str
+    details: Dict[str, Any]
+    status: str
+    resolved_at: Optional[str] = None
+    acknowledged_by: Optional[str] = None
+    notification_count: int = 0
 
 
 class AlertManager:
@@ -29,9 +64,22 @@ class AlertManager:
             config_path: Путь к конфигурационному файлу
         """
         self.config = self._load_config(config_path)
+        self.alerts: Dict[str, Alert] = {}
         self.alert_history: List[Dict] = []
         self.alert_log_path = Path('logs/alerts.log')
         self.alert_log_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Deduplication
+        self._alert_hashes: Dict[str, str] = {}
+        self._silenced_alerts: set = set()
+        
+        # Rate limiting
+        self._rate_limits: Dict[str, List[datetime]] = {}
+        self._rate_limit_window = timedelta(minutes=5)
+        self._rate_limit_max = 10
+        
+        # Callbacks
+        self._on_alert_callbacks: List[Callable[[Alert], None]] = []
 
     def _load_config(self, config_path: str = None) -> Dict:
         """Загрузка конфигурации"""
@@ -65,6 +113,52 @@ class AlertManager:
             },
         }
 
+    def _generate_alert_id(self, alert_name: str, description: str) -> str:
+        """Генерация уникального ID для алерта"""
+        content = f"{alert_name}:{description}"
+        return hashlib.md5(content.encode()).hexdigest()[:12]
+
+    def _check_rate_limit(self, alert_name: str) -> bool:
+        """Проверка rate limiting"""
+        now = datetime.now()
+        if alert_name not in self._rate_limits:
+            self._rate_limits[alert_name] = []
+        
+        # Очистка старых записей
+        cutoff = now - self._rate_limit_window
+        self._rate_limits[alert_name] = [
+            ts for ts in self._rate_limits[alert_name] if ts > cutoff
+        ]
+        
+        # Проверка лимита
+        if len(self._rate_limits[alert_name]) >= self._rate_limit_max:
+            return False
+        
+        self._rate_limits[alert_name].append(now)
+        return True
+
+    def _is_duplicate(self, alert_name: str, description: str) -> bool:
+        """Проверка на дубликат"""
+        alert_hash = hashlib.md5(f"{alert_name}:{description}".encode()).hexdigest()
+        if alert_name in self._alert_hashes:
+            return self._alert_hashes[alert_name] == alert_hash
+        return False
+
+    def silence_alert(self, alert_id: str, duration_minutes: int = 60):
+        """Заглушить алерт на указанное время"""
+        self._silenced_alerts.add(alert_id)
+        
+        # Автоматическое удаление через указанное время
+        def unsilence():
+            import threading
+            threading.Timer(duration_minutes * 60, self._silenced_alerts.discard, [alert_id]).start()
+        
+        unsilence()
+
+    def on_alert(self, callback: Callable[[Alert], None]):
+        """Регистрация callback'а на алерт"""
+        self._on_alert_callbacks.append(callback)
+
     def send_alert(
         self,
         alert_name: str,
@@ -72,9 +166,9 @@ class AlertManager:
         description: str,
         details: Dict = None,
         channels: List[str] = None
-    ):
+    ) -> Dict[str, bool]:
         """
-        Отправка алерта
+        Отправка алерта с deduplication и rate limiting
 
         Args:
             alert_name: Название алерта
@@ -83,17 +177,41 @@ class AlertManager:
             details: Дополнительные детали
             channels: Каналы для отправки (telegram, email, slack, webhook)
         """
-        alert = {
-            'timestamp': datetime.now().isoformat(),
-            'alert_name': alert_name,
-            'severity': severity,
-            'description': description,
-            'details': details or {},
-            'status': 'firing',
-        }
+        # Проверка на дубликат
+        if self._is_duplicate(alert_name, description):
+            return {"status": "duplicate", "sent": False}
+        
+        # Проверка rate limiting
+        if not self._check_rate_limit(alert_name):
+            return {"status": "rate_limited", "sent": False}
+        
+        alert_id = self._generate_alert_id(alert_name, description)
+        
+        # Проверка на silenced
+        if alert_id in self._silenced_alerts:
+            return {"status": "silenced", "sent": False}
+        
+        alert = Alert(
+            alert_id=alert_id,
+            timestamp=datetime.now().isoformat(),
+            alert_name=alert_name,
+            severity=severity,
+            description=description,
+            details=details or {},
+            status=AlertStatus.FIRING.value,
+        )
+        
+        self.alerts[alert_id] = alert
+        self.alert_history.append(asdict(alert))
+        self._log_alert(asdict(alert))
+        self._alert_hashes[alert_name] = hashlib.md5(f"{alert_name}:{description}".encode()).hexdigest()
 
-        self.alert_history.append(alert)
-        self._log_alert(alert)
+        # Вызов callback'ов
+        for callback in self._on_alert_callbacks:
+            try:
+                callback(alert)
+            except Exception:
+                pass
 
         # Определение каналов для отправки
         if channels is None:
@@ -103,18 +221,99 @@ class AlertManager:
         results = {}
 
         if 'telegram' in channels and self.config['telegram']['enabled']:
-            results['telegram'] = self._send_telegram(alert)
+            results['telegram'] = self._send_telegram(asdict(alert))
 
         if 'email' in channels and self.config['email']['enabled']:
-            results['email'] = self._send_email(alert)
+            results['email'] = self._send_email(asdict(alert))
 
         if 'slack' in channels and self.config['slack']['enabled']:
-            results['slack'] = self._send_slack(alert)
+            results['slack'] = self._send_slack(asdict(alert))
 
         if 'webhook' in channels and self.config['webhook']['enabled']:
-            results['webhook'] = self._send_webhook(alert)
+            results['webhook'] = self._send_webhook(asdict(alert))
 
-        return results
+        return {"status": "sent", "alert_id": alert_id, **results}
+
+    async def send_alert_async(
+        self,
+        alert_name: str,
+        severity: str,
+        description: str,
+        details: Dict = None,
+        channels: List[str] = None
+    ) -> Dict[str, bool]:
+        """Асинхронная отправка алерта"""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            None,
+            self.send_alert,
+            alert_name,
+            severity,
+            description,
+            details,
+            channels
+        )
+
+    def resolve_alert(self, alert_id: str) -> bool:
+        """Закрытие алерта"""
+        if alert_id not in self.alerts:
+            return False
+        
+        alert = self.alerts[alert_id]
+        alert.status = AlertStatus.RESOLVED.value
+        alert.resolved_at = datetime.now().isoformat()
+        
+        self.alert_history.append(asdict(alert))
+        return True
+
+    def acknowledge_alert(self, alert_id: str, acknowledged_by: str) -> bool:
+        """Подтверждение алерта"""
+        if alert_id not in self.alerts:
+            return False
+        
+        alert = self.alerts[alert_id]
+        alert.acknowledged_by = acknowledged_by
+        
+        self.alert_history.append(asdict(alert))
+        return True
+
+    def get_active_alerts(self) -> List[Alert]:
+        """Получение активных алертов"""
+        return [
+            alert for alert in self.alerts.values()
+            if alert.status == AlertStatus.FIRING.value
+        ]
+
+    def get_alert_statistics(self) -> Dict[str, Any]:
+        """Получение статистики алертов"""
+        now = datetime.now()
+        last_hour = now - timedelta(hours=1)
+        last_24h = now - timedelta(hours=24)
+        
+        recent_alerts = [
+            a for a in self.alert_history
+            if datetime.fromisoformat(a['timestamp']) > last_hour
+        ]
+        
+        by_severity = {}
+        by_status = {}
+        
+        for alert in self.alerts.values():
+            by_severity[alert.severity] = by_severity.get(alert.severity, 0) + 1
+            by_status[alert.status] = by_status.get(alert.status, 0) + 1
+        
+        return {
+            "total_alerts": len(self.alerts),
+            "active_alerts": len(self.get_active_alerts()),
+            "alerts_last_hour": len(recent_alerts),
+            "alerts_last_24h": len([
+                a for a in self.alert_history
+                if datetime.fromisoformat(a['timestamp']) > last_24h
+            ]),
+            "by_severity": by_severity,
+            "by_status": by_status,
+            "silenced_count": len(self._silenced_alerts),
+        }
 
     def send_recovery(
         self,
