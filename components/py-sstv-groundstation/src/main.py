@@ -184,6 +184,62 @@ def mode_demo(args):
     print()
     print("  Список частот:")
     print("    python main.py --list-freq")
+    print()
+    print("  Проверка устройства:")
+    print("    python main.py --check")
+
+
+def mode_check_device(args):
+    """Проверка подключения RTL-SDR устройства."""
+    print("\nПРОВЕРКА RTL-SDR УСТРОЙСТВА")
+    print("-" * 40)
+    
+    # Проверка импорта
+    print("1. Проверка rtlsdr...")
+    try:
+        from rtlsdr import RtlSdr
+        print("   ✓ rtlsdr установлен")
+    except ImportError:
+        print("   ✗ rtlsdr не найден")
+        print("   Установите: pip install rtlsdr pyrtlsdr")
+        return False
+    
+    # Поиск устройств
+    print("\n2. Поиск устройств...")
+    try:
+        num_devices = RtlSdr.get_device_count()
+        print(f"   Найдено: {num_devices}")
+        if num_devices == 0:
+            print("   ⚠ Устройства не подключены")
+            return False
+    except Exception as e:
+        print(f"   ✗ Ошибка: {e}")
+        return False
+    
+    # Информация об устройстве
+    print("\n3. Информация об устройстве:")
+    for i in range(num_devices):
+        try:
+            sdr = RtlSdr(device_index=i)
+            device_name = sdr.get_device_name() if hasattr(sdr, 'get_device_name') else 'Unknown'
+            serial = sdr.get_serial_number() if hasattr(sdr, 'get_serial_number') else 'Unknown'
+            manufacturer = sdr.get_manufacturer() if hasattr(sdr, 'get_manufacturer') else 'Unknown'
+            
+            print(f"   Устройство #{i}:")
+            print(f"      Название: {device_name}")
+            print(f"      Серийный: {serial}")
+            print(f"      Производитель: {manufacturer}")
+            
+            # Определение V4
+            if 'R828D' in device_name.upper() or 'V4' in device_name.upper():
+                print(f"      ✓ RTL-SDR V4 обнаружен")
+            
+            sdr.close()
+        except Exception as e:
+            print(f"   Устройство #{i}: Ошибка - {e}")
+    
+    print("\n✓ RTL-SDR готов к работе")
+    return True
 
 
 def main():
@@ -233,13 +289,16 @@ def main():
     parser.add_argument("--detect", action="store_true", help="Обнаружить SSTV сигнал")
     parser.add_argument("--list-freq", action="store_true", help="Список частот")
     parser.add_argument("--demo", action="store_true", help="Демонстрационный режим")
+    parser.add_argument("--check", action="store_true", help="Проверка подключения RTL-SDR")
 
     args = parser.parse_args()
 
     show_banner()
 
     # Определяем режим работы
-    if args.list_freq:
+    if args.check:
+        mode_check_device(args)
+    elif args.list_freq:
         mode_list_frequencies(args)
     elif args.demo:
         mode_demo(args)
