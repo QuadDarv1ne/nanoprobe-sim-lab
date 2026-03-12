@@ -540,47 +540,86 @@ class IntegratedWebDashboard:
                 self.error_handler.log_error(f"Ошибка чтения логов: {e}")
                 return jsonify({'error': str(e)}), 500
 
-        @self.app.route("/api/stats", methods=["GET"])
-        def api_stats():
-            """API для получения сводной статистики"""
+        @self.app.route("/api/actions/quick", methods=["POST"])
+        def api_quick_action():
+            """API для быстрых действий"""
             try:
-                import psutil
+                data = request.json
+                action = data.get("action", "")
 
-                # Статистика процессов
-                active_count = 0
-                stopped_count = 0
-                if hasattr(self, "_active_processes"):
-                    for proc in self._active_processes.values():
-                        if proc.poll() is None:
-                            active_count += 1
-                        else:
-                            stopped_count += 1
+                actions_map = {
+                    "clean_cache": self.cache_manager.auto_cleanup,
+                    "restart_all": self._restart_all_components,
+                    "stop_all": self._stop_all_components,
+                }
 
-                # Системная статистика
-                cpu_percent = psutil.cpu_percent(interval=0.1)
-                memory = psutil.virtual_memory()
-                disk = psutil.disk_usage(str(project_root))
+                if action not in actions_map:
+                    return jsonify({
+                        "success": False,
+                        "error": f"Неизвестное действие: {action}"
+                    }), 400
 
+                result = actions_map[action]()
                 return jsonify({
-                    "components": {
-                        "active": active_count,
-                        "stopped": stopped_count,
-                        "total": active_count + stopped_count
-                    },
-                    "system": {
-                        "cpu_percent": cpu_percent,
-                        "memory_percent": memory.percent,
-                        "memory_available_mb": memory.available // (1024 * 1024),
-                        "disk_percent": disk.percent,
-                        "disk_free_gb": disk.free // (1024 * 1024 * 1024)
-                    },
-                    "uptime": self._get_uptime(),
-                    "timestamp": datetime.now().isoformat(),
-                    "fastapi_integration": PROXY_AVAILABLE
+                    "success": True,
+                    "message": f"Действие '{action}' выполнено",
+                    "result": result
                 })
             except Exception as e:
-                self.error_handler.log_error(f"Ошибка получения статистики: {e}")
-                return jsonify({'error': str(e)}), 500
+                self.error_handler.log_error(f"Ошибка быстрого действия: {e}")
+                return jsonify({"success": False, "error": str(e)}), 500
+
+        def _stop_all_components(self):
+            """Остановить все компоненты"""
+            stopped = []
+            if hasattr(self, "_active_processes"):
+                for component, process in list(self._active_processes.items()):
+                    if process.poll() is None:
+                        process.terminate()
+                        try:
+                            process.wait(timeout=3)
+                        except subprocess.TimeoutExpired:
+                            process.kill()
+                            process.wait(timeout=1)
+                    del self._active_processes[component]
+                    stopped.append(component)
+                    self.logger.log_system_event(f"Остановлен: {component}", "INFO")
+            return {"stopped": stopped, "count": len(stopped)}
+
+        def _restart_all_components(self):
+            """Перезапустить все активные компоненты"""
+            restarted = []
+            failed = []
+            
+            self._stop_all_components()
+            
+            import time
+            time.sleep(1)
+            
+            component_paths = {
+                "spm_simulator": project_root / "components" / "cpp-spm-hardware-sim" / "src" / "spm_simulator.py",
+                "image_analyzer": project_root / "components" / "py-surface-image-analyzer" / "src" / "main.py",
+                "sstv_station": project_root / "components" / "py-sstv-groundstation" / "src" / "main.py",
+            }
+            
+            for component, path in component_paths.items():
+                if path.exists():
+                    try:
+                        process = subprocess.Popen(
+                            [sys.executable, str(path)],
+                            cwd=str(project_root),
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE,
+                            creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+                        )
+                        if not hasattr(self, "_active_processes"):
+                            self._active_processes = {}
+                        self._active_processes[component] = process
+                        restarted.append(component)
+                    except Exception as e:
+                        failed.append({"component": component, "error": str(e)})
+            
+            return {"restarted": restarted, "failed": failed}
 
         @self.app.route("/api/logs")
         def api_logs():
