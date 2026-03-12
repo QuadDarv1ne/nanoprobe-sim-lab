@@ -247,6 +247,12 @@ try:
 except ImportError:
     pass
 
+try:
+    from api.routes import batch
+    app.include_router(batch.router, prefix="/api/v1/batch", tags=["Пакетная обработка"])
+except ImportError:
+    pass
+
 
 # ==================== Exception Handlers ====================
 
