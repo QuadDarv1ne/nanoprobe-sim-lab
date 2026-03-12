@@ -68,13 +68,42 @@ class RedisCache:
             return False
 
     def clear_pattern(self, pattern: str) -> int:
+        """
+        Удаление ключей по паттерну (безопасно для production).
+        Использует SCAN вместо KEYS для production безопасности.
+        """
         if not self._enabled or not self.client:
             return 0
         try:
-            keys = self.client.keys(pattern)
-            return self.client.delete(*keys) if keys else 0
+            deleted = 0
+            cursor = 0
+            while True:
+                cursor, keys = self.client.scan(cursor, match=pattern, count=100)
+                if keys:
+                    deleted += self.client.delete(*keys)
+                if cursor == 0:
+                    break
+            return deleted
         except redis.RedisError:
             return 0
+
+    def delete_many(self, *keys: str) -> int:
+        """Удаление нескольких ключей"""
+        if not self._enabled or not self.client or not keys:
+            return 0
+        try:
+            return self.client.delete(*keys)
+        except redis.RedisError:
+            return 0
+
+    def exists(self, key: str) -> bool:
+        """Проверка существования ключа"""
+        if not self._enabled or not self.client:
+            return False
+        try:
+            return bool(self.client.exists(key))
+        except redis.RedisError:
+            return False
 
     def generate_key(self, prefix: str, *args) -> str:
         key_data = ":".join(str(arg) for arg in args)
