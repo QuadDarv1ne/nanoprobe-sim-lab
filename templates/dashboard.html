@@ -1062,6 +1062,10 @@
                             <div class="stat-value" id="stat-memory" style="color: var(--warning);">0%</div>
                             <div class="stat-label">Память</div>
                         </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-disk" style="color: var(--info);">0%</div>
+                            <div class="stat-label">Диск</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1386,8 +1390,10 @@
                 if (data.system) {
                     const cpuEl = document.getElementById('stat-cpu');
                     const memEl = document.getElementById('stat-memory');
+                    const diskEl = document.getElementById('stat-disk');
                     if (cpuEl) cpuEl.textContent = data.system.cpu_percent.toFixed(1) + '%';
                     if (memEl) memEl.textContent = data.system.memory_percent.toFixed(1) + '%';
+                    if (diskEl) diskEl.textContent = data.system.disk_percent.toFixed(1) + '%';
                 }
             });
 

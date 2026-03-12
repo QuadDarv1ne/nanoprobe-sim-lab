@@ -1086,7 +1086,7 @@ class WebDashboard:
                 time.sleep(5)
                 try:
                     import psutil
-                    
+
                     active_count = 0
                     if hasattr(self, "_active_processes"):
                         for comp, proc in list(self._active_processes.items()):
@@ -1103,7 +1103,8 @@ class WebDashboard:
 
                     cpu_percent = psutil.cpu_percent(interval=0.1)
                     memory = psutil.virtual_memory()
-                    
+                    disk = psutil.disk_usage(str(project_root))
+
                     emit("stats_update", {
                         "components": {
                             "active": active_count,
@@ -1112,7 +1113,9 @@ class WebDashboard:
                         "system": {
                             "cpu_percent": cpu_percent,
                             "memory_percent": memory.percent,
-                            "memory_available_mb": memory.available // (1024 * 1024)
+                            "memory_available_mb": memory.available // (1024 * 1024),
+                            "disk_percent": disk.percent,
+                            "disk_free_gb": disk.free // (1024 * 1024 * 1024)
                         },
                         "timestamp": datetime.now().isoformat()
                     })
