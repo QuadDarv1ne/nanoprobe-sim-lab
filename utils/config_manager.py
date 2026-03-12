@@ -9,6 +9,8 @@ import json
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 import os
+import threading
+from datetime import datetime
 
 
 class ConfigManager:
@@ -19,6 +21,15 @@ class ConfigManager:
     для всех компонентов проекта.
     """
 
+    _instance: Optional['ConfigManager'] = None
+    _lock = threading.Lock()
+
+    def __new__(cls, config_file: str = "config.json") -> 'ConfigManager':
+        """Singleton паттерн для ConfigManager"""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(self, config_file: str = "config.json") -> None:
         """
         Инициализирует менеджер конфигурации.
@@ -26,8 +37,13 @@ class ConfigManager:
         Args:
             config_file: Путь к файлу конфигурации.
         """
+        if hasattr(self, '_initialized') and self._initialized:
+            return
+            
         self.config_file: Path
         self.config: Dict[str, Any]
+        self._last_modified: Optional[datetime] = None
+        self._lock = threading.Lock()
 
         # Определяем путь к конфигурационному файлу
         if Path(config_file).is_absolute():
@@ -49,6 +65,7 @@ class ConfigManager:
                 self.config_file = possible_paths[0]
 
         self.config = self.load_config()
+        self._initialized = True
 
     def load_config(self) -> Dict[str, Any]:
         """
@@ -66,6 +83,9 @@ class ConfigManager:
         try:
             with open(self.config_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
+                self._last_modified = datetime.fromtimestamp(
+                    os.path.getmtime(self.config_file)
+                )
                 return data if isinstance(data, dict) else {}
         except json.JSONDecodeError as e:
             print(f"Ошибка при загрузке конфигурации: {e}")
@@ -76,18 +96,65 @@ class ConfigManager:
 
     def save_config(self) -> bool:
         """
-        Сохраняет текущую конфигурацию в файл.
+        Сохраняет текущую конфигурацию в файл (thread-safe).
 
         Returns:
             True если сохранение успешно, иначе False.
         """
-        try:
-            with open(self.config_file, "w", encoding="utf-8") as f:
-                json.dump(self.config, f, indent=2, ensure_ascii=False)
+        with self._lock:
+            try:
+                with open(self.config_file, "w", encoding="utf-8") as f:
+                    json.dump(self.config, f, indent=2, ensure_ascii=False)
+                self._last_modified = datetime.now()
+                return True
+            except Exception as e:
+                print(f"Ошибка при сохранении конфигурации: {e}")
+                return False
+
+    def get(self, key: str, default: Any = None) -> Any:
+        """
+        Получает значение по ключу (thread-safe).
+
+        Args:
+            key: Ключ в формате "section.subsection.key"
+            default: Значение по умолчанию
+
+        Returns:
+            Значение конфигурации или default
+        """
+        with self._lock:
+            keys = key.split('.')
+            value = self.config
+            for k in keys:
+                if isinstance(value, dict) and k in value:
+                    value = value[k]
+                else:
+                    return default
+            return value
+
+    def set(self, key: str, value: Any, save: bool = True) -> bool:
+        """
+        Устанавливает значение по ключу (thread-safe).
+
+        Args:
+            key: Ключ в формате "section.subsection.key"
+            value: Значение для установки
+            save: Сохранить ли в файл
+
+        Returns:
+            True если успешно
+        """
+        with self._lock:
+            keys = key.split('.')
+            config = self.config
+            for k in keys[:-1]:
+                if k not in config:
+                    config[k] = {}
+                config = config[k]
+            config[keys[-1]] = value
+            if save:
+                return self.save_config()
             return True
-        except Exception as e:
-            print(f"Ошибка при сохранении конфигурации: {e}")
-            return False
 
     def get_default_config(self) -> Dict[str, Any]:
         """
@@ -190,28 +257,6 @@ class ConfigManager:
                 return default
 
         return value
-
-    def set(self, key_path: str, value: Any) -> bool:
-        """
-        Устанавливает значение конфигурации по пути ключа
-
-        Args:
-            key_path: Путь к ключу в формате 'section.subsection.key'
-            value: Новое значение
-
-        Returns:
-            bool: True если успешно установлено, иначе False
-        """
-        keys = key_path.split(".")
-        config_ref = self.config
-
-        for key in keys[:-1]:
-            if key not in config_ref:
-                config_ref[key] = {}
-            config_ref = config_ref[key]
-
-        config_ref[keys[-1]] = value
-        return self.save_config()
 
     def update_component_config(self, component_name: str, new_config: Dict[str, Any]) -> bool:
         """
