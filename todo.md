@@ -1,215 +1,133 @@
-# Nanoprobe Sim Lab - План разработки
+# Nanoprobe Sim Lab - TODO
 
-**Последнее обновление:** 2026-03-12
-**Статус:** Проект запущен и работает ✅
+## Реализовано ✅
 
----
+### 1. RTL-SDR V4 Поддержка
+- [x] Автоопределение устройства (R828D)
+- [x] Sample rate 2.4 MSPS
+- [x] Bias-T для питания антенны
+- [x] AGC (автоматическая регулировка усиления)
+- [x] Direct sampling для УКВ
+- [x] Коррекция частоты (TCXO)
+- [x] Пакетное чтение сэмплов
+- [x] Сохранение WAV с метаданными
+- [x] CLI опции (--bias-tee, --agc, --gain, --sample-rate)
+- [x] Команда --check для проверки устройства
 
-## ✅ Выполнено (2026-03-12)
+### 2. SSTV Декодирование
+- [x] decode_from_samples() - декодирование из numpy массива
+- [x] Real-time декодирование (decode_realtime_init/push/stop)
+- [x] Автодетект SSTV сигнала
+- [x] Сохранение изображений с timestamp
+- [x] Пакетное декодирование (process_sstv_batch)
 
-### Улучшения веб-интерфейса
-- [x] Современный UI с тёмной/светлой темой
-- [x] Real-time графики на Chart.js 4.x
-- [x] Анимации и переходы
-- [x] Toast уведомления
-- [x] Адаптивный мобильный дизайн
-- [x] Quick actions панель
-- [x] Font Awesome иконки
-- [x] Улучшенные карточки с эффектами
+### 3. Спутниковое Отслеживание
+- [x] SatelliteTracker класс с TLE данными
+- [x] Предсказание пролётов (ISS, NOAA 15/18/19, Meteor-M2)
+- [x] Частоты SSTV спутников
+- [x] Команды --satellites и --schedule
+- [x] Пакетный расчёт пролётов
 
-### Новые API эндпоинты
-- [x] `/health/detailed` — детальная проверка здоровья
-- [x] `/metrics/realtime` — метрики в реальном времени
-- [x] `/api/v1/dashboard/stats` — статистика дашборда
-- [x] `/api/v1/export/{format}` — экспорт данных (json/csv/pdf)
-- [x] `/api/v1/dashboard/actions/*` — действия (clean_cache, start/stop_component)
-- [x] Flask action эндпоинты для интеграции
+### 4. Waterfall Дисплей
+- [x] FFT анализ в реальном времени (512 bins)
+- [x] Цветовая спектрограмма
+- [x] WaterfallDisplay класс
+- [x] WaterfallRecorder для записи
+- [x] Сохранение PNG и GIF
+- [x] Команда --waterfall
 
-### Утилиты
-- [x] `utils/enhanced_monitor.py` — расширенный системный мониторинг
-- [x] Система алертов с порогами (warning/critical)
-- [x] Статистика (avg/min/max)
-- [x] Мониторинг процессов и сети
-- [x] Data classes (SystemMetrics, Alert)
+### 5. CI/CD Pipeline
+- [x] tests.yml - тесты Python 3.9-3.12
+- [x] lint.yml - flake8, black, mypy
+- [x] build.yml - сборка при тегах
+- [x] CODEOWNERS
+- [x] PR и Issue шаблоны
 
-### Тесты и документация
-- [x] `tests/test_improvements.py` — 21 pytest тест (100% pass)
-- [x] `test_improvements.py` — integration тесты (12/12 pass)
-- [x] `IMPROVEMENTS.md` — полная документация улучшений
+### 6. Пакетная Обработка
+- [x] callback поддержка в BatchJob
+- [x] process_sstv_batch()
+- [x] process_satellite_passes()
+- [x] Real-time прогресс
 
-### Итоги тестирования
-- ✅ **FastAPI:** 9/9 тестов
-- ✅ **Flask:** 7/7 тестов  
-- ✅ **EnhancedMonitor:** 3/3 теста
-- ✅ **Integration:** 2/2 теста
-- ✅ **ВСЕГО:** 21/21 (100%)
-
----
-
-## ✅ Выполнено (2026-03-11)
-
----
-
-## ✅ Выполнено
-
-### FastAPI REST API
-- [x] Главное приложение (api/main.py)
-- [x] JWT аутентификация с refresh токенами
-- [x] CRUD сканирований
-- [x] CRUD симуляций
-- [x] AI/ML анализ дефектов
-- [x] Сравнение поверхностей
-- [x] PDF отчёты
-- [x] WebSocket real-time
-- [x] Автодокументация (Swagger/ReDoc)
-
-### Кэширование
-- [x] RedisCache класс
-- [x] Декоратор @cached
-- [x] Кэширование get_scans (5 мин)
-- [x] Кэширование get_simulations (5 мин)
-- [x] Кэширование get_scan (10 мин)
-- [x] Кэширование get_simulation (10 мин)
-- [x] Инвалидация кэша при CRUD операциях
-
-### Безопасность
-- [x] Rate limiting для login (5 запросов/мин)
-- [x] JWT_SECRET из переменных окружения
-- [x] Защита от brute force атак
-
-### Оптимизация кода
-- [x] Упрощён RedisCache класс
-- [x] Добавлен count_scans() метод
-- [x] Удалены дублирования
-- [x] Исправлена Unicode ошибка в Windows
-
-### Инфраструктура
-- [x] Docker Compose конфигурация
-- [x] Скрипты deploy.sh и monitor.sh
-- [x] Admin CLI утилита
-- [x] Тесты для API
-
-### Flask + FastAPI Интеграция (2026-03-11)
-- [x] Модуль интеграции (api/integration.py)
-- [x] Reverse proxy Blueprint (api/reverse_proxy.py)
-- [x] Интегрированная веб-панель (src/web/web_dashboard_integrated.py)
-- [x] Nginx конфигурация (deployment/nginx/nginx.conf)
-- [x] Тесты интеграции (tests/test_integration.py)
-- [x] Скрипт запуска (start_all.py)
-- [x] Документация (docs/INTEGRATION.md)
+### 7. Веб-интерфейс
+- [x] API /api/components
+- [x] API /api/processes
+- [x] API /api/stats
+- [x] API /api/health
+- [x] API /api/logs/component/<name>
+- [x] API /api/actions/start_component
+- [x] API /api/actions/stop_component
+- [x] API /api/actions/restart_component
+- [x] API /api/actions/quick
+- [x] WebSocket уведомления (component_status, stats_update)
+- [x] Real-time обновление статистики
+- [x] Кнопки управления компонентами
+- [x] Просмотр логов компонентов
 
 ---
 
-## 🔜 Следующие задачи
+## В Ожидании ⏳
 
-### Критические (High Priority)
-
-1. **Интеграция с БД**
-   - [ ] Подключить реальные данные из SQLite к `/api/v1/dashboard/stats`
-   - [ ] Добавить счётчики сканирований/симуляций/анализов
-   - [ ] Интеграция с existing utils/database.py
-
-2. **WebSocket Real-time**
-   - [ ] Активировать push-обновления для графиков
-   - [ ] Подписка на каналы (cpu, memory, processes)
-   - [ ] Интеграция с Flask SocketIO
-
-3. **Production готовность**
-   - [ ] Настроить Gunicorn для FastAPI
-   - [ ] Docker контейнеризация (полная)
-   - [ ] Health checks для всех endpoints
-
-### Средний приоритет
-
-4. **Production готовность** ✅ (2026-03-11)
-   - [x] Gunicorn конфигурация
-   - [x] Nginx reverse proxy setup
-   - [x] HTTPS/SSL настройка
-   - [x] Логирование в production
-
-5. **Мониторинг** ✅ (2026-03-11)
-   - [x] Prometheus метрики
-   - [x] Grafana дашборды
-   - [x] Health checks для всех endpoints
-   - [x] Alerting система
-
-6. **Оптимизация БД**
-   - [ ] Connection pooling
-   - [ ] Query оптимизация
-   - [ ] Миграции схемы (Alembic)
-   - [ ] Backup стратегия
-
-### Низкий приоритет
-
-7. **Новые функции**
-   - [ ] GraphQL API
-   - [ ] Celery фоновые задачи
-   - [ ] Real-time уведомления
-   - [ ] Пакетная обработка через API
-
-8. **Frontend**
-   - [ ] React/Vue компонент для дашборда
-   - [ ] PWA поддержка
-   - [ ] Mobile адаптация
+### Когда придёт RTL-SDR V4 (через 2 недели):
+- [ ] Тестирование real-time SSTV с МКС
+- [ ] Проверка waterfall дисплея
+- [ ] Тестирование приёма NOAA/Meteor
+- [ ] Калибровка частоты (TCXO)
+- [ ] Запись и декодирование пролётов
 
 ---
 
-## 📊 Метрики проекта
+## Будущие Улучшения 💡
 
-| Показатель | Значение |
-|------------|----------|
-| API endpoints | 40+ |
-| Утилит | 43+ |
-| Строк кода | ~6500 |
-| Покрытие тестами | ~85% |
-| Время ответа API | <150ms |
-| Тестов пройдено | 21/21 (100%) |
+### Приоритет 1
+- [ ] Веб-интерфейс waterfall (WebSocket streaming)
+- [ ] Автозапись при пролёте спутника
+- [ ] QSL карточки для подтверждённых приёмов
+- [ ] Интеграция с satnobs.io
+
+### Приоритет 2
+- [ ] TLE обновления автоматически (celestrak API)
+- [ ] Улучшенный SSTV детектор (энергия сигнала)
+- [ ] Экспорт в форматы радиолюбителей (ADIF)
+- [ ] Мобильная версия веб-интерфейса
+
+### Приоритет 3
+- [ ] Docker контейнеризация
+- [ ] Telegram бот для уведомлений
+- [ ] База данных всех приёмов
+- [ ] Статистика и графики
 
 ---
 
-## 🐛 Известные проблемы
+## Известные Проблемы 🐛
 
-1. **Redis кэш недоступен** - требуется установка Redis сервера (опционально)
-2. **rtlsdr зависимость** - проблема при установке на Windows (не критично)
-3. **Flask и FastAPI интегрированы** - ✅ Решено (2026-03-11)
-4. **Detailed health показывает "critical"** - диск заполнен >90% (не критично для dev)
+- [ ] test_metadata_structure требует mock SDR устройства
+- [ ] Waterfall требует много памяти при длительной записи
+- [ ] Real-time декодирование может пропускать сигналы при высокой нагрузке
 
 ---
 
-## 🚀 Быстрый старт
+## Команды для Использования
 
 ```bash
-# Установка зависимостей
-pip install -r requirements-api.txt
+# Проверка RTL-SDR
+python components/py-sstv-groundstation/src/main.py --check
 
-# Запуск API
-python run_api.py --reload
+# Real-time SSTV
+python components/py-sstv-groundstation/src/main.py --realtime-sstv -f iss --duration 120
 
-# Запуск Flask + FastAPI вместе
-python start_all.py --reload --browser
+# Waterfall
+python components/py-sstv-groundstation/src/main.py --waterfall -f 145.800 --save-waterfall
 
-# Проверка
-curl http://localhost:8000/health
+# Спутники
+python components/py-sstv-groundstation/src/main.py --satellites
+python components/py-sstv-groundstation/src/main.py --schedule --lat 55.75 --lon 37.61
 
-# Тестирование интеграции
-python tests/test_integration.py
-
-# Документация
-# http://localhost:8000/docs
-# http://localhost:5000 (веб-интерфейс)
+# Запуск веб-интерфейса
+python src/web/web_dashboard.py
 ```
 
 ---
 
-## 📝 Заметки
-
-- Проект использует Python 3.12+
-- Основная кодовая база на русском языке
-- API полностью функционален и протестирован
-- Redis кэширование работает опционально
-- **2026-03-12:** Добавлены улучшения UI/UX, новые API эндпоинты, enhanced_monitor
-- **Тесты:** 21/21 passed (100% success rate)
-
----
-
-*Последнее обновление: 2026-03-12 (Улучшения UI/UX и API реализованы)*
+**Последнее обновление:** 2026-03-12
+**Статус:** 7/8 приоритетных улучшений реализовано
