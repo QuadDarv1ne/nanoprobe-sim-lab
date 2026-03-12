@@ -203,7 +203,71 @@ def mode_demo(args):
     print()
     print("  Real-time SSTV:")
     print("    python main.py --realtime-sstv -f iss --duration 120")
-    print("    python main.py --realtime-sstv -f 145.800 --gain 35")
+    print()
+    print("  Спутники:")
+    print("    python main.py --satellites           # Список спутников")
+    print("    python main.py --schedule             # Расписание пролётов")
+    print("    python main.py --schedule --lat 55.75 --lon 37.61")
+
+
+def mode_list_satellites(args):
+    """Список спутников."""
+    from satellite_tracker import SatelliteTracker
+    
+    tracker = SatelliteTracker(ground_station_lat=args.lat, ground_station_lon=args.lon)
+    
+    print("\nСПУТНИКИ")
+    print("-" * 50)
+    
+    for sat_name in tracker.get_all_satellites():
+        freq = tracker.SSTV_FREQUENCIES.get(sat_name.lower(), 0)
+        position = tracker.get_current_position(sat_name)
+        
+        print(f"\n{sat_name}")
+        print(f"  Частота SSTV: {freq:.3f} МГц" if freq > 0 else "  Частота SSTV: N/A")
+        if position:
+            print(f"  Высота: {position['altitude_km']} км")
+            print(f"  Скорость: {position['velocity_kmh']} км/ч")
+            print(f"  Зона покрытия: {position['footprint_km']} км")
+
+
+def mode_satellite_schedule(args):
+    """Расписание пролётов спутников."""
+    from satellite_tracker import SatelliteTracker
+    
+    tracker = SatelliteTracker(ground_station_lat=args.lat, ground_station_lon=args.lon)
+    
+    print(f"\nРАСПИСАНИЕ ПРОЛЁТОВ")
+    print(f"Наземная станция: {args.lat}°N, {args.lon}°E")
+    print("-" * 60)
+    
+    schedule = tracker.get_sstv_schedule(hours_ahead=24)
+    
+    if not schedule:
+        print("Пролётов не найдено")
+        return
+    
+    for pass_info in schedule[:10]:  # Показываем первые 10
+        sat_name = pass_info['satellite']
+        aos = pass_info['aos']
+        los = pass_info['los']
+        max_el = pass_info['max_elevation']
+        freq = pass_info['frequency']
+        
+        print(f"\n{sat_name}")
+        print(f"  Начало: {aos.strftime('%H:%M:%S')} ({aos.strftime('%d.%m.%Y')})")
+        print(f"  Конец: {los.strftime('%H:%M:%S')}")
+        print(f"  Длительность: {pass_info['duration_minutes']} мин")
+        print(f"  Макс. высота: {max_el:.1f}°")
+        print(f"  Частота: {freq:.3f} МГц")
+        
+        # Рекомендация
+        if max_el > 45:
+            print(f"  ✓ Отличный пролёт для приёма!")
+        elif max_el > 20:
+            print(f"  ✓ Хороший пролёт")
+        else:
+            print(f"  ⚠ Низкая высота")
 
 
 def mode_realtime_sstv(args):
@@ -405,13 +469,21 @@ def main():
     parser.add_argument("--list-freq", action="store_true", help="Список частот")
     parser.add_argument("--demo", action="store_true", help="Демонстрационный режим")
     parser.add_argument("--check", action="store_true", help="Проверка подключения RTL-SDR")
+    parser.add_argument("--satellites", action="store_true", help="Список спутников")
+    parser.add_argument("--schedule", action="store_true", help="Расписание пролётов")
+    parser.add_argument("--lat", type=float, default=55.75, help="Широта наземной станции")
+    parser.add_argument("--lon", type=float, default=37.61, help="Долгота наземной станции")
 
     args = parser.parse_args()
 
     show_banner()
 
     # Определяем режим работы
-    if args.check:
+    if args.schedule:
+        mode_satellite_schedule(args)
+    elif args.satellites:
+        mode_list_satellites(args)
+    elif args.check:
         mode_check_device(args)
     elif args.list_freq:
         mode_list_frequencies(args)
