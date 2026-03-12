@@ -1489,7 +1489,8 @@
                     components.forEach(component => {
                         const icon = getComponentIcon(component.name);
                         const status = component.status || 'ready';
-                        
+                        const isRunning = status === 'running';
+
                         html += `
                             <li class="component-item">
                                 <div class="component-info">
@@ -1501,17 +1502,25 @@
                                         <p>${component.description || component.language || 'Python'}</p>
                                         <span class="status-badge ${status}">
                                             <span class="status-dot"></span>
-                                            <span>${status}</span>
+                                            <span>${isRunning ? 'Запущен' : (status === 'ready' ? 'Готов' : status)}</span>
                                         </span>
                                     </div>
                                 </div>
                                 <div class="btn-group">
-                                    <button class="btn btn-success btn-sm" onclick="startComponent('${component.name}')">
-                                        <i class="fas fa-play"></i> Запуск
-                                    </button>
-                                    <button class="btn btn-danger btn-sm" onclick="stopComponent('${component.name}')">
-                                        <i class="fas fa-stop"></i> Стоп
-                                    </button>
+                                    ${isRunning ? 
+                                        `<button class="btn btn-warning btn-sm" onclick="restartComponent('${component.name}')">
+                                            <i class="fas fa-redo"></i> Перезапуск
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" onclick="stopComponent('${component.name}')">
+                                            <i class="fas fa-stop"></i> Стоп
+                                        </button>` :
+                                        `<button class="btn btn-success btn-sm" onclick="startComponent('${component.name}')">
+                                            <i class="fas fa-play"></i> Запуск
+                                        </button>
+                                        <button class="btn btn-secondary btn-sm" disabled style="opacity: 0.5; cursor: not-allowed;">
+                                            <i class="fas fa-stop"></i> Стоп
+                                        </button>`
+                                    }
                                 </div>
                             </li>
                         `;
@@ -1898,6 +1907,14 @@
             .catch(error => {
                 showNotification(`Ошибка остановки компонента`, 'error');
             });
+        }
+
+        function restartComponent(name) {
+            showNotification(`Перезапуск ${name}...`, 'info');
+            stopComponent(name);
+            setTimeout(() => {
+                startComponent(name);
+            }, 1000);
         }
 
         function stopProcess(name) {

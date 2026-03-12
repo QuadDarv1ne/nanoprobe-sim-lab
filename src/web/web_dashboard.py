@@ -139,7 +139,7 @@ class WebDashboard:
                         return jsonify(resp.json())
                 except:
                     pass
-                
+
                 # Фоллбэк на локальные данные
                 component_status = {}
 
@@ -155,37 +155,127 @@ class WebDashboard:
                     project_root / "components" / "cpp-spm-hardware-sim" / "build" / "spm-simulator"
                 )
                 spm_exists = spm_python.exists() or spm_cpp.exists()
+                
+                # Проверяем, запущен ли компонент
+                spm_running = False
+                if "spm_simulator" in self._active_processes:
+                    proc = self._active_processes["spm_simulator"]
+                    spm_running = proc.poll() is None
+                
                 component_status["spm_simulator"] = {
-                    "status": "ready" if spm_exists else "not_installed",
-                    "processes": 0,
-                    "python_available": spm_python.exists(),
-                    "cpp_available": spm_cpp.exists(),
+                    "name": "SPM Simulator",
+                    "status": "running" if spm_running else ("ready" if spm_exists else "not_installed"),
+                    "processes": 1 if spm_running else 0,
                 }
 
                 # Проверяем анализатор изображений
                 analyzer_path = (
                     project_root / "components" / "py-surface-image-analyzer" / "src" / "main.py"
                 )
+                analyzer_running = False
+                if "image_analyzer" in self._active_processes:
+                    proc = self._active_processes["image_analyzer"]
+                    analyzer_running = proc.poll() is None
+                    
                 component_status["image_analyzer"] = {
-                    "status": "ready" if analyzer_path.exists() else "not_installed",
-                    "processes": 0,
+                    "name": "Image Analyzer",
+                    "status": "running" if analyzer_running else ("ready" if analyzer_path.exists() else "not_installed"),
+                    "processes": 1 if analyzer_running else 0,
                 }
 
                 # Проверяем SSTV станцию
                 sstv_path = (
                     project_root / "components" / "py-sstv-groundstation" / "src" / "main.py"
                 )
+                sstv_running = False
+                if "sstv_station" in self._active_processes:
+                    proc = self._active_processes["sstv_station"]
+                    sstv_running = proc.poll() is None
+                    
                 component_status["sstv_station"] = {
-                    "status": "ready" if sstv_path.exists() else "not_installed",
-                    "processes": 0,
+                    "name": "SSTV Station",
+                    "status": "running" if sstv_running else ("ready" if sstv_path.exists() else "not_installed"),
+                    "processes": 1 if sstv_running else 0,
                 }
 
-                component_status["web_dashboard"] = {"status": "running", "processes": 1}
+                component_status["web_dashboard"] = {
+                    "name": "Web Dashboard",
+                    "status": "running", 
+                    "processes": 1
+                }
 
                 return jsonify(component_status)
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка получения статуса компонентов: {e}")
                 return jsonify({"error": str(e)}), 500
+
+        @self.app.route("/api/components")
+        def api_components():
+            """API для получения списка компонентов в формате для frontend"""
+            try:
+                # Получаем статус компонентов напрямую
+                component_status = {}
+
+                # Проверяем SPM симулятор
+                spm_python = (
+                    project_root
+                    / "components"
+                    / "cpp-spm-hardware-sim"
+                    / "src"
+                    / "spm_simulator.py"
+                )
+                spm_cpp = (
+                    project_root / "components" / "cpp-spm-hardware-sim" / "build" / "spm-simulator"
+                )
+                spm_exists = spm_python.exists() or spm_cpp.exists()
+                spm_running = "spm_simulator" in self._active_processes and self._active_processes["spm_simulator"].poll() is None
+
+                component_status["spm_simulator"] = {
+                    "name": "SPM Simulator",
+                    "status": "running" if spm_running else ("ready" if spm_exists else "not_installed"),
+                    "processes": 1 if spm_running else 0,
+                }
+
+                # Проверяем анализатор изображений
+                analyzer_path = project_root / "components" / "py-surface-image-analyzer" / "src" / "main.py"
+                analyzer_running = "image_analyzer" in self._active_processes and self._active_processes["image_analyzer"].poll() is None
+
+                component_status["image_analyzer"] = {
+                    "name": "Image Analyzer",
+                    "status": "running" if analyzer_running else ("ready" if analyzer_path.exists() else "not_installed"),
+                    "processes": 1 if analyzer_running else 0,
+                }
+
+                # Проверяем SSTV станцию
+                sstv_path = project_root / "components" / "py-sstv-groundstation" / "src" / "main.py"
+                sstv_running = "sstv_station" in self._active_processes and self._active_processes["sstv_station"].poll() is None
+
+                component_status["sstv_station"] = {
+                    "name": "SSTV Station",
+                    "status": "running" if sstv_running else ("ready" if sstv_path.exists() else "not_installed"),
+                    "processes": 1 if sstv_running else 0,
+                }
+
+                component_status["web_dashboard"] = {
+                    "name": "Web Dashboard",
+                    "status": "running",
+                    "processes": 1
+                }
+
+                # Преобразуем в список для frontend
+                components_list = []
+                for comp_key, comp_data in component_status.items():
+                    components_list.append({
+                        "name": comp_key,
+                        "status": comp_data.get("status", "unknown"),
+                        "description": comp_data.get("name", comp_key),
+                        "processes": comp_data.get("processes", 0),
+                    })
+
+                return jsonify(components_list)
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка получения списка компонентов: {e}")
+                return jsonify([]), 500
 
         @self.app.route("/api/logs")
         def api_logs():

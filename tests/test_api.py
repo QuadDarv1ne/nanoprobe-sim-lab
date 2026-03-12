@@ -6,6 +6,15 @@
 import pytest
 from fastapi.testclient import TestClient
 from datetime import datetime
+import os
+
+# Создаём тестовую директорию для БД
+os.makedirs("data", exist_ok=True)
+
+# Инициализируем БД ДО импорта app
+from utils.database import DatabaseManager
+import api.main
+api.main.db_manager = DatabaseManager("data/nanoprobe.db")
 
 from api.main import app
 
@@ -42,7 +51,7 @@ class TestAuth:
         """Успешный вход"""
         response = client.post(
             "/api/v1/auth/login",
-            json={"username": "admin", "password": "admin123"},
+            json={"username": "admin", "password": "Admin123"},
         )
         assert response.status_code == 200
         data = response.json()
@@ -54,7 +63,7 @@ class TestAuth:
         """Неверные учетные данные"""
         response = client.post(
             "/api/v1/auth/login",
-            json={"username": "invalid", "password": "wrong"},
+            json={"username": "invalid", "password": "Wrong123"},
         )
         assert response.status_code == 401
 

@@ -273,13 +273,24 @@ async def http_exception_handler(request, exc: HTTPException):
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc: RequestValidationError):
     """Обработка ошибок валидации"""
+    # Сериализуем ошибки, преобразуя не-JSON объекты в строки
+    def serialize_error(err):
+        if isinstance(err, (str, int, float, bool, type(None))):
+            return err
+        elif isinstance(err, (list, tuple)):
+            return [serialize_error(e) for e in err]
+        elif isinstance(err, dict):
+            return {k: serialize_error(v) for k, v in err.items()}
+        else:
+            return str(err)
+    
     return JSONResponse(
         status_code=422,
         content={
             "error": True,
             "status_code": 422,
             "detail": "Validation error",
-            "errors": exc.errors()
+            "errors": serialize_error(exc.errors())
         }
     )
 

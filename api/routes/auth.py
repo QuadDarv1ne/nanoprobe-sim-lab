@@ -35,7 +35,7 @@ USERS_DB = {
     "admin": {
         "id": 1,
         "username": "admin",
-        "password_hash": pwd_context.hash("admin123"),
+        "password_hash": pwd_context.hash("Admin123"),
         "role": "admin",
         "created_at": "2026-03-11T00:00:00",
         "last_login": None,
@@ -43,7 +43,7 @@ USERS_DB = {
     "user": {
         "id": 2,
         "username": "user",
-        "password_hash": pwd_context.hash("user123"),
+        "password_hash": pwd_context.hash("User123"),
         "role": "user",
         "created_at": "2026-03-11T00:00:00",
         "last_login": None,
