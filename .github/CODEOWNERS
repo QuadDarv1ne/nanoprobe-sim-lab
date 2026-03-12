@@ -1,0 +1,13 @@
+# GitHub CODEOWNERS
+* @QuadDarv1ne
+
+# Core modules
+/src/core/ @QuadDarv1ne
+/src/web/ @QuadDarv1ne
+/api/ @QuadDarv1ne
+
+# Components
+/components/ @QuadDarv1ne
+
+# Tests
+/tests/ @QuadDarv1ne
