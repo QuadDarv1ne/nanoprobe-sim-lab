@@ -644,11 +644,29 @@ class IntegratedWebDashboard:
                 import time
                 time.sleep(0.5)
                 if process.poll() is not None:
+                    # WebSocket уведомление об ошибке
+                    if hasattr(self, 'socketio'):
+                        from flask_socketio import emit
+                        emit('component_status', {
+                            'component': component,
+                            'status': 'error',
+                            'message': f'Завершился с кодом {process.returncode}'
+                        }, broadcast=True)
+                    
                     return jsonify({
                         "success": False,
                         "error": f"Завершился с кодом {process.returncode}",
                         "log": str(log_dir / f"{component}_stderr.log")
                     }), 500
+
+                # WebSocket уведомление об успешном запуске
+                if hasattr(self, 'socketio'):
+                    from flask_socketio import emit
+                    emit('component_status', {
+                        'component': component,
+                        'status': 'running',
+                        'pid': process.pid
+                    }, broadcast=True)
 
                 return jsonify({"success": True, "message": f"{component} запущен", "pid": process.pid})
             except Exception as e:
@@ -679,6 +697,15 @@ class IntegratedWebDashboard:
 
                 del self._active_processes[component]
                 self.logger.log_system_event(f"Остановка: {component}", "INFO")
+
+                # WebSocket уведомление
+                if hasattr(self, 'socketio'):
+                    from flask_socketio import emit
+                    emit('component_status', {
+                        'component': component,
+                        'status': 'stopped'
+                    }, broadcast=True)
+
                 return jsonify({"success": True, "message": f"{component} остановлен"})
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка остановки: {e}")
@@ -740,10 +767,29 @@ class IntegratedWebDashboard:
 
                 time.sleep(0.5)
                 if process.poll() is not None:
+                    # WebSocket уведомление об ошибке
+                    if hasattr(self, 'socketio'):
+                        from flask_socketio import emit
+                        emit('component_status', {
+                            'component': component,
+                            'status': 'error',
+                            'message': f'Не удалось запустить (код {process.returncode})'
+                        }, broadcast=True)
+                    
                     return jsonify({
                         "success": False,
                         "error": f"Не удалось запустить (код {process.returncode})"
                     }), 500
+
+                # WebSocket уведомление об успешном перезапуске
+                if hasattr(self, 'socketio'):
+                    from flask_socketio import emit
+                    emit('component_status', {
+                        'component': component,
+                        'status': 'running',
+                        'pid': process.pid,
+                        'restarted': True
+                    }, broadcast=True)
 
                 return jsonify({
                     "success": True,
