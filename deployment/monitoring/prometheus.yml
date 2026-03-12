@@ -1,32 +1,46 @@
 # Prometheus конфигурация для Nanoprobe Simulation Lab
+# Сохранить как: deployment/monitoring/prometheus.yml
 
 global:
-  scrape_interval: 15s
-  evaluation_interval: 15s
+  scrape_interval: 15s          # Интервал сбора метрик
+  evaluation_interval: 15s      # Интервал вычисления правил
+  scrape_timeout: 10s           # Таймаут сбора
 
-# Правила алертов
+# Внешние лейблы
+external_labels:
+  monitor: 'nanoprobe-monitor'
+  environment: 'production'
+
+# Правила алертинга
 rule_files:
-  # - "alerts/*.yml"
+  - "alerts.yml"
 
 # Цели для сбора метрик
 scrape_configs:
-  # Основное приложение
-  - job_name: 'nanoprobe-lab'
+  # FastAPI приложение
+  - job_name: 'fastapi'
     static_configs:
-      - targets: ['nanoprobe-lab:5000']
-    metrics_path: '/api/metrics'
+      - targets: ['fastapi:8000']
+    metrics_path: '/metrics'
     scrape_interval: 10s
+
+  # Nginx (требуется nginx-prometheus-exporter)
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:80']
+    metrics_path: '/metrics'
+
+  # Redis
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+
+  # Node Exporter (системные метрики)
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
 
   # Prometheus сам себя
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
-
-  # Node exporter (системные метрики)
-  - job_name: 'node-exporter'
-    static_configs:
-      - targets: ['node-exporter:9100']
-
-# Настройки удаленного хранения (опционально)
-# remote_write:
-#   - url: "http://remote-storage:9201/write"

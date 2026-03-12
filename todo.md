@@ -44,6 +44,15 @@
 - [x] Admin CLI утилита
 - [x] Тесты для API
 
+### Flask + FastAPI Интеграция (2026-03-11)
+- [x] Модуль интеграции (api/integration.py)
+- [x] Reverse proxy Blueprint (api/reverse_proxy.py)
+- [x] Интегрированная веб-панель (src/web/web_dashboard_integrated.py)
+- [x] Nginx конфигурация (deployment/nginx/nginx.conf)
+- [x] Тесты интеграции (tests/test_integration.py)
+- [x] Скрипт запуска (start_all.py)
+- [x] Документация (docs/INTEGRATION.md)
+
 ---
 
 ## 🔜 Следующие задачи
@@ -51,10 +60,10 @@
 ### Критические (High Priority)
 
 1. **Интеграция с существующими utils**
-   - [ ] Подключить utils/database.py к API роутам
-   - [ ] Интегрировать utils/defect_analyzer.py
-   - [ ] Интегрировать utils/surface_comparator.py
-   - [ ] Интегрировать utils/pdf_report_generator.py
+   - [x] Подключить utils/database.py к API роутам
+   - [x] Интегрировать utils/defect_analyzer.py
+   - [x] Интегрировать utils/surface_comparator.py
+   - [x] Интегрировать utils/pdf_report_generator.py
 
 2. **Тестирование**
    - [ ] Запустить pytest tests/test_api.py
@@ -63,23 +72,23 @@
    - [ ] Проверить покрытие кода
 
 3. **Flask + FastAPI интеграция**
-   - [ ] Настроить проксирование Flask → FastAPI
-   - [ ] Общий доступ к сессиям
-   - [ ] Синхронизация данных
+   - [x] Настроить проксирование Flask → FastAPI
+   - [x] Общий доступ к сессиям
+   - [x] Синхронизация данных
 
 ### Средний приоритет
 
-4. **Production готовность**
-   - [ ] Gunicorn конфигурация
-   - [ ] Nginx reverse proxy setup
-   - [ ] HTTPS/SSL настройка
-   - [ ] Логирование в production
+4. **Production готовность** ✅ (2026-03-11)
+   - [x] Gunicorn конфигурация
+   - [x] Nginx reverse proxy setup
+   - [x] HTTPS/SSL настройка
+   - [x] Логирование в production
 
-5. **Мониторинг**
-   - [ ] Prometheus метрики
-   - [ ] Grafana дашборды
-   - [ ] Health checks для всех endpoints
-   - [ ] Alerting система
+5. **Мониторинг** ✅ (2026-03-11)
+   - [x] Prometheus метрики
+   - [x] Grafana дашборды
+   - [x] Health checks для всех endpoints
+   - [x] Alerting система
 
 6. **Оптимизация БД**
    - [ ] Connection pooling
@@ -118,7 +127,7 @@
 
 1. **Redis кэш недоступен** - требуется установка Redis сервера
 2. **rtlsdr зависимость** - проблема при установке на Windows
-3. **Flask и FastAPI работают раздельно** - нужна интеграция
+3. **Flask и FastAPI интегрированы** - ✅ Решено (2026-03-11)
 
 ---
 
@@ -131,11 +140,18 @@ pip install -r requirements-api.txt
 # Запуск API
 python run_api.py --reload
 
+# Запуск Flask + FastAPI вместе
+python start_all.py --reload --browser
+
 # Проверка
 curl http://localhost:8000/health
 
+# Тестирование интеграции
+python tests/test_integration.py
+
 # Документация
 # http://localhost:8000/docs
+# http://localhost:5000 (веб-интерфейс)
 ```
 
 ---
@@ -149,4 +165,4 @@ curl http://localhost:8000/health
 
 ---
 
-*Последнее обновление: 2026-03-11*
+*Последнее обновление: 2026-03-11 (Flask + FastAPI интеграция реализована)*

@@ -1,0 +1,59 @@
+# Dockerfile для Flask веб-панели (Production)
+FROM python:3.12-slim
+
+# Рабочая директория
+WORKDIR /app
+
+# Переменные окружения
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Установка системных зависимостей
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    libsqlite3-dev \
+    libhdf5-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Копирование requirements
+COPY requirements.txt .
+
+# Установка Python зависимостей
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt && \
+    pip install gunicorn
+
+# Копирование исходного кода
+COPY src/ ./src/
+COPY utils/ ./utils/
+COPY api/ ./api/
+COPY data/ ./data/
+COPY output/ ./output/
+COPY logs/ ./logs/
+COPY templates/ ./templates/
+
+# Создание директорий
+RUN mkdir -p /app/logs /app/data /app/output
+
+# Порт
+EXPOSE 5000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:5000/api/system_info || exit 1
+
+# Пользователь (не root для безопасности)
+RUN useradd --create-home --shell /bin/bash nanoprobe && \
+    chown -R nanoprobe:nanoprobe /app
+USER nanoprobe
+
+# Запуск через Gunicorn
+CMD ["gunicorn", "src.web.web_dashboard_integrated:app", \
+     "--bind", "0.0.0.0:5000", \
+     "--workers", "2", \
+     "--threads", "4", \
+     "--worker-class", "gthread", \
+     "--timeout", "120"]

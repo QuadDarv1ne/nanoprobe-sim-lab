@@ -1,0 +1,131 @@
+# Prometheus Alert Rules для Nanoprobe Simulation Lab
+# Сохранить как: deployment/monitoring/alerts.yml
+
+groups:
+  - name: nanoprobe_alerts
+    interval: 30s
+    rules:
+      # ==================== HTTP ошибки ====================
+      - alert: HighErrorRate
+        expr: sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Высокий уровень ошибок HTTP"
+          description: "Уровень ошибок {{ $value | humanizePercentage }} превышает 5%"
+
+      - alert: High4xxRate
+        expr: sum(rate(http_requests_total{status=~"4.."}[5m])) / sum(rate(http_requests_total[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Высокий уровень 4xx ошибок"
+          description: "Уровень 4xx ошибок {{ $value | humanizePercentage }} превышает 10%"
+
+      # ==================== Время ответа ====================
+      - alert: SlowResponseTime
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, endpoint)) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Медленное время ответа API"
+          description: "95-й перцентиль времени ответа > 2с для {{ $labels.endpoint }}"
+
+      - alert: VerySlowResponseTime
+        expr: histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, endpoint)) > 5
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Очень медленное время ответа API"
+          description: "99-й перцентиль времени ответа > 5с для {{ $labels.endpoint }}"
+
+      # ==================== Доступность ====================
+      - alert: ServiceDown
+        expr: up{job="fastapi"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "FastAPI сервис недоступен"
+          description: "Сервис {{ $labels.job }} не отвечает"
+
+      - alert: AllTargetsDown
+        expr: count(up == 0) == count(up)
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Все сервисы недоступны"
+          description: "Все monitored сервисы не отвечают"
+
+      # ==================== Ресурсы ====================
+      - alert: HighMemoryUsage
+        expr: container_memory_usage_bytes / container_spec_memory_limit_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Высокое использование памяти"
+          description: "Использование памяти {{ $value | humanizePercentage }} превышает 90%"
+
+      - alert: HighCPUUsage
+        expr: rate(container_cpu_usage_seconds_total[5m]) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Высокое использование CPU"
+          description: "Использование CPU {{ $value | humanizePercentage }} превышает 80%"
+
+      # ==================== Бизнес-метрики ====================
+      - alert: HighActiveSimulations
+        expr: simulations_active > 100
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Много активных симуляций"
+          description: "{{ $value }} активных симуляций"
+
+      - alert: NoScansCreated
+        expr: increase(scans_created_total[1h]) == 0
+        for: 2h
+        labels:
+          severity: info
+        annotations:
+          summary: "Нет новых сканирований"
+          description: "За последние 2 часа не создано ни одного сканирования"
+
+      # ==================== WebSocket ====================
+      - alert: HighWebSocketConnections
+        expr: websocket_connections > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Много WebSocket подключений"
+          description: "{{ $value }} активных WebSocket подключений"
+
+      # ==================== Кэш ====================
+      - alert: LowCacheHitRate
+        expr: sum(rate(cache_hits_total[5m])) / (sum(rate(cache_hits_total[5m])) + sum(rate(cache_misses_total[5m]))) < 0.5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Низкий процент попаданий кэша"
+          description: "Cache hit rate {{ $value | humanizePercentage }} ниже 50%"
+
+      # ==================== Database ====================
+      - alert: DatabaseConnectionPoolExhausted
+        expr: db_pool_available_connections == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Пул соединений БД исчерпан"
+          description: "Нет доступных соединений в пуле"

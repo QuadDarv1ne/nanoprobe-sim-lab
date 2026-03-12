@@ -1,0 +1,16 @@
+# Grafana Dashboards конфигурация
+# Сохранить как: deployment/monitoring/grafana/dashboards.yml
+
+apiVersion: 1
+
+providers:
+  - name: 'Nanoprobe Dashboards'
+    orgId: 1
+    folder: ''
+    folderUid: ''
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
