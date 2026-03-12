@@ -49,27 +49,30 @@ async def get_scans(
 ):
     """Получить список сканирований"""
     from api.main import redis_cache
-    
+    from api.metrics import BusinessMetrics
+
     cache_key = f"scans:{scan_type or 'all'}:{limit}:{offset}"
-    
+
     if redis_cache and redis_cache.is_available():
         cached_result = redis_cache.get(cache_key)
         if cached_result:
+            BusinessMetrics.inc_cache_hit("scans")
             return ScanListResponse(**cached_result)
-    
+        BusinessMetrics.inc_cache_miss("scans")
+
     scans = db.get_scan_results(scan_type=scan_type, limit=limit, offset=offset)
     total = db.count_scans(scan_type)
-    
+
     result = ScanListResponse(
         items=[ScanResponse.model_validate(scan) for scan in scans],
         total=total,
         limit=limit,
         offset=offset,
     )
-    
+
     if redis_cache and redis_cache.is_available():
         redis_cache.set(cache_key, result.model_dump(), expire=300)
-    
+
     return result
 
 
@@ -89,29 +92,32 @@ async def get_scan(
 ):
     """Получить сканирование по ID"""
     from api.main import redis_cache
-    
+    from api.metrics import BusinessMetrics
+
     cache_key = f"scan:{scan_id}"
-    
+
     # Проверка кэша
     if redis_cache and redis_cache.is_available():
         cached = redis_cache.get(cache_key)
         if cached:
+            BusinessMetrics.inc_cache_hit("scan_detail")
             return ScanResponse(**cached)
-    
+        BusinessMetrics.inc_cache_miss("scan_detail")
+
     scan = db.get_scan_by_id(scan_id)
-    
+
     if not scan:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Сканирование с ID {scan_id} не найдено",
         )
-    
+
     result = ScanResponse.model_validate(scan)
-    
+
     # Сохранение в кэш
     if redis_cache and redis_cache.is_available():
         redis_cache.set(cache_key, result.model_dump(), expire=600)
-    
+
     return result
 
 
@@ -132,7 +138,8 @@ async def create_scan(
 ):
     """Создать новое сканирование"""
     from api.main import redis_cache
-    
+    from api.metrics import BusinessMetrics
+
     scan_id = db.add_scan_result(
         scan_type=scan.scan_type.value,
         surface_type=scan.surface_type,
@@ -148,6 +155,9 @@ async def create_scan(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Не удалось получить созданную запись",
         )
+
+    # Бизнес-метрики
+    BusinessMetrics.inc_scan_created(scan.scan_type.value)
 
     # Инвалидация кэша
     if redis_cache and redis_cache.is_available():

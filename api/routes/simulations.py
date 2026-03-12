@@ -44,25 +44,28 @@ async def get_simulations(
 ):
     """Получить список симуляций"""
     from api.main import redis_cache
-    
+    from api.metrics import BusinessMetrics
+
     cache_key = f"simulations:{status or 'all'}:{limit}"
-    
+
     if redis_cache and redis_cache.is_available():
         cached = redis_cache.get(cache_key)
         if cached:
+            BusinessMetrics.inc_cache_hit("simulations")
             return SimulationListResponse(**cached)
-    
+        BusinessMetrics.inc_cache_miss("simulations")
+
     simulations = db.get_simulations(status=status, limit=limit)
-    
+
     result = SimulationListResponse(
         items=[SimulationResponse.model_validate(sim) for sim in simulations],
         total=len(simulations),
         limit=limit,
     )
-    
+
     if redis_cache and redis_cache.is_available():
         redis_cache.set(cache_key, result.model_dump(), expire=300)
-    
+
     return result
 
 
