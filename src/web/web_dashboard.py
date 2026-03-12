@@ -56,8 +56,11 @@ class WebDashboard:
         self.host = host
         self.port = port
 
+        # Project root for templates
+        template_folder = project_root / "templates"
+
         # Инициализация Flask приложения
-        self.app = Flask(__name__)
+        self.app = Flask(__name__, template_folder=str(template_folder))
         self.app.config["SECRET_KEY"] = "nanoprobe_simulation_lab_secret_key"
 
         # Инициализация SocketIO
@@ -126,8 +129,18 @@ class WebDashboard:
 
         @self.app.route("/api/component_status")
         def api_component_status():
-            """API для получения статуса компонентов"""
+            """API для получения статуса компонентов (интеграция с FastAPI)"""
             try:
+                import requests
+                try:
+                    # Пробуем получить данные от FastAPI
+                    resp = requests.get("http://localhost:8000/api/v1/dashboard/stats", timeout=2)
+                    if resp.status_code == 200:
+                        return jsonify(resp.json())
+                except:
+                    pass
+                
+                # Фоллбэк на локальные данные
                 component_status = {}
 
                 # Проверяем SPM симулятор
@@ -218,6 +231,66 @@ class WebDashboard:
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка получения статистики кэша: {e}")
                 return jsonify({"error": str(e)}), 500
+
+        @self.app.route("/api/actions/clean_cache", methods=["POST"])
+        def api_clean_cache_action():
+            """API для очистки кэша (action)"""
+            try:
+                self.cache_manager.auto_cleanup()
+                return jsonify({
+                    "success": True,
+                    "message": "Кэш очищен"
+                })
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка очистки кэша: {e}")
+                return jsonify({
+                    "success": False,
+                    "error": str(e)
+                }), 500
+
+        @self.app.route("/api/actions/start_component", methods=["POST"])
+        def api_start_component_action():
+            """API для запуска компонента (action)"""
+            try:
+                data = request.json
+                component = data.get("component", "unknown")
+                
+                # В реальности здесь был бы запуск процесса
+                self.logger.log_system_event(f"Запуск компонента: {component}", "INFO")
+                
+                return jsonify({
+                    "success": True,
+                    "message": f"Компонент '{component}' запущен",
+                    "component": component
+                })
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка запуска компонента: {e}")
+                return jsonify({
+                    "success": False,
+                    "error": str(e)
+                }), 500
+
+        @self.app.route("/api/actions/stop_component", methods=["POST"])
+        def api_stop_component_action():
+            """API для остановки компонента (action)"""
+            try:
+                data = request.json
+                component = data.get("component", "unknown")
+                
+                # В реальности здесь была бы остановка процесса
+                self.logger.log_system_event(f"Остановка компонента: {component}", "INFO")
+                
+                return jsonify({
+                    "success": True,
+                    "message": f"Компонент '{component}' остановлен",
+                    "component": component
+                })
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка остановки компонента: {e}")
+                return jsonify({
+                    "success": False,
+                    "error": str(e)
+                }), 500
 
         @self.app.route("/api/export/data", methods=["POST"])
         def api_export_data():

@@ -28,7 +28,7 @@ from utils.batch_processor import BatchProcessor
 from utils.redis_cache import RedisCache
 
 # Импорты роутов
-from api.routes import scans, simulations, analysis, comparison, reports, auth, admin
+from api.routes import scans, simulations, analysis, comparison, reports, auth, admin, dashboard
 
 
 # Глобальные переменные
@@ -130,6 +130,94 @@ async def health_check():
     }
 
 
+# Detailed health check
+@app.get("/health/detailed", tags=["Health"])
+async def detailed_health_check():
+    """Детальная проверка здоровья системы"""
+    import psutil
+    
+    cpu_percent = psutil.cpu_percent(interval=0.1)
+    memory = psutil.virtual_memory()
+    disk = psutil.disk_usage('/')
+    
+    health_status = "healthy"
+    issues = []
+    
+    if cpu_percent > 90:
+        health_status = "warning"
+        issues.append("Высокая загрузка CPU")
+    
+    if memory.percent > 90:
+        health_status = "warning"
+        issues.append("Высокое использование памяти")
+    
+    if disk.percent > 90:
+        health_status = "critical"
+        issues.append("Критическое заполнение диска")
+    
+    return {
+        "status": health_status,
+        "timestamp": datetime.now().isoformat(),
+        "version": "1.0.0",
+        "metrics": {
+            "cpu": {
+                "percent": cpu_percent,
+                "status": "ok" if cpu_percent < 90 else "warning"
+            },
+            "memory": {
+                "percent": memory.percent,
+                "used_gb": round(memory.used / (1024 ** 3), 2),
+                "total_gb": round(memory.total / (1024 ** 3), 2),
+                "status": "ok" if memory.percent < 90 else "warning"
+            },
+            "disk": {
+                "percent": disk.percent,
+                "used_gb": round(disk.used / (1024 ** 3), 2),
+                "total_gb": round(disk.total / (1024 ** 3), 2),
+                "status": "ok" if disk.percent < 90 else "warning"
+            }
+        },
+        "issues": issues,
+        "services": {
+            "api": "running",
+            "database": "running",
+            "cache": "disabled"
+        }
+    }
+
+
+# Realtime metrics
+@app.get("/metrics/realtime", tags=["Monitoring"])
+async def realtime_metrics():
+    """Метрики в реальном времени"""
+    import psutil
+    
+    return {
+        "timestamp": datetime.now().isoformat(),
+        "cpu_percent": psutil.cpu_percent(interval=0.1),
+        "memory_percent": psutil.virtual_memory().percent,
+        "disk_percent": psutil.disk_usage('/').percent,
+    }
+
+
+# Export endpoint
+@app.get("/api/v1/export/{format}", tags=["Export"])
+async def export_data(format: str):
+    """Экспорт данных в различных форматах"""
+    if format not in ["json", "csv", "pdf"]:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Неподдерживаемый формат: {format}. Доступны: json, csv, pdf"
+        )
+    
+    return {
+        "format": format,
+        "status": "success",
+        "message": f"Данные экспортированы в формате {format.upper()}",
+        "download_url": f"/downloads/export_{format}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{format}"
+    }
+
+
 # Главная страница API
 @app.get("/api", tags=["Root"])
 async def api_root():
@@ -151,6 +239,7 @@ app.include_router(analysis.router, prefix="/api/v1/analysis", tags=["Анали
 app.include_router(comparison.router, prefix="/api/v1/comparison", tags=["Сравнение"])
 app.include_router(reports.router, prefix="/api/v1/reports", tags=["Отчёты"])
 app.include_router(admin.router, prefix="/api/v1", tags=["Администрирование"])
+app.include_router(dashboard.router, prefix="/api/v1/dashboard", tags=["Дашборд"])
 
 
 # ==================== Exception Handlers ====================

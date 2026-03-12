@@ -1,580 +1,1518 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Веб-панель управления - Лаборатория моделирования нанозонда</title>
+    <title>Nanoprobe Sim Lab - Панель управления</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #3498db;
-            --success-color: #27ae60;
-            --warning-color: #f39c12;
-            --danger-color: #e74c3c;
-            --light-color: #ecf0f1;
-            --dark-color: #34495e;
+            /* Dark theme colors */
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: #1e293b;
+            --bg-hover: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #334155;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --success: #10b981;
+            --success-hover: #059669;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --info: #06b6d4;
+            
+            /* Gradients */
+            --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            --gradient-success: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+            --gradient-danger: linear-gradient(135deg, #ef4444 0%, #f59e0b 100%);
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.3);
         }
-        
+
+        [data-theme="light"] {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-hover: #f1f5f9;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f7fa;
-            color: #333;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
-        
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--text-muted);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        /* Header */
         .header {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            background: var(--gradient-primary);
             color: white;
-            padding: 1rem 2rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 1.5rem 2rem;
+            box-shadow: var(--shadow-lg);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
         }
-        
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header-logo {
+            font-size: 2rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
         .header h1 {
-            font-size: 1.8rem;
-            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
         }
-        
+
         .header p {
             opacity: 0.9;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
         }
-        
+
+        .header-actions {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .theme-toggle, .refresh-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .theme-toggle:hover, .refresh-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Container */
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 2rem;
         }
-        
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        
-        .card {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            padding: 1.5rem;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-        
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid var(--light-color);
-        }
-        
-        .card-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--primary-color);
-        }
-        
-        .card-icon {
-            font-size: 1.5rem;
-        }
-        
-        .metric-value {
-            font-size: 2rem;
-            font-weight: 700;
-            margin: 0.5rem 0;
-        }
-        
-        .metric-label {
-            color: #666;
-            font-size: 0.9rem;
-        }
-        
-        .status-indicator {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-right: 8px;
-        }
-        
-        .status-running {
-            background-color: var(--success-color);
-        }
-        
-        .status-stopped {
-            background-color: var(--danger-color);
-        }
-        
-        .status-warning {
-            background-color: var(--warning-color);
-        }
-        
-        .btn {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            margin: 0.25rem;
-        }
-        
-        .btn-primary {
-            background-color: var(--secondary-color);
-            color: white;
-        }
-        
-        .btn-success {
-            background-color: var(--success-color);
-            color: white;
-        }
-        
-        .btn-danger {
-            background-color: var(--danger-color);
-            color: white;
-        }
-        
-        .btn-warning {
-            background-color: var(--warning-color);
-            color: white;
-        }
-        
-        .btn:hover {
-            opacity: 0.9;
-            transform: translateY(-2px);
-        }
-        
-        .component-list {
-            list-style: none;
-        }
-        
-        .component-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem;
-            border-bottom: 1px solid var(--light-color);
-        }
-        
-        .component-item:last-child {
-            border-bottom: none;
-        }
-        
-        .progress-bar {
-            height: 10px;
-            background-color: var(--light-color);
-            border-radius: 5px;
-            overflow: hidden;
-            margin: 0.5rem 0;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--success-color), var(--warning-color));
-            border-radius: 5px;
-            transition: width 0.3s ease;
-        }
-        
-        .log-container {
-            background-color: var(--dark-color);
-            color: white;
-            padding: 1rem;
-            border-radius: 5px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-        
-        .log-entry {
-            margin: 0.25rem 0;
-            padding: 0.25rem 0;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .log-timestamp {
-            color: #95a5a6;
-            margin-right: 1rem;
-        }
-        
-        .log-level {
-            display: inline-block;
-            padding: 0.1rem 0.4rem;
-            border-radius: 3px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            margin-right: 0.5rem;
-        }
-        
-        .log-level-info { background-color: var(--secondary-color); }
-        .log-level-warning { background-color: var(--warning-color); }
-        .log-level-error { background-color: var(--danger-color); }
-        
+
+        /* Tabs */
         .tabs {
             display: flex;
-            margin-bottom: 1rem;
-            border-bottom: 2px solid var(--light-color);
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0;
+            overflow-x: auto;
         }
-        
+
         .tab {
             padding: 1rem 1.5rem;
             cursor: pointer;
             border-bottom: 3px solid transparent;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
+            color: var(--text-secondary);
+            font-weight: 500;
+            white-space: nowrap;
+            position: relative;
+            margin-bottom: -2px;
         }
-        
+
+        .tab:hover {
+            color: var(--text-primary);
+            background: var(--bg-hover);
+            border-radius: 0.5rem 0.5rem 0 0;
+        }
+
         .tab.active {
-            border-bottom-color: var(--secondary-color);
-            color: var(--secondary-color);
-            font-weight: 600;
+            border-bottom-color: var(--primary);
+            color: var(--primary);
         }
-        
+
+        .tab i {
+            margin-right: 0.5rem;
+        }
+
         .tab-content {
             display: none;
+            animation: fadeIn 0.3s ease;
         }
-        
+
         .tab-content.active {
             display: block;
         }
-        
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border-radius: 1rem;
+            box-shadow: var(--shadow-md);
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-primary);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl), var(--shadow-glow);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-icon {
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.5rem;
+            background: var(--gradient-primary);
+            color: white;
+        }
+
+        .card-icon.success { background: var(--gradient-success); }
+        .card-icon.warning { background: var(--gradient-danger); }
+        .card-icon.info { background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%); }
+
+        /* Metrics */
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .metric-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin: 1rem 0;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-bar {
+            height: 12px;
+            background-color: var(--bg-secondary);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient-primary);
+            border-radius: 6px;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.3),
+                transparent
+            );
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .btn i { font-size: 1rem; }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-success {
+            background: var(--gradient-success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-danger {
+            background: var(--gradient-danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.8125rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        /* Status Indicator */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-badge.running {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .status-badge.stopped {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .status-badge.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Component List */
+        .component-list {
+            list-style: none;
+        }
+
+        .component-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             padding: 1rem;
-            border-radius: 5px;
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.2s ease;
+        }
+
+        .component-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .component-item:last-child {
+            border-bottom: none;
+        }
+
+        .component-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .component-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            background: var(--bg-secondary);
+        }
+
+        .component-details h4 {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .component-details p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* Log Container */
+        .log-container {
+            background: var(--bg-secondary);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.8125rem;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .log-entry {
+            display: flex;
+            gap: 0.75rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-color);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-10px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-timestamp {
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .log-level {
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .log-level.info { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
+        .log-level.warning { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        .log-level.error { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .log-level.success { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+
+        .log-message {
+            color: var(--text-secondary);
+            flex: 1;
+        }
+
+        /* Notifications */
+        .notification-container {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .notification {
+            padding: 1rem 1.25rem;
+            border-radius: 0.75rem;
             color: white;
             font-weight: 500;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            z-index: 1000;
-            transform: translateX(400px);
-            transition: transform 0.3s ease;
+            box-shadow: var(--shadow-xl);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-width: 300px;
+            max-width: 500px;
+            animation: slideInRight 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        
-        .notification.show {
-            transform: translateX(0);
+
+        @keyframes slideInRight {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
-        
-        .notification-success {
-            background-color: var(--success-color);
+
+        .notification.exit {
+            animation: slideOutRight 0.3s ease forwards;
         }
-        
-        .notification-error {
-            background-color: var(--danger-color);
+
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(400px); opacity: 0; }
         }
-        
-        .notification-warning {
-            background-color: var(--warning-color);
+
+        .notification.success {
+            background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
         }
-        
+
+        .notification.error {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .notification.warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+        }
+
+        .notification.info {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        }
+
+        /* Settings */
+        .settings-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .settings-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .settings-description {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 32px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            transition: all 0.3s ease;
+            border-radius: 32px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 24px;
+            width: 24px;
+            left: 2px;
+            bottom: 2px;
+            background-color: var(--text-secondary);
+            transition: all 0.3s ease;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background: var(--gradient-primary);
+            border-color: transparent;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(28px);
+            background-color: white;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            padding: 1.25rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 1.5rem 0;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            color: var(--text-secondary);
+            padding: 2rem;
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .container {
-                padding: 1rem;
-            }
-            
             .header {
                 padding: 1rem;
             }
-            
+
             .header h1 {
-                font-size: 1.4rem;
+                font-size: 1.125rem;
             }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                gap: 0.25rem;
+            }
+
+            .tab {
+                padding: 0.75rem 1rem;
+                font-size: 0.875rem;
+            }
+
+            .header-actions {
+                gap: 0.5rem;
+            }
+
+            .theme-toggle span, .refresh-btn span {
+                display: none;
+            }
+        }
+
+        /* Quick Actions Panel */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .quick-action-btn {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            padding: 1rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .quick-action-btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .quick-action-btn i {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        .quick-action-btn span {
+            font-size: 0.875rem;
+            font-weight: 500;
         }
     </style>
 </head>
 <body>
+    <!-- Header -->
     <div class="header">
-        <h1>🔬 Лаборатория моделирования нанозонда</h1>
-        <p>Веб-панель управления проектом</p>
-    </div>
-    
-    <div class="container">
-        <!-- Вкладки -->
-        <div class="tabs">
-            <div class="tab active" data-tab="overview">Обзор</div>
-            <div class="tab" data-tab="components">Компоненты</div>
-            <div class="tab" data-tab="analytics">Аналитика</div>
-            <div class="tab" data-tab="logs">Логи</div>
-            <div class="tab" data-tab="settings">Настройки</div>
+        <div class="header-content">
+            <div class="header-left">
+                <div class="header-logo">🔬</div>
+                <div>
+                    <h1>Nanoprobe Simulation Lab</h1>
+                    <p>Панель управления проектом</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="refresh-btn" onclick="refreshAll()">
+                    <i class="fas fa-sync-alt"></i>
+                    <span>Обновить</span>
+                </button>
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <i class="fas fa-moon"></i>
+                    <span>Тема</span>
+                </button>
+            </div>
         </div>
-        
-        <!-- Обзор -->
+    </div>
+
+    <!-- Container -->
+    <div class="container">
+        <!-- Tabs -->
+        <div class="tabs">
+            <div class="tab active" data-tab="overview">
+                <i class="fas fa-home"></i> Обзор
+            </div>
+            <div class="tab" data-tab="components">
+                <i class="fas fa-microchip"></i> Компоненты
+            </div>
+            <div class="tab" data-tab="analytics">
+                <i class="fas fa-chart-line"></i> Аналитика
+            </div>
+            <div class="tab" data-tab="scans">
+                <i class="fas fa-search"></i> Сканирования
+            </div>
+            <div class="tab" data-tab="logs">
+                <i class="fas fa-scroll"></i> Логи
+            </div>
+            <div class="tab" data-tab="settings">
+                <i class="fas fa-cog"></i> Настройки
+            </div>
+        </div>
+
+        <!-- Overview Tab -->
         <div class="tab-content active" id="overview">
             <div class="dashboard-grid">
-                <!-- Статус проекта -->
+                <!-- Project Status -->
                 <div class="card">
                     <div class="card-header">
-                        <div class="card-title">Статус проекта</div>
-                        <div class="card-icon">📊</div>
+                        <div class="card-title">
+                            <i class="fas fa-project-diagram"></i>
+                            Статус проекта
+                        </div>
+                        <div class="card-icon">
+                            <i class="fas fa-rocket"></i>
+                        </div>
                     </div>
                     <div id="project-status">
-                        <div class="metric-value" id="project-name">Загрузка...</div>
+                        <div class="metric-value" id="project-name">
+                            <span class="spinner"></span>
+                        </div>
                         <div class="metric-label">Версия: <span id="project-version">-</span></div>
-                        <div class="metric-label">Компонентов: <span id="components-count">-</span></div>
+                        <div class="status-badge running" style="margin-top: 0.75rem;">
+                            <span class="status-dot"></span>
+                            <span id="project-status-text">Работает</span>
+                        </div>
                     </div>
                 </div>
-                
-                <!-- Системные метрики -->
+
+                <!-- CPU Usage -->
                 <div class="card">
                     <div class="card-header">
-                        <div class="card-title">Система</div>
-                        <div class="card-icon">💻</div>
+                        <div class="card-title">
+                            <i class="fas fa-microchip"></i>
+                            Процессор
+                        </div>
+                        <div class="card-icon warning">
+                            <i class="fas fa-tachometer-alt"></i>
+                        </div>
                     </div>
-                    <div>
-                        <div class="metric-label">CPU</div>
+                    <div class="progress-container">
+                        <div class="progress-header">
+                            <span class="metric-label">Загрузка CPU</span>
+                            <span class="metric-label" id="cpu-value">0%</span>
+                        </div>
                         <div class="progress-bar">
                             <div class="progress-fill" id="cpu-progress" style="width: 0%"></div>
                         </div>
-                        <div class="metric-value" id="cpu-value">0%</div>
-                        
-                        <div class="metric-label">Память</div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-primary" onclick="showCpuDetails()">
+                            <i class="fas fa-info-circle"></i> Детали
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Memory Usage -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-memory"></i>
+                            Память
+                        </div>
+                        <div class="card-icon info">
+                            <i class="fas fa-server"></i>
+                        </div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-header">
+                            <span class="metric-label">Использование RAM</span>
+                            <span class="metric-label" id="memory-value">0%</span>
+                        </div>
                         <div class="progress-bar">
                             <div class="progress-fill" id="memory-progress" style="width: 0%"></div>
                         </div>
-                        <div class="metric-value" id="memory-value">0%</div>
                     </div>
+                    <div class="metric-label" id="memory-detail">0 / 0 GB</div>
                 </div>
-                
-                <!-- Кэш -->
+
+                <!-- Cache Status -->
                 <div class="card">
                     <div class="card-header">
-                        <div class="card-title">Кэш</div>
-                        <div class="card-icon">🗂️</div>
+                        <div class="card-title">
+                            <i class="fas fa-database"></i>
+                            Кэш
+                        </div>
+                        <div class="card-icon success">
+                            <i class="fas fa-hdd"></i>
+                        </div>
                     </div>
                     <div>
                         <div class="metric-value" id="cache-size">0 MB</div>
-                        <div class="metric-label">Размер кэша</div>
-                        <div class="metric-value" id="cache-files">0</div>
-                        <div class="metric-label">Файлов</div>
-                        <button class="btn btn-warning" onclick="cleanCache()">Очистить кэш</button>
+                        <div class="metric-label">Общий размер</div>
+                        <div class="metric-label" style="margin-top: 0.5rem;">
+                            <i class="fas fa-file"></i> Файлов: <span id="cache-files">0</span>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-warning" onclick="cleanCache()">
+                                <i class="fas fa-trash"></i> Очистить
+                            </button>
+                            <button class="btn btn-sm btn-primary" onclick="showCacheDetails()">
+                                <i class="fas fa-info-circle"></i> Детали
+                            </button>
+                        </div>
                     </div>
                 </div>
-                
-                <!-- Запущенные процессы -->
+
+                <!-- Running Processes -->
                 <div class="card">
                     <div class="card-header">
-                        <div class="card-title">Процессы</div>
-                        <div class="card-icon">⚡</div>
+                        <div class="card-title">
+                            <i class="fas fa-tasks"></i>
+                            Процессы
+                        </div>
+                        <div class="card-icon">
+                            <i class="fas fa-cogs"></i>
+                        </div>
                     </div>
                     <div id="running-processes">
-                        <div class="metric-label">Нет активных процессов</div>
+                        <div class="loading">
+                            <span class="spinner"></span>
+                            <span>Загрузка...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-chart-bar"></i>
+                            Статистика
+                        </div>
+                        <div class="card-icon success">
+                            <i class="fas fa-calculator"></i>
+                        </div>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-scans">0</div>
+                            <div class="stat-label">Сканирований</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-simulations">0</div>
+                            <div class="stat-label">Симуляций</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-analyses">0</div>
+                            <div class="stat-label">Анализов</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-uptime">0</div>
+                            <div class="stat-label">Часов работы</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-bolt"></i>
+                        Быстрые действия
+                    </div>
+                </div>
+                <div class="quick-actions">
+                    <div class="quick-action-btn" onclick="runSpmSimulator()">
+                        <i class="fas fa-microscope"></i>
+                        <span>СЗМ Симулятор</span>
+                    </div>
+                    <div class="quick-action-btn" onclick="runAnalyzer()">
+                        <i class="fas fa-image"></i>
+                        <span>Анализатор</span>
+                    </div>
+                    <div class="quick-action-btn" onclick="runSstvStation()">
+                        <i class="fas fa-satellite"></i>
+                        <span>SSTV Станция</span>
+                    </div>
+                    <div class="quick-action-btn" onclick="generateReport()">
+                        <i class="fas fa-file-pdf"></i>
+                        <span>Отчёт PDF</span>
+                    </div>
+                    <div class="quick-action-btn" onclick="exportData()">
+                        <i class="fas fa-download"></i>
+                        <span>Экспорт данных</span>
+                    </div>
+                    <div class="quick-action-btn" onclick="openApiDocs()">
+                        <i class="fas fa-book"></i>
+                        <span>API Документация</span>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <!-- Компоненты -->
+
+        <!-- Components Tab -->
         <div class="tab-content" id="components">
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Компоненты проекта</div>
-                    <div class="card-icon">⚙️</div>
+                    <div class="card-title">
+                        <i class="fas fa-puzzle-piece"></i>
+                        Компоненты проекта
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="loadComponents()">
+                        <i class="fas fa-sync-alt"></i> Обновить
+                    </button>
                 </div>
                 <ul class="component-list" id="components-list">
                     <li class="component-item">
-                        <div>Загрузка компонентов...</div>
+                        <div class="loading">
+                            <span class="spinner"></span>
+                            <span>Загрузка компонентов...</span>
+                        </div>
                     </li>
                 </ul>
             </div>
         </div>
-        
-        <!-- Аналитика -->
+
+        <!-- Analytics Tab -->
         <div class="tab-content" id="analytics">
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Аналитика проекта</div>
-                    <div class="card-icon">📈</div>
+                    <div class="card-title">
+                        <i class="fas fa-chart-area"></i>
+                        Аналитика производительности
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary btn-sm" onclick="refreshAnalytics()">
+                            <i class="fas fa-sync-alt"></i> Обновить
+                        </button>
+                        <button class="btn btn-success btn-sm" onclick="exportAnalytics()">
+                            <i class="fas fa-download"></i> Экспорт
+                        </button>
+                    </div>
                 </div>
-                <div>
-                    <canvas id="analytics-chart" height="100"></canvas>
-                    <button class="btn btn-primary" onclick="refreshAnalytics()">Обновить аналитику</button>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="analytics-cpu-avg">0%</div>
+                        <div class="stat-label">Средняя CPU</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="analytics-memory-avg">0%</div>
+                        <div class="stat-label">Средняя RAM</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="analytics-requests">0</div>
+                        <div class="stat-label">Запросов/мин</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="analytics-uptime">0ч</div>
+                        <div class="stat-label">Аптайм</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="analytics-chart"></canvas>
                 </div>
             </div>
         </div>
-        
-        <!-- Логи -->
+
+        <!-- Scans Tab -->
+        <div class="tab-content" id="scans">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-search-plus"></i>
+                        Результаты сканирований
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary btn-sm" onclick="loadScans()">
+                            <i class="fas fa-sync-alt"></i> Обновить
+                        </button>
+                        <button class="btn btn-success btn-sm" onclick="newScan()">
+                            <i class="fas fa-plus"></i> Новое
+                        </button>
+                    </div>
+                </div>
+                <div id="scans-list">
+                    <div class="loading">
+                        <span class="spinner"></span>
+                        <span>Загрузка сканирований...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs Tab -->
         <div class="tab-content" id="logs">
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Системные логи</div>
-                    <div class="card-icon">📝</div>
+                    <div class="card-title">
+                        <i class="fas fa-clipboard-list"></i>
+                        Системные логи
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary btn-sm" onclick="refreshLogs()">
+                            <i class="fas fa-sync-alt"></i> Обновить
+                        </button>
+                        <button class="btn btn-warning btn-sm" onclick="clearLogs()">
+                            <i class="fas fa-trash"></i> Очистить
+                        </button>
+                        <button class="btn btn-success btn-sm" onclick="downloadLogs()">
+                            <i class="fas fa-download"></i> Скачать
+                        </button>
+                    </div>
                 </div>
                 <div class="log-container" id="log-container">
-                    <div class="log-entry">Загрузка логов...</div>
-                </div>
-                <div style="margin-top: 1rem;">
-                    <button class="btn btn-primary" onclick="refreshLogs()">Обновить логи</button>
-                    <button class="btn btn-warning" onclick="clearLogs()">Очистить логи</button>
+                    <div class="loading">
+                        <span class="spinner"></span>
+                        <span>Загрузка логов...</span>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <!-- Настройки -->
+
+        <!-- Settings Tab -->
         <div class="tab-content" id="settings">
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Настройки панели</div>
-                    <div class="card-icon">🔧</div>
+                    <div class="card-title">
+                        <i class="fas fa-sliders-h"></i>
+                        Настройки панели
+                    </div>
                 </div>
-                <div>
-                    <div style="margin-bottom: 1rem;">
-                        <label>
-                            <input type="checkbox" id="auto-refresh" checked> 
-                            Автоматическое обновление данных
-                        </label>
+                
+                <div class="settings-group">
+                    <label class="settings-label">
+                        <i class="fas fa-sync-alt"></i> Автоматическое обновление
+                    </label>
+                    <p class="settings-description">
+                        Включите для автоматического обновления данных дашборда
+                    </p>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="auto-refresh" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="settings-group">
+                    <label class="settings-label">
+                        <i class="fas fa-clock"></i> Интервал обновления
+                    </label>
+                    <p class="settings-description">
+                        Частота обновления данных в секундах (1-60)
+                    </p>
+                    <input type="number" id="refresh-interval" class="input-field" value="5" min="1" max="60">
+                </div>
+
+                <div class="settings-group">
+                    <label class="settings-label">
+                        <i class="fas fa-bell"></i> Уведомления
+                    </label>
+                    <p class="settings-description">
+                        Показывать уведомления о событиях системы
+                    </p>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="notifications-enabled" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="settings-group">
+                    <label class="settings-label">
+                        <i class="fas fa-palette"></i> Тема оформления
+                    </label>
+                    <p class="settings-description">
+                        Выберите цветовую схему интерфейса
+                    </p>
+                    <select id="theme-select" class="input-field" onchange="setTheme(this.value)">
+                        <option value="dark">Тёмная</option>
+                        <option value="light">Светлая</option>
+                        <option value="auto">Авто (по системе)</option>
+                    </select>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-success" onclick="saveSettings()">
+                        <i class="fas fa-save"></i> Сохранить настройки
+                    </button>
+                    <button class="btn btn-warning" onclick="resetSettings()">
+                        <i class="fas fa-undo"></i> Сбросить
+                    </button>
+                </div>
+            </div>
+
+            <!-- API Settings -->
+            <div class="card" style="margin-top: 1.5rem;">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-code"></i>
+                        API Настройки
                     </div>
-                    <div style="margin-bottom: 1rem;">
-                        <label>Интервал обновления (сек): </label>
-                        <input type="number" id="refresh-interval" value="5" min="1" max="60" style="width: 80px;">
-                    </div>
-                    <button class="btn btn-success" onclick="saveSettings()">Сохранить настройки</button>
+                </div>
+                
+                <div class="settings-group">
+                    <label class="settings-label">API Endpoint</label>
+                    <input type="text" class="input-field" value="http://localhost:8000" id="api-endpoint">
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="testApiConnection()">
+                        <i class="fas fa-plug"></i> Проверить подключение
+                    </button>
+                    <button class="btn btn-success" onclick="openApiDocs()">
+                        <i class="fas fa-external-link-alt"></i> Открыть Swagger UI
+                    </button>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- Уведомления -->
-    <div id="notification" class="notification"></div>
-    
+
+    <!-- Notifications Container -->
+    <div class="notification-container" id="notification-container"></div>
+
     <script>
-        // Глобальные переменные
+        // ==================== Global State ====================
         let socket;
         let refreshInterval;
         let analyticsChart;
-        
-        // Инициализация при загрузке страницы
+        let settings = {
+            autoRefresh: true,
+            refreshInterval: 5,
+            notifications: true,
+            theme: 'dark'
+        };
+
+        // ==================== Initialization ====================
         document.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
             initializeSocket();
             loadDashboardData();
             setupTabs();
             setupAutoRefresh();
             initializeAnalyticsChart();
+            applyTheme(settings.theme);
         });
-        
-        // Инициализация WebSocket соединения
+
+        // ==================== WebSocket ====================
         function initializeSocket() {
             socket = io();
-            
+
             socket.on('connect', function() {
                 showNotification('Подключено к серверу', 'success');
                 socket.emit('request_update');
             });
-            
+
             socket.on('status_update', function(data) {
                 updateDashboard(data);
             });
-            
+
             socket.on('disconnect', function() {
                 showNotification('Потеряно соединение с сервером', 'error');
             });
         }
-        
-        // Загрузка данных дашборда
+
+        // ==================== Data Loading ====================
         function loadDashboardData() {
-            fetch('/api/status')
-                .then(response => response.json())
-                .then(data => {
-                    updateDashboard(data);
-                })
-                .catch(error => {
-                    console.error('Ошибка загрузки данных:', error);
-                    showNotification('Ошибка загрузки данных', 'error');
-                });
-            
+            Promise.all([
+                fetch('/api/system_info').then(r => r.json()),
+                fetch('/api/component_status').then(r => r.json()),
+                fetch('/api/logs').then(r => r.json())
+            ]).then(([systemInfo, components, logs]) => {
+                updateDashboard({ ...systemInfo, components, logs });
+            }).catch(error => {
+                console.error('Ошибка загрузки данных:', error);
+            });
+        }
+
+        function refreshAll() {
+            showNotification('Обновление данных...', 'info');
+            loadDashboardData();
             loadComponents();
             loadLogs();
         }
-        
-        // Обновление дашборда
+
+        // ==================== Dashboard Update ====================
         function updateDashboard(data) {
+            // Project Info
             if (data.project_info) {
-                document.getElementById('project-name').textContent = data.project_info.name;
-                document.getElementById('project-version').textContent = data.project_info.version;
-                document.getElementById('components-count').textContent = data.project_info.components_count;
-            }
-            
-            if (data.system_metrics) {
-                const cpuPercent = data.system_metrics.cpu_percent || 0;
-                const memoryPercent = data.system_metrics.memory_percent || 0;
+                document.getElementById('project-name').textContent = data.project_info.name || 'Nanoprobe Sim Lab';
+                document.getElementById('project-version').textContent = data.project_info.version || '1.0.0';
                 
+                if (data.project_info.uptime) {
+                    const hours = Math.floor(data.project_info.uptime / 3600);
+                    document.getElementById('stat-uptime').textContent = hours;
+                }
+            }
+
+            // System Metrics
+            if (data.system_metrics || data.cpu_percent !== undefined) {
+                const cpuPercent = data.system_metrics?.cpu_percent || data.cpu_percent || 0;
+                const memoryPercent = data.system_metrics?.memory_percent || data.memory_percent || 0;
+
                 document.getElementById('cpu-progress').style.width = cpuPercent + '%';
                 document.getElementById('cpu-value').textContent = cpuPercent.toFixed(1) + '%';
-                
+
                 document.getElementById('memory-progress').style.width = memoryPercent + '%';
                 document.getElementById('memory-value').textContent = memoryPercent.toFixed(1) + '%';
+                
+                if (data.system_metrics?.memory_used && data.system_metrics?.memory_total) {
+                    const used = (data.system_metrics.memory_used / 1024 ** 3).toFixed(1);
+                    const total = (data.system_metrics.memory_total / 1024 ** 3).toFixed(1);
+                    document.getElementById('memory-detail').textContent = `${used} / ${total} GB`;
+                }
             }
-            
-            if (data.cache_info) {
-                document.getElementById('cache-size').textContent = (data.cache_info.total_size_mb || 0).toFixed(1) + ' MB';
-                document.getElementById('cache-files').textContent = data.cache_info.total_files || 0;
+
+            // Cache Info
+            if (data.cache_info || data.cache_size !== undefined) {
+                const cacheSize = data.cache_info?.total_size_mb || data.cache_size || 0;
+                const cacheFiles = data.cache_info?.total_files || data.cache_files || 0;
+                
+                document.getElementById('cache-size').textContent = cacheSize.toFixed(1) + ' MB';
+                document.getElementById('cache-files').textContent = cacheFiles;
             }
-            
-            if (data.running_processes) {
-                updateRunningProcesses(data.running_processes);
+
+            // Running Processes
+            if (data.running_processes || data.processes) {
+                updateRunningProcesses(data.running_processes || data.processes);
             }
         }
-        
-        // Обновление запущенных процессов
+
         function updateRunningProcesses(processes) {
             const container = document.getElementById('running-processes');
-            const processCount = Object.keys(processes).length;
+            const processList = Array.isArray(processes) ? processes : Object.entries(processes || {});
             
-            if (processCount === 0) {
-                container.innerHTML = '<div class="metric-label">Нет активных процессов</div>';
-            } else {
-                let html = '';
-                for (const [name, process] of Object.entries(processes)) {
-                    html += `
-                        <div class="component-item">
-                            <div>
-                                <span class="status-indicator status-running"></span>
-                                ${name}
-                            </div>
-                            <button class="btn btn-danger btn-sm" onclick="stopComponent('${name}')">Остановить</button>
-                        </div>
-                    `;
-                }
-                container.innerHTML = html;
+            if (processList.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                        <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <p>Нет активных процессов</p>
+                    </div>
+                `;
+                return;
             }
+
+            let html = '';
+            (Array.isArray(processList) ? processList : Object.entries(processList)).forEach(([name, process]) => {
+                const processName = typeof process === 'object' ? process.name || name : name;
+                const status = typeof process === 'object' ? process.status || 'running' : 'running';
+                
+                html += `
+                    <div class="component-item">
+                        <div class="component-info">
+                            <div class="component-icon">
+                                <i class="fas fa-cog"></i>
+                            </div>
+                            <div class="component-details">
+                                <h4>${processName}</h4>
+                                <span class="status-badge ${status}">
+                                    <span class="status-dot"></span>
+                                    <span>${status}</span>
+                                </span>
+                            </div>
+                        </div>
+                        <button class="btn btn-danger btn-sm" onclick="stopProcess('${name}')">
+                            <i class="fas fa-stop"></i>
+                        </button>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
         }
-        
-        // Загрузка компонентов
+
+        // ==================== Components ====================
         function loadComponents() {
+            const container = document.getElementById('components-list');
+            container.innerHTML = `
+                <li class="component-item">
+                    <div class="loading">
+                        <span class="spinner"></span>
+                        <span>Загрузка компонентов...</span>
+                    </div>
+                </li>
+            `;
+
             fetch('/api/components')
                 .then(response => response.json())
                 .then(data => {
-                    const container = document.getElementById('components-list');
-                    if (data.length === 0) {
-                        container.innerHTML = '<li class="component-item">Компоненты не найдены</li>';
+                    const components = Array.isArray(data) ? data : [];
+                    
+                    if (components.length === 0) {
+                        container.innerHTML = `
+                            <li class="component-item">
+                                <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                                    <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                                    <p>Компоненты не найдены</p>
+                                </div>
+                            </li>
+                        `;
                         return;
                     }
-                    
+
                     let html = '';
-                    data.forEach(component => {
+                    components.forEach(component => {
+                        const icon = getComponentIcon(component.name);
+                        const status = component.status || 'ready';
+                        
                         html += `
                             <li class="component-item">
-                                <div>
-                                    <strong>${component.name}</strong>
-                                    <div style="font-size: 0.9rem; color: #666;">${component.description}</div>
-                                    <div style="font-size: 0.8rem; color: #999;">${component.language} | ${component.path}</div>
+                                <div class="component-info">
+                                    <div class="component-icon" style="background: var(--gradient-primary); color: white;">
+                                        <i class="${icon}"></i>
+                                    </div>
+                                    <div class="component-details">
+                                        <h4>${component.name}</h4>
+                                        <p>${component.description || component.language || 'Python'}</p>
+                                        <span class="status-badge ${status}">
+                                            <span class="status-dot"></span>
+                                            <span>${status}</span>
+                                        </span>
+                                    </div>
                                 </div>
-                                <button class="btn btn-success btn-sm" onclick="startComponent('${component.name}')">Запустить</button>
+                                <div class="btn-group">
+                                    <button class="btn btn-success btn-sm" onclick="startComponent('${component.name}')">
+                                        <i class="fas fa-play"></i> Запуск
+                                    </button>
+                                    <button class="btn btn-danger btn-sm" onclick="stopComponent('${component.name}')">
+                                        <i class="fas fa-stop"></i> Стоп
+                                    </button>
+                                </div>
                             </li>
                         `;
                     });
@@ -582,214 +1520,504 @@
                 })
                 .catch(error => {
                     console.error('Ошибка загрузки компонентов:', error);
+                    container.innerHTML = `
+                        <li class="component-item">
+                            <div style="color: var(--danger);">Ошибка загрузки компонентов</div>
+                        </li>
+                    `;
                 });
         }
-        
-        // Загрузка логов
+
+        function getComponentIcon(name) {
+            const icons = {
+                'spm': 'fa-microscope',
+                'analyzer': 'fa-image',
+                'sstv': 'fa-satellite',
+                'web': 'fa-globe',
+                'api': 'fa-code'
+            };
+            const lowerName = name.toLowerCase();
+            for (const [key, icon] of Object.entries(icons)) {
+                if (lowerName.includes(key)) return `fas ${icon}`;
+            }
+            return 'fas fa-cog';
+        }
+
+        // ==================== Logs ====================
         function loadLogs() {
-            fetch('/api/logs?limit=20')
+            const container = document.getElementById('log-container');
+            
+            fetch('/api/logs')
                 .then(response => response.json())
                 .then(data => {
-                    const container = document.getElementById('log-container');
-                    if (data.length === 0) {
-                        container.innerHTML = '<div class="log-entry">Логи пусты</div>';
+                    const logs = Array.isArray(data) ? data : (data.logs || []);
+                    
+                    if (logs.length === 0) {
+                        container.innerHTML = `
+                            <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                                <i class="fas fa-clipboard-check" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                                <p>Логи пусты</p>
+                            </div>
+                        `;
                         return;
                     }
-                    
+
                     let html = '';
-                    data.forEach(log => {
-                        const levelClass = `log-level-${log.level.toLowerCase()}`;
+                    logs.slice(-50).reverse().forEach(log => {
+                        const level = log.level?.toLowerCase() || 'info';
+                        const timestamp = log.timestamp ? new Date(log.timestamp).toLocaleTimeString() : new Date().toLocaleTimeString();
+                        
                         html += `
                             <div class="log-entry">
-                                <span class="log-timestamp">${new Date(log.timestamp).toLocaleTimeString()}</span>
-                                <span class="log-level ${levelClass}">${log.level}</span>
-                                <span>[${log.component}]</span>
-                                <span>${log.message}</span>
+                                <span class="log-timestamp">${timestamp}</span>
+                                <span class="log-level ${level}">${log.level || 'INFO'}</span>
+                                <span class="log-message">${escapeHtml(log.message || log)}</span>
                             </div>
                         `;
                     });
                     container.innerHTML = html;
-                    container.scrollTop = container.scrollHeight;
                 })
                 .catch(error => {
                     console.error('Ошибка загрузки логов:', error);
+                    container.innerHTML = `
+                        <div class="log-entry">
+                            <span class="log-level error">ERROR</span>
+                            <span class="log-message">Ошибка загрузки логов: ${error.message}</span>
+                        </div>
+                    `;
                 });
         }
-        
-        // Настройка вкладок
-        function setupTabs() {
-            const tabs = document.querySelectorAll('.tab');
-            const contents = document.querySelectorAll('.tab-content');
-            
-            tabs.forEach(tab => {
-                tab.addEventListener('click', function() {
-                    const tabName = this.getAttribute('data-tab');
-                    
-                    // Убираем активный класс у всех вкладок и содержимого
-                    tabs.forEach(t => t.classList.remove('active'));
-                    contents.forEach(c => c.classList.remove('active'));
-                    
-                    // Добавляем активный класс текущей вкладке и содержимому
-                    this.classList.add('active');
-                    document.getElementById(tabName).classList.add('active');
-                });
-            });
+
+        function refreshLogs() {
+            loadLogs();
+            showNotification('Логи обновлены', 'success');
         }
-        
-        // Настройка автоматического обновления
-        function setupAutoRefresh() {
-            const checkbox = document.getElementById('auto-refresh');
-            const intervalInput = document.getElementById('refresh-interval');
-            
-            function updateRefresh() {
-                if (refreshInterval) {
-                    clearInterval(refreshInterval);
-                }
-                
-                if (checkbox.checked) {
-                    const interval = parseInt(intervalInput.value) * 1000;
-                    refreshInterval = setInterval(loadDashboardData, interval);
-                }
-            }
-            
-            checkbox.addEventListener('change', updateRefresh);
-            intervalInput.addEventListener('change', updateRefresh);
-            
-            // Начальное обновление
-            updateRefresh();
+
+        function clearLogs() {
+            document.getElementById('log-container').innerHTML = `
+                <div class="log-entry">
+                    <span class="log-level info">INFO</span>
+                    <span class="log-message">Логи очищены</span>
+                </div>
+            `;
+            showNotification('Логи очищены', 'success');
         }
-        
-        // Инициализация графика аналитики
+
+        function downloadLogs() {
+            showNotification('Скачивание логов...', 'info');
+            // Implementation for downloading logs
+        }
+
+        // ==================== Analytics Chart ====================
         function initializeAnalyticsChart() {
             const ctx = document.getElementById('analytics-chart').getContext('2d');
+            
+            // Gradient for chart
+            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.3)');
+            gradient.addColorStop(1, 'rgba(59, 130, 246, 0.01)');
+
             analyticsChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: [],
                     datasets: [{
-                        label: 'Системная нагрузка',
+                        label: 'Загрузка CPU (%)',
                         data: [],
-                        borderColor: '#3498db',
-                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                        tension: 0.4
+                        borderColor: '#3b82f6',
+                        backgroundColor: gradient,
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointHoverRadius: 5
+                    }, {
+                        label: 'Использование RAM (%)',
+                        data: [],
+                        borderColor: '#10b981',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 5
                     }]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
                     scales: {
                         y: {
                             beginAtZero: true,
-                            max: 100
+                            max: 100,
+                            grid: {
+                                color: 'rgba(148, 163, 184, 0.1)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(148, 163, 184, 0.1)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            }
                         }
                     }
                 }
             });
         }
-        
-        // Обновление аналитики
+
         function refreshAnalytics() {
-            fetch('/api/actions/get_analytics', { method: 'POST' })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showNotification(data.message, 'success');
-                        // Здесь можно обновить график аналитики
-                    } else {
-                        showNotification(data.error || 'Ошибка получения аналитики', 'error');
-                    }
-                })
-                .catch(error => {
-                    showNotification('Ошибка получения аналитики', 'error');
+            // Add new data point
+            const now = new Date().toLocaleTimeString();
+            const cpuData = document.getElementById('cpu-value').textContent;
+            const memoryData = document.getElementById('memory-value').textContent;
+            
+            const cpu = parseFloat(cpuData) || 0;
+            const memory = parseFloat(memoryData) || 0;
+
+            analyticsChart.data.labels.push(now);
+            analyticsChart.data.datasets[0].data.push(cpu);
+            analyticsChart.data.datasets[1].data.push(memory);
+
+            // Keep only last 20 points
+            if (analyticsChart.data.labels.length > 20) {
+                analyticsChart.data.labels.shift();
+                analyticsChart.data.datasets[0].data.shift();
+                analyticsChart.data.datasets[1].data.shift();
+            }
+
+            analyticsChart.update();
+
+            // Update stats
+            const cpuAvg = analyticsChart.data.datasets[0].data.reduce((a, b) => a + b, 0) / 
+                          Math.max(1, analyticsChart.data.datasets[0].data.length);
+            const memoryAvg = analyticsChart.data.datasets[1].data.reduce((a, b) => a + b, 0) / 
+                             Math.max(1, analyticsChart.data.datasets[1].data.length);
+
+            document.getElementById('analytics-cpu-avg').textContent = cpuAvg.toFixed(1) + '%';
+            document.getElementById('analytics-memory-avg').textContent = memoryAvg.toFixed(1) + '%';
+
+            showNotification('Аналитика обновлена', 'success');
+        }
+
+        function exportAnalytics() {
+            showNotification('Экспорт аналитики...', 'info');
+        }
+
+        // ==================== Tabs ====================
+        function setupTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabName = this.getAttribute('data-tab');
+
+                    tabs.forEach(t => t.classList.remove('active'));
+                    contents.forEach(c => c.classList.remove('active'));
+
+                    this.classList.add('active');
+                    document.getElementById(tabName).classList.add('active');
+
+                    // Load tab-specific data
+                    if (tabName === 'components') loadComponents();
+                    if (tabName === 'logs') loadLogs();
+                    if (tabName === 'analytics') refreshAnalytics();
+                    if (tabName === 'scans') loadScans();
                 });
-        }
-        
-        // Обновление логов
-        function refreshLogs() {
-            loadLogs();
-            showNotification('Логи обновлены', 'success');
-        }
-        
-        // Очистка логов
-        function clearLogs() {
-            document.getElementById('log-container').innerHTML = '<div class="log-entry">Логи очищены</div>';
-            showNotification('Логи очищены', 'success');
-        }
-        
-        // Запуск компонента
-        function startComponent(componentName) {
-            fetch('/api/actions/start_component', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ component: componentName })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showNotification(data.message, 'success');
-                    loadDashboardData();
-                } else {
-                    showNotification(data.error || 'Ошибка запуска компонента', 'error');
-                }
-            })
-            .catch(error => {
-                showNotification('Ошибка запуска компонента', 'error');
             });
         }
-        
-        // Остановка компонента
-        function stopComponent(componentName) {
-            fetch('/api/actions/stop_component', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ component: componentName })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showNotification(data.message, 'success');
-                    loadDashboardData();
-                } else {
-                    showNotification(data.error || 'Ошибка остановки компонента', 'error');
+
+        // ==================== Auto Refresh ====================
+        function setupAutoRefresh() {
+            const checkbox = document.getElementById('auto-refresh');
+            const intervalInput = document.getElementById('refresh-interval');
+
+            checkbox.checked = settings.autoRefresh;
+            intervalInput.value = settings.refreshInterval;
+
+            function updateRefresh() {
+                if (refreshInterval) {
+                    clearInterval(refreshInterval);
                 }
-            })
-            .catch(error => {
-                showNotification('Ошибка остановки компонента', 'error');
-            });
+
+                if (checkbox.checked) {
+                    const interval = parseInt(intervalInput.value) * 1000;
+                    refreshInterval = setInterval(() => {
+                        loadDashboardData();
+                        refreshAnalytics();
+                    }, interval);
+                }
+            }
+
+            checkbox.addEventListener('change', updateRefresh);
+            intervalInput.addEventListener('change', updateRefresh);
+
+            updateRefresh();
         }
-        
-        // Очистка кэша
+
+        // ==================== Settings ====================
+        function loadSettings() {
+            const saved = localStorage.getItem('nanoprobe_settings');
+            if (saved) {
+                settings = { ...settings, ...JSON.parse(saved) };
+            }
+        }
+
+        function saveSettings() {
+            settings.autoRefresh = document.getElementById('auto-refresh').checked;
+            settings.refreshInterval = parseInt(document.getElementById('refresh-interval').value);
+            settings.notifications = document.getElementById('notifications-enabled').checked;
+            settings.theme = document.getElementById('theme-select').value;
+
+            localStorage.setItem('nanoprobe_settings', JSON.stringify(settings));
+            applyTheme(settings.theme);
+            
+            showNotification('Настройки сохранены', 'success');
+        }
+
+        function resetSettings() {
+            settings = {
+                autoRefresh: true,
+                refreshInterval: 5,
+                notifications: true,
+                theme: 'dark'
+            };
+            localStorage.setItem('nanoprobe_settings', JSON.stringify(settings));
+            
+            document.getElementById('auto-refresh').checked = true;
+            document.getElementById('refresh-interval').value = 5;
+            document.getElementById('notifications-enabled').checked = true;
+            document.getElementById('theme-select').value = 'dark';
+            
+            showNotification('Настройки сброшены', 'warning');
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            settings.theme = next;
+            document.getElementById('theme-select').value = next;
+        }
+
+        function setTheme(theme) {
+            settings.theme = theme;
+            applyTheme(theme);
+        }
+
+        function applyTheme(theme) {
+            const html = document.documentElement;
+            if (theme === 'auto') {
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                html.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+            } else {
+                html.setAttribute('data-theme', theme);
+            }
+        }
+
+        // ==================== Actions ====================
         function cleanCache() {
             if (confirm('Вы уверены, что хотите очистить кэш?')) {
                 fetch('/api/actions/clean_cache', { method: 'POST' })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showNotification(data.message, 'success');
-                        loadDashboardData();
-                    } else {
-                        showNotification(data.error || 'Ошибка очистки кэша', 'error');
-                    }
-                })
-                .catch(error => {
-                    showNotification('Ошибка очистки кэша', 'error');
-                });
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showNotification(data.message || 'Кэш очищен', 'success');
+                            loadDashboardData();
+                        } else {
+                            showNotification(data.error || 'Ошибка очистки кэша', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        showNotification('Ошибка очистки кэша', 'error');
+                    });
             }
         }
-        
-        // Сохранение настроек
-        function saveSettings() {
-            showNotification('Настройки сохранены', 'success');
+
+        function showCacheDetails() {
+            showNotification('Загрузка деталей кэша...', 'info');
         }
-        
-        // Показ уведомлений
-        function showNotification(message, type = 'info') {
-            const notification = document.getElementById('notification');
-            notification.textContent = message;
-            notification.className = `notification notification-${type} show`;
+
+        function showCpuDetails() {
+            showNotification('Загрузка деталей CPU...', 'info');
+        }
+
+        function startComponent(name) {
+            fetch('/api/actions/start_component', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ component: name })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message || `Компонент ${name} запущен`, 'success');
+                    loadComponents();
+                    loadDashboardData();
+                } else {
+                    showNotification(data.error || `Ошибка запуска ${name}`, 'error');
+                }
+            })
+            .catch(error => {
+                showNotification(`Ошибка запуска компонента`, 'error');
+            });
+        }
+
+        function stopComponent(name) {
+            fetch('/api/actions/stop_component', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ component: name })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message || `Компонент ${name} остановлен`, 'success');
+                    loadComponents();
+                    loadDashboardData();
+                } else {
+                    showNotification(data.error || `Ошибка остановки ${name}`, 'error');
+                }
+            })
+            .catch(error => {
+                showNotification(`Ошибка остановки компонента`, 'error');
+            });
+        }
+
+        function stopProcess(name) {
+            stopComponent(name);
+        }
+
+        // Quick Actions
+        function runSpmSimulator() {
+            startComponent('spm_simulator');
+        }
+
+        function runAnalyzer() {
+            startComponent('image_analyzer');
+        }
+
+        function runSstvStation() {
+            startComponent('sstv_station');
+        }
+
+        function generateReport() {
+            showNotification('Генерация отчёта...', 'info');
+            window.open('http://localhost:8000/api/v1/reports/generate', '_blank');
+        }
+
+        function exportData() {
+            showNotification('Экспорт данных...', 'info');
+        }
+
+        function openApiDocs() {
+            window.open('http://localhost:8000/docs', '_blank');
+        }
+
+        function loadScans() {
+            const container = document.getElementById('scans-list');
+            container.innerHTML = `
+                <div class="loading">
+                    <span class="spinner"></span>
+                    <span>Загрузка сканирований...</span>
+                </div>
+            `;
             
+            fetch('http://localhost:8000/api/v1/scans')
+                .then(response => response.json())
+                .then(data => {
+                    const scans = Array.isArray(data) ? data : [];
+                    if (scans.length === 0) {
+                        container.innerHTML = `
+                            <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                                <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                                <p>Нет сканирований</p>
+                            </div>
+                        `;
+                    } else {
+                        document.getElementById('stat-scans').textContent = scans.length;
+                        // Render scans list
+                    }
+                })
+                .catch(() => {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                            <p>Не удалось загрузить сканирования</p>
+                        </div>
+                    `;
+                });
+        }
+
+        function newScan() {
+            showNotification('Запуск симулятора СЗМ...', 'info');
+            runSpmSimulator();
+        }
+
+        function testApiConnection() {
+            const endpoint = document.getElementById('api-endpoint').value;
+            fetch(`${endpoint}/health`)
+                .then(response => {
+                    if (response.ok) {
+                        showNotification('API подключен: ' + endpoint, 'success');
+                    } else {
+                        showNotification('API ответил ошибкой', 'warning');
+                    }
+                })
+                .catch(() => {
+                    showNotification('Не удалось подключиться к API', 'error');
+                });
+        }
+
+        // ==================== Notifications ====================
+        function showNotification(message, type = 'info') {
+            if (!settings.notifications) return;
+
+            const container = document.getElementById('notification-container');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+
+            notification.innerHTML = `
+                <i class="fas ${icons[type] || icons.info}"></i>
+                <span>${escapeHtml(message)}</span>
+            `;
+
+            container.appendChild(notification);
+
+            // Auto remove after 4 seconds
             setTimeout(() => {
-                notification.classList.remove('show');
-            }, 3000);
+                notification.classList.add('exit');
+                setTimeout(() => notification.remove(), 300);
+            }, 4000);
+        }
+
+        // ==================== Utilities ====================
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
     </script>
 </body>
