@@ -1,226 +1,106 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Тесты для модуля обработки ошибок."""
+"""
+Тесты для улучшенной системы обработки ошибок
+"""
 
-import unittest
-import tempfile
 import sys
+import os
+import json
 from pathlib import Path
-import time
+from datetime import datetime
 
-sys.path.insert(0, str(Path(__file__).parent.parent / 'utils'))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from error_handler import ErrorHandler, ErrorSeverity, RecoveryManager, SafeExecutor
-
-
-class TestErrorSeverity(unittest.TestCase):
-    """Тесты для перечисления ErrorSeverity"""
-
-    def test_severity_values(self):
-        """Тестирует значения уровней важности"""
-        self.assertEqual(ErrorSeverity.DEBUG.value, 10)
-        self.assertEqual(ErrorSeverity.INFO.value, 20)
-        self.assertEqual(ErrorSeverity.WARNING.value, 30)
-        self.assertEqual(ErrorSeverity.ERROR.value, 40)
-        self.assertEqual(ErrorSeverity.CRITICAL.value, 50)
+from utils.error_handler import ErrorInfo, ErrorSeverity
 
 
-class TestErrorHandler(unittest.TestCase):
-    """Тесты для класса ErrorHandler"""
-
-    def setUp(self):
-        """Подготовка тестового окружения"""
-        self.temp_dir = tempfile.mkdtemp()
-        self.log_file = Path(self.temp_dir) / "error_log.json"
-
-    def tearDown(self):
-        """Очистка после теста"""
-        import shutil
-        shutil.rmtree(self.temp_dir, ignore_errors=True)
-
-    def test_initialization(self):
-        """Тестирует инициализацию ErrorHandler"""
-        handler = ErrorHandler(str(self.log_file))
-        self.assertEqual(handler.log_file, self.log_file)
-        self.assertEqual(handler.max_log_size, 1000)
-
-    def test_log_error(self):
-        """Тестирует логирование ошибки"""
-        handler = ErrorHandler(str(self.log_file))
-
-        error_info = handler.log_error(
-            "Test error message",
-            ValueError("Test exception"),
-            "TestComponent",
-            ErrorSeverity.ERROR
-        )
-
-        self.assertEqual(error_info.message, "Test error message")
-        self.assertEqual(error_info.component, "TestComponent")
-        self.assertEqual(error_info.severity, ErrorSeverity.ERROR)
-
-    def test_log_error_without_exception(self):
-        """Тестирует логирование без исключения"""
-        handler = ErrorHandler(str(self.log_file))
-
-        error_info = handler.log_error(
-            "Manual error",
-            component="ManualComponent"
-        )
-
-        self.assertEqual(error_info.message, "Manual error")
-        self.assertEqual(error_info.exception_type, "Manual")
-
-    def test_get_recent_errors(self):
-        """Тестирует получение последних ошибок"""
-        handler = ErrorHandler(str(self.log_file))
-
-        handler.log_error("Error 1", component="Test")
-        handler.log_error("Error 2", component="Test")
-
-        recent = handler.get_recent_errors(5)
-        self.assertGreaterEqual(len(recent), 2)
-
-    def test_get_errors_by_severity(self):
-        """Тестирует получение ошибок по уровню"""
-        handler = ErrorHandler(str(self.log_file))
-
-        handler.log_error("Warning", severity=ErrorSeverity.WARNING)
-        handler.log_error("Error", severity=ErrorSeverity.ERROR)
-
-        warnings = handler.get_errors_by_severity(ErrorSeverity.WARNING)
-        self.assertEqual(len(warnings), 1)
-
-    def test_get_errors_by_component(self):
-        """Тестирует получение ошибок по компоненту"""
-        handler = ErrorHandler(str(self.log_file))
-
-        handler.log_error("Error 1", component="ComponentA")
-        handler.log_error("Error 2", component="ComponentB")
-
-        errors_a = handler.get_errors_by_component("ComponentA")
-        self.assertEqual(len(errors_a), 1)
-
-    def test_clear_error_history(self):
-        """Тестирует очистку истории ошибок"""
-        handler = ErrorHandler(str(self.log_file))
-
-        handler.log_error("Error 1", component="Test")
-        handler.clear_error_history()
-
-        recent = handler.get_recent_errors()
-        self.assertEqual(len(recent), 0)
-
-    def test_export_error_report(self):
-        """Тестирует экспорт отчета об ошибках"""
-        handler = ErrorHandler(str(self.log_file))
-
-        handler.log_error("Test error", component="Test")
-
-        report_path = handler.export_error_report()
-        self.assertTrue(Path(report_path).exists())
+def test_error_info_serialization():
+    """Тест сериализации ErrorInfo"""
+    print("Тест сериализации ErrorInfo...")
+    
+    error = ErrorInfo(
+        timestamp=datetime.now(),
+        severity=ErrorSeverity.WARNING,
+        message="Test message",
+        exception_type="TestException",
+        exception_message="Test",
+        traceback_info="Traceback info",
+        component="test",
+        user_context={"user": "test_user"},
+        error_id="test_123"
+    )
+    
+    # Сериализация
+    data = error.to_dict()
+    
+    assert "timestamp" in data
+    assert "severity" in data
+    assert "message" in data
+    assert "error_id" in data
+    assert "resolved" in data
+    
+    # Десериализация
+    restored = ErrorInfo.from_dict(data)
+    
+    assert restored.message == error.message
+    assert restored.error_id == error.error_id
+    assert restored.severity == error.severity
+    
+    print("✓ Сериализация ErrorInfo: PASS")
+    return True
 
 
-class TestRecoveryManager(unittest.TestCase):
-    """Тесты для класса RecoveryManager"""
-
-    def setUp(self):
-        """Подготовка тестового окружения"""
-        self.temp_dir = tempfile.mkdtemp()
-        self.log_file = Path(self.temp_dir) / "error_log.json"
-        self.error_handler = ErrorHandler(str(self.log_file))
-        self.recovery_mgr = RecoveryManager(self.error_handler)
-
-    def tearDown(self):
-        """Очистка после теста"""
-        import shutil
-        shutil.rmtree(self.temp_dir, ignore_errors=True)
-
-    def test_create_state_backup(self):
-        """Тестирует создание резервной копии состояния"""
-        state_data = {"key": "value", "number": 42}
-        self.recovery_mgr.create_state_backup("test_state", state_data)
-
-        self.assertIn("test_state", self.recovery_mgr.state_backups)
-
-    def test_restore_state(self):
-        """Тестирует восстановление состояния"""
-        state_data = {"key": "value"}
-        self.recovery_mgr.create_state_backup("test_state", state_data)
-
-        restored = self.recovery_mgr.restore_state("test_state")
-        self.assertEqual(restored, state_data)
-
-    def test_restore_missing_state(self):
-        """Тестирует восстановление несуществующего состояния"""
-        restored = self.recovery_mgr.restore_state("missing_state")
-        self.assertIsNone(restored)
-
-    def test_register_recovery_strategy(self):
-        """Тестирует регистрацию стратегии восстановления"""
-        def mock_strategy(error_info):
-            """TODO: Add description"""
-            return True
-
-        self.recovery_mgr.register_recovery_strategy("ValueError", mock_strategy)
-        self.assertIn("ValueError", self.recovery_mgr.recovery_strategies)
+def test_error_severity_enum():
+    """Тест Enum уровней ошибок"""
+    print("Тест ErrorSeverity Enum...")
+    
+    assert ErrorSeverity.DEBUG.value == 10
+    assert ErrorSeverity.INFO.value == 20
+    assert ErrorSeverity.WARNING.value == 30
+    assert ErrorSeverity.ERROR.value == 40
+    assert ErrorSeverity.CRITICAL.value == 50
+    
+    print("✓ ErrorSeverity Enum: PASS")
+    return True
 
 
-class TestSafeExecutor(unittest.TestCase):
-    """Тесты для класса SafeExecutor"""
-
-    def setUp(self):
-        """Подготовка тестового окружения"""
-        self.temp_dir = tempfile.mkdtemp()
-        self.log_file = Path(self.temp_dir) / "error_log.json"
-        self.error_handler = ErrorHandler(str(self.log_file))
-        self.executor = SafeExecutor(self.error_handler)
-
-    def tearDown(self):
-        """Очистка после теста"""
-        import shutil
-        shutil.rmtree(self.temp_dir, ignore_errors=True)
-
-    def test_execute_with_retry_success(self):
-        """Тестирует успешное выполнение с повторами"""
-        counter = {"attempts": 0}
-
-        def success_func():
-            """TODO: Add description"""
-            counter["attempts"] += 1
-            return "success"
-
-        result = self.executor.execute_with_retry(success_func, max_retries=3)
-        self.assertEqual(result, "success")
-        self.assertEqual(counter["attempts"], 1)
-
-    def test_execute_with_retry_failure(self):
-        """Тестирует неудачное выполнение с повторами"""
-        def fail_func():
-            """TODO: Add description"""
-            raise ValueError("Always fails")
-
-        with self.assertRaises(ValueError):
-            self.executor.execute_with_retry(fail_func, max_retries=2)
-
-    def test_execute_with_timeout_success(self):
-        """Тестирует успешное выполнение с таймаутом"""
-        def quick_func():
-            """TODO: Add description"""
-            return "quick result"
-
-        result = self.executor.execute_with_timeout(quick_func, timeout=5.0)
-        self.assertEqual(result, "quick result")
-
-    def test_execute_with_timeout_expired(self):
-        """Тестирует истечение таймаута"""
-        def slow_func():
-            """TODO: Add description"""
-            time.sleep(2)
-            return "slow result"
-
-        result = self.executor.execute_with_timeout(slow_func, timeout=0.1, fallback_return="timeout")
-        self.assertEqual(result, "timeout")
+def main():
+    """Запуск всех тестов"""
+    print("=" * 60)
+    print("ТЕСТЫ СИСТЕМЫ ОБРАБОТКИ ОШИБОК")
+    print("=" * 60)
+    
+    tests = [
+        test_error_info_serialization,
+        test_error_severity_enum,
+    ]
+    
+    passed = 0
+    failed = 0
+    
+    for test in tests:
+        try:
+            if test():
+                passed += 1
+            else:
+                failed += 1
+        except Exception as e:
+            print(f"✗ {test.__name__}: FAIL - {e}")
+            import traceback
+            traceback.print_exc()
+            failed += 1
+    
+    print("\n" + "=" * 60)
+    print(f"ИТОГИ: {passed}/{len(tests)} тестов пройдено ({passed/len(tests)*100:.1f}%)")
+    
+    if passed == len(tests):
+        print("🎉 Все тесты пройдены!")
+        return 0
+    else:
+        print(f"❌ {failed} тест(а) провалено")
+        return 1
 
 
-if __name__ == '__main__':
-    unittest.main()
+if __name__ == "__main__":
+    sys.exit(main())

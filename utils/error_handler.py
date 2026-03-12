@@ -10,15 +10,17 @@
 import logging
 import traceback
 import json
+import sys
+import os
 from pathlib import Path
-from datetime import datetime
-from typing import Dict, Any, Optional, Callable
+from datetime import datetime, timedelta
+from typing import Dict, Any, Optional, Callable, List, Tuple
 from functools import wraps
 import threading
 import queue
 import time
 from enum import Enum
-from dataclasses import dataclass
+from dataclasses import dataclass, field, asdict
 
 
 class ErrorSeverity(Enum):
@@ -43,6 +45,39 @@ class ErrorInfo:
     traceback_info: str
     component: str
     user_context: Optional[Dict[str, Any]] = None
+    error_id: str = field(default_factory=lambda: "")
+    resolved: bool = False
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Конвертация в словарь"""
+        return {
+            "timestamp": self.timestamp.isoformat() if self.timestamp else None,
+            "severity": self.severity.value,
+            "message": self.message,
+            "exception_type": self.exception_type,
+            "exception_message": self.exception_message,
+            "traceback_info": self.traceback_info,
+            "component": self.component,
+            "user_context": self.user_context,
+            "error_id": self.error_id,
+            "resolved": self.resolved,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "ErrorInfo":
+        """Создание из словаря"""
+        return cls(
+            timestamp=datetime.fromisoformat(data["timestamp"]) if data.get("timestamp") else datetime.now(),
+            severity=ErrorSeverity(data.get("severity", 40)),
+            message=data.get("message", ""),
+            exception_type=data.get("exception_type", ""),
+            exception_message=data.get("exception_message", ""),
+            traceback_info=data.get("traceback_info", ""),
+            component=data.get("component", ""),
+            user_context=data.get("user_context"),
+            error_id=data.get("error_id", ""),
+            resolved=data.get("resolved", False),
+        )
 
 
 class ErrorHandler:
@@ -52,19 +87,38 @@ class ErrorHandler:
     логирование и восстановление после ошибок.
     """
 
-    def __init__(self, log_file: str = "error_log.json", max_log_size: int = 1000):
+    _instance: Optional["ErrorHandler"] = None
+    _lock = threading.Lock()
+
+    def __new__(cls, *args, **kwargs) -> "ErrorHandler":
+        """Singleton паттерн"""
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self, log_file: str = "error_log.json", max_log_size: int = 1000, auto_save: bool = True):
         """
         Инициализирует обработчик ошибок
 
         Args:
             log_file: Файл для логирования ошибок
             max_log_size: Максимальный размер лога (количество записей)
+            auto_save: Автоматическое сохранение после каждой ошибки
         """
+        if hasattr(self, "_initialized") and self._initialized:
+            return
+            
         self.log_file = Path(log_file)
         self.max_log_size = max_log_size
+        self.auto_save = auto_save
         self.error_queue = queue.Queue()
-        self.error_history = []
+        self.error_history: List[ErrorInfo] = []
         self.lock = threading.Lock()
+        self._error_counts: Dict[str, int] = {}
+        self._last_cleanup = datetime.now()
+        self._cleanup_interval = timedelta(hours=1)
 
         # Создаем файл лога если не существует
         if not self.log_file.exists():
@@ -75,6 +129,7 @@ class ErrorHandler:
 
         # Загружаем историю ошибок
         self.load_error_history()
+        self._initialized = True
 
     def load_error_history(self):
         """Загружает историю ошибок из файла"""
@@ -82,7 +137,7 @@ class ErrorHandler:
             with open(self.log_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 self.error_history = [
-                    ErrorInfo(**item) if isinstance(item, dict) else item for item in data
+                    ErrorInfo.from_dict(item) if isinstance(item, dict) else item for item in data
                 ]
         except Exception:
             self.error_history = []
@@ -90,31 +145,24 @@ class ErrorHandler:
     def save_error_history(self):
         """Сохраняет историю ошибок в файл"""
         try:
-            # Сохраняем только последние max_log_size ошибок
-            recent_errors = self.error_history[-self.max_log_size :]
+            with self.lock:
+                # Сохраняем только последние max_log_size ошибок
+                recent_errors = self.error_history[-self.max_log_size:]
 
-            # Преобразуем объекты ErrorInfo в словари
-            serializable_errors = []
-            for error in recent_errors:
-                if isinstance(error, ErrorInfo):
-                    serializable_error = {
-                        "timestamp": error.timestamp.isoformat(),
-                        "severity": error.severity.name,
-                        "message": error.message,
-                        "exception_type": error.exception_type,
-                        "exception_message": error.exception_message,
-                        "traceback_info": error.traceback_info,
-                        "component": error.component,
-                        "user_context": error.user_context,
-                    }
-                    serializable_errors.append(serializable_error)
-                else:
-                    serializable_errors.append(error)
+                # Преобразуем объекты ErrorInfo в словари
+                serializable_errors = [error.to_dict() if isinstance(error, ErrorInfo) else error for error in recent_errors]
 
-            with open(self.log_file, "w", encoding="utf-8") as f:
-                json.dump(serializable_errors, f, ensure_ascii=False, default=str)
+                with open(self.log_file, "w", encoding="utf-8") as f:
+                    json.dump(serializable_errors, f, ensure_ascii=False, default=str)
         except Exception as e:
             print(f"Ошибка сохранения истории ошибок: {e}")
+
+    def _maybe_cleanup(self):
+        """Периодическая очистка старых ошибок"""
+        now = datetime.now()
+        if now - self._last_cleanup > self._cleanup_interval:
+            self.cleanup_old_errors(max_age_days=30)
+            self._last_cleanup = now
 
     def log_error(
         self,
@@ -138,6 +186,7 @@ class ErrorHandler:
             Объект информации об ошибке
         """
         timestamp = datetime.now()
+        error_id = f"{timestamp.strftime('%Y%m%d%H%M%S')}_{component}_{len(self.error_history)}"
 
         if exception:
             exception_type = type(exception).__name__
@@ -157,16 +206,55 @@ class ErrorHandler:
             traceback_info=traceback_info,
             component=component,
             user_context=user_context,
+            error_id=error_id,
         )
 
         with self.lock:
             self.error_history.append(error_info)
-            self.save_error_history()
+            
+            # Track error count by component
+            self._error_counts[component] = self._error_counts.get(component, 0) + 1
+            
+            # Auto-save if enabled
+            if self.auto_save:
+                self.save_error_history()
+            
+            # Periodic cleanup
+            self._maybe_cleanup()
 
         # Логируем в стандартный логгер
         logging.log(severity.value, f"[{component}] {message}")
 
         return error_info
+
+    def get_error_statistics(self) -> Dict[str, Any]:
+        """Получение статистики ошибок"""
+        with self.lock:
+            total = len(self.error_history)
+            by_severity = {}
+            by_component = {}
+            recent_24h = 0
+            
+            now = datetime.now()
+            for error in self.error_history:
+                # By severity
+                sev_name = error.severity.name
+                by_severity[sev_name] = by_severity.get(sev_name, 0) + 1
+                
+                # By component
+                by_component[error.component] = by_component.get(error.component, 0) + 1
+                
+                # Recent 24h
+                if now - error.timestamp < timedelta(hours=24):
+                    recent_24h += 1
+            
+            return {
+                "total_errors": total,
+                "errors_last_24h": recent_24h,
+                "by_severity": by_severity,
+                "by_component": by_component,
+                "error_counts": self._error_counts,
+            }
 
     def handle_exception(
         self,
@@ -251,7 +339,43 @@ class ErrorHandler:
         """Очищает историю ошибок"""
         with self.lock:
             self.error_history.clear()
+            self._error_counts.clear()
             self.save_error_history()
+
+    def cleanup_old_errors(self, max_age_days: int = 30):
+        """Очистка старых ошибок"""
+        with self.lock:
+            cutoff = datetime.now() - timedelta(days=max_age_days)
+            original_count = len(self.error_history)
+            
+            self.error_history = [
+                error for error in self.error_history
+                if error.timestamp > cutoff
+            ]
+            
+            removed = original_count - len(self.error_history)
+            if removed > 0:
+                self.save_error_history()
+            
+            return removed
+
+    def get_recent_errors(self, hours: int = 24) -> List[ErrorInfo]:
+        """Получение недавних ошибок"""
+        cutoff = datetime.now() - timedelta(hours=hours)
+        return [
+            error for error in self.error_history
+            if error.timestamp > cutoff
+        ]
+
+    def resolve_error(self, error_id: str) -> bool:
+        """Отметка ошибки как решенной"""
+        with self.lock:
+            for error in self.error_history:
+                if error.error_id == error_id:
+                    error.resolved = True
+                    self.save_error_history()
+                    return True
+            return False
 
     def export_error_report(self, output_path: str = None) -> str:
         """
@@ -283,6 +407,8 @@ class ErrorHandler:
                     "exception_message": error.exception_message,
                     "component": error.component,
                     "has_user_context": error.user_context is not None,
+                    "error_id": error.error_id,
+                    "resolved": error.resolved,
                 }
             )
 
