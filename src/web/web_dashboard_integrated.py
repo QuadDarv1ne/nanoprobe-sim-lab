@@ -602,6 +602,76 @@ class IntegratedWebDashboard:
                 self.error_handler.log_error(f"Ошибка остановки: {e}")
                 return jsonify({"success": False, "error": str(e)}), 500
 
+        @self.app.route("/api/actions/restart_component", methods=["POST"])
+        def api_restart_component_action():
+            """API для перезапуска компонента"""
+            try:
+                data = request.json
+                component = data.get("component", "unknown")
+
+                if not hasattr(self, "_active_processes"):
+                    self._active_processes = {}
+
+                # Останавливаем если запущен
+                if component in self._active_processes:
+                    process = self._active_processes[component]
+                    if process.poll() is None:
+                        process.terminate()
+                        try:
+                            process.wait(timeout=3)
+                        except subprocess.TimeoutExpired:
+                            process.kill()
+                            process.wait(timeout=1)
+                    del self._active_processes[component]
+
+                import time
+                time.sleep(0.5)
+
+                # Запускаем заново
+                component_paths = {
+                    "spm_simulator": project_root / "components" / "cpp-spm-hardware-sim" / "src" / "spm_simulator.py",
+                    "image_analyzer": project_root / "components" / "py-surface-image-analyzer" / "src" / "main.py",
+                    "sstv_station": project_root / "components" / "py-sstv-groundstation" / "src" / "main.py",
+                }
+
+                if component not in component_paths:
+                    return jsonify({"success": False, "error": "Компонент не найден"}), 404
+
+                component_path = component_paths[component]
+                if not component_path.exists():
+                    return jsonify({"success": False, "error": "Файл не найден"}), 404
+
+                log_dir = project_root / "logs" / "components"
+                log_dir.mkdir(parents=True, exist_ok=True)
+
+                with open(log_dir / f"{component}_stdout.log", "ab") as out_f, \
+                     open(log_dir / f"{component}_stderr.log", "ab") as err_f:
+                    process = subprocess.Popen(
+                        [sys.executable, str(component_path)],
+                        cwd=str(project_root),
+                        stdout=out_f, stderr=err_f,
+                        creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+                    )
+
+                self._active_processes[component] = process
+                self.logger.log_system_event(f"Перезапуск: {component} (PID: {process.pid})", "INFO")
+
+                time.sleep(0.5)
+                if process.poll() is not None:
+                    return jsonify({
+                        "success": False,
+                        "error": f"Не удалось запустить (код {process.returncode})"
+                    }), 500
+
+                return jsonify({
+                    "success": True,
+                    "message": f"{component} перезапущен",
+                    "pid": process.pid
+                })
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка перезапуска: {e}")
+                return jsonify({"success": False, "error": str(e)}), 500
+
         @self.app.route("/api/config", methods=["GET", "POST"])
         def api_config():
             """API для управления конфигурацией"""

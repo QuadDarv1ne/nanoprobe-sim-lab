@@ -1924,11 +1924,25 @@
         }
 
         function restartComponent(name) {
-            showNotification(`Перезапуск ${name}...`, 'info');
-            stopComponent(name);
-            setTimeout(() => {
-                startComponent(name);
-            }, 1000);
+            fetch('/api/actions/restart_component', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ component: name })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message || `Компонент ${name} перезапущен`, 'success');
+                    loadComponents();
+                    loadDashboardData();
+                } else {
+                    showNotification(data.error || `Ошибка перезапуска ${name}`, 'error');
+                }
+            })
+            .catch(error => {
+                showNotification(`Ошибка соединения с сервером`, 'error');
+                console.error(error);
+            });
         }
 
         function stopProcess(name) {
