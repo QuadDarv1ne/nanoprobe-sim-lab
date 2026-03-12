@@ -408,6 +408,98 @@ class IntegratedWebDashboard:
                 self.error_handler.log_error(f"Ошибка получения статуса компонентов: {e}")
                 return jsonify({'error': str(e)}), 500
 
+        @self.app.route("/api/components")
+        def api_components():
+            """API для получения списка компонентов в формате для frontend"""
+            try:
+                component_status = {}
+
+                # Проверяем SPM симулятор
+                spm_python = (
+                    project_root / "components" / "cpp-spm-hardware-sim" / "src" / "spm_simulator.py"
+                )
+                spm_cpp = (
+                    project_root / "components" / "cpp-spm-hardware-sim" / "build" / "spm-simulator"
+                )
+                spm_exists = spm_python.exists() or spm_cpp.exists()
+                spm_running = False
+                if hasattr(self, "_active_processes") and "spm_simulator" in self._active_processes:
+                    proc = self._active_processes["spm_simulator"]
+                    spm_running = proc.poll() is None
+
+                component_status["spm_simulator"] = {
+                    "name": "SPM Simulator",
+                    "status": "running" if spm_running else ("ready" if spm_exists else "not_installed"),
+                    "processes": 1 if spm_running else 0,
+                }
+
+                # Проверяем анализатор изображений
+                analyzer_path = project_root / "components" / "py-surface-image-analyzer" / "src" / "main.py"
+                analyzer_running = False
+                if hasattr(self, "_active_processes") and "image_analyzer" in self._active_processes:
+                    proc = self._active_processes["image_analyzer"]
+                    analyzer_running = proc.poll() is None
+
+                component_status["image_analyzer"] = {
+                    "name": "Image Analyzer",
+                    "status": "running" if analyzer_running else ("ready" if analyzer_path.exists() else "not_installed"),
+                    "processes": 1 if analyzer_running else 0,
+                }
+
+                # Проверяем SSTV станцию
+                sstv_path = project_root / "components" / "py-sstv-groundstation" / "src" / "main.py"
+                sstv_running = False
+                if hasattr(self, "_active_processes") and "sstv_station" in self._active_processes:
+                    proc = self._active_processes["sstv_station"]
+                    sstv_running = proc.poll() is None
+
+                component_status["sstv_station"] = {
+                    "name": "SSTV Station",
+                    "status": "running" if sstv_running else ("ready" if sstv_path.exists() else "not_installed"),
+                    "processes": 1 if sstv_running else 0,
+                }
+
+                component_status["web_dashboard"] = {"name": "Web Dashboard", "status": "running", "processes": 1}
+                component_status["fastapi"] = {"name": "FastAPI", "status": "integrated" if PROXY_AVAILABLE else "not_integrated", "processes": 1 if PROXY_AVAILABLE else 0}
+
+                # Преобразуем в список для frontend
+                components_list = []
+                for comp_key, comp_data in component_status.items():
+                    components_list.append({
+                        "name": comp_key,
+                        "status": comp_data.get("status", "unknown"),
+                        "description": comp_data.get("name", comp_key),
+                        "processes": comp_data.get("processes", 0),
+                    })
+
+                return jsonify(components_list)
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка получения списка компонентов: {e}")
+                return jsonify([]), 500
+
+        @self.app.route("/api/processes", methods=["GET"])
+        def api_processes():
+            """API для получения статуса всех процессов компонентов"""
+            try:
+                processes = {}
+                if hasattr(self, "_active_processes"):
+                    for component, proc in self._active_processes.items():
+                        poll_result = proc.poll()
+                        processes[component] = {
+                            "pid": proc.pid,
+                            "status": "running" if poll_result is None else "stopped",
+                            "exit_code": poll_result,
+                            "returncode": proc.returncode
+                        }
+
+                return jsonify({
+                    "active_count": len(getattr(self, "_active_processes", {})),
+                    "processes": processes
+                })
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка получения статуса процессов: {e}")
+                return jsonify({'error': str(e)}), 500
+
         @self.app.route("/api/logs")
         def api_logs():
             """API для получения логов"""
@@ -423,6 +515,92 @@ class IntegratedWebDashboard:
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка получения логов: {e}")
                 return jsonify({'error': str(e)}), 500
+
+        @self.app.route("/api/actions/start_component", methods=["POST"])
+        def api_start_component_action():
+            """API для запуска компонента"""
+            try:
+                data = request.json
+                component = data.get("component", "unknown")
+
+                component_paths = {
+                    "spm_simulator": project_root / "components" / "cpp-spm-hardware-sim" / "src" / "spm_simulator.py",
+                    "image_analyzer": project_root / "components" / "py-surface-image-analyzer" / "src" / "main.py",
+                    "sstv_station": project_root / "components" / "py-sstv-groundstation" / "src" / "main.py",
+                }
+
+                if component not in component_paths:
+                    return jsonify({"success": False, "error": f"Компонент '{component}' не найден"}), 404
+
+                component_path = component_paths[component]
+                if not component_path.exists():
+                    return jsonify({"success": False, "error": f"Файл не найден: {component_path}"}), 404
+
+                if not hasattr(self, "_active_processes"):
+                    self._active_processes = {}
+
+                if component in self._active_processes:
+                    proc = self._active_processes[component]
+                    if proc.poll() is None:
+                        return jsonify({"success": False, "error": f"Уже запущен (PID: {proc.pid})"}), 409
+
+                log_dir = project_root / "logs" / "components"
+                log_dir.mkdir(parents=True, exist_ok=True)
+
+                with open(log_dir / f"{component}_stdout.log", "ab") as out_f, \
+                     open(log_dir / f"{component}_stderr.log", "ab") as err_f:
+                    process = subprocess.Popen(
+                        [sys.executable, str(component_path)],
+                        cwd=str(project_root),
+                        stdout=out_f, stderr=err_f,
+                        creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+                    )
+
+                self._active_processes[component] = process
+                self.logger.log_system_event(f"Запуск: {component} (PID: {process.pid})", "INFO")
+
+                import time
+                time.sleep(0.5)
+                if process.poll() is not None:
+                    return jsonify({
+                        "success": False,
+                        "error": f"Завершился с кодом {process.returncode}",
+                        "log": str(log_dir / f"{component}_stderr.log")
+                    }), 500
+
+                return jsonify({"success": True, "message": f"{component} запущен", "pid": process.pid})
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка запуска: {e}")
+                return jsonify({"success": False, "error": str(e)}), 500
+
+        @self.app.route("/api/actions/stop_component", methods=["POST"])
+        def api_stop_component_action():
+            """API для остановки компонента"""
+            try:
+                data = request.json
+                component = data.get("component", "unknown")
+
+                if not hasattr(self, "_active_processes"):
+                    self._active_processes = {}
+
+                if component not in self._active_processes:
+                    return jsonify({"success": False, "error": f"Не запущен"}), 404
+
+                process = self._active_processes[component]
+                if process.poll() is None:
+                    process.terminate()
+                    try:
+                        process.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
+                        process.wait(timeout=2)
+
+                del self._active_processes[component]
+                self.logger.log_system_event(f"Остановка: {component}", "INFO")
+                return jsonify({"success": True, "message": f"{component} остановлен"})
+            except Exception as e:
+                self.error_handler.log_error(f"Ошибка остановки: {e}")
+                return jsonify({"success": False, "error": str(e)}), 500
 
         @self.app.route("/api/config", methods=["GET", "POST"])
         def api_config():
