@@ -478,7 +478,8 @@ class SDRInterface:
     def start_recording(
         self,
         duration_seconds: float = 60,
-        output_file: str = None
+        output_file: str = None,
+        realtime_callback=None
     ) -> bool:
         """
         Начинает запись сигнала.
@@ -486,6 +487,7 @@ class SDRInterface:
         Args:
             duration_seconds: Длительность записи
             output_file: Файл для сохранения
+            realtime_callback: Callback для real-time обработки сэмплов
 
         Returns:
             bool: True если успешно
@@ -515,6 +517,10 @@ class SDRInterface:
                 if samples is not None:
                     self.recorded_samples.append(samples)
 
+                    # Real-time обработка
+                    if realtime_callback:
+                        realtime_callback(samples)
+
                     if self.callback:
                         self.callback(samples)
 
@@ -531,6 +537,44 @@ class SDRInterface:
         self.recording_thread.start()
 
         return True
+
+    def start_realtime_sstv(self, decoder, duration_seconds: int = 120) -> bool:
+        """
+        Запускает real-time приём и декодирование SSTV.
+
+        Args:
+            decoder: SSTVDecoder с инициализированным real-time режимом
+            duration_seconds: Длительность приёма
+
+        Returns:
+            bool: True если успешно
+        """
+        def sstv_callback(event_type, data):
+            """Callback для событий SSTV декодера."""
+            if event_type == 'status':
+                print(f"SSTV статус: {data}")
+            elif event_type == 'image':
+                print(f"SSTV изображение получено: {data.size}")
+                # Сохраняем изображение
+                output_file = f"sstv_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+                data.save(output_file)
+                print(f"Изображение сохранено: {output_file}")
+
+        # Инициализируем real-time декодер
+        decoder.decode_realtime_init(
+            sample_rate=self.sample_rate,
+            callback=sstv_callback
+        )
+
+        # Callback для обработки сэмплов
+        def sample_callback(samples):
+            decoder.decode_realtime_push(samples)
+
+        # Запускаем запись с real-time обработкой
+        return self.start_recording(
+            duration_seconds=duration_seconds,
+            realtime_callback=sample_callback
+        )
 
     def stop_recording(self) -> List[np.ndarray]:
         """

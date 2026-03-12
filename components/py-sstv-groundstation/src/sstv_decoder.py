@@ -136,6 +136,89 @@ class SSTVDecoder:
             print(f"Ошибка декодирования из сэмплов: {e}")
             return None
 
+    def decode_realtime_init(self, sample_rate: int = 44100, callback=None):
+        """
+        Инициализирует real-time декодер SSTV.
+
+        Args:
+            sample_rate: частота дискретизации
+            callback: функция обратного вызова для прогресса
+        """
+        self.rt_sample_rate = sample_rate
+        self.rt_callback = callback
+        self.rt_buffer = []
+        self.rt_max_buffer = int(sample_rate * 30)  # 30 секунд
+        self.rt_is_decoding = False
+        self.rt_image = None
+        print(f"Real-time декодер инициализирован: {sample_rate} Гц")
+
+    def decode_realtime_push(self, samples: np.ndarray) -> Optional[Image.Image]:
+        """
+        Добавляет сэмплы в real-time декодер.
+
+        Args:
+            samples: numpy массив сэмплов
+
+        Returns:
+            Image.Image: Декодированное изображение или None
+        """
+        if not hasattr(self, 'rt_buffer'):
+            self.decode_realtime_init()
+
+        self.rt_buffer.append(samples)
+        
+        # Ограничиваем размер буфера
+        total_samples = sum(len(s) for s in self.rt_buffer)
+        if total_samples > self.rt_max_buffer:
+            # Удаляем старые сэмплы
+            while total_samples > self.rt_max_buffer and self.rt_buffer:
+                removed = self.rt_buffer.pop(0)
+                total_samples -= len(removed)
+
+        # Проверяем наличие SSTV сигнала (простая эвристика)
+        if len(self.rt_buffer) > 0:
+            combined = np.concatenate(self.rt_buffer[-10:])  # Последние 10 блоков
+            signal_strength = np.mean(np.abs(combined))
+            
+            if signal_strength > 0.1 and not self.rt_is_decoding:
+                # Обнаружен сигнал - начинаем декодирование
+                self.rt_is_decoding = True
+                print("SSTV сигнал обнаружен, декодирование...")
+                
+                if self.rt_callback:
+                    self.rt_callback('status', 'decoding')
+                
+                # Пробуем декодировать
+                try:
+                    all_samples = np.concatenate(self.rt_buffer)
+                    self.rt_image = self.decode_from_samples(all_samples, self.rt_sample_rate)
+                    
+                    if self.rt_image:
+                        print(f"✓ SSTV декодировано: {self.rt_image.size[0]}x{self.rt_image.size[1]}")
+                        if self.rt_callback:
+                            self.rt_callback('image', self.rt_image)
+                        self.rt_is_decoding = False
+                        self.rt_buffer = []  # Очищаем буфер
+                        return self.rt_image
+                    else:
+                        print("? Не удалось декодировать")
+                        if self.rt_callback:
+                            self.rt_callback('status', 'failed')
+                except Exception as e:
+                    print(f"Ошибка декодирования: {e}")
+                    if self.rt_callback:
+                        self.rt_callback('status', 'error')
+                
+                self.rt_is_decoding = False
+
+        return None
+
+    def decode_realtime_stop(self):
+        """Останавливает real-time декодер."""
+        self.rt_buffer = []
+        self.rt_is_decoding = False
+        print("Real-time декодер остановлен")
+
     def _decode_with_mode(self, audio_file: str, mode: str) -> Optional[Image.Image]:
         """
         Декодирует SSTV в конкретном режиме.

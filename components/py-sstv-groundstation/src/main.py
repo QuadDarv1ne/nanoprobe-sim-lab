@@ -200,9 +200,57 @@ def mode_demo(args):
     print()
     print("  Проверка устройства:")
     print("    python main.py --check")
+    print()
+    print("  Real-time SSTV:")
+    print("    python main.py --realtime-sstv -f iss --duration 120")
+    print("    python main.py --realtime-sstv -f 145.800 --gain 35")
 
 
-def mode_check_device(args):
+def mode_realtime_sstv(args):
+    """Режим real-time приёма и декодирования SSTV."""
+    print(f"\nREAL-TIME SSTV ПРИЁМ")
+    print(f"Частота: {args.frequency} МГц")
+    print(f"Длительность: {args.duration}с")
+    print("-" * 40)
+
+    sdr = create_sdr(
+        device_index=args.device,
+        frequency=args.frequency,
+        sample_rate=args.sample_rate,
+        gain=args.gain,
+        bias_tee=args.bias_tee,
+        agc=args.agc
+    )
+    if not sdr:
+        print("Ошибка инициализации SDR")
+        return False
+
+    decoder = SSTVDecoder()
+
+    try:
+        print(f"Запуск real-time приёма... Нажмите Ctrl+C для остановки")
+        success = sdr.start_realtime_sstv(decoder, duration_seconds=args.duration)
+        
+        if success:
+            # Ожидаем завершения
+            while sdr.is_recording:
+                time.sleep(1)
+        else:
+            print("Ошибка запуска real-time приёма")
+            return False
+
+        return True
+
+    except KeyboardInterrupt:
+        print("\nОстановка по пользователю...")
+        sdr.stop_recording()
+        decoder.decode_realtime_stop()
+        return True
+    finally:
+        sdr.close()
+
+
+def main():
     """Проверка подключения RTL-SDR устройства."""
     print("\nПРОВЕРКА RTL-SDR УСТРОЙСТВА")
     print("-" * 40)
@@ -255,6 +303,59 @@ def mode_check_device(args):
     return True
 
 
+def mode_check_device(args):
+    """Проверка подключения RTL-SDR устройства."""
+    print("\nПРОВЕРКА RTL-SDR УСТРОЙСТВА")
+    print("-" * 40)
+    
+    # Проверка импорта
+    print("1. Проверка rtlsdr...")
+    try:
+        from rtlsdr import RtlSdr
+        print("   ✓ rtlsdr установлен")
+    except ImportError:
+        print("   ✗ rtlsdr не найден")
+        print("   Установите: pip install rtlsdr pyrtlsdr")
+        return False
+
+    # Поиск устройств
+    print("\n2. Поиск устройств...")
+    try:
+        num_devices = RtlSdr.get_device_count()
+        print(f"   Найдено: {num_devices}")
+        if num_devices == 0:
+            print("   ⚠ Устройства не подключены")
+            return False
+    except Exception as e:
+        print(f"   ✗ Ошибка: {e}")
+        return False
+
+    # Информация об устройстве
+    print("\n3. Информация об устройстве:")
+    for i in range(num_devices):
+        try:
+            sdr = RtlSdr(device_index=i)
+            device_name = sdr.get_device_name() if hasattr(sdr, 'get_device_name') else 'Unknown'
+            serial = sdr.get_serial_number() if hasattr(sdr, 'get_serial_number') else 'Unknown'
+            manufacturer = sdr.get_manufacturer() if hasattr(sdr, 'get_manufacturer') else 'Unknown'
+
+            print(f"   Устройство #{i}:")
+            print(f"      Название: {device_name}")
+            print(f"      Серийный: {serial}")
+            print(f"      Производитель: {manufacturer}")
+
+            # Определение V4
+            if 'R828D' in device_name.upper() or 'V4' in device_name.upper():
+                print(f"      ✓ RTL-SDR V4 обнаружен")
+
+            sdr.close()
+        except Exception as e:
+            print(f"   Устройство #{i}: Ошибка - {e}")
+
+    print("\n✓ RTL-SDR готов к работе")
+    return True
+
+
 def main():
     """Основная функция SSTV станции."""
     parser = argparse.ArgumentParser(
@@ -289,6 +390,7 @@ def main():
     parser.add_argument("--output-audio", type=str, help="Файл для аудио записи")
     parser.add_argument("--output-image", type=str, help="Файл для изображения")
     parser.add_argument("--auto-decode", action="store_true", help="Авто декодирование после записи")
+    parser.add_argument("--realtime-sstv", action="store_true", help="Real-time декодирование SSTV")
 
     # Сканирование
     parser.add_argument("--scan", action="store_true", help="Режим сканирования частот")
@@ -315,6 +417,8 @@ def main():
         mode_list_frequencies(args)
     elif args.demo:
         mode_demo(args)
+    elif args.realtime_sstv:
+        mode_realtime_sstv(args)
     elif args.scan:
         mode_scan(args)
     elif args.sdr:
