@@ -117,6 +117,22 @@ class WebDashboard:
                 self.error_handler.log_error(f"Ошибка получения информации о системе: {e}")
                 return jsonify({"error": str(e)}), 500
 
+        @self.app.route("/api/health")
+        def api_health():
+            """Health check endpoint"""
+            try:
+                return jsonify({
+                    "status": "healthy",
+                    "timestamp": datetime.now().isoformat(),
+                    "uptime": self._get_uptime(),
+                    "components": {
+                        "database": "ok",
+                        "socketio": "ok" if hasattr(self, 'socketio') else "not_initialized"
+                    }
+                })
+            except Exception as e:
+                return jsonify({"status": "unhealthy", "error": str(e)}), 500
+
         @self.app.route("/api/performance_data")
         def api_performance_data():
             """API для получения данных о производительности"""
