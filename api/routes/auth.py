@@ -58,19 +58,19 @@ USERS_DB = {
 
 
 def validate_password_strength(password: str) -> tuple[bool, str]:
-    """Проверка надёжности пароля"""
+    """Validate password strength"""
     if len(password) < 8:
-        return False, "Пароль должен быть не менее 8 символов"
+        return False, "Password must be at least 8 characters"
     if len(password) > 128:
-        return False, "Пароль не должен превышать 128 символов"
+        return False, "Password must not exceed 128 characters"
     if not any(c.isupper() for c in password):
-        return False, "Пароль должен содержать заглавную букву"
+        return False, "Password must contain an uppercase letter"
     if not any(c.isdigit() for c in password):
-        return False, "Пароль должен содержать цифру"
+        return False, "Password must contain a digit"
     if not any(c.islower() for c in password):
-        return False, "Пароль должен содержать строчную букву"
+        return False, "Password must contain a lowercase letter"
     if not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password):
-        return False, "Пароль должен содержать специальный символ"
+        return False, "Password must contain a special character"
     return True, ""
 
 
