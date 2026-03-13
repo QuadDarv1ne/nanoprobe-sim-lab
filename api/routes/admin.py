@@ -14,6 +14,7 @@ from pathlib import Path
 from api.schemas import ErrorResponse
 from api.dependencies import get_current_user, require_admin
 from api.dependencies import get_redis_cache, get_batch_processor
+from api.error_handlers import AuthorizationError, NotFoundError
 
 
 router = APIRouter(prefix="/admin", tags=["Администрирование"])
@@ -118,11 +119,8 @@ async def get_system_resources(current_user: dict = Depends(get_current_user)):
 async def get_system_processes(current_user: dict = Depends(get_current_user)):
     """Список процессов"""
     if current_user.get("role") != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Требуется роль администратора",
-        )
-    
+        raise AuthorizationError("Требуется роль администратора")
+
     current_pid = os.getpid()
     process = psutil.Process(current_pid)
     
@@ -149,11 +147,8 @@ async def get_system_processes(current_user: dict = Depends(get_current_user)):
 async def list_logs(current_user: dict = Depends(get_current_user)):
     """Список файлов логов"""
     if current_user.get("role") != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Требуется роль администратора",
-        )
-    
+        raise AuthorizationError("Требуется роль администратора")
+
     logs_dir = Path("logs")
     if not logs_dir.exists():
         return {"files": []}
@@ -181,31 +176,25 @@ async def view_log(
 ):
     """Просмотр лога"""
     if current_user.get("role") != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Требуется роль администратора",
-        )
-    
+        raise AuthorizationError("Требуется роль администратора")
+
     log_path = Path("logs") / filename
-    
+
     # Проверка на directory traversal
     if not log_path.is_relative_to(Path("logs")):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Неверное имя файла",
         )
-    
+
     if not log_path.exists():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Файл {filename} не найден",
-        )
-    
+        raise NotFoundError(f"Файл {filename} не найден", resource_type="log_file")
+
     try:
         with open(log_path, "r", encoding="utf-8") as f:
             all_lines = f.readlines()
             last_lines = all_lines[-lines:] if len(all_lines) > lines else all_lines
-        
+
         return {
             "filename": filename,
             "lines": len(all_lines),
