@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 External Services API routes с Circuit Breaker
 Интеграция с внешними сервисами через circuit breaker

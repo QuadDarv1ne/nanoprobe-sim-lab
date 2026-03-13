@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 API роуты для аутентификации
 JWT токен, логин, регистрация с refresh token rotation

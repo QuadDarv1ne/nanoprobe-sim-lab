@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Dashboard API routes for Nanoprobe Sim Lab
 Provides aggregated stats and system health endpoints

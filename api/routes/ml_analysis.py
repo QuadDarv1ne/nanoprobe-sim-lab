@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 AI/ML Analysis routes с pre-trained моделями
 """
