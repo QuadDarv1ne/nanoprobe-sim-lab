@@ -16,6 +16,7 @@ from api.schemas import (
     ErrorResponse,
 )
 from api.dependencies import get_db, get_redis_cache
+from api.error_handlers import NotFoundError
 from utils.database import DatabaseManager
 from utils.redis_cache import RedisCache
 
@@ -81,13 +82,10 @@ async def get_simulation(
     
     simulations = db.get_simulations(limit=100)
     sim = next((s for s in simulations if s.get('simulation_id') == simulation_id), None)
-    
+
     if not sim:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Симуляция с ID {simulation_id} не найдена",
-        )
-    
+        raise NotFoundError(f"Симуляция с ID {simulation_id} не найдена", resource_type="simulation")
+
     result = SimulationResponse.model_validate(sim)
     
     if redis_cache and redis_cache.is_available():
@@ -123,10 +121,7 @@ async def create_simulation(
 
     simulations = db.get_simulations(limit=1)
     if not simulations:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Не удалось получить созданную симуляцию",
-        )
+        raise NotFoundError("Не удалось получить созданную симуляцию", resource_type="simulation")
 
     return SimulationResponse.model_validate(simulations[0])
 
@@ -158,9 +153,6 @@ async def update_simulation(
     sim = next((s for s in simulations if s.get('simulation_id') == simulation_id), None)
 
     if not sim:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Симуляция с ID {simulation_id} не найдена",
-        )
+        raise NotFoundError(f"Симуляция с ID {simulation_id} не найдена", resource_type="simulation")
 
     return SimulationResponse.model_validate(sim)

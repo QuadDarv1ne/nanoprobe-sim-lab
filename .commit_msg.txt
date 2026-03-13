@@ -1,5 +1,7 @@
-refactor: remove unused RequestValidationError import from api/main.py
+refactor: use NotFoundError in simulations routes
 
-Cleanup:
-- Remove unused import (handled by error_handlers module)
-- Keep imports clean and minimal
+Replace HTTPException with custom NotFoundError:
+- get_simulation endpoint (404)
+- create_simulation error handling
+- update_simulation endpoint (404)
+- Consistent error responses with resource_type
