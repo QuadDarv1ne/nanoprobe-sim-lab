@@ -270,6 +270,170 @@ async def refresh_access_token(refresh_token: str):
         raise AuthenticationError("Неверный refresh токен")
 
 
+@router.post(
+    "/2fa/setup",
+    summary="Настроить 2FA",
+    description="Инициация настройки двухфакторной аутентификации",
+)
+async def setup_2fa(current_user: dict = Depends(get_current_user)):
+    """Настройка 2FA"""
+    from utils.two_factor_auth import get_2fa_manager
+    
+    username = current_user["username"]
+    user_email = f"{username}@nanoprobe.local"
+    
+    two_factor = get_2fa_manager()
+    secret, provisioning_uri = two_factor.setup_2fa(username, user_email)
+    
+    return {
+        "secret": secret,
+        "provisioning_uri": provisioning_uri,
+        "message": "Отсканируйте QR код в Google Authenticator"
+    }
+
+
+@router.post(
+    "/2fa/verify",
+    summary="Верифицировать 2FA",
+    description="Подтверждение настройки 2FA OTP кодом",
+)
+async def verify_2fa_setup(
+    otp_code: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Верификация 2FA"""
+    from utils.two_factor_auth import get_2fa_manager
+    
+    username = current_user["username"]
+    two_factor = get_2fa_manager()
+    
+    if two_factor.verify_2fa_setup(username, otp_code):
+        return {"success": True, "message": "2FA успешно включена"}
+    
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Неверный OTP код"
+    )
+
+
+@router.post(
+    "/2fa/verify-login",
+    summary="2FA верификация при входе",
+    description="Проверка 2FA кода после успешного логина",
+)
+async def verify_2fa_login(
+    otp_code: str,
+    username: str,
+    password: str
+):
+    """2FA при входе"""
+    from utils.two_factor_auth import get_2fa_manager
+    
+    # Сначала проверяем логин/пароль
+    user = USERS_DB.get(username)
+    if not user or not verify_password(password, user["password_hash"]):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Неверное имя пользователя или пароль"
+        )
+    
+    # Проверяем 2FA если включена
+    two_factor = get_2fa_manager()
+    
+    if two_factor.is_2fa_enabled(username):
+        # Требуется 2FA верификация
+        if not two_factor.verify_2fa(username, otp_code):
+            # Пробуем резервный код
+            if not two_factor.verify_backup_code(username, otp_code):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Неверный 2FA код"
+                )
+    
+    # Генерация токенов
+    access_token = create_access_token(
+        data={"sub": user["username"], "user_id": user["id"]}
+    )
+    refresh_token = create_refresh_token(
+        data={"sub": user["username"], "user_id": user["id"]}
+    )
+    
+    return LoginResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        token_type="bearer",
+        expires_in=JWT_EXPIRATION_MINUTES * 60,
+        user={
+            "id": user["id"],
+            "username": user["username"],
+            "role": user["role"],
+            "2fa_enabled": two_factor.is_2fa_enabled(username)
+        }
+    )
+
+
+@router.get(
+    "/2fa/status",
+    summary="Статус 2FA",
+    description="Проверка статуса 2FA для текущего пользователя",
+)
+async def get_2fa_status(current_user: dict = Depends(get_current_user)):
+    """Статус 2FA"""
+    from utils.two_factor_auth import get_2fa_manager
+    
+    username = current_user["username"]
+    two_factor = get_2fa_manager()
+    
+    return {
+        "enabled": two_factor.is_2fa_enabled(username),
+        "username": username
+    }
+
+
+@router.post(
+    "/2fa/disable",
+    summary="Отключить 2FA",
+    description="Отключение двухфакторной аутентификации",
+)
+async def disable_2fa(
+    otp_code: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Отключение 2FA"""
+    from utils.two_factor_auth import get_2fa_manager
+    
+    username = current_user["username"]
+    two_factor = get_2fa_manager()
+    
+    if two_factor.disable_2fa(username, otp_code):
+        return {"success": True, "message": "2FA отключена"}
+    
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Неверный OTP код"
+    )
+
+
+@router.post(
+    "/2fa/backup-codes",
+    summary="Генерировать резервные коды",
+    description="Генерация резервных кодов для 2FA",
+)
+async def generate_backup_codes(current_user: dict = Depends(get_current_user)):
+    """Генерация резервных кодов"""
+    from utils.two_factor_auth import get_2fa_manager
+    
+    username = current_user["username"]
+    two_factor = get_2fa_manager()
+    
+    codes = two_factor.generate_backup_codes(username, count=10)
+    
+    return {
+        "backup_codes": codes,
+        "message": "Сохраните эти коды в безопасном месте!"
+    }
+
+
 @router.get(
     "/me",
     summary="Текущий пользователь",
@@ -277,11 +441,17 @@ async def refresh_access_token(refresh_token: str):
 )
 async def get_current_user_info(current_user: dict = Depends(get_current_user)):
     """Получение информации о текущем пользователе"""
+    from utils.two_factor_auth import get_2fa_manager
+    
+    username = current_user["username"]
+    two_factor = get_2fa_manager()
+    
     return {
         "id": current_user["id"],
         "username": current_user["username"],
         "role": current_user["role"],
         "created_at": current_user["created_at"],
+        "2fa_enabled": two_factor.is_2fa_enabled(username)
     }
 
 

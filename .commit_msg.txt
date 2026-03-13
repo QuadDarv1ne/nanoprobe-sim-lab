@@ -1,17 +1,32 @@
-feat: Redis integration for refresh token storage
+feat: add 2FA TOTP authentication with Google Authenticator
 
-Critical improvement - Redis integration:
+Critical security improvement - Two-Factor Authentication:
 
-- Add _get_redis_client() for Redis connection
-- Add _store_refresh_token() - save jti to Redis with TTL
-- Add _is_token_valid() - check token validity via Redis
-- Add _revoke_refresh_token() - delete token from Redis
-- Fallback to in-memory storage if Redis unavailable
-- Update refresh_access_token to use Redis validation
-- Add logging for token operations
+- Create utils/two_factor_auth.py (230 lines)
+- TOTP implementation with pyotp
+- QR code generation with qrcode
+- Google Authenticator compatible
+- Backup codes support
+- Persistent secrets storage (JSON)
 
-Benefits:
-- Persistent token storage across restarts
-- Automatic token expiration via Redis TTL
-- Distributed token validation (multi-instance)
-- Graceful degradation to in-memory
+New API endpoints:
+- POST /api/v1/auth/2fa/setup - Init 2FA setup
+- POST /api/v1/auth/2fa/verify - Verify setup with OTP
+- POST /api/v1/auth/2fa/verify-login - 2FA at login
+- GET /api/v1/auth/2fa/status - Check 2FA status
+- POST /api/v1/auth/2fa/disable - Disable 2FA
+- POST /api/v1/auth/2fa/backup-codes - Generate backup codes
+
+Features:
+- Secret generation and storage
+- QR code provisioning URI
+- OTP verification with time window
+- Backup codes (10 one-time use)
+- Graceful degradation (2FA optional)
+- Integrated with existing auth flow
+
+Security benefits:
+- Protection against credential theft
+- Time-based codes (30 second rotation)
+- Backup codes for recovery
+- Per-user secret storage
