@@ -31,6 +31,7 @@ from utils.redis_cache import RedisCache
 
 # Импорты роутов
 from api.routes import scans, simulations, analysis, comparison, reports, auth, admin, dashboard
+from api.routes import graphql, ml_analysis
 
 
 # Глобальные переменные
@@ -268,6 +269,12 @@ try:
 except ImportError:
     pass
 
+# GraphQL API
+app.include_router(graphql.router, prefix="/api/v1", tags=["GraphQL"])
+
+# AI/ML Analysis
+app.include_router(ml_analysis.router, prefix="/api/v1", tags=["AI/ML"])
+
 
 # Metrics endpoint для Prometheus
 @app.get("/metrics", tags=["Monitoring"])
@@ -284,6 +291,54 @@ async def metrics():
         content=prometheus_metrics,
         media_type="text/plain"
     )
+
+
+# GraphQL endpoint
+@app.post("/graphql")
+async def graphql_endpoint(request: Request):
+    """GraphQL endpoint для запросов"""
+    from api.graphql_schema import schema
+    import json
+    
+    body = await request.json()
+    query = body.get("query")
+    variables = body.get("variables")
+    operation_name = body.get("operationName")
+    
+    result = await schema.execute(
+        query,
+        variable_values=variables,
+        operation_name=operation_name
+    )
+    
+    if result.errors:
+        logger.error(f"GraphQL errors: {result.errors}")
+    
+    return {"data": result.data, "errors": result.errors}
+
+
+@app.get("/graphql/playground")
+async def graphql_playground():
+    """GraphQL Playground UI"""
+    return {
+        "message": "GraphQL Playground",
+        "endpoint": "/graphql",
+        "example_query": """
+query {
+    stats {
+        totalScans
+        totalSimulations
+        totalImages
+        activeSimulations
+    }
+    scans(limit: 10) {
+        id
+        scanType
+        timestamp
+    }
+}
+"""
+    }
 
 
 # WebSocket эндпоинт для real-time обновлений
