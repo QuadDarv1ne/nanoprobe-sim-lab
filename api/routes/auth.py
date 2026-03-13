@@ -21,6 +21,7 @@ from api.schemas import (
     ErrorResponse,
 )
 from api.dependencies import rate_limit, get_current_user
+from api.error_handlers import AuthenticationError
 
 router = APIRouter()
 security = HTTPBearer()
@@ -128,17 +129,8 @@ async def login(request: Request, login_data: LoginRequest):
     """Вход в систему"""
     user = USERS_DB.get(login_data.username)
 
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Неверное имя пользователя или пароль",
-        )
-
-    if not verify_password(login_data.password, user["password_hash"]):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Неверное имя пользователя или пароль",
-        )
+    if not user or not verify_password(login_data.password, user["password_hash"]):
+        raise AuthenticationError("Неверное имя пользователя или пароль")
 
     # Обновление last_login
     user["last_login"] = datetime.now().isoformat()
@@ -173,35 +165,23 @@ async def refresh_access_token(refresh_token: str):
     """Обновление токена с refresh token rotation"""
     try:
         payload = jwt.decode(refresh_token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        
+
         # Проверка типа токена
         if payload.get("type") != "refresh":
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Неверный тип токена",
-            )
-        
+            raise AuthenticationError("Неверный тип токена")
+
         # Проверка jti (rotation check)
         jti = payload.get("jti")
         if jti not in _active_refresh_tokens:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Refresh токен был отозван",
-            )
-        
+            raise AuthenticationError("Refresh токен был отозван")
+
         username: str = payload.get("sub")
         if username is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Неверный refresh токен",
-            )
+            raise AuthenticationError("Неверный refresh токен")
 
         user = USERS_DB.get(username)
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Пользователь не найден",
-            )
+            raise AuthenticationError("Пользователь не найден")
 
         # Ревокация старого токена (rotation)
         revoke_refresh_token(jti)
@@ -222,10 +202,7 @@ async def refresh_access_token(refresh_token: str):
         )
 
     except jwt.PyJWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Неверный refresh токен",
-        )
+        raise AuthenticationError("Неверный refresh токен")
 
 
 @router.get(

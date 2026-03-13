@@ -1,10 +1,5 @@
-feat: enhance WebSocket real-time updates with channels and heartbeat
+refactor: remove unused RequestValidationError import from api/main.py
 
-High priority improvement - WebSocket integration:
-
-- Add channel subscription (subscribe/unsubscribe)
-- Add get_metrics command for on-demand system metrics
-- Implement heartbeat mechanism with 60s timeout
-- Add logging for client connections/disconnections
-- Create push_realtime_updates background task skeleton
-- Improved error handling and cleanup
+Cleanup:
+- Remove unused import (handled by error_handlers module)
+- Keep imports clean and minimal
