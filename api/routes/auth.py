@@ -5,7 +5,7 @@ JWT токен, логин, регистрация с refresh token rotation
 Redis integration для персистентного хранения токенов
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Set
@@ -24,7 +24,7 @@ from api.schemas import (
     RefreshTokenRequest,
 )
 from api.dependencies import rate_limit, get_current_user
-from api.error_handlers import AuthenticationError
+from api.error_handlers import AuthenticationError, ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -310,11 +310,8 @@ async def verify_2fa_setup(
     
     if two_factor.verify_2fa_setup(username, otp_code):
         return {"success": True, "message": "2FA успешно включена"}
-    
-    raise HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        detail="Неверный OTP код"
-    )
+
+    raise ValidationError("Неверный OTP код")
 
 
 @router.post(
@@ -329,27 +326,21 @@ async def verify_2fa_login(
 ):
     """2FA при входе"""
     from utils.two_factor_auth import get_2fa_manager
-    
+
     # Сначала проверяем логин/пароль
     user = USERS_DB.get(username)
     if not user or not verify_password(password, user["password_hash"]):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Неверное имя пользователя или пароль"
-        )
-    
+        raise AuthenticationError("Неверное имя пользователя или пароль")
+
     # Проверяем 2FA если включена
     two_factor = get_2fa_manager()
-    
+
     if two_factor.is_2fa_enabled(username):
         # Требуется 2FA верификация
         if not two_factor.verify_2fa(username, otp_code):
             # Пробуем резервный код
             if not two_factor.verify_backup_code(username, otp_code):
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Неверный 2FA код"
-                )
+                raise AuthenticationError("Неверный 2FA код")
     
     # Генерация токенов
     access_token = create_access_token(
@@ -405,14 +396,11 @@ async def disable_2fa(
     
     username = current_user["username"]
     two_factor = get_2fa_manager()
-    
+
     if two_factor.disable_2fa(username, otp_code):
         return {"success": True, "message": "2FA отключена"}
-    
-    raise HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        detail="Неверный OTP код"
-    )
+
+    raise ValidationError("Неверный OTP код")
 
 
 @router.post(
