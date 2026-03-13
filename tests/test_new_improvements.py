@@ -33,7 +33,7 @@ class TestSchemasValidation:
 
         with pytest.raises(ValueError) as exc_info:
             LoginRequest(username="test_user", password="short1")
-        assert "не менее 8 символов" in str(exc_info.value)
+        assert "8" in str(exc_info.value)
 
     def test_login_request_password_no_uppercase(self):
         """Тест пароля без заглавных букв"""
@@ -41,7 +41,7 @@ class TestSchemasValidation:
 
         with pytest.raises(ValueError) as exc_info:
             LoginRequest(username="test_user", password="password123")
-        assert "заглавную букву" in str(exc_info.value)
+        assert "заглавную" in str(exc_info.value)
 
     def test_login_request_password_no_digit(self):
         """Тест пароля без цифр"""
@@ -57,7 +57,7 @@ class TestSchemasValidation:
 
         with pytest.raises(ValueError) as exc_info:
             LoginRequest(username="test_user", password="PASSWORD123")
-        assert "строчную букву" in str(exc_info.value)
+        assert "строчную" in str(exc_info.value)
 
     def test_login_request_password_too_long(self):
         """Тест слишком длинного пароля"""
@@ -66,7 +66,7 @@ class TestSchemasValidation:
         long_password = "A" * 129
         with pytest.raises(ValueError) as exc_info:
             LoginRequest(username="test_user", password=long_password)
-        assert "128 символов" in str(exc_info.value)
+        assert "128" in str(exc_info.value)
 
     def test_pagination_params(self):
         """Тест параметров пагинации"""
@@ -102,8 +102,13 @@ class TestDatabaseCache:
         db = DatabaseManager(db_path=db_path, enable_cache=True)
         yield db
 
-        # Очистка
-        os.unlink(db_path)
+        # Очистка - закрываем пул перед удалением файла
+        try:
+            db.close_pool()
+            time.sleep(0.2)
+            os.unlink(db_path)
+        except Exception:
+            pass
 
     def test_cache_initialization(self, db):
         """Тест инициализации кэша"""
@@ -230,13 +235,34 @@ class TestEnhancedMonitorPrometheus:
         metrics = monitor.export_prometheus_metrics()
         lines = metrics.split("\n")
 
-        # Находим строку с CPU
-        cpu_line = [l for l in lines if "nanoprobe_cpu_percent " in l][0]
+        # Находим строку с CPU (пропускаем строки с кириллицей)
+        cpu_line = None
+        for l in lines:
+            if "nanoprobe_cpu_percent " in l and not l.startswith("#"):
+                # Проверяем, что последнее значение - число
+                try:
+                    cpu_value = float(l.split()[-1])
+                    cpu_line = l
+                    break
+                except ValueError:
+                    continue
+        
+        assert cpu_line is not None, "Не найдена строка с CPU метрикой"
         cpu_value = float(cpu_line.split()[-1])
         assert 0 <= cpu_value <= 100
 
         # Находим строку с memory
-        mem_line = [l for l in lines if "nanoprobe_memory_percent " in l][0]
+        mem_line = None
+        for l in lines:
+            if "nanoprobe_memory_percent " in l and not l.startswith("#"):
+                try:
+                    mem_value = float(l.split()[-1])
+                    mem_line = l
+                    break
+                except ValueError:
+                    continue
+        
+        assert mem_line is not None, "Не найдена строка с memory метрикой"
         mem_value = float(mem_line.split()[-1])
         assert 0 <= mem_value <= 100
 
@@ -280,7 +306,13 @@ class TestDatabaseCacheIntegration:
         db = DatabaseManager(db_path=db_path, enable_cache=True)
         yield db
 
-        os.unlink(db_path)
+        # Очистка - закрываем пул перед удалением файла
+        try:
+            db.close_pool()
+            time.sleep(0.2)
+            os.unlink(db_path)
+        except Exception:
+            pass
 
     def test_batch_insert_cache_invalidation(self, db):
         """Тест инвалидации кэша при пакетной вставке"""

@@ -23,43 +23,43 @@ def test_schemas_validation():
     # Тест 1: Валидный запрос
     try:
         request = LoginRequest(username="test_user", password="Password123")
-        print("✓ Валидный логин: PASS")
+        print("[PASS] Валидный логин")
     except Exception as e:
-        print(f"✗ Валидный логин: FAIL - {e}")
+        print(f"[FAIL] Валидный логин: {e}")
         return False
 
     # Тест 2: Короткий пароль
     try:
         LoginRequest(username="test_user", password="short1")
-        print("✗ Короткий пароль: FAIL (должен был отклонить)")
+        print("[FAIL] Короткий пароль (должен был отклонить)")
         return False
     except ValidationError:
-        print("✓ Короткий пароль: PASS")
+        print("[PASS] Короткий пароль")
 
     # Тест 3: Без заглавных
     try:
         LoginRequest(username="test_user", password="password123")
-        print("✗ Без заглавных: FAIL (должен был отклонить)")
+        print("[FAIL] Без заглавных (должен был отклонить)")
         return False
     except ValidationError:
-        print("✓ Без заглавных: PASS")
+        print("[PASS] Без заглавных")
 
     # Тест 4: Без цифр
     try:
         LoginRequest(username="test_user", password="Passwordabc")
-        print("✗ Без цифр: FAIL (должен был отклонить)")
+        print("[FAIL] Без цифр (должен был отклонить)")
         return False
     except ValidationError:
-        print("✓ Без цифр: PASS")
+        print("[PASS] Без цифр")
 
     # Тест 5: Пагинация
     try:
         params = PaginationParams(page=2, page_size=50)
         assert params.offset == 50
         assert params.limit == 50
-        print("✓ Пагинация: PASS")
+        print("[PASS] Пагинация")
     except Exception as e:
-        print(f"✗ Пагинация: FAIL - {e}")
+        print(f"[FAIL] Пагинация: {e}")
         return False
 
     return True
@@ -81,13 +81,13 @@ def test_database_cache():
         # Тест 1: Инициализация кэша
         assert hasattr(db, '_query_cache')
         assert db._cache_ttl == 60
-        print("✓ Инициализация кэша: PASS")
+        print("[PASS] Инициализация кэша")
 
         # Тест 2: Set/Get кэша
         db._set_cache("test_key", {"data": "value"})
         result = db._get_from_cache("test_key")
         assert result == {"data": "value"}
-        print("✓ Set/Get кэша: PASS")
+        print("[PASS] Set/Get кэша")
 
         # Тест 3: TTL кэша
         db._cache_ttl = 1
@@ -95,7 +95,7 @@ def test_database_cache():
         time.sleep(1.5)
         result = db._get_from_cache("ttl_key")
         assert result is None
-        print("✓ TTL кэша: PASS")
+        print("[PASS] TTL кэша")
 
         # Тест 4: Инвалидация
         db._set_cache("scans:all:100:0", "val1")
@@ -104,20 +104,20 @@ def test_database_cache():
         db.invalidate_cache("scans:")
         assert "scans:all:100:0" not in db._query_cache
         assert "other:key" in db._query_cache
-        print("✓ Инвалидация кэша: PASS")
+        print("[PASS] Инвалидация кэша")
 
         # Тест 5: Статистика
         db._set_cache("key1", "value1")
         db._set_cache("key2", "value2")
         stats = db.get_cache_stats()
         assert stats["total_entries"] >= 2
-        print("✓ Статистика кэша: PASS")
+        print("[PASS] Статистика кэша")
 
         # Тест 6: add_scan_result инвалидация
         scan_id = db.add_scan_result("spm", "test", 100, 100)
         scan_keys_before = [k for k in db._query_cache.keys() if "scans:" in k]
         assert len(scan_keys_before) == 0  # Кэш очищен после вставки
-        print("✓ Инвалидация при вставке: PASS")
+        print("[PASS] Инвалидация при вставке")
 
         # Тест 7: delete_scan инвалидация
         db.get_scan_by_id(scan_id)
@@ -126,12 +126,12 @@ def test_database_cache():
         # Кэш должен быть очищен для scan:id:{id}
         scan_id_keys = [k for k in db._query_cache.keys() if f"scan:id:{scan_id}" in k]
         assert len(scan_id_keys) == 0
-        print("✓ Инвалидация при удалении: PASS")
+        print("[PASS] Инвалидация при удалении")
 
         return True
 
     except Exception as e:
-        print(f"✗ Тесты кэша: FAIL - {e}")
+        print(f"[FAIL] Тесты кэша: {e}")
         import traceback
         traceback.print_exc()
         return False
@@ -160,18 +160,18 @@ def test_enhanced_monitor_prometheus():
         assert isinstance(metrics, str)
         assert "# HELP" in metrics
         assert "# TYPE" in metrics
-        print("✓ Формат Prometheus: PASS")
+        print("[PASS] Формат Prometheus")
 
         # Тест 2: Наличие метрик
         assert "nanoprobe_cpu_percent" in metrics
         assert "nanoprobe_memory_percent" in metrics
         assert "nanoprobe_disk_percent" in metrics
-        print("✓ Наличие метрик: PASS")
+        print("[PASS] Наличие метрик")
 
         # Тест 3: Типы метрик
         assert "TYPE nanoprobe_cpu_percent gauge" in metrics
         assert "TYPE nanoprobe_uptime_seconds counter" in metrics
-        print("✓ Типы метрик: PASS")
+        print("[PASS] Типы метрик")
 
         # Тест 4: Значения метрик
         lines = metrics.split("\n")
@@ -180,16 +180,16 @@ def test_enhanced_monitor_prometheus():
             if "nanoprobe_cpu_percent " in line and not line.startswith("#"):
                 cpu_value = float(line.split()[-1])
                 assert 0 <= cpu_value <= 100
-                print(f"✓ Значение CPU ({cpu_value:.1f}%): PASS")
+                print(f"[PASS] Значение CPU ({cpu_value:.1f}%)")
                 break
         else:
-            print("✗ Не найдено значение CPU")
+            print("[FAIL] Не найдено значение CPU")
             return False
 
         return True
 
     except Exception as e:
-        print(f"✗ Тесты Prometheus: FAIL - {e}")
+        print(f"[FAIL] Тесты Prometheus: {e}")
         import traceback
         traceback.print_exc()
         return False
@@ -209,19 +209,19 @@ def test_dashboard_routes():
         assert "used_mb" in stats
         assert "total_mb" in stats
         assert "percent" in stats
-        print("✓ Статистика хранилища: PASS")
+        print("[PASS] Статистика хранилища")
 
         # Тест 2: Форматирование аптайма
         assert format_uptime(0) == "< 1 мин"
         assert format_uptime(60) == "1 мин"
         assert format_uptime(3661) == "1 ч 1 мин"
         assert "дн" in format_uptime(86400)
-        print("✓ Форматирование аптайма: PASS")
+        print("[PASS] Форматирование аптайма")
 
         return True
 
     except Exception as e:
-        print(f"✗ Dashboard routes: FAIL - {e}")
+        print(f"[FAIL] Dashboard routes: {e}")
         import traceback
         traceback.print_exc()
         return False
@@ -248,16 +248,16 @@ def main():
     total = len(results)
 
     for name, result in results.items():
-        status = "✓ PASS" if result else "✗ FAIL"
+        status = "[PASS]" if result else "[FAIL]"
         print(f"{status} - {name}")
 
     print(f"\nВсего: {passed}/{total} тестов пройдено ({passed/total*100:.1f}%)")
 
     if passed == total:
-        print("\n🎉 Все тесты пройдены!")
+        print("\nВсе тесты пройдены!")
         return 0
     else:
-        print(f"\n❌ {total - passed} тест(а) провалено")
+        print(f"\n{total - passed} тест(а) провалено")
         return 1
 
 
