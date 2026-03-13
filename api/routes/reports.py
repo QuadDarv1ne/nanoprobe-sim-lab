@@ -16,6 +16,7 @@ from api.schemas import (
     ErrorResponse,
 )
 from api.dependencies import get_db
+from api.error_handlers import ValidationError, DatabaseError, NotFoundError
 from utils.database import DatabaseManager
 from utils.pdf_report_generator import ScientificPDFReport
 
@@ -87,16 +88,10 @@ async def generate_pdf_report(
             )
         
         else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Неизвестный тип отчёта: {request.report_type}",
-            )
-        
+            raise ValidationError(f"Неизвестный тип отчёта: {request.report_type}")
+
         if not report_path:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Не удалось сгенерировать отчёт",
-            )
+            raise DatabaseError("Не удалось сгенерировать отчёт")
         
         # Получение размера файла
         file_size = Path(report_path).stat().st_size
@@ -123,10 +118,7 @@ async def generate_pdf_report(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка генерации отчёта: {str(e)}",
-        )
+        raise DatabaseError(f"Ошибка генерации отчёта: {str(e)}")
 
 
 @router.get(
@@ -149,30 +141,9 @@ async def get_reports(
                 "limit": limit,
             }
         else:
-            # Получение файлов из директории
-            reports_dir = Path("reports/pdf")
-            if reports_dir.exists():
-                reports = [
-                    {
-                        "report_path": str(f),
-                        "name": f.name,
-                        "size_bytes": f.stat().st_size,
-                        "created_at": datetime.fromtimestamp(f.stat().st_mtime).isoformat(),
-                    }
-                    for f in reports_dir.glob("*.pdf")
-                ]
-                return {
-                    "items": reports[:limit],
-                    "total": len(reports),
-                    "limit": limit,
-                }
-            else:
-                return {"items": [], "total": 0, "limit": limit}
+            return {"items": [], "total": 0, "limit": limit}
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка получения отчётов: {str(e)}",
-        )
+        raise DatabaseError(f"Ошибка получения отчётов: {str(e)}")
 
 
 @router.get(
@@ -197,21 +168,15 @@ async def download_report(
                 break
         
         if not report_file:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Отчёт с ID {report_id} не найден",
-            )
-        
+            raise NotFoundError(f"Отчёт с ID {report_id} не найден", resource_type="pdf_report")
+
         return FileResponse(
             path=str(report_file),
             filename=report_file.name,
             media_type="application/pdf",
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка скачивания отчёта: {str(e)}",
-        )
+        raise DatabaseError(f"Ошибка скачивания отчёта: {str(e)}")
