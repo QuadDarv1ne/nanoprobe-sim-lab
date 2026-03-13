@@ -45,7 +45,15 @@ async def lifespan(app: FastAPI):
     """Управление жизненным циклом приложения"""
     global db_manager, redis_cache
 
-    # Инициализация БД
+    # Применение миграций БД
+    from api.database_init import ensure_database
+    
+    if ensure_database("data/nanoprobe.db"):
+        print("[OK] Database migrations applied")
+    else:
+        print("[ERROR] Database initialization failed")
+    
+    # Инициализация БД менеджера
     db_manager = DatabaseManager("data/nanoprobe.db")
     print("[OK] Database initialized")
 
@@ -53,7 +61,7 @@ async def lifespan(app: FastAPI):
     redis_host = os.getenv("REDIS_HOST", "localhost")
     redis_port = int(os.getenv("REDIS_PORT", "6379"))
     redis_cache = RedisCache(host=redis_host, port=redis_port)
-    
+
     if redis_cache.is_available():
         print(f"[OK] Redis cache connected: {redis_host}:{redis_port}")
     else:
