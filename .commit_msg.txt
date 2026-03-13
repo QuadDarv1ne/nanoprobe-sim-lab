@@ -1,5 +1,7 @@
-test: fix dashboard stats and component action tests
+feat: extended DB stats and real-time dashboard updates
 
-- Update test_dashboard_stats to check actual response fields
-- Make test_start_component and test_stop_component handle server unavailable cases
-- Accept 200/404/503 status codes for component tests
+- Added extended statistics to DashboardStats schema
+- Integrated SQLite for real data from database
+- Real-time stats updates via WebSocket
+- Fixed merge conflicts in templates/dashboard.html
+- Improved dashboard stats API performance
