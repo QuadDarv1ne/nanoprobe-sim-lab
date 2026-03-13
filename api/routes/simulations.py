@@ -5,7 +5,6 @@ API роуты для управления симуляциями
 
 from fastapi import APIRouter, Depends, Query
 from typing import List, Optional
-from datetime import datetime
 import uuid
 
 from api.schemas import (
