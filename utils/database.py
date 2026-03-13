@@ -477,6 +477,8 @@ class DatabaseManager:
                 (timestamp, scan_type, surface_type, width, height, file_path, metadata)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             """, data)
+            # Инвалидация кэша после вставки
+            self.invalidate_cache("scans:")
             return len(data)
 
     def get_scan_results(
