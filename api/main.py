@@ -72,6 +72,29 @@ async def lifespan(app: FastAPI):
     # Очистка при остановке
     print("[INFO] Application stopped")
 
+    # Закрытие соединений
+    try:
+        if redis_cache:
+            redis_cache.close()
+            print("[OK] Redis cache closed")
+    except Exception as e:
+        print(f"[WARN] Redis cache cleanup error: {e}")
+
+    try:
+        if db_manager:
+            db_manager.close_pool()
+            DatabaseManager.close_all_pools()
+            print("[OK] Database connections closed")
+    except Exception as e:
+        print(f"[WARN] Database cleanup error: {e}")
+
+    try:
+        from api.routes.external_services import close_http_session
+        close_http_session()
+        print("[OK] HTTP session closed")
+    except Exception as e:
+        print(f"[WARN] HTTP session cleanup error: {e}")
+
 
 # Создание FastAPI приложения
 app = FastAPI(

@@ -40,6 +40,13 @@ def create_session() -> requests.Session:
 http_session = create_session()
 
 
+def close_http_session():
+    """Закрытие HTTP сессии и освобождение ресурсов"""
+    global http_session
+    if http_session:
+        http_session.close()
+
+
 # Circuit breaker для внешних API
 from utils.circuit_breaker import circuit_breaker, get_circuit_breaker
 
