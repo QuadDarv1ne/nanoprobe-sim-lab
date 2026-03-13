@@ -15,6 +15,7 @@ from api.schemas import (
     ErrorResponse,
 )
 from api.dependencies import get_db, get_redis_cache
+from api.error_handlers import NotFoundError
 from utils.redis_cache import RedisCache
 from utils.database import DatabaseManager
 
@@ -99,10 +100,7 @@ async def get_scan(
     scan = db.get_scan_by_id(scan_id)
 
     if not scan:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Сканирование с ID {scan_id} не найдено",
-        )
+        raise NotFoundError(f"Сканирование с ID {scan_id} не найдено", resource_type="scan")
 
     result = ScanResponse.model_validate(scan)
 
@@ -143,10 +141,7 @@ async def create_scan(
     # Получение созданной записи
     scans = db.get_scan_results(limit=1)
     if not scans:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Не удалось получить созданную запись",
-        )
+        raise NotFoundError("Не удалось получить созданную запись", resource_type="scan")
 
     # Бизнес-метрики
     BusinessMetrics.inc_scan_created(scan.scan_type.value)
