@@ -122,35 +122,9 @@ except ImportError:
     pass
 
 
-# Глобальный обработчик ошибок
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
-    """Обработка HTTP исключений"""
-    logger.warning(f"HTTP {exc.status_code}: {exc.detail} - {request.url}")
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"detail": exc.detail, "status_code": exc.status_code}
-    )
-
-
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    """Обработка ошибок валидации"""
-    logger.warning(f"Validation error: {exc.errors()} - {request.url}")
-    return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={"detail": "Ошибка валидации", "errors": exc.errors()}
-    )
-
-
-@app.exception_handler(Exception)
-async def general_exception_handler(request: Request, exc: Exception):
-    """Обработка общих исключений"""
-    logger.error(f"Internal error: {str(exc)} - {request.url}", exc_info=True)
-    return JSONResponse(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"detail": "Внутренняя ошибка сервера", "error": str(exc)}
-    )
+# Регистрация централизованных обработчиков ошибок
+from api.error_handlers import register_error_handlers
+register_error_handlers(app)
 
 
 # Health check
