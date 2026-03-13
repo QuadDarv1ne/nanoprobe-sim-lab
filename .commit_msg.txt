@@ -1,11 +1,17 @@
-docs: add GraphQL and AI/ML improvements documentation
+feat: Redis integration for refresh token storage
 
-README.md:
-- Add GraphQL endpoints table
-- Add AI/ML endpoints table
-- Add GraphQL query example
+Critical improvement - Redis integration:
 
-IMPROVEMENTS.md:
-- Add GraphQL API section (types, queries, mutations)
-- Add AI/ML improvements section (models, capabilities)
-- Update metrics table with new counts
+- Add _get_redis_client() for Redis connection
+- Add _store_refresh_token() - save jti to Redis with TTL
+- Add _is_token_valid() - check token validity via Redis
+- Add _revoke_refresh_token() - delete token from Redis
+- Fallback to in-memory storage if Redis unavailable
+- Update refresh_access_token to use Redis validation
+- Add logging for token operations
+
+Benefits:
+- Persistent token storage across restarts
+- Automatic token expiration via Redis TTL
+- Distributed token validation (multi-instance)
+- Graceful degradation to in-memory

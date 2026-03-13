@@ -2,6 +2,7 @@
 """
 API роуты для аутентификации
 JWT токен, логин, регистрация с refresh token rotation
+Redis integration для персистентного хранения токенов
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status, Request
@@ -11,6 +12,7 @@ from typing import Optional, Dict, Set
 import jwt
 import os
 import secrets
+import logging
 
 from passlib.context import CryptContext
 
@@ -23,6 +25,8 @@ from api.schemas import (
 from api.dependencies import rate_limit, get_current_user
 from api.error_handlers import AuthenticationError
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
 security = HTTPBearer()
 
@@ -30,9 +34,6 @@ JWT_SECRET = os.getenv("JWT_SECRET", secrets.token_urlsafe(32))
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_MINUTES = 60
 JWT_REFRESH_EXPIRATION_DAYS = 7
-
-# Хранилище активных refresh токенов (в production использовать Redis/БД)
-_active_refresh_tokens: Set[str] = set()
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -97,6 +98,65 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return encoded_jwt
 
 
+def _get_redis_client():
+    """Получение Redis клиента"""
+    try:
+        import redis
+        redis_host = os.getenv("REDIS_HOST", "localhost")
+        redis_port = int(os.getenv("REDIS_PORT", "6379"))
+        redis_client = redis.Redis(host=redis_host, port=redis_port, db=0, decode_responses=True)
+        redis_client.ping()  # Проверка подключения
+        return redis_client
+    except Exception as e:
+        logger.warning(f"Redis not available, using in-memory storage: {e}")
+        return None
+
+
+# In-memory хранилище (fallback если Redis недоступен)
+_in_memory_tokens: Set[str] = set()
+
+
+def _store_refresh_token(jti: str, username: str):
+    """Сохранение refresh токена в Redis"""
+    redis_client = _get_redis_client()
+    if redis_client:
+        try:
+            key = f"refresh_token:{jti}"
+            redis_client.setex(key, JWT_REFRESH_EXPIRATION_DAYS * 86400, username)
+        except Exception as e:
+            logger.error(f"Failed to store token in Redis: {e}")
+            _in_memory_tokens.add(jti)
+    else:
+        _in_memory_tokens.add(jti)
+
+
+def _is_token_valid(jti: str) -> bool:
+    """Проверка валидности refresh токена"""
+    redis_client = _get_redis_client()
+    if redis_client:
+        try:
+            key = f"refresh_token:{jti}"
+            return redis_client.exists(key)
+        except Exception as e:
+            logger.error(f"Failed to check token in Redis: {e}")
+            return jti in _in_memory_tokens
+    return jti in _in_memory_tokens
+
+
+def _revoke_refresh_token(jti: str):
+    """Отмена refresh токена (rotation)"""
+    redis_client = _get_redis_client()
+    if redis_client:
+        try:
+            key = f"refresh_token:{jti}"
+            redis_client.delete(key)
+        except Exception as e:
+            logger.error(f"Failed to revoke token in Redis: {e}")
+            _in_memory_tokens.discard(jti)
+    else:
+        _in_memory_tokens.discard(jti)
+
+
 def create_refresh_token(data: dict) -> str:
     """Создание refresh токена с уникальным jti"""
     to_encode = data.copy()
@@ -104,13 +164,16 @@ def create_refresh_token(data: dict) -> str:
     jti = secrets.token_urlsafe(16)  # Unique token ID
     to_encode.update({"exp": expire, "type": "refresh", "jti": jti})
     encoded_jwt = jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
-    _active_refresh_tokens.add(jti)
+    
+    # Сохранение jti в Redis
+    _store_refresh_token(jti, data.get("sub", "unknown"))
+    
     return encoded_jwt
 
 
 def revoke_refresh_token(jti: str):
     """Отмена refresh токена (rotation)"""
-    _active_refresh_tokens.discard(jti)
+    _revoke_refresh_token(jti)
 
 
 @router.post(
@@ -170,9 +233,9 @@ async def refresh_access_token(refresh_token: str):
         if payload.get("type") != "refresh":
             raise AuthenticationError("Неверный тип токена")
 
-        # Проверка jti (rotation check)
+        # Проверка jti (rotation check) через Redis
         jti = payload.get("jti")
-        if jti not in _active_refresh_tokens:
+        if not _is_token_valid(jti):
             raise AuthenticationError("Refresh токен был отозван")
 
         username: str = payload.get("sub")
@@ -194,6 +257,8 @@ async def refresh_access_token(refresh_token: str):
             data={"sub": user["username"], "user_id": user["id"]}
         )
 
+        logger.info(f"Token refreshed for user: {username}")
+        
         return Token(
             access_token=new_access_token,
             refresh_token=new_refresh_token,
