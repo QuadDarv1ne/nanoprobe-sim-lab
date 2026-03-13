@@ -3,7 +3,7 @@
 GraphQL API routes для Nanoprobe Sim Lab
 """
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter
 from typing import Optional, Dict, Any
 import asyncio
 

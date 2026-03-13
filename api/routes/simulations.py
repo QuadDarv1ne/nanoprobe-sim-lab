@@ -3,7 +3,7 @@
 API роуты для управления симуляциями
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, Query
 from typing import List, Optional
 from datetime import datetime
 import uuid
