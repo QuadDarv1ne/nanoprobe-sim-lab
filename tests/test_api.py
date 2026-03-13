@@ -160,7 +160,7 @@ class TestComparison:
                 "image2_path": "/nonexistent/image2.png",
             },
         )
-        assert response.status_code == 400
+        assert response.status_code == 422  # ValidationError
 
 
 class TestReports:

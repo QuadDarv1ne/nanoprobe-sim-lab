@@ -7,6 +7,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from datetime import datetime
 import uuid
 from pathlib import Path
+import logging
+from api.error_handlers import ValidationError
 
 from api.schemas import (
     SurfaceComparisonRequest,
@@ -15,8 +17,12 @@ from api.schemas import (
     ErrorResponse,
 )
 from api.dependencies import get_db
+from api.error_handlers import NotFoundError
 from utils.database import DatabaseManager
 from utils.surface_comparator import SurfaceComparator
+
+
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter()
@@ -41,16 +47,10 @@ async def compare_surfaces(
         image2_path = Path(request.image2_path)
 
         if not image1_path.exists():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Файл не найден: {request.image1_path}",
-            )
+            raise ValidationError(f"Файл не найден: {request.image1_path}")
 
         if not image2_path.exists():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Файл не найден: {request.image2_path}",
-            )
+            raise ValidationError(f"Файл не найден: {request.image2_path}")
 
         # Создание компаратора
         comparator = SurfaceComparator()
@@ -100,9 +100,12 @@ async def compare_surfaces(
             created_at=datetime.now().isoformat(),
         )
         
+    except ValidationError:
+        raise
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Comparison error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Ошибка сравнения поверхностей: {str(e)}",
@@ -130,6 +133,7 @@ async def get_comparison_history(
         else:
             return {"items": [], "total": 0, "limit": limit, "message": "Метод не реализован"}
     except Exception as e:
+        logger.error(f"History error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Ошибка получения истории: {str(e)}",
@@ -149,13 +153,10 @@ async def get_comparison(
         if hasattr(db, 'get_surface_comparisons'):
             comparisons = db.get_surface_comparisons(limit=100)
             comparison = next((c for c in comparisons if c.get('comparison_id') == comparison_id), None)
-            
+
             if not comparison:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Сравнение с ID {comparison_id} не найдено",
-                )
-            
+                raise NotFoundError(f"Сравнение с ID {comparison_id} не найдено", resource_type="comparison")
+
             return comparison
         else:
             raise HTTPException(
