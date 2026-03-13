@@ -134,7 +134,7 @@ def main():
     parser.add_argument(
         '--letsencrypt',
         action='store_true',
-        help='Показать инструкцию для Let's Encrypt'
+        help="Показать инструкцию для Let's Encrypt"
     )
     
     args = parser.parse_args()

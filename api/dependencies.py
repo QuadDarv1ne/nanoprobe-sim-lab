@@ -107,7 +107,12 @@ def get_redis_cache_required() -> RedisCache:
 
 
 def get_batch_processor() -> BatchProcessor:
-    """Зависимость для получения процессора пакетной обработки"""
+    """
+    Зависимость для получения процессора пакетной обработки
+
+    Returns:
+        BatchProcessor: Экземпляр процессора
+    """
     return BatchProcessor()
 
 
