@@ -34,9 +34,12 @@ class RedisCache:
                     db=self.db,
                     decode_responses=True,
                     socket_connect_timeout=5,
+                    socket_timeout=5,
+                    retry_on_timeout=True,
+                    health_check_interval=30,
                 )
                 self._client.ping()
-            except (redis.ConnectionError, redis.TimeoutError):
+            except (redis.ConnectionError, redis.TimeoutError, redis.RedisError):
                 self._enabled = False
                 self._client = None
         return self._client
@@ -132,6 +135,16 @@ class RedisCache:
             }
         except redis.RedisError:
             return {"available": False, "error": "Connection error"}
+
+    def close(self):
+        """Закрытие соединения с Redis"""
+        if self._client:
+            try:
+                self._client.close()
+            except redis.RedisError:
+                pass
+            finally:
+                self._client = None
 
 
 cache = RedisCache()
