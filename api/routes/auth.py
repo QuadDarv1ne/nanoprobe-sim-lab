@@ -19,7 +19,7 @@ from api.schemas import (
     Token,
     ErrorResponse,
 )
-from utils.rate_limiter import rate_limit
+from api.dependencies import rate_limit
 
 router = APIRouter()
 security = HTTPBearer()

@@ -4,8 +4,9 @@
 Общие зависимости для всех роутов
 """
 
-from fastapi import HTTPException, status
-from typing import Optional
+from fastapi import HTTPException, status, Request
+from typing import Optional, Callable
+from functools import wraps
 from utils.database import DatabaseManager
 from utils.redis_cache import RedisCache
 from utils.batch_processor import BatchProcessor
@@ -90,3 +91,57 @@ def require_admin(current_user: dict) -> dict:
             detail="Требуется роль администратора"
         )
     return current_user
+
+
+def get_client_ip(request: Request) -> str:
+    """
+    Получение IP адреса клиента
+    
+    Args:
+        request: FastAPI request объект
+        
+    Returns:
+        str: IP адрес клиента
+    """
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
+def rate_limit(max_requests: int = 10, window_seconds: int = 60):
+    """
+    Декоратор для ограничения частоты запросов
+    
+    Args:
+        max_requests: Максимальное количество запросов
+        window_seconds: Окно времени в секундах
+        
+    Использование:
+        @router.post("/login")
+        @rate_limit(max_requests=5, window_seconds=60)
+        async def login(...):
+            ...
+    """
+    from utils.rate_limiter import RateLimiter
+    
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(request: Request, *args, **kwargs):
+            from api.dependencies import get_client_ip
+            client_ip = get_client_ip(request)
+            rate_limiter = RateLimiter()
+            
+            if not rate_limiter.is_allowed(client_ip, max_requests, window_seconds):
+                retry_after = rate_limiter.get_retry_after(
+                    client_ip, max_requests, window_seconds
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail="Слишком много запросов",
+                    headers={"Retry-After": str(retry_after)}
+                )
+            
+            return await func(request, *args, **kwargs)
+        return wrapper
+    return decorator
