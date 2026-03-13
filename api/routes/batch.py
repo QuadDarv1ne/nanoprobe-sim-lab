@@ -8,15 +8,11 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 
 from api.schemas import ErrorResponse, BatchJobCreate, BatchJobResponse
+from api.dependencies import get_batch_processor
 from utils.batch_processor import BatchProcessor
 
 
 router = APIRouter()
-
-
-def get_batch_processor() -> BatchProcessor:
-    """Зависимость для получения процессора пакетной обработки"""
-    return BatchProcessor()
 
 
 @router.get(

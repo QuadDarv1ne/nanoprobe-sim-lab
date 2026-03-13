@@ -12,7 +12,8 @@ import os
 from pathlib import Path
 
 from api.schemas import ErrorResponse
-from api.routes.auth import get_current_user
+from api.dependencies import get_current_user, require_admin
+from api.dependencies import get_redis_cache, get_batch_processor
 
 
 router = APIRouter(prefix="/admin", tags=["Администрирование"])
@@ -25,19 +26,16 @@ router = APIRouter(prefix="/admin", tags=["Администрирование"])
     summary="Статус Redis кэша",
     description="Получить статистику Redis кэша",
 )
-async def get_redis_cache_status(current_user: dict = Depends(get_current_user)):
+async def get_redis_cache_status(
+    current_user: dict = Depends(get_current_user),
+    redis_cache = Depends(get_redis_cache),
+):
     """Статус Redis кэша"""
-    if current_user.get("role") != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Требуется роль администратора",
-        )
-    
-    from api.main import redis_cache
-    
+    require_admin(current_user)
+
     if redis_cache is None:
         return {"available": False, "message": "Redis не инициализирован"}
-    
+
     return redis_cache.get_stats()
 
 
@@ -50,11 +48,7 @@ async def get_redis_cache_status(current_user: dict = Depends(get_current_user))
 )
 async def get_system_info(current_user: dict = Depends(get_current_user)):
     """Системная информация"""
-    if current_user.get("role") != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Требуется роль администратора",
-        )
+    require_admin(current_user)
     
     return {
         "platform": os.name,
@@ -73,12 +67,8 @@ async def get_system_info(current_user: dict = Depends(get_current_user)):
 )
 async def get_system_resources(current_user: dict = Depends(get_current_user)):
     """Использование ресурсов"""
-    if current_user.get("role") != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Требуется роль администратора",
-        )
-    
+    require_admin(current_user)
+
     # CPU
     cpu_percent = psutil.cpu_percent(interval=1)
     cpu_per_core = psutil.cpu_percent(interval=1, percpu=True)
