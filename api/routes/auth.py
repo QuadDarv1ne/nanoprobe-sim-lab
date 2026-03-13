@@ -19,7 +19,7 @@ from api.schemas import (
     Token,
     ErrorResponse,
 )
-from api.dependencies import rate_limit
+from api.dependencies import rate_limit, get_current_user
 
 router = APIRouter()
 security = HTTPBearer()
@@ -93,33 +93,6 @@ def create_refresh_token(data: dict) -> str:
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
     return encoded_jwt
-
-
-async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-) -> dict:
-    """Получение текущего пользователя из токена"""
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Неверные учетные данные",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    
-    try:
-        token = credentials.credentials
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        username: str = payload.get("sub")
-        
-        if username is None:
-            raise credentials_exception
-        
-        user = USERS_DB.get(username)
-        if not user:
-            raise credentials_exception
-        
-        return user
-    except jwt.PyJWTError:
-        raise credentials_exception
 
 
 @router.post(

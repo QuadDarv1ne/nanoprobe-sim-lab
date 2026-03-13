@@ -34,23 +34,29 @@ async def get_current_user(
     Raises:
         HTTPException: Если токен недействителен
     """
+    from api.routes.auth import USERS_DB
+
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Неверные учетные данные",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
     try:
         token = credentials.credentials
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        user_id = payload.get("sub")
-        if user_id is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Недействительный токен",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-        return {"user_id": user_id, "payload": payload}
+        username: str = payload.get("sub")
+
+        if username is None:
+            raise credentials_exception
+
+        user = USERS_DB.get(username)
+        if not user:
+            raise credentials_exception
+
+        return user
     except jwt.PyJWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Недействительный токен",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise credentials_exception
 
 
 def require_admin(current_user: dict) -> dict:
@@ -66,9 +72,7 @@ def require_admin(current_user: dict) -> dict:
     Raises:
         HTTPException: Если у пользователя нет роли администратора
     """
-    payload = current_user.get("payload", {})
-    role = payload.get("role", "user")
-    if role != "admin":
+    if current_user.get("role") != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Требуется роль администратора"
