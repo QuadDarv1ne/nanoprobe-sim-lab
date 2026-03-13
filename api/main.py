@@ -107,13 +107,21 @@ app = FastAPI(
 )
 
 # CORS настройки (для Next.js frontend в будущем)
+_cors_env = os.getenv("CORS_ORIGINS", "")
+if _cors_env.startswith("["):
+    # JSON формат: ["url1","url2"]
+    import json
+    CORS_ORIGINS = json.loads(_cors_env)
+else:
+    # CSV формат: url1,url2,url3
+    CORS_ORIGINS = [origin.strip() for origin in _cors_env.split(",") if origin.strip()]
+
+if not CORS_ORIGINS:
+    CORS_ORIGINS = ["http://localhost:3000", "http://localhost:5000", "http://127.0.0.1:5000"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",  # Next.js
-        "http://localhost:5000",  # Flask
-        "http://127.0.0.1:5000",
-    ],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
