@@ -4,7 +4,6 @@
 Автоматизация обработки множественных файлов и заданий
 """
 
-import os
 import json
 import time
 import asyncio
