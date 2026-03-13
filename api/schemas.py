@@ -52,6 +52,8 @@ class LoginRequest(BaseModel):
             raise ValueError('Пароль должен содержать цифру')
         if not re.search(r'[a-zа-яё]', v):
             raise ValueError('Пароль должен содержать строчную букву')
+        if not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in v):
+            raise ValueError('Пароль должен содержать специальный символ')
         return v
 
 
