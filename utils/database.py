@@ -8,7 +8,7 @@ import sqlite3
 import json
 from pathlib import Path
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any, Tuple, Callable
 from contextlib import contextmanager, asynccontextmanager
 from queue import Queue
 import threading
@@ -16,6 +16,7 @@ import asyncio
 import numpy as np
 from functools import wraps, lru_cache
 import time
+import hashlib
 
 
 class ConnectionPool:
@@ -1035,6 +1036,44 @@ class DatabaseManager:
             oldest = min(self._query_cache.items(), key=lambda x: x[1][1])
             del self._query_cache[oldest[0]]
         self._query_cache[key] = (value, datetime.now())
+
+    def cached_query(ttl: int = 300):
+        """
+        Декоратор для кэширования результатов запросов.
+        
+        Args:
+            ttl: Время жизни кэша в секундах (по умолчанию 300 = 5 минут)
+        
+        Использование:
+            @db.cached_query(ttl=600)
+            def get_expensive_query(...):
+                ...
+        """
+        def decorator(func: Callable) -> Callable:
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                # Генерация ключа кэша на основе имени функции и аргументов
+                cache_key_parts = [func.__name__]
+                for arg in args[1:]:  # Пропускаем self
+                    cache_key_parts.append(str(arg))
+                for k, v in sorted(kwargs.items()):
+                    cache_key_parts.append(f"{k}={v}")
+                
+                cache_key = hashlib.md5("|".join(cache_key_parts).encode()).hexdigest()
+                
+                # Проверка кэша
+                cached = self._get_cached(cache_key)
+                if cached is not None:
+                    return cached
+                
+                # Выполнение функции
+                result = func(*args, **kwargs)
+                
+                # Кэширование результата
+                self._cache_result(cache_key, result, ttl=ttl)
+                return result
+            return wrapper
+        return decorator
 
     def search_scans(
         self,
