@@ -1,34 +1,16 @@
-feat: add Circuit Breaker pattern and External Services integration
+perf: add HTTP session with connection pooling and retry
 
-Circuit Breaker pattern (utils/circuit_breaker.py):
-- CircuitBreaker class with CLOSED/OPEN/HALF_OPEN states
-- Configurable failure threshold and recovery timeout
-- Thread-safe implementation
-- Decorator for easy integration
-- Fallback support
-- Statistics and monitoring
+Performance optimization for external services:
 
-External Services (api/routes/external_services.py):
-- NASA APOD API integration
-- Zenodo scientific data search
-- Figshare data search
-- All endpoints protected by circuit breakers
-- Health check endpoint for external services
-- Circuit breaker status/reset endpoints
-
-New API endpoints:
-- GET /api/v1/external/nasa/apod - NASA Astronomy Picture of the Day
-- GET /api/v1/external/zenodo/search - Zenodo search
-- GET /api/v1/external/figodo/search - Figshare search
-- GET /api/v1/external/circuit-breakers - All circuit breakers status
-- POST /api/v1/external/circuit-breakers/reset - Reset all breakers
-- GET /api/v1/external/circuit-breaker/{name} - Specific breaker status
-- POST /api/v1/external/circuit-breaker/{name}/reset - Reset breaker
-- GET /api/v1/external/health - External services health check
+- Create shared HTTP session with connection pooling
+- Add retry strategy with exponential backoff
+- Configure retry for 429, 500, 502, 503, 504 status codes
+- Pool connections: 10 per host, max 20 total
+- Use session instead of raw requests.get()
+- Add os import for NASA_API_KEY env variable
 
 Benefits:
-- Protection against cascading failures
-- Automatic recovery
-- Graceful degradation with fallbacks
-- Monitoring and observability
-- Resilient external API integration
+- Reduced connection overhead
+- Automatic retry on transient failures
+- Better resource utilization
+- Improved reliability

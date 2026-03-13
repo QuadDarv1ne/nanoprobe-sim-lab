@@ -7,12 +7,37 @@ External Services API routes с Circuit Breaker
 from fastapi import APIRouter, HTTPException, status, Query
 from typing import Optional, Dict, Any
 import logging
+import os
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/external", tags=["External Services"])
+
+
+# HTTP сессия с connection pooling и retry
+def create_session() -> requests.Session:
+    """Создание HTTP сессии с retry и connection pooling"""
+    session = requests.Session()
+    
+    # Retry стратегия
+    retry = Retry(
+        total=3,
+        backoff_factor=0.3,
+        status_forcelist=[429, 500, 502, 503, 504],
+        allowed_methods=["GET"]
+    )
+    adapter = HTTPAdapter(max_retries=retry, pool_connections=10, pool_maxsize=20)
+    session.mount("https://", adapter)
+    session.mount("http://", adapter)
+    
+    return session
+
+
+http_session = create_session()
 
 
 # Circuit breaker для внешних API
@@ -40,16 +65,16 @@ async def get_nasa_apod(date: Optional[str] = None):
     Returns:
         Данные APOD
     """
-    api_key = "DEMO_KEY"  # В production использовать env variable
+    api_key = os.getenv("NASA_API_KEY", "DEMO_KEY")
     url = "https://api.nasa.gov/planetary/apod"
     params = {"api_key": api_key}
-    
+
     if date:
         params["date"] = date
-    
-    response = requests.get(url, params=params, timeout=10)
+
+    response = http_session.get(url, params=params, timeout=10)
     response.raise_for_status()
-    
+
     return response.json()
 
 
@@ -85,10 +110,10 @@ async def search_zenodo(
         "sort": "bestmatch",
         "order": "desc"
     }
-    
-    response = requests.get(url, params=params, timeout=10)
+
+    response = http_session.get(url, params=params, timeout=10)
     response.raise_for_status()
-    
+
     return response.json()
 
 
@@ -122,10 +147,10 @@ async def search_figshare(
         "search": query,
         "limit": limit
     }
-    
-    response = requests.get(url, params=params, timeout=10)
+
+    response = http_session.get(url, params=params, timeout=10)
     response.raise_for_status()
-    
+
     return response.json()
 
 
@@ -209,7 +234,7 @@ async def check_external_services_health():
     
     for name, service in services.items():
         try:
-            response = requests.head(service["url"], timeout=5)
+            response = http_session.head(service["url"], timeout=5)
             if response.status_code < 400:
                 service["status"] = "healthy"
             else:
@@ -217,5 +242,5 @@ async def check_external_services_health():
         except Exception as e:
             service["status"] = "unhealthy"
             service["error"] = str(e)
-    
+
     return {"services": services, "timestamp": datetime.now().isoformat()}
