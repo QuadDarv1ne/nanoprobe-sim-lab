@@ -7,14 +7,15 @@
 import sqlite3
 import json
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any, Tuple
 from contextlib import contextmanager, asynccontextmanager
 from queue import Queue
 import threading
 import asyncio
 import numpy as np
-from functools import wraps
+from functools import wraps, lru_cache
+import time
 
 
 class ConnectionPool:
@@ -930,13 +931,23 @@ class DatabaseManager:
             ))
             return cursor.lastrowid
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self, use_cache: bool = True) -> Dict[str, Any]:
         """
-        Получает статистику базы данных.
+        Получает статистику базы данных с кэшированием.
+
+        Args:
+            use_cache: Использовать кэш (по умолчанию True, TTL=10 сек)
 
         Returns:
             Словарь со статистикой
         """
+        # Проверка кэша
+        cache_key = "statistics"
+        if use_cache:
+            cached = self._get_cached(cache_key)
+            if cached is not None:
+                return cached
+
         with self.get_connection() as conn:
             cursor = conn.cursor()
 
@@ -998,7 +1009,32 @@ class DatabaseManager:
             cursor.execute("SELECT COUNT(*) FROM performance_metrics")
             stats['total_metrics'] = cursor.fetchone()[0]
 
+            # Кэширование результата (TTL=10 сек)
+            if use_cache:
+                self._cache_result(cache_key, stats, ttl=10)
+
             return stats
+
+    def _get_cached(self, key: str) -> Optional[Any]:
+        """Получить из кэша если не истёк TTL"""
+        if not self.enable_cache:
+            return None
+        if key in self._query_cache:
+            value, timestamp = self._query_cache[key]
+            if (datetime.now() - timestamp).total_seconds() < self._cache_ttl:
+                return value
+            del self._query_cache[key]
+        return None
+
+    def _cache_result(self, key: str, value: Any, ttl: Optional[int] = None):
+        """Закэшировать результат"""
+        if not self.enable_cache:
+            return
+        if len(self._query_cache) >= self._cache_max_size:
+            # Очистка старого кэша
+            oldest = min(self._query_cache.items(), key=lambda x: x[1][1])
+            del self._query_cache[oldest[0]]
+        self._query_cache[key] = (value, datetime.now())
 
     def search_scans(
         self,
