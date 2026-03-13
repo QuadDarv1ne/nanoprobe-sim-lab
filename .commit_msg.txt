@@ -1,5 +1,1 @@
-perf: add caching for dashboard stats API (5s TTL)
-
-- Add LRU cache for dashboard stats endpoint
-- Cache-Control header support for cache bypass
-- Improves response time for frequent requests
+chore: cleanup test files
