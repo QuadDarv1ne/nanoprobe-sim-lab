@@ -175,12 +175,28 @@ def create_error_response(
 async def api_error_handler(request: Request, exc: HTTPException) -> JSONResponse:
     """Обработчик HTTP исключений"""
     severity = ErrorSeverity.WARNING if exc.status_code < 500 else ErrorSeverity.ERROR
-    
+
     return create_error_response(
         error=exc,
         status_code=exc.status_code,
         request=request,
         severity=severity
+    )
+
+
+async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+    """Обработчик HTTPException с добавлением severity"""
+    severity = ErrorSeverity.WARNING if exc.status_code < 500 else ErrorSeverity.ERROR
+
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "detail": exc.detail,
+            "error_code": f"ERR_{exc.status_code}",
+            "severity": severity.value,
+            "path": str(request.url.path),
+            "timestamp": datetime.now().isoformat(),
+        }
     )
 
 
@@ -266,8 +282,8 @@ async def api_error_handler_wrapper(request: Request, exc: APIError) -> JSONResp
 
 def register_error_handlers(app):
     """Регистрация обработчиков ошибок в FastAPI приложении"""
-    
-    app.add_exception_handler(HTTPException, api_error_handler)
+
+    app.add_exception_handler(HTTPException, http_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_error_handler)
     app.add_exception_handler(Exception, general_error_handler)
     app.add_exception_handler(APIError, api_error_handler_wrapper)

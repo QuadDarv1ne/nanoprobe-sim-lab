@@ -268,6 +268,7 @@ class ErrorResponse(BaseModel):
     """Ошибка"""
     detail: str
     error_code: Optional[str] = None
+    severity: Optional[str] = None
     timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
     path: Optional[str] = None
 
