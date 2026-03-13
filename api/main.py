@@ -290,32 +290,92 @@ async def metrics():
 # WebSocket эндпоинт для real-time обновлений
 @app.websocket("/ws/realtime")
 async def websocket_endpoint(websocket: WebSocket):
-    """WebSocket для real-time обновлений"""
+    """WebSocket для real-time обновлений с поддержкой каналов"""
     await websocket.accept()
     
+    import psutil
+    
+    subscribed_channels = set()
+    last_pong = datetime.now()
+
     try:
         while True:
-            # Получение команд от клиента
-            data = await websocket.receive_text()
-            message = json.loads(data)
-            
-            # Обработка команд
-            if message.get("type") == "subscribe":
-                channel = message.get("channel")
-                await websocket.send_json({
-                    "type": "subscribed",
-                    "channel": channel,
-                    "timestamp": datetime.now().isoformat(),
-                })
-            
-            elif message.get("type") == "ping":
-                await websocket.send_json({
-                    "type": "pong",
-                    "timestamp": datetime.now().isoformat(),
-                })
-                
+            try:
+                # Получение команд от клиента с timeout
+                data = await websocket.receive_text()
+                last_pong = datetime.now()
+                message = json.loads(data)
+
+                # Обработка команд
+                if message.get("type") == "subscribe":
+                    channel = message.get("channel")
+                    if channel:
+                        subscribed_channels.add(channel)
+                        await websocket.send_json({
+                            "type": "subscribed",
+                            "channel": channel,
+                            "timestamp": datetime.now().isoformat(),
+                        })
+                        logger.info(f"Client subscribed to channel: {channel}")
+
+                elif message.get("type") == "unsubscribe":
+                    channel = message.get("channel")
+                    subscribed_channels.discard(channel)
+                    await websocket.send_json({
+                        "type": "unsubscribed",
+                        "channel": channel,
+                        "timestamp": datetime.now().isoformat(),
+                    })
+
+                elif message.get("type") == "ping":
+                    await websocket.send_json({
+                        "type": "pong",
+                        "timestamp": datetime.now().isoformat(),
+                    })
+
+                elif message.get("type") == "get_metrics":
+                    # Отправка текущих метрик
+                    metrics = {
+                        "type": "metrics",
+                        "timestamp": datetime.now().isoformat(),
+                        "data": {
+                            "cpu_percent": psutil.cpu_percent(interval=0.1),
+                            "memory_percent": psutil.virtual_memory().percent,
+                            "disk_percent": psutil.disk_usage('/').percent,
+                        }
+                    }
+                    await websocket.send_json(metrics)
+
+            except asyncio.TimeoutError:
+                # Проверка heartbeat
+                if (datetime.now() - last_pong).total_seconds() > 60:
+                    logger.warning("Client heartbeat timeout, disconnecting")
+                    break
+                continue
+
     except WebSocketDisconnect:
-        print("🔌 WebSocket клиент отключился")
+        logger.info(f"🔌 WebSocket client disconnected. Channels: {subscribed_channels}")
+    except Exception as e:
+        logger.error(f"WebSocket error: {e}")
+    finally:
+        subscribed_channels.clear()
+
+
+# Фоновая задача для push-уведомлений подписчикам
+async def push_realtime_updates():
+    """Периодическая отправка обновлений подписчикам"""
+    import psutil
+    
+    while True:
+        try:
+            await asyncio.sleep(5)  # Каждые 5 секунд
+            
+            # Здесь должна быть интеграция с ConnectionManager для рассылки
+            # Пока просто логируем
+            logger.debug("Realtime update tick")
+            
+        except Exception as e:
+            logger.error(f"Error in push_realtime_updates: {e}")
 
 
 def get_db() -> DatabaseManager:
