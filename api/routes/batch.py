@@ -9,6 +9,7 @@ from datetime import datetime
 
 from api.schemas import ErrorResponse, BatchJobCreate, BatchJobResponse
 from api.dependencies import get_batch_processor
+from api.error_handlers import NotFoundError, ValidationError
 from utils.batch_processor import BatchProcessor
 
 
@@ -45,10 +46,7 @@ async def get_job(
     """Получить задание по ID"""
     job = processor.get_job_status(job_id)
     if "error" in job:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=job["error"],
-        )
+        raise NotFoundError(f"Задание {job_id} не найдено", resource_type="batch_job")
     return job
 
 
@@ -64,10 +62,7 @@ async def get_job_stats(
     """Получить статистику задания"""
     stats = processor.get_job_stats(job_id)
     if stats is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Задание {job_id} не найдено",
-        )
+        raise NotFoundError(f"Задание {job_id} не найдено", resource_type="batch_job")
     return stats
 
 
@@ -93,10 +88,7 @@ async def cancel_job(
     """Отменить задание"""
     success = processor.cancel_job(job_id)
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Не удалось отменить задание (возможно, оно уже выполняется или завершено)",
-        )
+        raise ValidationError("Не удалось отменить задание (возможно, оно уже выполняется или завершено)")
     return {"success": True, "job_id": job_id}
 
 
@@ -112,10 +104,7 @@ async def pause_job(
     """Приостановить задание"""
     success = processor.pause_job(job_id)
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Не удалось приостановить задание (возможно, оно не выполняется)",
-        )
+        raise ValidationError("Не удалось приостановить задание (возможно, оно не выполняется)")
     return {"success": True, "job_id": job_id}
 
 
@@ -131,10 +120,7 @@ async def resume_job(
     """Возобновить задание"""
     success = processor.resume_job(job_id)
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Не удалось возобновить задание (возможно, оно не приостановлено)",
-        )
+        raise ValidationError("Не удалось возобновить задание (возможно, оно не приостановлено)")
     return {"success": True, "job_id": job_id}
 
 
