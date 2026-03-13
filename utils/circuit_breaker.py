@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Circuit Breaker pattern для Nanoprobe Sim Lab
 Защита от каскадных сбоев при работе с внешними сервисами

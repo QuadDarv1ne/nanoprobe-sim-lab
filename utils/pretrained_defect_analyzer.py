@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 AI/ML улучшения для анализа дефектов
 Pre-trained модели и transfer learning
