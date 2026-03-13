@@ -30,6 +30,31 @@
 
 ---
 
+## 🔧 Latest Improvements (2026-03-13)
+
+### Test Reliability
+- [x] Fixed Unicode encoding issues for Windows cp1251
+- [x] Replaced Unicode symbols (✓/✗) with ASCII [PASS]/[FAIL]
+- [x] Fixed database file leaks in tests (close_pool method)
+- [x] Fixed schema validation tests for Russian error messages
+- [x] Improved Prometheus metrics parsing for different locales
+
+### Database Connection Pool
+- [x] Added close_pool() method to DatabaseManager
+- [x] Fixed bare except → except Exception (E722)
+- [x] Proper cleanup in ConnectionPool and AsyncConnectionPool
+
+### Prometheus Metrics
+- [x] Converted HELP strings to English
+- [x] Removed Cyrillic compatibility issues
+
+### Configuration
+- [x] Updated mypy to Python 3.13
+- [x] Enabled warn_redundant_casts
+- [x] Enabled warn_unused_ignores
+
+---
+
 ## 🔄 In Progress
 
 None currently - project is stable and ready for rest.
@@ -80,7 +105,7 @@ None currently - project is stable and ready for rest.
 
 | Metric | Value |
 |--------|-------|
-| Total Tests | 33 |
+| Total Tests | 82+ |
 | Test Pass Rate | 100% |
 | API Endpoints | 33+ |
 | Lines of Code | ~25,750 |
@@ -88,8 +113,6 @@ None currently - project is stable and ready for rest.
 | Custom Exceptions | 8 |
 | GraphQL Types | 6 |
 | ML Models | 3 |
-| 2FA Methods | 6 |
-| Circuit Breakers | 3 |
 
 ---
 
@@ -107,7 +130,7 @@ None currently - project is stable and ready for rest.
 - Project is production-ready
 - All critical improvements completed
 - dev and main branches are synchronized
-- Last commit: `ba7c586` - perf: add HTTP session with connection pooling and retry
+- Latest: Test reliability improvements for Windows
 
 ---
 
