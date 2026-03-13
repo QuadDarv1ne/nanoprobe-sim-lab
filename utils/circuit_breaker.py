@@ -298,3 +298,11 @@ def reset_all_circuit_breakers():
     with _breakers_lock:
         for cb in _circuit_breakers.values():
             cb.reset()
+
+
+def close_all_circuit_breakers():
+    """Очистка всех circuit breakers при shutdown"""
+    global _circuit_breakers
+    with _breakers_lock:
+        _circuit_breakers.clear()
+        logger.info("All circuit breakers closed")

@@ -95,6 +95,13 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"[WARN] HTTP session cleanup error: {e}")
 
+    try:
+        from utils.circuit_breaker import close_all_circuit_breakers
+        close_all_circuit_breakers()
+        print("[OK] Circuit breakers closed")
+    except Exception as e:
+        print(f"[WARN] Circuit breakers cleanup error: {e}")
+
 
 # Создание FastAPI приложения
 app = FastAPI(
