@@ -4,7 +4,7 @@ FastAPI REST API для Nanoprobe Simulation Lab
 Совместная работа с Flask веб-интерфейсом
 """
 
-from fastapi import FastAPI, HTTPException, Depends, status, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Depends, status, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -18,6 +18,8 @@ from typing import List, Optional
 import json
 import os
 import logging
+
+from api.error_handlers import ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -259,11 +261,10 @@ async def realtime_metrics():
 async def export_data(format: str):
     """Экспорт данных в различных форматах"""
     if format not in ["json", "csv", "pdf"]:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Неподдерживаемый формат: {format}. Доступны: json, csv, pdf"
+        raise ValidationError(
+            f"Неподдерживаемый формат: {format}. Доступны: json, csv, pdf"
         )
-    
+
     return {
         "format": format,
         "status": "success",
