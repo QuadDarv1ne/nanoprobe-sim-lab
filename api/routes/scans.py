@@ -14,21 +14,12 @@ from api.schemas import (
     ScanListResponse,
     ErrorResponse,
 )
+from api.dependencies import get_db, get_redis_cache
+from utils.redis_cache import RedisCache
 from utils.database import DatabaseManager
 
 
 router = APIRouter()
-
-
-def get_db() -> DatabaseManager:
-    """Зависимость для получения менеджера БД"""
-    from api.main import db_manager
-    if db_manager is None:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="База данных недоступна"
-        )
-    return db_manager
 
 
 @router.get(
@@ -46,9 +37,9 @@ async def get_scans(
     page: int = Query(1, ge=1, description="Номер страницы"),
     page_size: int = Query(20, ge=1, le=100, description="Размер страницы"),
     db: DatabaseManager = Depends(get_db),
+    redis_cache: RedisCache = Depends(get_redis_cache),
 ):
     """Получить список сканирований с пагинацией по страницам"""
-    from api.main import redis_cache
     from api.metrics import BusinessMetrics
 
     offset = (page - 1) * page_size

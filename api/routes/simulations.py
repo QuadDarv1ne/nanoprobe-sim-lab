@@ -15,21 +15,12 @@ from api.schemas import (
     SimulationStatus,
     ErrorResponse,
 )
+from api.dependencies import get_db, get_redis_cache
 from utils.database import DatabaseManager
+from utils.redis_cache import RedisCache
 
 
 router = APIRouter()
-
-
-def get_db() -> DatabaseManager:
-    """Зависимость для получения менеджера БД"""
-    from api.main import db_manager
-    if db_manager is None:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="База данных недоступна"
-        )
-    return db_manager
 
 
 @router.get(
@@ -41,9 +32,9 @@ async def get_simulations(
     status: Optional[str] = Query(None, description="Фильтр по статусу"),
     limit: int = Query(50, ge=1, le=500),
     db: DatabaseManager = Depends(get_db),
+    redis_cache: RedisCache = Depends(get_redis_cache),
 ):
     """Получить список симуляций"""
-    from api.main import redis_cache
     from api.metrics import BusinessMetrics
 
     cache_key = f"simulations:{status or 'all'}:{limit}"

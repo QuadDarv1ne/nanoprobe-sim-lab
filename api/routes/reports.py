@@ -15,17 +15,12 @@ from api.schemas import (
     ReportType,
     ErrorResponse,
 )
+from api.dependencies import get_db
 from utils.database import DatabaseManager
 from utils.pdf_report_generator import ScientificPDFReport
 
 
 router = APIRouter()
-
-
-def get_db() -> DatabaseManager:
-    """Зависимость для получения менеджера БД"""
-    from api.main import db_manager
-    return db_manager
 
 
 @router.post(
