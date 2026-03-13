@@ -18,7 +18,6 @@ from datetime import datetime
 from typing import List, Optional
 import json
 import os
-import traceback
 import logging
 
 logger = logging.getLogger(__name__)
@@ -139,7 +138,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     """Обработка ошибок валидации"""
     logger.warning(f"Validation error: {exc.errors()} - {request.url}")
     return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={"detail": "Ошибка валидации", "errors": exc.errors()}
     )
 
@@ -287,65 +286,6 @@ try:
     app.include_router(batch.router, prefix="/api/v1/batch", tags=["Пакетная обработка"])
 except ImportError:
     pass
-
-
-# ==================== Exception Handlers ====================
-
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request, exc: HTTPException):
-    """Обработка HTTP исключений"""
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={
-            "error": True,
-            "status_code": exc.status_code,
-            "detail": exc.detail,
-            "path": str(request.url.path)
-        }
-    )
-
-
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request, exc: RequestValidationError):
-    """Обработка ошибок валидации"""
-    # Сериализуем ошибки, преобразуя не-JSON объекты в строки
-    def serialize_error(err):
-        if isinstance(err, (str, int, float, bool, type(None))):
-            return err
-        elif isinstance(err, (list, tuple)):
-            return [serialize_error(e) for e in err]
-        elif isinstance(err, dict):
-            return {k: serialize_error(v) for k, v in err.items()}
-        else:
-            return str(err)
-    
-    return JSONResponse(
-        status_code=422,
-        content={
-            "error": True,
-            "status_code": 422,
-            "detail": "Validation error",
-            "errors": serialize_error(exc.errors())
-        }
-    )
-
-
-@app.exception_handler(Exception)
-async def general_exception_handler(request, exc: Exception):
-    """Обработка общих исключений"""
-    # Логирование ошибки
-    error_trace = traceback.format_exc()
-    print(f"[ERROR] {datetime.now().isoformat()} - {exc}\n{error_trace}")
-
-    return JSONResponse(
-        status_code=500,
-        content={
-            "error": True,
-            "status_code": 500,
-            "detail": "Internal server error",
-            "type": exc.__class__.__name__
-        }
-    )
 
 
 # Metrics endpoint для Prometheus
