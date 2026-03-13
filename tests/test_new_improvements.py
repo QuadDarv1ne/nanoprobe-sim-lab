@@ -235,18 +235,14 @@ class TestEnhancedMonitorPrometheus:
         metrics = monitor.export_prometheus_metrics()
         lines = metrics.split("\n")
 
-        # Находим строку с CPU (пропускаем строки с кириллицей)
+        # Находим строку с CPU
         cpu_line = None
         for l in lines:
             if "nanoprobe_cpu_percent " in l and not l.startswith("#"):
-                # Проверяем, что последнее значение - число
-                try:
-                    cpu_value = float(l.split()[-1])
-                    cpu_line = l
-                    break
-                except ValueError:
-                    continue
-        
+                cpu_value = float(l.split()[-1])
+                cpu_line = l
+                break
+
         assert cpu_line is not None, "Не найдена строка с CPU метрикой"
         cpu_value = float(cpu_line.split()[-1])
         assert 0 <= cpu_value <= 100
@@ -255,13 +251,10 @@ class TestEnhancedMonitorPrometheus:
         mem_line = None
         for l in lines:
             if "nanoprobe_memory_percent " in l and not l.startswith("#"):
-                try:
-                    mem_value = float(l.split()[-1])
-                    mem_line = l
-                    break
-                except ValueError:
-                    continue
-        
+                mem_value = float(l.split()[-1])
+                mem_line = l
+                break
+
         assert mem_line is not None, "Не найдена строка с memory метрикой"
         mem_value = float(mem_line.split()[-1])
         assert 0 <= mem_value <= 100

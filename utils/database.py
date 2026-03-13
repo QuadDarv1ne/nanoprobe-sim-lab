@@ -171,6 +171,16 @@ class DatabaseManager:
                 pool.close_all()
             cls._pools.clear()
 
+    def close_pool(self):
+        """Закрыть пул соединений для текущего экземпляра"""
+        db_path_str = str(self.db_path)
+        with self._pool_lock:
+            if db_path_str in self._pools:
+                self._pools[db_path_str].close_all()
+                del self._pools[db_path_str]
+            if hasattr(self, '_pool') and self._pool:
+                self._pool.close_all()
+
     @contextmanager
     def get_connection(self):
         """Контекстный менеджер для подключения к БД с пулом соединений."""
