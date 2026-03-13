@@ -4,7 +4,7 @@ Pydantic схемы для Nanoprobe Sim Lab API
 Валидация данных запросов и ответов
 """
 
-from pydantic import BaseModel, Field, HttpUrl, field_validator
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, Dict, Any, List
 from datetime import datetime
 from enum import Enum
