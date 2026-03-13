@@ -11,6 +11,7 @@ from functools import wraps
 from utils.database import DatabaseManager
 from utils.redis_cache import RedisCache
 from utils.batch_processor import BatchProcessor
+from api.error_handlers import AuthorizationError, RateLimitError
 import os
 import jwt
 
@@ -70,26 +71,15 @@ def require_admin(current_user: dict) -> dict:
         dict: Данные пользователя если это админ
 
     Raises:
-        HTTPException: Если у пользователя нет роли администратора
+        AuthorizationError: Если у пользователя нет роли администратора
     """
     if current_user.get("role") != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Требуется роль администратора"
-        )
+        raise AuthorizationError("Требуется роль администратора")
     return current_user
 
 
 def get_db() -> DatabaseManager:
-    """
-    Зависимость для получения менеджера БД
-    
-    Returns:
-        DatabaseManager: Экземпляр менеджера базы данных
-        
-    Raises:
-        HTTPException: Если БД недоступна
-    """
+    """Зависимость для получения менеджера БД"""
     from api.main import db_manager
     if db_manager is None:
         raise HTTPException(
@@ -100,26 +90,13 @@ def get_db() -> DatabaseManager:
 
 
 def get_redis_cache() -> Optional[RedisCache]:
-    """
-    Зависимость для получения Redis кэша
-    
-    Returns:
-        Optional[RedisCache]: Экземпляр Redis кэша или None
-    """
+    """Зависимость для получения Redis кэша"""
     from api.main import redis_cache
     return redis_cache
 
 
 def get_redis_cache_required() -> RedisCache:
-    """
-    Зависимость для получения Redis кэша (обязательный)
-    
-    Returns:
-        RedisCache: Экземпляр Redis кэша
-        
-    Raises:
-        HTTPException: Если Redis недоступен
-    """
+    """Зависимость для получения Redis кэша (обязательный)"""
     from api.main import redis_cache
     if redis_cache is None or not redis_cache.is_available():
         raise HTTPException(
@@ -130,34 +107,8 @@ def get_redis_cache_required() -> RedisCache:
 
 
 def get_batch_processor() -> BatchProcessor:
-    """
-    Зависимость для получения процессора пакетной обработки
-    
-    Returns:
-        BatchProcessor: Экземпляр процессора
-    """
+    """Зависимость для получения процессора пакетной обработки"""
     return BatchProcessor()
-
-
-def require_admin(current_user: dict) -> dict:
-    """
-    Проверка роли администратора
-    
-    Args:
-        current_user: Данные текущего пользователя
-        
-    Returns:
-        dict: Данные пользователя если это админ
-        
-    Raises:
-        HTTPException: Если у пользователя нет роли администратора
-    """
-    if current_user.get("role") != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Требуется роль администратора"
-        )
-    return current_user
 
 
 def get_client_ip(request: Request) -> str:
@@ -179,11 +130,11 @@ def get_client_ip(request: Request) -> str:
 def rate_limit(max_requests: int = 10, window_seconds: int = 60):
     """
     Декоратор для ограничения частоты запросов
-    
+
     Args:
         max_requests: Максимальное количество запросов
         window_seconds: Окно времени в секундах
-        
+
     Использование:
         @router.post("/login")
         @rate_limit(max_requests=5, window_seconds=60)
@@ -191,24 +142,20 @@ def rate_limit(max_requests: int = 10, window_seconds: int = 60):
             ...
     """
     from utils.rate_limiter import RateLimiter
-    
+
     def decorator(func):
         @wraps(func)
         async def wrapper(request: Request, *args, **kwargs):
             from api.dependencies import get_client_ip
             client_ip = get_client_ip(request)
             rate_limiter = RateLimiter()
-            
+
             if not rate_limiter.is_allowed(client_ip, max_requests, window_seconds):
                 retry_after = rate_limiter.get_retry_after(
                     client_ip, max_requests, window_seconds
                 )
-                raise HTTPException(
-                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                    detail="Слишком много запросов",
-                    headers={"Retry-After": str(retry_after)}
-                )
-            
+                raise RateLimitError(retry_after)
+
             return await func(request, *args, **kwargs)
         return wrapper
     return decorator
