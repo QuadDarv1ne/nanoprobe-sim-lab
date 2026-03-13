@@ -1,7 +1,5 @@
-feat: extended DB stats and real-time dashboard updates
+perf: add caching for dashboard stats API (5s TTL)
 
-- Added extended statistics to DashboardStats schema
-- Integrated SQLite for real data from database
-- Real-time stats updates via WebSocket
-- Fixed merge conflicts in templates/dashboard.html
-- Improved dashboard stats API performance
+- Add LRU cache for dashboard stats endpoint
+- Cache-Control header support for cache bypass
+- Improves response time for frequent requests
