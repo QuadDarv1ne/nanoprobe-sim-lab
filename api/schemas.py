@@ -325,6 +325,16 @@ class DashboardStats(BaseModel):
     recent_scans_count: int
     recent_simulations_count: int
     success_rate: float
+    # Расширенная статистика из БД
+    total_images: int = 0
+    total_exports: int = 0
+    total_comparisons: int = 0
+    total_defect_analyses: int = 0
+    total_pdf_reports: int = 0
+    total_batch_jobs: int = 0
+    active_batch_jobs: int = 0
+    scans_by_type: Dict[str, int] = {}
+    db_size_mb: float = 0.0
 
 
 class HealthStatus(BaseModel):
