@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Enhanced System Monitor for Nanoprobe Sim Lab
 Расширенный мониторинг системы с аналитикой и алертами

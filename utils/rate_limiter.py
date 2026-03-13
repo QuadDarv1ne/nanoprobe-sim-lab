@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Rate Limiter для Nanoprobe Sim Lab API
 Защита от brute force и DDoS атак

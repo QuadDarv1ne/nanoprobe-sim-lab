@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 2FA (Two-Factor Authentication) для Nanoprobe Sim Lab
 TOTP (Time-based One-Time Password) интеграция с Google Authenticator

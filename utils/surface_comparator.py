@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Surface image comparison module for Nanoprobe Simulation Lab"""
 
 import numpy as np

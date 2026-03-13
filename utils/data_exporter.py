@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Модуль экспорта данных для проекта Nanoprobe Simulation Lab."""
 
 import json
