@@ -1,7 +1,1 @@
-feat: extended DB stats and real-time dashboard updates
-
-- Added extended statistics to DashboardStats schema
-- Integrated SQLite for real data from database
-- Real-time stats updates via WebSocket
-- Fixed merge conflicts in templates/dashboard.html
-- Improved dashboard stats API performance
+chore: cleanup test files
