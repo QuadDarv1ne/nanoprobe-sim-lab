@@ -7,6 +7,8 @@ from fastapi import APIRouter, HTTPException, status
 from typing import Optional, Dict, Any
 import asyncio
 
+from api.error_handlers import DatabaseError
+
 router = APIRouter(prefix="/graphql", tags=["GraphQL"])
 
 
@@ -80,10 +82,7 @@ async def graphql_query(
         }
         
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"GraphQL execution error: {str(e)}"
-        )
+        raise DatabaseError(f"GraphQL execution error: {str(e)}")
 
 
 @router.get(
