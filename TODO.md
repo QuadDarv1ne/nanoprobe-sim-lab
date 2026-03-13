@@ -32,26 +32,52 @@
 
 ## 🔧 Latest Improvements (2026-03-13)
 
-### Test Reliability
-- [x] Fixed Unicode encoding issues for Windows cp1251
-- [x] Replaced Unicode symbols (✓/✗) with ASCII [PASS]/[FAIL]
-- [x] Fixed database file leaks in tests (close_pool method)
-- [x] Fixed schema validation tests for Russian error messages
-- [x] Improved Prometheus metrics parsing for different locales
+### Error Handling Refactoring
+- [x] Replaced HTTPException with custom exceptions in admin routes
+- [x] Replaced HTTPException with custom exceptions in batch routes
+- [x] Added AuthorizationError for 403 responses
+- [x] Added NotFoundError for 404 responses
+- [x] Added ValidationError for 400 responses
+- [x] Reduced code by ~25 lines
 
-### Database Connection Pool
-- [x] Added close_pool() method to DatabaseManager
+### Resource Cleanup
+- [x] Added close_pool() to DatabaseManager
+- [x] Added close() to RedisCache
+- [x] Added close_http_session() for external services
+- [x] Added close_all_circuit_breakers()
+- [x] Integrated cleanup in lifespan shutdown
+
+### Configuration & Environment
+- [x] Updated .env.example with all variables (61 lines)
+- [x] Added CORS_ORIGINS env variable support (JSON/CSV)
+- [x] Added API_DEBUG env variable
+- [x] Added all alerting variables (Telegram, Email, Slack)
+
+### API Improvements
+- [x] Added RefreshTokenRequest schema
+- [x] Updated /refresh endpoint to use request body
+- [x] Added severity field to ErrorResponse schema
+
+### Code Quality
 - [x] Fixed bare except → except Exception (E722)
-- [x] Proper cleanup in ConnectionPool and AsyncConnectionPool
+- [x] Updated mypy to Python 3.13
+- [x] Enabled warn_redundant_casts
+- [x] Enabled warn_unused_ignores
+
+### Test Reliability
+- [x] Fixed Unicode encoding for Windows cp1251
+- [x] Replaced Unicode symbols with ASCII [PASS]/[FAIL]
+- [x] Fixed database file leaks in tests
+- [x] Fixed schema validation for Russian messages
+- [x] Improved Prometheus metrics parsing
 
 ### Prometheus Metrics
 - [x] Converted HELP strings to English
 - [x] Removed Cyrillic compatibility issues
 
-### Configuration
-- [x] Updated mypy to Python 3.13
-- [x] Enabled warn_redundant_casts
-- [x] Enabled warn_unused_ignores
+### Cache Improvements
+- [x] Fixed invalidate_cache to use startswith()
+- [x] Added cache invalidation for batch inserts
 
 ---
 
@@ -108,11 +134,12 @@ None currently - project is stable and ready for rest.
 | Total Tests | 82+ |
 | Test Pass Rate | 100% |
 | API Endpoints | 33+ |
-| Lines of Code | ~25,750 |
+| Lines of Code | ~25,700 |
 | CI/CD Workflows | 5 |
 | Custom Exceptions | 8 |
 | GraphQL Types | 6 |
 | ML Models | 3 |
+| Recent Commits | 12 |
 
 ---
 
@@ -130,7 +157,8 @@ None currently - project is stable and ready for rest.
 - Project is production-ready
 - All critical improvements completed
 - dev and main branches are synchronized
-- Latest: Test reliability improvements for Windows
+- Latest: Custom exceptions refactoring (admin, batch routes)
+- Code reduction: ~40 lines through exception refactoring
 
 ---
 
