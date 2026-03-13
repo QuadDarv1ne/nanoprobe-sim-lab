@@ -13,7 +13,6 @@ from contextlib import contextmanager, asynccontextmanager
 from queue import Queue
 import threading
 import asyncio
-import numpy as np
 from functools import wraps, lru_cache
 import hashlib
 

@@ -5,7 +5,6 @@ API роуты для пакетной обработки
 
 from fastapi import APIRouter, Depends, Query, Body
 from typing import List, Optional, Dict, Any
-from datetime import datetime
 
 from api.schemas import ErrorResponse, BatchJobCreate, BatchJobResponse
 from api.dependencies import get_batch_processor
