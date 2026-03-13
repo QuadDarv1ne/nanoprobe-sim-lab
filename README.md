@@ -13,19 +13,19 @@
 
 ✅ **Проект полностью функционален**
 
-✅ **Все модули протестированы**
+✅ **Все модули протестированы** (33 теста, 100%)
 
 ✅ **Код отформатирован и оптимизирован**
 
-✅ **Конфигурации организованы**
+✅ **REST API с JWT authentication** 🔐
 
-✅ **Система очистки кэша активна**
+✅ **WebSocket real-time обновления** 🔄
 
-✅ **Автоматические улучшения включены**
+✅ **CI/CD pipeline** (security, tests, releases) 🚀
 
-✅ **REST API реализован** 🎉
+✅ **Database migrations** (Alembic) 🗄️
 
-✅ **Документация полная** 📚
+✅ **Централизованная обработка ошибок** ⚠️
 
 Проект прошел полную автоматическую очистку и оптимизацию. Все компоненты работают корректно, архитектура улучшена, и внедрены современные практики разработки.
 
@@ -637,6 +637,9 @@ python -m pytest tests/
 
 # Запуск с покрытием
 python -m pytest --cov=utils tests/
+
+# Запуск конкретных тестов
+python -m pytest tests/test_api.py -v
 ```
 
 ### Документация
@@ -645,6 +648,79 @@ python -m pytest --cov=utils tests/
 # Генерация документации
 python utils/documentation_generator.py
 ```
+
+## Критические улучшения (2026-03-13)
+
+### 🔐 Безопасность JWT
+
+- **Refresh token rotation** — уникальный jti для каждого токена
+- **Усиленная валидация паролей** — 8+ символов, uppercase, lowercase, digit, special char
+- **Ревокация токенов** при logout
+- **Secure JWT_SECRET** — генерация при отсутствии
+
+### ⚠️ Централизованная обработка ошибок
+
+- **Кастомные исключения:** `APIError`, `ValidationError`, `NotFoundError`, `AuthenticationError`
+- **ErrorSeverity enum** — категоризация по важности
+- **Унифицированный формат ответов** — error_id, error_code, severity
+- **Структурированное логирование** — контекст, client_ip, path
+
+### 🗄️ Database Migration
+
+- **Alembic интеграция** — авто-применение при старте API
+- **Fallback на direct init** — если миграции не работают
+- **Migration tracking** — текущая и head ревизии
+
+### 🔄 WebSocket Real-time
+
+- **Каналы** — subscribe/unsubscribe
+- **Heartbeat** — 60s timeout
+- **Get metrics** — CPU, memory, disk по запросу
+- **Push notifications** — фоновая задача (5s interval)
+
+### 🚀 CI/CD Pipeline
+
+- **security.yml** — Bandit, Safety, pip-audit, secrets detection
+- **auto-release.yml** — релизы по тегам, changelog, Docker push to GHCR
+- **benchmark.yml** — pytest-benchmark для PR
+
+## API Endpoints
+
+### Authentication
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/auth/login` | POST | Вход (JWT token) |
+| `/api/v1/auth/refresh` | POST | Обновление токена (rotation) |
+| `/api/v1/auth/logout` | POST | Выход (revocation) |
+| `/api/v1/auth/me` | GET | Текущий пользователь |
+
+### Health & Monitoring
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | Health check |
+| `/health/detailed` | GET | Детальный health с метриками |
+| `/metrics/realtime` | GET | Real-time метрики |
+| `/metrics` | GET | Prometheus metrics |
+| `/ws/realtime` | WebSocket | Real-time обновления |
+
+### CRUD Operations
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/scans` | GET/POST | Сканирования |
+| `/api/v1/simulations` | GET/POST/PATCH | Симуляции |
+| `/api/v1/analysis` | POST | AI/ML анализ дефектов |
+| `/api/v1/comparison` | POST/GET | Сравнение поверхностей |
+| `/api/v1/reports` | POST | PDF отчёты |
+
+### Dashboard
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/dashboard/stats` | GET | Сводная статистика |
+| `/api/v1/dashboard/actions/clean_cache` | POST | Очистка кэша |
 
 ## Вклад в проект
 
