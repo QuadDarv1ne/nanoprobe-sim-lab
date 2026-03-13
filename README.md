@@ -722,6 +722,40 @@ python utils/documentation_generator.py
 | `/api/v1/dashboard/stats` | GET | Сводная статистика |
 | `/api/v1/dashboard/actions/clean_cache` | POST | Очистка кэша |
 
+### GraphQL
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/graphql` | POST | GraphQL запросы |
+| `/api/v1/graphql/schema` | GET | Получить схему |
+
+**Пример GraphQL запроса:**
+```graphql
+query {
+    stats {
+        totalScans
+        totalSimulations
+        totalImages
+        activeSimulations
+    }
+    scans(limit: 10) {
+        id
+        scanType
+        timestamp
+    }
+}
+```
+
+### AI/ML
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/ml/analyze` | POST | Анализ изображения |
+| `/api/v1/ml/models` | GET | Список моделей |
+| `/api/v1/ml/fine-tune` | POST | Дообучение модели |
+| `/api/v1/ml/save-model` | POST | Сохранение модели |
+| `/api/v1/ml/batch-analyze` | GET | Пакетный анализ |
+
 ## Вклад в проект
 
 Проект открыт для образовательных и научных вкладов.

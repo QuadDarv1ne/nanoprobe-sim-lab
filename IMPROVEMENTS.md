@@ -205,15 +205,102 @@ async def lifespan(app: FastAPI):
 
 ---
 
+## 🆕 Новые возможности (2026-03-13)
+
+### 9. GraphQL API (api/graphql_schema.py)
+
+**Создано:** `api/graphql_schema.py` (227 строк)
+
+**Типы:**
+- `Scan` — сканирования
+- `Simulation` — симуляции
+- `Image` — изображения
+- `DefectAnalysis` — анализы дефектов
+- `SurfaceComparison` — сравнения поверхностей
+- `DashboardStats` — статистика дашборда
+
+**Query:**
+- `scans(limit)` — список сканирований
+- `scan(scanId)` — сканирование по ID
+- `simulations(limit)` — список симуляций
+- `images(limit)` — список изображений
+- `stats()` — статистика дашборда
+
+**Mutation:**
+- `createScan(scanType, surfaceType, width, height)` — создать сканирование
+
+**Endpoint'ы:**
+- `POST /api/v1/graphql` — выполнение запросов
+- `GET /api/v1/graphql/schema` — получить схему
+
+**Пример использования:**
+```bash
+curl -X POST http://localhost:8000/api/v1/graphql \
+  -H "Content-Type: application/json" \
+  -d '{"query": "{ stats { totalScans totalSimulations } }"}'
+```
+
+### 10. AI/ML улучшения (utils/pretrained_defect_analyzer.py)
+
+**Создано:** `utils/pretrained_defect_analyzer.py` (390 строк)
+
+**Поддерживаемые модели:**
+- ResNet50 (default)
+- EfficientNetB0
+- MobileNetV2
+
+**Возможности:**
+- ✅ Pre-trained веса (ImageNet)
+- ✅ Transfer learning (замороженные слои)
+- ✅ Fine-tuning на кастомных данных
+- ✅ Пакетный анализ
+- ✅ Сохранение/загрузка моделей
+- ✅ GPU поддержка (опционально)
+
+**Классы дефектов:**
+- `normal` — без дефектов
+- `scratch` — царапины
+- `crack` — трещины
+- `pit` — углубления
+- `inclusion` — включения
+- `void` — пустоты
+- `contamination` — загрязнения
+- `roughness` — шероховатость
+
+**Endpoint'ы:**
+- `POST /api/v1/ml/analyze` — анализ изображения
+- `GET /api/v1/ml/models` — список моделей
+- `POST /api/v1/ml/fine-tune` — дообучение
+- `POST /api/v1/ml/save-model` — сохранение
+- `GET /api/v1/ml/batch-analyze` — пакетный анализ
+
+**Пример использования:**
+```bash
+# Анализ изображения
+curl -X POST http://localhost:8000/api/v1/ml/analyze \
+  -F "image=@sample.png" \
+  -F "model_type=resnet50"
+
+# Дообучение модели
+curl -X POST http://localhost:8000/api/v1/ml/fine-tune \
+  -F "model_type=resnet50" \
+  -F "epochs=10" \
+  -F "batch_size=32"
+```
+
+---
+
 ## 📈 Метрики улучшений
 
 | Метрика | До | После | Улучшение |
 |---------|-----|-------|-----------|
 | Тестов пройдено | 15/15 | 33/33 | +120% |
-| Строк кода | ~25000 | ~23346 | -6.6% |
-| API endpoints | 14 | 18 | +4 |
+| Строк кода | ~25000 | ~24346 | -2.6% |
+| API endpoints | 14 | 23 | +64% |
 | CI/CD workflows | 2 | 5 | +150% |
 | Custom exceptions | 0 | 8 | +8 |
+| GraphQL types | 0 | 6 | +6 |
+| ML models | 0 | 3 | +3 |
 
 ---
 

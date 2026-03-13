@@ -1,15 +1,11 @@
-docs: update README.md and IMPROVEMENTS.md
+docs: add GraphQL and AI/ML improvements documentation
 
 README.md:
-- Add critical improvements section
-- Add API endpoints tables
-- Update project status with test count
+- Add GraphQL endpoints table
+- Add AI/ML endpoints table
+- Add GraphQL query example
 
 IMPROVEMENTS.md:
-- Add JWT security improvements
-- Add centralized error handling docs
-- Add database migration docs
-- Add WebSocket improvements
-- Add CI/CD workflows docs
-- Add code quality improvements
-- Update test metrics (33/33 passed)
+- Add GraphQL API section (types, queries, mutations)
+- Add AI/ML improvements section (models, capabilities)
+- Update metrics table with new counts
