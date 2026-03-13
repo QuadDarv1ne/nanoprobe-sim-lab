@@ -35,7 +35,7 @@ class ConnectionPool:
             conn = self._pool.get_nowait()
             self._stats["hits"] += 1
             return conn
-        except:
+        except Exception:
             with self._lock:
                 if self._created < self.pool_size:
                     conn = self._create_connection()
@@ -49,7 +49,7 @@ class ConnectionPool:
         """Возврат соединения в пул"""
         try:
             self._pool.put_nowait(conn)
-        except:
+        except Exception:
             conn.close()
 
     def _create_connection(self) -> sqlite3.Connection:
@@ -70,7 +70,7 @@ class ConnectionPool:
             try:
                 conn = self._pool.get_nowait()
                 conn.close()
-            except:
+            except Exception:
                 break
 
     def get_stats(self) -> Dict[str, int]:
@@ -96,7 +96,7 @@ class AsyncConnectionPool:
         """Получение соединения из пула"""
         try:
             return self._pool.get_nowait()
-        except:
+        except Exception:
             async with self._lock:
                 if self._created < self.pool_size:
                     conn = self._create_connection()
@@ -108,7 +108,7 @@ class AsyncConnectionPool:
         """Возврат соединения в пул"""
         try:
             self._pool.put_nowait(conn)
-        except:
+        except Exception:
             conn.close()
 
     def _create_connection(self) -> sqlite3.Connection:
@@ -126,7 +126,7 @@ class AsyncConnectionPool:
             try:
                 conn = self._pool.get_nowait()
                 conn.close()
-            except:
+            except Exception:
                 break
 
 
