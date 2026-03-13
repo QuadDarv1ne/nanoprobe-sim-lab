@@ -11,7 +11,7 @@ from functools import wraps
 from utils.database import DatabaseManager
 from utils.redis_cache import RedisCache
 from utils.batch_processor import BatchProcessor
-from api.error_handlers import AuthorizationError, RateLimitError
+from api.error_handlers import AuthorizationError, RateLimitError, DatabaseError
 import os
 import jwt
 
@@ -82,10 +82,7 @@ def get_db() -> DatabaseManager:
     """Зависимость для получения менеджера БД"""
     from api.main import db_manager
     if db_manager is None:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="База данных недоступна"
-        )
+        raise DatabaseError("База данных недоступна")
     return db_manager
 
 
@@ -99,10 +96,7 @@ def get_redis_cache_required() -> RedisCache:
     """Зависимость для получения Redis кэша (обязательный)"""
     from api.main import redis_cache
     if redis_cache is None or not redis_cache.is_available():
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Redis кэш недоступен"
-        )
+        raise DatabaseError("Redis кэш недоступен")
     return redis_cache
 
 
