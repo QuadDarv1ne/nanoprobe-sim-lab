@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 GraphQL API routes для Nanoprobe Sim Lab
 """

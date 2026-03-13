@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 FastAPI REST API для Nanoprobe Simulation Lab
 Совместная работа с Flask веб-интерфейсом
