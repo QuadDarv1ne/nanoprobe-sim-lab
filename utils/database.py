@@ -1194,7 +1194,7 @@ class DatabaseManager:
             pattern: Шаблон для фильтрации ключей (если None, очищается весь кэш)
         """
         if pattern:
-            keys_to_delete = [k for k in self._query_cache.keys() if pattern in k]
+            keys_to_delete = [k for k in self._query_cache.keys() if k.startswith(pattern)]
             for key in keys_to_delete:
                 del self._query_cache[key]
         else:
