@@ -22,6 +22,7 @@ from api.schemas import (
     PaginatedResponse,
     ErrorResponse,
 )
+from api.error_handlers import DatabaseError, ValidationError
 from utils.enhanced_monitor import get_monitor, format_uptime
 
 router = APIRouter()
@@ -156,13 +157,10 @@ async def get_dashboard_stats(
         
         # Кэширование результата
         cache_stats(result.model_dump())
-        
+
         return result
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка получения статистики: {str(e)}"
-        )
+        raise DatabaseError(f"Ошибка получения статистики: {str(e)}")
 
 
 @router.get(
@@ -263,10 +261,7 @@ async def get_detailed_health():
             }
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка проверки здоровья: {str(e)}"
-        )
+        raise DatabaseError(f"Ошибка проверки здоровья: {str(e)}")
 
 
 @router.get(
@@ -309,10 +304,7 @@ async def get_realtime_metrics(
 
         return result
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка получения метрик: {str(e)}"
-        )
+        raise DatabaseError(f"Ошибка получения метрик: {str(e)}")
 
 
 @router.get(
@@ -351,10 +343,7 @@ async def get_metrics_history(
 
         return {"history": history}
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка получения истории: {str(e)}"
-        )
+        raise DatabaseError(f"Ошибка получения истории: {str(e)}")
 
 
 @router.get(
@@ -372,10 +361,7 @@ async def get_alerts(
         alerts = monitor.get_alerts(limit=limit, level=level)
         return {"alerts": alerts, "total": len(alerts)}
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка получения алертов: {str(e)}"
-        )
+        raise DatabaseError(f"Ошибка получения алертов: {str(e)}")
 
 
 @router.get(
@@ -393,10 +379,7 @@ async def get_top_processes(
         processes = monitor.get_process_list(limit=limit, sort_by=sort_by)
         return {"processes": processes, "total": len(processes)}
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка получения процессов: {str(e)}"
-        )
+        raise DatabaseError(f"Ошибка получения процессов: {str(e)}")
 
 
 @router.post(
@@ -479,10 +462,7 @@ async def start_component_action(component: dict):
     """
     component_name = component.get("component", "")
     if not component_name:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Не указано имя компонента"
-        )
+        raise ValidationError("Не указано имя компонента")
 
     # В реальной реализации здесь будет запуск процесса
     return JSONResponse(
@@ -508,10 +488,7 @@ async def stop_component_action(component: dict):
     """
     component_name = component.get("component", "")
     if not component_name:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Не указано имя компонента"
-        )
+        raise ValidationError("Не указано имя компонента")
 
     # В реальной реализации здесь будет остановка процесса
     return JSONResponse(
@@ -546,7 +523,4 @@ async def get_storage_stats_endpoint():
             }
         }
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка получения статистики хранилища: {str(e)}"
-        )
+        raise DatabaseError(f"Ошибка получения статистики хранилища: {str(e)}")
