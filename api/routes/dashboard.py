@@ -6,8 +6,10 @@ Provides aggregated stats and system health endpoints
 
 from fastapi import APIRouter, HTTPException, status, Depends, Query
 from fastapi.responses import JSONResponse
+from fastapi import Header
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
+from functools import lru_cache
 import psutil
 import os
 from pathlib import Path
@@ -24,10 +26,33 @@ from utils.enhanced_monitor import get_monitor, format_uptime
 
 router = APIRouter()
 
+# Кэш для статистики (5 секунд)
+_stats_cache = {}
+_stats_cache_time = None
+CACHE_TTL = 5  # секунд
+
 
 def get_project_root() -> Path:
     """Получить корень проекта"""
     return Path(__file__).parent.parent.parent
+
+
+def get_cached_stats() -> Optional[Dict]:
+    """Получить кэшированную статистику если не истёк TTL"""
+    global _stats_cache, _stats_cache_time
+    if _stats_cache_time is None:
+        return None
+    age = (datetime.now() - _stats_cache_time).total_seconds()
+    if age < CACHE_TTL:
+        return _stats_cache
+    return None
+
+
+def cache_stats(stats: Dict):
+    """Закэшировать статистику"""
+    global _stats_cache, _stats_cache_time
+    _stats_cache = stats
+    _stats_cache_time = datetime.now()
 
 
 def get_storage_stats() -> Dict[str, float]:
@@ -70,7 +95,9 @@ def get_storage_stats() -> Dict[str, float]:
         500: {"model": ErrorResponse, "description": "Ошибка сервера"},
     },
 )
-async def get_dashboard_stats():
+async def get_dashboard_stats(
+    cache_control: Optional[str] = Header(None, alias="Cache-Control")
+):
     """
     Возвращает сводную статистику для дашборда:
     - Количество сканирований
@@ -79,6 +106,12 @@ async def get_dashboard_stats():
     - Аптайм системы
     - Расширенная статистика БД
     """
+    # Проверка кэша если не требуется свежий ответ
+    if cache_control != "no-cache":
+        cached = get_cached_stats()
+        if cached:
+            return DashboardStats(**cached)
+
     try:
         monitor = get_monitor()
         stats = monitor.get_statistics()
@@ -100,7 +133,7 @@ async def get_dashboard_stats():
             # Фоллбэк на заглушки если БД недоступна
             pass
 
-        return DashboardStats(
+        result = DashboardStats(
             total_scans=db_stats.get('total_scans', 0),
             total_simulations=db_stats.get('total_simulations', 0),
             active_simulations=db_stats.get('active_simulations', 0),
@@ -120,6 +153,11 @@ async def get_dashboard_stats():
             scans_by_type=db_stats.get('scans_by_type', {}),
             db_size_mb=db_size_mb,
         )
+        
+        # Кэширование результата
+        cache_stats(result.model_dump())
+        
+        return result
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
