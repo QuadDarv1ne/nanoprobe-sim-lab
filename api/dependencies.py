@@ -4,13 +4,76 @@
 Общие зависимости для всех роутов
 """
 
-from fastapi import HTTPException, status, Request
+from fastapi import HTTPException, status, Request, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Optional, Callable
 from functools import wraps
 from utils.database import DatabaseManager
 from utils.redis_cache import RedisCache
 from utils.batch_processor import BatchProcessor
 import os
+import jwt
+
+security = HTTPBearer()
+JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key-change-in-production")
+JWT_ALGORITHM = "HS256"
+
+
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+) -> dict:
+    """
+    Получение текущего пользователя из JWT токена
+
+    Args:
+        credentials: HTTP Bearer credentials
+
+    Returns:
+        dict: Данные пользователя
+
+    Raises:
+        HTTPException: Если токен недействителен
+    """
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        user_id = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Недействительный токен",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        return {"user_id": user_id, "payload": payload}
+    except jwt.PyJWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Недействительный токен",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+
+def require_admin(current_user: dict) -> dict:
+    """
+    Проверка роли администратора
+
+    Args:
+        current_user: Данные текущего пользователя
+
+    Returns:
+        dict: Данные пользователя если это админ
+
+    Raises:
+        HTTPException: Если у пользователя нет роли администратора
+    """
+    payload = current_user.get("payload", {})
+    role = payload.get("role", "user")
+    if role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Требуется роль администратора"
+        )
+    return current_user
 
 
 def get_db() -> DatabaseManager:
