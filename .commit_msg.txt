@@ -1,15 +1,10 @@
-feat: add centralized error handling for API
+feat: enhance WebSocket real-time updates with channels and heartbeat
 
-Critical improvement #2 - Unified error handling:
+High priority improvement - WebSocket integration:
 
-- Create api/error_handlers.py with centralized exception handlers
-- Add custom exception classes:
-  - APIError (base)
-  - ValidationError, NotFoundError, AuthenticationError
-  - AuthorizationError, RateLimitError, DatabaseError
-  - ExternalServiceError
-- Add ErrorSeverity enum for categorization
-- Register handlers in main.py
-- Structured logging with error_id, context, severity
-- Consistent error response format across all endpoints
-- Production-safe error messages (hide details by default)
+- Add channel subscription (subscribe/unsubscribe)
+- Add get_metrics command for on-demand system metrics
+- Implement heartbeat mechanism with 60s timeout
+- Add logging for client connections/disconnections
+- Create push_realtime_updates background task skeleton
+- Improved error handling and cleanup

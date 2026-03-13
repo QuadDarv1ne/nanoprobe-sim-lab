@@ -1,0 +1,54 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday
+
+jobs:
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit safety pip-audit
+
+    - name: Run Bandit security lint
+      run: |
+        bandit -r src/ utils/ api/ -f json -o bandit-report.json || true
+
+    - name: Upload Bandit report
+      uses: actions/upload-artifact@v4
+      with:
+        name: bandit-report
+        path: bandit-report.json
+        retention-days: 7
+
+    - name: Run Safety check
+      run: |
+        safety check -r requirements.txt --json || true
+
+    - name: Run pip-audit
+      run: |
+        pip-audit -r requirements.txt || true
+
+    - name: Check for secrets in code
+      run: |
+        echo "Checking for hardcoded secrets..."
+        ! grep -r "password.*=.*['\"]" src/ utils/ api/ --include="*.py" || echo "Warning: Potential hardcoded passwords found"
+        ! grep -r "secret.*=.*['\"]" src/ utils/ api/ --include="*.py" || echo "Warning: Potential hardcoded secrets found"
+        ! grep -r "api_key.*=.*['\"]" src/ utils/ api/ --include="*.py" || echo "Warning: Potential hardcoded API keys found"
