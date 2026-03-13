@@ -653,8 +653,10 @@ python utils/documentation_generator.py
 ## Контакты
 
 **Школа программирования Maestro7IT**  
-📧 Email: maksimqwe42@mail.ru
-🌐 Сайт: https://school-maestro7it.ru/
+
+📧 **Email:** maksimqwe42@mail.ru
+
+🌐 **Сайт:** https://school-maestro7it.ru/
 
 ## Благодарности
 
