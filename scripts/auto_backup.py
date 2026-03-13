@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Скрипт для автоматических резервных копий
 Использование: python scripts/auto_backup.py [daily|weekly|monthly]

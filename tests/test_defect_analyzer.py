@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Тесты для AI/ML анализатора дефектов."""
 
 import unittest

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Модуль шифрования данных для проекта Лаборатория моделирования нанозонда."""
 
 from cryptography.fernet import Fernet

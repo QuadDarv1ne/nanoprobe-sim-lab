@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SDR интерфейс для приема SSTV сигналов."""
 
 import numpy as np

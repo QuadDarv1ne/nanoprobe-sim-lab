@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Логирование для FastAPI приложения
 Интеграция production_logger с uvicorn/gunicorn

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """API интерфейс для проекта Лаборатория моделирования нанозонда."""
 
 from flask import Flask, request, jsonify, Response

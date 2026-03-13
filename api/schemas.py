@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Pydantic схемы для Nanoprobe Sim Lab API
 Валидация данных запросов и ответов

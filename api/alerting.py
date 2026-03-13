@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Alerting система для Nanoprobe Simulation Lab
 Отправка уведомлений в Telegram, Email, Slack

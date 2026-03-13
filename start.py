@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Main entry point for Nanoprobe Simulation Lab."""
 
 import sys

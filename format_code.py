@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Скрипт форматирования кода проекта Nanoprobe Simulation Lab."""
 
 import os
@@ -180,7 +179,6 @@ class CodeFormatter:
                         insert_idx = i + 1
                         break
 
-                lines.insert(insert_idx, '# -*- coding: utf-8 -*-')
                 content = '\n'.join(lines)
 
             # Также проверяем наличие shebang в исполняемых файлах

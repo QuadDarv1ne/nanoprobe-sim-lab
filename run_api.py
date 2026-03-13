@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Скрипт запуска FastAPI API для Nanoprobe Sim Lab
 """

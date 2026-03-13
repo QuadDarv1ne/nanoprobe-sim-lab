@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Скрипт для генерации SSL сертификатов (Python версия)
 Использование: python scripts/generate_ssl_certs.py [domain]

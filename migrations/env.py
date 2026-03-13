@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Alembic env для миграций"""
 
 from logging.config import fileConfig

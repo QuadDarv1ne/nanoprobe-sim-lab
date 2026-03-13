@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """WebSocket сервер для realtime обновлений дашборда."""
 
 from flask import Flask, request

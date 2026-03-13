@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Тесты для backup_manager."""
 
 import unittest

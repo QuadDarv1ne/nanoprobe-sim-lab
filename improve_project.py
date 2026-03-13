@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Скрипт улучшения проекта Nanoprobe Simulation Lab."""
 
 import os

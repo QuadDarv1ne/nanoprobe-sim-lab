@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 CLI для управления миграциями Alembic
 Использование: python migrate.py [command]

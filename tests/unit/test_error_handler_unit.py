@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Unit-тесты для модуля обработки ошибок."""
 
 import unittest
