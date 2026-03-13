@@ -77,6 +77,7 @@ async def get_dashboard_stats():
     - Количество симуляций
     - Использование хранилища
     - Аптайм системы
+    - Расширенная статистика БД
     """
     try:
         monitor = get_monitor()
@@ -85,10 +86,16 @@ async def get_dashboard_stats():
 
         # Интеграция с БД для реальных данных
         db_stats = {}
+        db_size_mb = 0.0
         try:
             from utils.database import DatabaseManager
+            from pathlib import Path
             db = DatabaseManager(db_path="data/nanoprobe.db")
             db_stats = db.get_statistics()
+            # Размер БД
+            db_path = Path("data/nanoprobe.db")
+            if db_path.exists():
+                db_size_mb = round(db_path.stat().st_size / (1024 * 1024), 2)
         except Exception:
             # Фоллбэк на заглушки если БД недоступна
             pass
@@ -102,6 +109,16 @@ async def get_dashboard_stats():
             recent_scans_count=db_stats.get('total_scans', 0),
             recent_simulations_count=db_stats.get('total_simulations', 0),
             success_rate=100.0 if db_stats.get('total_scans', 0) == 0 else 100.0,
+            # Расширенная статистика
+            total_images=db_stats.get('total_images', 0),
+            total_exports=db_stats.get('total_exports', 0),
+            total_comparisons=db_stats.get('total_comparisons', 0),
+            total_defect_analyses=db_stats.get('total_defect_analyses', 0),
+            total_pdf_reports=db_stats.get('total_pdf_reports', 0),
+            total_batch_jobs=db_stats.get('total_batch_jobs', 0),
+            active_batch_jobs=db_stats.get('active_batch_jobs', 0),
+            scans_by_type=db_stats.get('scans_by_type', {}),
+            db_size_mb=db_size_mb,
         )
     except Exception as e:
         raise HTTPException(

@@ -1052,7 +1052,6 @@
                             <div class="stat-label">Часов работы</div>
                         </div>
                     </div>
-<<<<<<< HEAD
                     <div class="stats-grid" style="margin-top: 1rem;">
                         <div class="stat-card">
                             <div class="stat-value" id="stat-components-active" style="color: var(--success);">0</div>
@@ -1071,8 +1070,6 @@
                             <div class="stat-label">Диск</div>
                         </div>
                     </div>
-=======
->>>>>>> 779a924 (Local improvements and conflict resolution)
                 </div>
             </div>
 
@@ -1108,7 +1105,6 @@
                     <div class="quick-action-btn" onclick="openApiDocs()">
                         <i class="fas fa-book"></i>
                         <span>API Документация</span>
-<<<<<<< HEAD
                     </div>
                 </div>
                 <div class="quick-actions" style="margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
@@ -1123,8 +1119,6 @@
                     <div class="quick-action-btn" onclick="quickAction('restart_all')" style="background: rgba(245, 158, 11, 0.2);">
                         <i class="fas fa-redo-alt"></i>
                         <span>Перезапустить все</span>
-=======
->>>>>>> 779a924 (Local improvements and conflict resolution)
                     </div>
                 </div>
             </div>
@@ -1421,21 +1415,9 @@
                 updateDashboard(data);
             });
 
-<<<<<<< HEAD
             socket.on('stats_update', function(data) {
-                // Обновление статистики в реальном времени
-                if (data.components) {
-                    const activeEl = document.getElementById('stat-components-active');
-                    if (activeEl) activeEl.textContent = data.components.active;
-                }
-                if (data.system) {
-                    const cpuEl = document.getElementById('stat-cpu');
-                    const memEl = document.getElementById('stat-memory');
-                    const diskEl = document.getElementById('stat-disk');
-                    if (cpuEl) cpuEl.textContent = data.system.cpu_percent.toFixed(1) + '%';
-                    if (memEl) memEl.textContent = data.system.memory_percent.toFixed(1) + '%';
-                    if (diskEl) diskEl.textContent = data.system.disk_percent.toFixed(1) + '%';
-                }
+                // Обновление статистики БД в реальном времени
+                updateDatabaseStats(data);
             });
 
             socket.on('component_status', function(data) {
@@ -1451,11 +1433,37 @@
                 loadDashboardData();
             });
 
-=======
->>>>>>> 779a924 (Local improvements and conflict resolution)
             socket.on('disconnect', function() {
                 showNotification('Потеряно соединение с сервером', 'error');
             });
+        }
+
+        // Обновление статистики БД
+        function updateDatabaseStats(stats) {
+            if (stats.total_scans !== undefined) {
+                const el = document.getElementById('stat-total-scans');
+                if (el) el.textContent = stats.total_scans;
+            }
+            if (stats.total_simulations !== undefined) {
+                const el = document.getElementById('stat-total-simulations');
+                if (el) el.textContent = stats.total_simulations;
+            }
+            if (stats.total_images !== undefined) {
+                const el = document.getElementById('stat-total-images');
+                if (el) el.textContent = stats.total_images;
+            }
+            if (stats.total_comparisons !== undefined) {
+                const el = document.getElementById('stat-total-comparisons');
+                if (el) el.textContent = stats.total_comparisons;
+            }
+            if (stats.total_defect_analyses !== undefined) {
+                const el = document.getElementById('stat-total-defects');
+                if (el) el.textContent = stats.total_defect_analyses;
+            }
+            if (stats.db_size_mb !== undefined) {
+                const el = document.getElementById('stat-db-size');
+                if (el) el.textContent = stats.db_size_mb.toFixed(2) + ' MB';
+            }
         }
 
         // ==================== Data Loading ====================
@@ -1463,16 +1471,14 @@
             Promise.all([
                 fetch('/api/system_info').then(r => r.json()),
                 fetch('/api/component_status').then(r => r.json()),
-<<<<<<< HEAD
                 fetch('/api/logs').then(r => r.json()),
                 fetch('/api/stats').then(r => r.json()).catch(() => ({}))
             ]).then(([systemInfo, components, logs, stats]) => {
                 updateDashboard({ ...systemInfo, components, logs, stats });
-=======
-                fetch('/api/logs').then(r => r.json())
-            ]).then(([systemInfo, components, logs]) => {
-                updateDashboard({ ...systemInfo, components, logs });
->>>>>>> 779a924 (Local improvements and conflict resolution)
+                // Обновление статистики БД
+                if (stats && Object.keys(stats).length > 0) {
+                    updateDatabaseStats(stats);
+                }
             }).catch(error => {
                 console.error('Ошибка загрузки данных:', error);
             });
@@ -1508,11 +1514,7 @@
 
                 document.getElementById('memory-progress').style.width = memoryPercent + '%';
                 document.getElementById('memory-value').textContent = memoryPercent.toFixed(1) + '%';
-<<<<<<< HEAD
 
-=======
-                
->>>>>>> 779a924 (Local improvements and conflict resolution)
                 if (data.system_metrics?.memory_used && data.system_metrics?.memory_total) {
                     const used = (data.system_metrics.memory_used / 1024 ** 3).toFixed(1);
                     const total = (data.system_metrics.memory_total / 1024 ** 3).toFixed(1);
@@ -1520,7 +1522,6 @@
                 }
             }
 
-<<<<<<< HEAD
             // Stats from /api/stats
             if (data.stats) {
                 if (data.stats.components) {
@@ -1536,22 +1537,11 @@
             if (data.cache_info || data.cache_size !== undefined) {
                 const cacheSize = data.cache_info?.total_size_mb || data.cache_size || 0;
                 const cacheFiles = data.cache_info?.total_files || data.cache_files || 0;
-                
+
                 document.getElementById('cache-size').textContent = cacheSize.toFixed(1) + ' MB';
                 document.getElementById('cache-files').textContent = cacheFiles;
             }
 
-=======
-            // Cache Info
-            if (data.cache_info || data.cache_size !== undefined) {
-                const cacheSize = data.cache_info?.total_size_mb || data.cache_size || 0;
-                const cacheFiles = data.cache_info?.total_files || data.cache_files || 0;
-                
-                document.getElementById('cache-size').textContent = cacheSize.toFixed(1) + ' MB';
-                document.getElementById('cache-files').textContent = cacheFiles;
-            }
-
->>>>>>> 779a924 (Local improvements and conflict resolution)
             // Running Processes
             if (data.running_processes || data.processes) {
                 updateRunningProcesses(data.running_processes || data.processes);
@@ -1651,11 +1641,7 @@
                                     </div>
                                 </div>
                                 <div class="btn-group">
-<<<<<<< HEAD
                                     ${isRunning ?
-=======
-                                    ${isRunning ? 
->>>>>>> 779a924 (Local improvements and conflict resolution)
                                         `<button class="btn btn-warning btn-sm" onclick="restartComponent('${component.name}')">
                                             <i class="fas fa-redo"></i> Перезапуск
                                         </button>
@@ -1669,12 +1655,9 @@
                                             <i class="fas fa-stop"></i> Стоп
                                         </button>`
                                     }
-<<<<<<< HEAD
                                     <button class="btn btn-info btn-sm" onclick="viewComponentLogs('${component.name}')" style="margin-left: 5px;">
                                         <i class="fas fa-file-alt"></i> Логи
                                     </button>
-=======
->>>>>>> 779a924 (Local improvements and conflict resolution)
                                 </div>
                             </li>
                         `;
@@ -2072,7 +2055,6 @@
         }
 
         function restartComponent(name) {
-<<<<<<< HEAD
             fetch('/api/actions/restart_component', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -2092,20 +2074,12 @@
                 showNotification(`Ошибка соединения с сервером`, 'error');
                 console.error(error);
             });
-=======
-            showNotification(`Перезапуск ${name}...`, 'info');
-            stopComponent(name);
-            setTimeout(() => {
-                startComponent(name);
-            }, 1000);
->>>>>>> 779a924 (Local improvements and conflict resolution)
         }
 
         function stopProcess(name) {
             stopComponent(name);
         }
 
-<<<<<<< HEAD
         function viewComponentLogs(name) {
             fetch(`/api/logs/component/${name}`)
                 .then(response => response.json())
@@ -2168,9 +2142,7 @@
             }
         }
 
-=======
         // Quick Actions
->>>>>>> 779a924 (Local improvements and conflict resolution)
         function runSpmSimulator() {
             startComponent('spm_simulator');
         }
@@ -2251,22 +2223,13 @@
         }
 
         // ==================== Notifications ====================
-<<<<<<< HEAD
         function showNotification(message, type = 'info', duration = 4000, allowHtml = false) {
             if (!settings.notifications && type !== 'info') return;
-=======
-        function showNotification(message, type = 'info') {
-            if (!settings.notifications) return;
->>>>>>> 779a924 (Local improvements and conflict resolution)
 
             const container = document.getElementById('notification-container');
             const notification = document.createElement('div');
             notification.className = `notification ${type}`;
-<<<<<<< HEAD
 
-=======
-            
->>>>>>> 779a924 (Local improvements and conflict resolution)
             const icons = {
                 success: 'fa-check-circle',
                 error: 'fa-exclamation-circle',
@@ -2274,21 +2237,14 @@
                 info: 'fa-info-circle'
             };
 
-<<<<<<< HEAD
             const content = allowHtml ? message : escapeHtml(message);
             notification.innerHTML = `
                 <i class="fas ${icons[type] || icons.info}"></i>
                 <span>${content}</span>
-=======
-            notification.innerHTML = `
-                <i class="fas ${icons[type] || icons.info}"></i>
-                <span>${escapeHtml(message)}</span>
->>>>>>> 779a924 (Local improvements and conflict resolution)
             `;
 
             container.appendChild(notification);
 
-<<<<<<< HEAD
             // Auto remove after duration
             if (duration > 0) {
                 setTimeout(() => {
@@ -2296,12 +2252,6 @@
                     setTimeout(() => notification.remove(), 300);
                 }, duration);
             }
-=======
-            // Auto remove after 4 seconds
-            setTimeout(() => {
-                notification.classList.add('exit');
-                setTimeout(() => notification.remove(), 300);
-            }, 4000);
         }
 
         // ==================== Waterfall ====================
