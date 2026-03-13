@@ -22,7 +22,7 @@
 
 **Реализовано:**
 - ✅ Refresh token rotation с уникальным jti
-- ✅ Хранилище активных refresh токенов (`_active_refresh_tokens`)
+- ✅ Хранилище активных refresh токенов (Redis + in-memory fallback)
 - ✅ Ревокация токена при каждом refresh
 - ✅ Проверка типа токена (access vs refresh)
 - ✅ Усиленная валидация паролей:
@@ -34,12 +34,56 @@
 - ✅ Secure JWT_SECRET (генерация через secrets.token_urlsafe)
 - ✅ Logout с ревокацией refresh токена
 
+**Redis integration:**
+- `_get_redis_client()` — подключение к Redis
+- `_store_refresh_token()` — сохранение jti с TTL
+- `_is_token_valid()` — проверка через Redis
+- `_revoke_refresh_token()` — отзыв токена
+- Автоматический fallback на in-memory
+
 **Новые эндпоинты:**
 - `POST /api/v1/auth/refresh` — Обновление токена (rotation)
 - `POST /api/v1/auth/logout` — Выход с ревокацией
 
 **Изменённые эндпоинты:**
 - `POST /api/v1/auth/login` — Усиленная валидация пароля
+
+---
+
+### 1.1. 2FA TOTP Authentication (utils/two_factor_auth.py)
+
+**Создано:** `utils/two_factor_auth.py` (278 строк)
+
+**Возможности:**
+- ✅ TOTP (Time-based One-Time Password)
+- ✅ Google Authenticator совместимость
+- ✅ QR code provisioning
+- ✅ Резервные коды (10 шт)
+- ✅ Персистентное хранение секретов (JSON)
+
+**Новые эндпоинты:**
+- `POST /api/v1/auth/2fa/setup` — Настройка 2FA
+- `POST /api/v1/auth/2fa/verify` — Верификация setup
+- `POST /api/v1/auth/2fa/verify-login` — 2FA при входе
+- `GET /api/v1/auth/2fa/status` — Статус 2FA
+- `POST /api/v1/auth/2fa/disable` — Отключение
+- `POST /api/v1/auth/2fa/backup-codes` — Генерация кодов
+
+**Пример настройки 2FA:**
+```bash
+# 1. Получить secret и QR код
+curl -X POST http://localhost:8000/api/v1/auth/2fa/setup \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# 2. Отсканировать QR код в Google Authenticator
+
+# 3. Верифицировать setup
+curl -X POST "http://localhost:8000/api/v1/auth/2fa/verify?otp_code=123456" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# 4. Вход с 2FA
+curl -X POST "http://localhost:8000/api/v1/auth/2fa/verify-login?username=admin&password=Admin123!&otp_code=123456"
+```
 
 ---
 
@@ -295,12 +339,14 @@ curl -X POST http://localhost:8000/api/v1/ml/fine-tune \
 | Метрика | До | После | Улучшение |
 |---------|-----|-------|-----------|
 | Тестов пройдено | 15/15 | 33/33 | +120% |
-| Строк кода | ~25000 | ~24346 | -2.6% |
-| API endpoints | 14 | 23 | +64% |
+| Строк кода | ~25000 | ~25200 | +0.8% |
+| API endpoints | 14 | 33 | +136% |
 | CI/CD workflows | 2 | 5 | +150% |
 | Custom exceptions | 0 | 8 | +8 |
 | GraphQL types | 0 | 6 | +6 |
 | ML models | 0 | 3 | +3 |
+| 2FA methods | 0 | 6 | +6 |
+| Критические улучшения | 0 | 5 | ✅100% |
 
 ---
 

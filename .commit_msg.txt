@@ -1,32 +1,14 @@
-feat: add 2FA TOTP authentication with Google Authenticator
+docs: update README and IMPROVEMENTS with Redis and 2FA
 
-Critical security improvement - Two-Factor Authentication:
+README.md:
+- Add 2FA TOTP status badge
+- Add Redis integration status badge
+- Add GraphQL API status badge
+- Add AI/ML status badge
+- Add 2FA endpoints to Authentication table
 
-- Create utils/two_factor_auth.py (230 lines)
-- TOTP implementation with pyotp
-- QR code generation with qrcode
-- Google Authenticator compatible
-- Backup codes support
-- Persistent secrets storage (JSON)
-
-New API endpoints:
-- POST /api/v1/auth/2fa/setup - Init 2FA setup
-- POST /api/v1/auth/2fa/verify - Verify setup with OTP
-- POST /api/v1/auth/2fa/verify-login - 2FA at login
-- GET /api/v1/auth/2fa/status - Check 2FA status
-- POST /api/v1/auth/2fa/disable - Disable 2FA
-- POST /api/v1/auth/2fa/backup-codes - Generate backup codes
-
-Features:
-- Secret generation and storage
-- QR code provisioning URI
-- OTP verification with time window
-- Backup codes (10 one-time use)
-- Graceful degradation (2FA optional)
-- Integrated with existing auth flow
-
-Security benefits:
-- Protection against credential theft
-- Time-based codes (30 second rotation)
-- Backup codes for recovery
-- Per-user secret storage
+IMPROVEMENTS.md:
+- Add Redis integration details
+- Add 2FA TOTP section with examples
+- Update metrics table
+- Mark critical improvements as 100% complete

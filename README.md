@@ -19,13 +19,21 @@
 
 ✅ **REST API с JWT authentication** 🔐
 
+✅ **2FA TOTP аутентификация** (Google Authenticator) 🔑
+
 ✅ **WebSocket real-time обновления** 🔄
 
 ✅ **CI/CD pipeline** (security, tests, releases) 🚀
 
 ✅ **Database migrations** (Alembic) 🗄️
 
+✅ **Redis integration** (token storage) 💾
+
 ✅ **Централизованная обработка ошибок** ⚠️
+
+✅ **GraphQL API** 🔍
+
+✅ **AI/ML анализ дефектов** 🤖
 
 Проект прошел полную автоматическую очистку и оптимизацию. Все компоненты работают корректно, архитектура улучшена, и внедрены современные практики разработки.
 
@@ -691,9 +699,15 @@ python utils/documentation_generator.py
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/v1/auth/login` | POST | Вход (JWT token) |
+| `/api/v1/auth/2fa/verify-login` | POST | Вход с 2FA |
 | `/api/v1/auth/refresh` | POST | Обновление токена (rotation) |
 | `/api/v1/auth/logout` | POST | Выход (revocation) |
 | `/api/v1/auth/me` | GET | Текущий пользователь |
+| `/api/v1/auth/2fa/setup` | POST | Настроить 2FA |
+| `/api/v1/auth/2fa/verify` | POST | Верифицировать 2FA |
+| `/api/v1/auth/2fa/status` | GET | Статус 2FA |
+| `/api/v1/auth/2fa/disable` | POST | Отключить 2FA |
+| `/api/v1/auth/2fa/backup-codes` | POST | Резервные коды |
 
 ### Health & Monitoring
 
