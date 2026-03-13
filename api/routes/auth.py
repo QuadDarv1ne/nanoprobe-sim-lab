@@ -21,6 +21,7 @@ from api.schemas import (
     LoginResponse,
     Token,
     ErrorResponse,
+    RefreshTokenRequest,
 )
 from api.dependencies import rate_limit, get_current_user
 from api.error_handlers import AuthenticationError
@@ -224,10 +225,10 @@ async def login(request: Request, login_data: LoginRequest):
     summary="Обновить токен",
     description="Обновление access токена с помощью refresh токена (rotation)",
 )
-async def refresh_access_token(refresh_token: str):
+async def refresh_access_token(request: RefreshTokenRequest):
     """Обновление токена с refresh token rotation"""
     try:
-        payload = jwt.decode(refresh_token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        payload = jwt.decode(request.refresh_token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
 
         # Проверка типа токена
         if payload.get("type") != "refresh":

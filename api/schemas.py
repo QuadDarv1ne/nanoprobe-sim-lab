@@ -55,6 +55,11 @@ class LoginRequest(BaseModel):
         return v
 
 
+class RefreshTokenRequest(BaseModel):
+    """Запрос на обновление токена"""
+    refresh_token: str = Field(..., description="Refresh токен")
+
+
 class LoginResponse(BaseModel):
     """Ответ на логин"""
     access_token: str
