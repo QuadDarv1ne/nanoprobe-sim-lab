@@ -3,7 +3,7 @@
 API роуты для пакетной обработки
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Body
+from fastapi import APIRouter, Depends, Query, Body
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 

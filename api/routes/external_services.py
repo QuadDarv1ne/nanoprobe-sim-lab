@@ -4,7 +4,7 @@ External Services API routes с Circuit Breaker
 Интеграция с внешними сервисами через circuit breaker
 """
 
-from fastapi import APIRouter, HTTPException, status, Query
+from fastapi import APIRouter, Query
 from typing import Optional, Dict, Any
 import logging
 import os

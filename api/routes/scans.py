@@ -4,7 +4,7 @@ API роуты для управления сканированиями
 CRUD операции для результатов сканирований
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Response
+from fastapi import APIRouter, Depends, Query, Response
 from typing import List, Optional
 from datetime import datetime
 
