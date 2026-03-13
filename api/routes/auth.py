@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 """
 API роуты для аутентификации
-JWT токен, логин, регистрация
+JWT токен, логин, регистрация с refresh token rotation
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Dict, Set
 import jwt
 import os
+import secrets
 
 from passlib.context import CryptContext
 
@@ -24,10 +25,13 @@ from api.dependencies import rate_limit, get_current_user
 router = APIRouter()
 security = HTTPBearer()
 
-JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key-change-in-production")
+JWT_SECRET = os.getenv("JWT_SECRET", secrets.token_urlsafe(32))
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_MINUTES = 60
 JWT_REFRESH_EXPIRATION_DAYS = 7
+
+# Хранилище активных refresh токенов (в production использовать Redis/БД)
+_active_refresh_tokens: Set[str] = set()
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -55,10 +59,16 @@ def validate_password_strength(password: str) -> tuple[bool, str]:
     """Проверка надёжности пароля"""
     if len(password) < 8:
         return False, "Пароль должен быть не менее 8 символов"
+    if len(password) > 128:
+        return False, "Пароль не должен превышать 128 символов"
     if not any(c.isupper() for c in password):
         return False, "Пароль должен содержать заглавную букву"
     if not any(c.isdigit() for c in password):
         return False, "Пароль должен содержать цифру"
+    if not any(c.islower() for c in password):
+        return False, "Пароль должен содержать строчную букву"
+    if not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password):
+        return False, "Пароль должен содержать специальный символ"
     return True, ""
 
 
@@ -75,24 +85,31 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     """Создание access токена"""
     to_encode = data.copy()
-    
+
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
         expire = datetime.utcnow() + timedelta(minutes=JWT_EXPIRATION_MINUTES)
-    
-    to_encode.update({"exp": expire})
+
+    to_encode.update({"exp": expire, "type": "access"})
     encoded_jwt = jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
     return encoded_jwt
 
 
 def create_refresh_token(data: dict) -> str:
-    """Создание refresh токена"""
+    """Создание refresh токена с уникальным jti"""
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(days=JWT_REFRESH_EXPIRATION_DAYS)
-    to_encode.update({"exp": expire})
+    jti = secrets.token_urlsafe(16)  # Unique token ID
+    to_encode.update({"exp": expire, "type": "refresh", "jti": jti})
     encoded_jwt = jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    _active_refresh_tokens.add(jti)
     return encoded_jwt
+
+
+def revoke_refresh_token(jti: str):
+    """Отмена refresh токена (rotation)"""
+    _active_refresh_tokens.discard(jti)
 
 
 @router.post(
@@ -150,39 +167,60 @@ async def login(request: Request, login_data: LoginRequest):
     "/refresh",
     response_model=Token,
     summary="Обновить токен",
-    description="Обновление access токена с помощью refresh токена",
+    description="Обновление access токена с помощью refresh токена (rotation)",
 )
-async def refresh_token(refresh_token: str):
-    """Обновление токена"""
+async def refresh_access_token(refresh_token: str):
+    """Обновление токена с refresh token rotation"""
     try:
         payload = jwt.decode(refresh_token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        username: str = payload.get("sub")
         
+        # Проверка типа токена
+        if payload.get("type") != "refresh":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Неверный тип токена",
+            )
+        
+        # Проверка jti (rotation check)
+        jti = payload.get("jti")
+        if jti not in _active_refresh_tokens:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Refresh токен был отозван",
+            )
+        
+        username: str = payload.get("sub")
         if username is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Неверный refresh токен",
             )
-        
+
         user = USERS_DB.get(username)
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Пользователь не найден",
             )
-        
-        # Создание нового access токена
+
+        # Ревокация старого токена (rotation)
+        revoke_refresh_token(jti)
+
+        # Создание новой пары токенов
         new_access_token = create_access_token(
             data={"sub": user["username"], "user_id": user["id"]}
         )
-        
+        new_refresh_token = create_refresh_token(
+            data={"sub": user["username"], "user_id": user["id"]}
+        )
+
         return Token(
             access_token=new_access_token,
-            refresh_token=refresh_token,
+            refresh_token=new_refresh_token,
             token_type="bearer",
             expires_in=JWT_EXPIRATION_MINUTES * 60,
         )
-        
+
     except jwt.PyJWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -208,11 +246,19 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
 @router.post(
     "/logout",
     summary="Выход из системы",
-    description="Выход из системы (на клиенте удалить токены)",
+    description="Выход из системы с ревокацией refresh токена",
 )
-async def logout():
-    """Выход из системы"""
-    # На клиенте нужно удалить токены
+async def logout(refresh_token: Optional[str] = None):
+    """Выход из системы с ревокацией refresh токена"""
+    if refresh_token:
+        try:
+            payload = jwt.decode(refresh_token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+            jti = payload.get("jti")
+            if jti:
+                revoke_refresh_token(jti)
+        except jwt.PyJWTError:
+            pass
+    
     return {"message": "Успешный выход. Удалите токены на клиенте."}
 
 

@@ -1,4 +1,6 @@
-refactor: remove unused time import from utils/database.py
+cleanup: remove redundant wrapper scripts from project root
 
-- Remove unused 'import time' module
-- Keep hashlib and numpy which are used
+- Remove test_optimizations.py (functionality exists in utils/*)
+- Remove optimize_all.py (functionality exists in utils/*)
+- Remove test_project.py (covered by pytest tests/)
+- These scripts were wrappers around utils modules
