@@ -15,7 +15,7 @@ from api.schemas import (
     ErrorResponse,
 )
 from api.dependencies import get_db, get_redis_cache
-from api.error_handlers import NotFoundError
+from api.error_handlers import NotFoundError, DatabaseError
 from utils.redis_cache import RedisCache
 from utils.database import DatabaseManager
 
@@ -169,14 +169,11 @@ async def delete_scan(
 ):
     """Удалить сканирование"""
     from api.main import redis_cache
-    
+
     success = db.delete_scan(scan_id)
 
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Сканирование с ID {scan_id} не найдено",
-        )
+        raise NotFoundError(f"Сканирование с ID {scan_id} не найдено", resource_type="scan")
 
     # Инвалидация кэша
     if redis_cache and redis_cache.is_available():
@@ -199,7 +196,7 @@ async def search_scans(
     """Поиск сканирований"""
     try:
         scans = db.search_scans(query=query, limit=limit)
-        
+
         return ScanListResponse(
             items=[ScanResponse.model_validate(scan) for scan in scans],
             total=len(scans),
@@ -207,7 +204,4 @@ async def search_scans(
             offset=0,
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка поиска: {str(e)}",
-        )
+        raise DatabaseError(f"Ошибка поиска сканирований: {str(e)}")
