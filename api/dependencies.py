@@ -79,15 +79,7 @@ def require_admin(current_user: dict) -> dict:
 
 
 def get_db() -> DatabaseManager:
-    """
-    Зависимость для получения менеджера БД
-    
-    Returns:
-        DatabaseManager: Экземпляр менеджера базы данных
-        
-    Raises:
-        HTTPException: Если БД недоступна
-    """
+    """Зависимость для получения менеджера БД"""
     from api.main import db_manager
     if db_manager is None:
         raise HTTPException(
@@ -98,26 +90,13 @@ def get_db() -> DatabaseManager:
 
 
 def get_redis_cache() -> Optional[RedisCache]:
-    """
-    Зависимость для получения Redis кэша
-    
-    Returns:
-        Optional[RedisCache]: Экземпляр Redis кэша или None
-    """
+    """Зависимость для получения Redis кэша"""
     from api.main import redis_cache
     return redis_cache
 
 
 def get_redis_cache_required() -> RedisCache:
-    """
-    Зависимость для получения Redis кэша (обязательный)
-    
-    Returns:
-        RedisCache: Экземпляр Redis кэша
-        
-    Raises:
-        HTTPException: Если Redis недоступен
-    """
+    """Зависимость для получения Redis кэша (обязательный)"""
     from api.main import redis_cache
     if redis_cache is None or not redis_cache.is_available():
         raise HTTPException(
