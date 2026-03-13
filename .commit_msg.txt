@@ -1,6 +1,4 @@
-fix: add get_current_user and require_admin to API dependencies
+refactor: remove unused time import from utils/database.py
 
-- Add JWT authentication functions to api/dependencies.py
-- Fix ImportError in admin.py routes
-- Rename test_integration.py to test_integration_api.py to avoid conflicts
-- Remove duplicate test_logger.py from tests/unit/
+- Remove unused 'import time' module
+- Keep hashlib and numpy which are used
