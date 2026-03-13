@@ -3,12 +3,12 @@
 API роуты для сравнения поверхностей
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from datetime import datetime
 import uuid
 from pathlib import Path
 import logging
-from api.error_handlers import ValidationError
+from api.error_handlers import ValidationError, NotFoundError
 
 from api.schemas import (
     SurfaceComparisonRequest,
@@ -17,7 +17,6 @@ from api.schemas import (
     ErrorResponse,
 )
 from api.dependencies import get_db
-from api.error_handlers import NotFoundError
 from utils.database import DatabaseManager
 from utils.surface_comparator import SurfaceComparator
 
@@ -102,14 +101,9 @@ async def compare_surfaces(
         
     except ValidationError:
         raise
-    except HTTPException:
-        raise
     except Exception as e:
         logger.error(f"Comparison error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка сравнения поверхностей: {str(e)}",
-        )
+        raise ValidationError(f"Ошибка сравнения поверхностей: {str(e)}")
 
 
 @router.get(
@@ -134,10 +128,7 @@ async def get_comparison_history(
             return {"items": [], "total": 0, "limit": limit, "message": "Метод не реализован"}
     except Exception as e:
         logger.error(f"History error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка получения истории: {str(e)}",
-        )
+        raise ValidationError(f"Ошибка получения истории: {str(e)}")
 
 
 @router.get(
@@ -159,14 +150,8 @@ async def get_comparison(
 
             return comparison
         else:
-            raise HTTPException(
-                status_code=status.HTTP_501_NOT_IMPLEMENTED,
-                detail="Метод не реализован",
-            )
-    except HTTPException:
+            raise ValidationError("Метод не реализован")
+    except (ValidationError, NotFoundError):
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка получения сравнения: {str(e)}",
-        )
+        raise ValidationError(f"Ошибка получения сравнения: {str(e)}")
