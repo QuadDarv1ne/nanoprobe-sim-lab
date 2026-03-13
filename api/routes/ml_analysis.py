@@ -8,6 +8,8 @@ from typing import List, Optional, Dict, Any
 from pathlib import Path
 import logging
 
+from api.error_handlers import ValidationError, DatabaseError
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/ml", tags=["AI/ML Analysis"])
@@ -49,23 +51,17 @@ async def analyze_with_pretrained(
         # Анализ
         analyzer = get_analyzer(model_type=model_type)
         result = analyzer.analyze_image(str(temp_path))
-        
+
         if not result.get('success'):
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=result.get('error', 'Analysis failed')
-            )
-        
+            raise DatabaseError(result.get('error', 'Analysis failed'))
+
         return result
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"ML analysis error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Analysis error: {str(e)}"
-        )
+        raise DatabaseError(f"Analysis error: {str(e)}")
     finally:
         # Очистка временного файла
         if temp_path.exists():
@@ -117,34 +113,25 @@ async def fine_tune_model(
     from utils.pretrained_defect_analyzer import get_analyzer
     
     train_path = Path("data/ml_train")
-    
+
     if not train_path.exists():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Training data not found at {train_path}"
-        )
-    
+        raise ValidationError(f"Training data not found at {train_path}")
+
     analyzer = get_analyzer(model_type=model_type)
-    
+
     if not analyzer.load_model():
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to load model"
-        )
-    
+        raise DatabaseError("Failed to load model")
+
     result = analyzer.fine_tune(
         train_data_path=str(train_path),
         epochs=epochs,
         batch_size=batch_size,
         validation_split=validation_split
     )
-    
+
     if not result.get('success'):
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=result.get('error', 'Fine-tuning failed')
-        )
-    
+        raise DatabaseError(result.get('error', 'Fine-tuning failed'))
+
     return result
 
 
@@ -161,21 +148,15 @@ async def save_model(
     from utils.pretrained_defect_analyzer import get_analyzer
     
     analyzer = get_analyzer(model_type=model_type)
-    
+
     if not analyzer._model_loaded:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Model not loaded"
-        )
-    
+        raise ValidationError("Model not loaded")
+
     success = analyzer.save_model(model_path)
-    
+
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to save model"
-        )
-    
+        raise DatabaseError("Failed to save model")
+
     return {
         "success": True,
         "model_path": model_path,
@@ -199,14 +180,11 @@ async def batch_analyze(
     try:
         paths = json.loads(image_paths)
     except json.JSONDecodeError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid JSON in image_paths"
-        )
-    
+        raise ValidationError("Invalid JSON in image_paths")
+
     analyzer = get_analyzer(model_type=model_type)
     results = analyzer.analyze_batch(paths)
-    
+
     return {
         "results": results,
         "total": len(results),
