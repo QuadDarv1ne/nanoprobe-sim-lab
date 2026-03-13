@@ -31,7 +31,7 @@ from utils.redis_cache import RedisCache
 
 # Импорты роутов
 from api.routes import scans, simulations, analysis, comparison, reports, auth, admin, dashboard
-from api.routes import graphql, ml_analysis
+from api.routes import graphql, ml_analysis, external_services
 
 
 # Глобальные переменные
@@ -274,6 +274,9 @@ app.include_router(graphql.router, prefix="/api/v1", tags=["GraphQL"])
 
 # AI/ML Analysis
 app.include_router(ml_analysis.router, prefix="/api/v1", tags=["AI/ML"])
+
+# External Services (with Circuit Breaker)
+app.include_router(external_services.router, prefix="/api/v1", tags=["External Services"])
 
 
 # Metrics endpoint для Prometheus
