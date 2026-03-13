@@ -8,7 +8,6 @@ from fastapi import FastAPI, HTTPException, Depends, status, WebSocket, WebSocke
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi import Request
 from contextlib import asynccontextmanager
