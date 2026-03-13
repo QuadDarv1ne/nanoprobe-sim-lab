@@ -13,6 +13,8 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from datetime import datetime
 
+from api.error_handlers import NotFoundError
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/external", tags=["External Services"])
@@ -199,10 +201,7 @@ async def get_circuit_breaker_status(name: str):
         breaker = get_circuit_breaker(name)
         return breaker.get_stats()
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Circuit breaker '{name}' not found: {str(e)}"
-        )
+        raise NotFoundError(f"Circuit breaker '{name}' not found: {str(e)}")
 
 
 @router.post(
@@ -219,10 +218,7 @@ async def reset_circuit_breaker(name: str):
         breaker.reset()
         return {"success": True, "message": f"Circuit breaker '{name}' reset"}
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Circuit breaker '{name}' not found: {str(e)}"
-        )
+        raise NotFoundError(f"Circuit breaker '{name}' not found: {str(e)}")
 
 
 # Health check для внешних сервисов
