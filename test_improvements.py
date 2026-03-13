@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Тестирование улучшений проекта Nanoprobe Sim Lab
 """

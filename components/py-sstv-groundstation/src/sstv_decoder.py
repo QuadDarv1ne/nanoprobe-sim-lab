@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Модуль декодирования SSTV."""
 
 import numpy as np

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Тесты для batch processor."""
 
 import unittest

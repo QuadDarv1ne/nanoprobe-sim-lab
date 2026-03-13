@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 GraphQL API для Nanoprobe Sim Lab
 Schema и резолверы для GraphQL endpoint

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Тесты для PDF report generator."""
 
 import unittest

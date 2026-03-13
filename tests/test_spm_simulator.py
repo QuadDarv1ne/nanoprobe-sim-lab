@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Тесты для симулятора СЗМ."""
 
 import unittest

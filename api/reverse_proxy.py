@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Reverse proxy для интеграции Flask и FastAPI
 Позволяет Flask приложению проксировать запросы к FastAPI

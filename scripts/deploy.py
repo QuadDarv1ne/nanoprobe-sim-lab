@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Скрипт развёртывания Nanoprobe Simulation Lab в production
 Использование: python scripts/deploy.py [--check] [--setup] [--start]

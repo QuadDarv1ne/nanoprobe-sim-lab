@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 CLI утилита для администратора Nanoprobe Sim Lab
 Управление проектом из командной строки

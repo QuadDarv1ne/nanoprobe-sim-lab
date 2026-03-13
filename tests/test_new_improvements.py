@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Тесты для новых улучшений Nanoprobe Sim Lab
 Проверка улучшенных компонентов: schemas, dashboard routes, database cache, enhanced monitor

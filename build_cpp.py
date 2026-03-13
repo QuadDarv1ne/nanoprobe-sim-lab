@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Скрипт сборки C++ компонентов для проекта Nanoprobe Simulation Lab."""
 
 import os

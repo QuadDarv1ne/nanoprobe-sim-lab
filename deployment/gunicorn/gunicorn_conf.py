@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Gunicorn конфигурация для production запуска FastAPI приложения
 Использование: gunicorn -c gunicorn_conf.py api.main:app

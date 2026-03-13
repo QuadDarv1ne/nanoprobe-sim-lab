@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Скрипт очистки и организации проекта Nanoprobe Simulation Lab."""
 
 import os
