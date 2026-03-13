@@ -1,1 +1,6 @@
-chore: cleanup test files
+fix: add get_current_user and require_admin to API dependencies
+
+- Add JWT authentication functions to api/dependencies.py
+- Fix ImportError in admin.py routes
+- Rename test_integration.py to test_integration_api.py to avoid conflicts
+- Remove duplicate test_logger.py from tests/unit/
