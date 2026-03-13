@@ -395,9 +395,8 @@ async def export_data(format: str):
     - pdf: PDF отчёт
     """
     if format not in ["json", "csv", "pdf"]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Неподдерживаемый формат: {format}. Доступны: json, csv, pdf"
+        raise ValidationError(
+            f"Неподдерживаемый формат: {format}. Доступны: json, csv, pdf"
         )
 
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')

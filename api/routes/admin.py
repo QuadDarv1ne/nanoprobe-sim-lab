@@ -4,7 +4,7 @@
 Управление пользователями, системные настройки, мониторинг
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from typing import List, Dict, Any
 from datetime import datetime
 import psutil
@@ -14,7 +14,7 @@ from pathlib import Path
 from api.schemas import ErrorResponse
 from api.dependencies import get_current_user, require_admin
 from api.dependencies import get_redis_cache, get_batch_processor
-from api.error_handlers import AuthorizationError, NotFoundError
+from api.error_handlers import AuthorizationError, NotFoundError, ValidationError
 
 
 router = APIRouter(prefix="/admin", tags=["Администрирование"])
@@ -182,10 +182,7 @@ async def view_log(
 
     # Проверка на directory traversal
     if not log_path.is_relative_to(Path("logs")):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Неверное имя файла",
-        )
+        raise ValidationError("Неверное имя файла")
 
     if not log_path.exists():
         raise NotFoundError(f"Файл {filename} не найден", resource_type="log_file")
@@ -201,10 +198,7 @@ async def view_log(
             "content": "".join(last_lines),
         }
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка чтения лога: {str(e)}",
-        )
+        raise ValidationError(f"Ошибка чтения лога: {str(e)}")
 
 
 @router.post(
@@ -218,37 +212,28 @@ async def clear_logs(
 ):
     """Очистка логов"""
     if current_user.get("role") != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Требуется роль администратора",
-        )
-    
+        raise AuthorizationError("Требуется роль администратора")
+
     logs_dir = Path("logs")
-    
+
     if filename:
         # Очистка конкретного файла
         log_path = logs_dir / filename
         if not log_path.is_relative_to(logs_dir):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Неверное имя файла",
-            )
-        
+            raise ValidationError("Неверное имя файла")
+
         if log_path.exists():
             with open(log_path, "w", encoding="utf-8") as f:
                 f.write("")
             return {"message": f"Лог {filename} очищен"}
         else:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Файл {filename} не найден",
-            )
+            raise NotFoundError(f"Файл {filename} не найден", resource_type="log_file")
     else:
         # Очистка всех логов
         for log_file in logs_dir.glob("*.log"):
             with open(log_file, "w", encoding="utf-8") as f:
                 f.write("")
-        
+
         return {"message": "Все логи очищены"}
 
 
@@ -262,19 +247,16 @@ async def clear_logs(
 async def get_database_stats(current_user: dict = Depends(get_current_user)):
     """Статистика БД"""
     if current_user.get("role") != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Требуется роль администратора",
-        )
-    
+        raise AuthorizationError("Требуется роль администратора")
+
     from api.main import db_manager
-    
+
     stats = db_manager.get_statistics()
-    
+
     # Размер файла БД
     db_path = Path(db_manager.db_path)
     db_size = db_path.stat().st_size if db_path.exists() else 0
-    
+
     return {
         **stats,
         "database_size_bytes": db_size,
@@ -290,27 +272,21 @@ async def get_database_stats(current_user: dict = Depends(get_current_user)):
 async def vacuum_database(current_user: dict = Depends(get_current_user)):
     """Оптимизация БД"""
     if current_user.get("role") != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Требуется роль администратора",
-        )
-    
+        raise AuthorizationError("Требуется роль администратора")
+
     from api.main import db_manager
-    
+
     try:
         with db_manager.get_connection() as conn:
             conn.execute("VACUUM")
             conn.execute("ANALYZE")
-        
+
         return {
             "message": "База данных оптимизирована",
             "timestamp": datetime.now().isoformat(),
         }
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка оптимизации: {str(e)}",
-        )
+        raise ValidationError(f"Ошибка оптимизации: {str(e)}")
 
 
 @router.get(
@@ -321,19 +297,16 @@ async def vacuum_database(current_user: dict = Depends(get_current_user)):
 async def get_database_tables(current_user: dict = Depends(get_current_user)):
     """Список таблиц"""
     if current_user.get("role") != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Требуется роль администратора",
-        )
-    
+        raise AuthorizationError("Требуется роль администратора")
+
     from api.main import db_manager
-    
+
     tables = []
     with db_manager.get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
         tables = [row[0] for row in cursor.fetchall()]
-    
+
     return {"tables": tables}
 
 
@@ -347,13 +320,10 @@ async def get_database_tables(current_user: dict = Depends(get_current_user)):
 async def list_users(current_user: dict = Depends(get_current_user)):
     """Список пользователей"""
     if current_user.get("role") != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Требуется роль администратора",
-        )
-    
+        raise AuthorizationError("Требуется роль администратора")
+
     from api.routes.auth import USERS_DB
-    
+
     users = []
     for username, user_data in USERS_DB.items():
         users.append({
@@ -362,7 +332,7 @@ async def list_users(current_user: dict = Depends(get_current_user)):
             "role": user_data["role"],
             "created_at": user_data["created_at"],
         })
-    
+
     return {"users": users, "total": len(users)}
 
 
@@ -379,18 +349,12 @@ async def create_user(
 ):
     """Создание пользователя"""
     if current_user.get("role") != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Требуется роль администратора",
-        )
-    
+        raise AuthorizationError("Требуется роль администратора")
+
     from api.routes.auth import USERS_DB, hash_password
-    
+
     if username in USERS_DB:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Пользователь уже существует",
-        )
+        raise ValidationError("Пользователь уже существует")
     
     new_id = max(u["id"] for u in USERS_DB.values()) + 1 if USERS_DB else 1
     
@@ -423,27 +387,18 @@ async def delete_user(
 ):
     """Удаление пользователя"""
     if current_user.get("role") != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Требуется роль администратора",
-        )
-    
+        raise AuthorizationError("Требуется роль администратора")
+
     from api.routes.auth import USERS_DB
-    
+
     if username not in USERS_DB:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Пользователь {username} не найден",
-        )
-    
+        raise NotFoundError(f"Пользователь {username} не найден", resource_type="user")
+
     if username == current_user.get("username"):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Нельзя удалить самого себя",
-        )
-    
+        raise ValidationError("Нельзя удалить самого себя")
+
     del USERS_DB[username]
-    
+
     return {"message": f"Пользователь {username} удалён"}
 
 
@@ -457,10 +412,7 @@ async def delete_user(
 async def get_cache_stats(current_user: dict = Depends(get_current_user)):
     """Статистика кэша"""
     if current_user.get("role") != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Требуется роль администратора",
-        )
+        raise AuthorizationError("Требуется роль администратора")
     
     cache_dirs = ["cache", "temp", "__pycache__"]
     stats = {}
@@ -491,16 +443,13 @@ async def clear_cache(
 ):
     """Очистка кэша"""
     if current_user.get("role") != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Требуется роль администратора",
-        )
-    
+        raise AuthorizationError("Требуется роль администратора")
+
     from utils.cache_manager import CacheManager
-    
+
     cache_mgr = CacheManager()
     cleared = cache_mgr.auto_cleanup()
-    
+
     return {
         "message": "Кэш очищен",
         "cleared": cleared,
@@ -518,11 +467,8 @@ async def clear_cache(
 async def list_tasks(current_user: dict = Depends(get_current_user)):
     """Список задач"""
     if current_user.get("role") != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Требуется роль администратора",
-        )
-    
+        raise AuthorizationError("Требуется роль администратора")
+
     # Заглушка для будущей интеграции с Celery
     return {
         "tasks": [],

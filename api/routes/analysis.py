@@ -3,7 +3,7 @@
 API роуты для анализа дефектов и изображений
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from fastapi.responses import FileResponse
 from pathlib import Path
 from datetime import datetime
@@ -16,6 +16,7 @@ from api.schemas import (
     ErrorResponse,
 )
 from api.dependencies import get_db
+from api.error_handlers import NotFoundError, ValidationError
 from utils.database import DatabaseManager
 from utils.defect_analyzer import DefectAnalysisPipeline, analyze_defects
 
@@ -40,9 +41,9 @@ async def analyze_image_defects(
         # Проверка существования файла
         image_path = Path(request.image_path)
         if not image_path.exists():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Файл не найден: {request.image_path}",
+            raise ValidationError(
+                f"Файл не найден: {request.image_path}",
+                details={"path": request.image_path}
             )
 
         # Создание пайплайна
@@ -90,13 +91,10 @@ async def analyze_image_defects(
             timestamp=datetime.now().isoformat(),
         )
         
-    except HTTPException:
+    except (ValidationError, NotFoundError):
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка анализа дефектов: {str(e)}",
-        )
+        raise ValidationError(f"Ошибка анализа дефектов: {str(e)}")
 
 
 @router.get(
@@ -120,10 +118,7 @@ async def get_defect_history(
         else:
             return {"items": [], "total": 0, "limit": limit, "message": "Метод не реализован"}
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка получения истории: {str(e)}",
-        )
+        raise ValidationError(f"Ошибка получения истории: {str(e)}")
 
 
 @router.get(
@@ -140,23 +135,14 @@ async def get_defect_analysis(
         if hasattr(db, 'get_defect_analyses'):
             analyses = db.get_defect_analyses(limit=100)
             analysis = next((a for a in analyses if a.get('analysis_id') == analysis_id), None)
-            
+
             if not analysis:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Анализ с ID {analysis_id} не найден",
-                )
-            
+                raise NotFoundError(f"Анализ с ID {analysis_id} не найден")
+
             return analysis
         else:
-            raise HTTPException(
-                status_code=status.HTTP_501_NOT_IMPLEMENTED,
-                detail="Метод не реализован",
-            )
-    except HTTPException:
+            raise ValidationError("Метод не реализован")
+    except (ValidationError, NotFoundError):
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка получения анализа: {str(e)}",
-        )
+        raise ValidationError(f"Ошибка получения анализа: {str(e)}")
