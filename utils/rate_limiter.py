@@ -8,9 +8,11 @@ import time
 from collections import defaultdict
 from typing import Dict, Tuple, Optional, List
 from functools import wraps
-from fastapi import HTTPException, status, Request
+from fastapi import Request
 import threading
 from dataclasses import dataclass, field
+
+from api.error_handlers import RateLimitError
 
 
 @dataclass
@@ -154,14 +156,13 @@ class RateLimiter:
 limiter = RateLimiter()
 
 
-def rate_limit(max_requests: int = 10, window_seconds: int = 60, block_message: str = "Слишком много запросов"):
+def rate_limit(max_requests: int = 10, window_seconds: int = 60):
     """
     Декоратор для rate limiting с прогрессивной блокировкой.
 
     Args:
         max_requests: Максимум запросов в окно
         window_seconds: Размер окна в секундах
-        block_message: Сообщение при блокировке
     """
     def decorator(func):
         @wraps(func)
@@ -171,11 +172,7 @@ def rate_limit(max_requests: int = 10, window_seconds: int = 60, block_message: 
 
             if not limiter.is_allowed(key, max_requests, window_seconds):
                 retry_after = limiter.get_retry_after(key, max_requests, window_seconds)
-                raise HTTPException(
-                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                    detail=block_message,
-                    headers={"Retry-After": str(retry_after)},
-                )
+                raise RateLimitError(retry_after)
 
             return await func(request, *args, **kwargs)
         return wrapper
