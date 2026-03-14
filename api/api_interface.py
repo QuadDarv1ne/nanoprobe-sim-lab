@@ -51,7 +51,6 @@ class NanoprobeAPI:
         # Настраиваем маршруты
         self.setup_routes()
 
-
     def setup_routes(self) -> None:
         """Настраивает маршруты API"""
         # Маршруты для СЗМ симуляции
@@ -82,7 +81,6 @@ class NanoprobeAPI:
         # Маршрут для получения информации о системе
         self.app.add_url_rule('/api/system/info', 'get_system_info', self.get_system_info, methods=['GET'])
         self.app.add_url_rule('/api/system/status', 'get_system_status', self.get_system_status, methods=['GET'])
-
 
     def create_surface(self) -> Tuple[Response, int]:
         """
@@ -127,7 +125,6 @@ class NanoprobeAPI:
         except Exception as e:
             self.logger_manager.log_spm_event(f"Критическая ошибка: {str(e)}", "ERROR")
             return jsonify(ResponseBuilder.error(str(e), "INTERNAL_ERROR")), 500
-
 
     def scan_surface(self) -> Tuple[Response, int]:
         """
@@ -185,7 +182,6 @@ class NanoprobeAPI:
             self.logger_manager.log_spm_event(f"Ошибка сканирования: {str(e)}", "ERROR")
             return jsonify(ResponseBuilder.error(str(e), "SCAN_ERROR")), 500
 
-
     def process_image(self) -> Tuple[Response, int]:
         """
         Обрабатывает изображение.
@@ -235,7 +231,6 @@ class NanoprobeAPI:
             self.logger_manager.log_analyzer_event(f"Ошибка обработки изображения: {str(e)}", "ERROR")
             return jsonify(ResponseBuilder.error(str(e), "IMAGE_PROCESSING_ERROR")), 500
 
-
     def decode_sstv(self) -> Tuple[Response, int]:
         """
         Декодирует SSTV сигнал.
@@ -284,7 +279,6 @@ class NanoprobeAPI:
             self.logger_manager.log_sstv_event(f"Ошибка декодирования SSTV: {e}", "ERROR")
             return jsonify({'status': 'error', 'message': str(e)}), 500
 
-
     def start_simulation(self) -> Tuple[Response, int]:
         """
         Запускает новую симуляцию
@@ -328,7 +322,6 @@ class NanoprobeAPI:
         except Exception as e:
             self.logger_manager.log_simulation_event(f"Ошибка запуска симуляции: {e}", "ERROR")
             return jsonify({'status': 'error', 'message': str(e)}), 500
-
 
     def _run_simulation(self, simulation_id: str, simulation_type: str, parameters: Dict[str, Any]) -> None:
         """
@@ -374,7 +367,6 @@ class NanoprobeAPI:
             self.active_simulations[simulation_id]['status'] = 'error'
             self.active_simulations[simulation_id]['error'] = str(e)
 
-
     def _generate_simulation_results(self, simulation_type: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
         Генерирует результаты симуляции
@@ -407,7 +399,6 @@ class NanoprobeAPI:
         else:
             return {'general_results': 'Simulation completed successfully'}
 
-
     def get_simulation_status(self, simulation_id: str) -> Tuple[Response, int]:
         """
         Возвращает статус симуляции
@@ -422,7 +413,6 @@ class NanoprobeAPI:
             return jsonify({'status': 'error', 'message': 'Simulation not found'}), 404
 
         return jsonify(self.active_simulations[simulation_id])
-
 
     def get_simulation_results(self, simulation_id: str) -> Tuple[Response, int]:
         """
@@ -446,7 +436,6 @@ class NanoprobeAPI:
                     return jsonify({'status': status, 'message': f'Simulation is {status}'})
             else:
                 return jsonify({'status': 'error', 'message': 'Simulation not found'}), 404
-
 
     def upload_data(self) -> Tuple[Response, int]:
         """
@@ -481,7 +470,6 @@ class NanoprobeAPI:
             self.logger_manager.log_system_event(f"Ошибка загрузки данных: {e}", "ERROR")
             return jsonify({'status': 'error', 'message': str(e)}), 500
 
-
     def list_data(self) -> Tuple[Response, int]:
         """
         Возвращает список доступных данных
@@ -515,7 +503,6 @@ class NanoprobeAPI:
         except Exception as e:
             self.logger_manager.log_system_event(f"Ошибка получения списка данных: {e}", "ERROR")
             return jsonify({'status': 'error', 'message': str(e)}), 500
-
 
     def get_system_info(self) -> Response:
         """
@@ -553,7 +540,6 @@ class NanoprobeAPI:
 
         return jsonify(info)
 
-
     def get_system_status(self) -> Response:
         """
         Возвращает статус системы
@@ -577,7 +563,6 @@ class NanoprobeAPI:
 
         return jsonify(status)
 
-
     def run(self, host: str = 'localhost', port: int = 5000, debug: bool = False) -> None:
         """
         Запускает API сервер
@@ -589,6 +574,7 @@ class NanoprobeAPI:
         """
         print(f"Запуск API сервера на {host}:{port}")
         self.app.run(host=host, port=port, debug=debug, threaded=True)
+
 
 def main():
     """Главная функция для запуска API сервера"""
@@ -609,6 +595,7 @@ def main():
 
     # Для демонстрации запускаем сервер
     # api.run(debug=True)  # Закомментировано для безопасности
+
 
 if __name__ == "__main__":
     main()

@@ -43,6 +43,8 @@ logs/
 # Данные
 data/*.db
 data/*.sqlite
+data/*.db-shm
+data/*.db-wal
 output/
 reports/
 
