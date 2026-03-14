@@ -6,8 +6,8 @@ Prometheus метрики для Nanoprobe FastAPI приложения
 import time
 import os
 from functools import wraps
+from typing import List, Dict, Any, Optional
 
-from fastapi import Response
 from fastapi.responses import PlainTextResponse
 
 try:
@@ -18,8 +18,6 @@ try:
         Summary,
         generate_latest,
         CONTENT_TYPE_LATEST,
-        CollectorRegistry,
-        multiprocess,
         start_http_server,
     )
     from prometheus_client import REGISTRY

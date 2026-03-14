@@ -1,6 +1,7 @@
 """Модуль валидации данных для API проекта Nanoprobe Simulation Lab."""
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Tuple
+from datetime import datetime
 
 
 class ValidationError(Exception):
