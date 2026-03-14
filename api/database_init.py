@@ -119,7 +119,7 @@ if __name__ == "__main__":
     success = ensure_database(db_path)
 
     if success:
-        print(f"✅ Database ready at {db_path}")
+        print("✅ Database ready at " + db_path)
     else:
-        print(f"❌ Database initialization failed")
+        print("❌ Database initialization failed")
         exit(1)

@@ -128,7 +128,7 @@ async def create_scan(
     from api.main import redis_cache
     from api.metrics import BusinessMetrics
 
-    scan_id = db.add_scan_result(
+    db.add_scan_result(
         scan_type=scan.scan_type.value,
         surface_type=scan.surface_type,
         width=scan.width,
