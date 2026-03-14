@@ -10,8 +10,6 @@ from api.schemas import (
     SimulationCreate,
     SimulationResponse,
     SimulationListResponse,
-    SimulationStatus,
-    ErrorResponse,
 )
 from api.dependencies import get_db, get_redis_cache
 from api.error_handlers import NotFoundError

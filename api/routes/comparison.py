@@ -13,7 +13,6 @@ from api.schemas import (
     SurfaceComparisonRequest,
     SurfaceComparisonResponse,
     ComparisonMetrics,
-    ErrorResponse,
 )
 from api.dependencies import get_db
 from utils.database import DatabaseManager

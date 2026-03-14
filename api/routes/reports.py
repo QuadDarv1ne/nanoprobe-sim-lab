@@ -3,7 +3,7 @@ API роуты для генерации PDF отчётов
 """
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse
 from datetime import datetime
 import uuid
 from pathlib import Path
@@ -12,7 +12,6 @@ from api.schemas import (
     PDFReportRequest,
     PDFReportResponse,
     ReportType,
-    ErrorResponse,
 )
 from api.dependencies import get_db
 from api.error_handlers import ValidationError, DatabaseError, NotFoundError
