@@ -331,7 +331,12 @@ def cmd_info(args):
 # ==================== Основная функция ====================
 
 def main():
-    """TODO: Add description"""
+    """
+    Основная функция CLI утилиты
+    
+    Парсит аргументы командной строки и выполняет соответствующую команду.
+    Доступные команды: status, cleanup, backup, restore, users, logs
+    """
     parser = argparse.ArgumentParser(
         description="CLI утилита для администратора Nanoprobe Sim Lab",
         formatter_class=argparse.RawDescriptionHelpFormatter,

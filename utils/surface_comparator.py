@@ -61,7 +61,12 @@ class SurfaceComparator:
     """Surface image comparator for AFM images"""
 
     def __init__(self, comparison_method: str = "ssim"):
-        """TODO: Add description"""
+        """
+        Initialize surface comparator
+        
+        Args:
+            comparison_method: Method for comparison ('ssim', 'mse', 'psnr')
+        """
         self.comparison_method = comparison_method
         self.output_dir = Path("output/surface_comparisons")
         self.output_dir.mkdir(parents=True, exist_ok=True)
