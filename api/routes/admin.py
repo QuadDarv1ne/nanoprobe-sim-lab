@@ -26,7 +26,7 @@ router = APIRouter(prefix="/admin", tags=["Администрирование"])
 )
 async def get_redis_cache_status(
     current_user: dict = Depends(get_current_user),
-    redis_cache = Depends(get_redis_cache),
+    redis_cache=Depends(get_redis_cache),
 ):
     """Статус Redis кэша"""
     require_admin(current_user)

@@ -19,6 +19,7 @@ from py_surface_image_analyzer.src.image_processor import ImageProcessor
 from py_sstv_groundstation.src.sstv_decoder import SSTVDecoder
 from .validators import DataValidator, ResponseBuilder, ValidationError
 
+
 class NanoprobeAPI:
     """
     Класс API интерфейса проекта
@@ -611,4 +612,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

@@ -22,7 +22,6 @@ class DataFormatSpec:
     FORMAT_ANALYTICS_REPORT = "analytics_report_v1"
 
     @staticmethod
-
     def validate_format(data: Dict[str, Any], format_type: str) -> bool:
         """
         Проверяет соответствие данных заданному формату
@@ -50,7 +49,6 @@ class DataFormatSpec:
         return all(field in data for field in required)
 
     @staticmethod
-
     def get_schema(format_type: str) -> Dict[str, Any]:
         """
         Возвращает схему для заданного формата
@@ -228,7 +226,6 @@ class SurfaceDataConverter(BaseDataConverter):
         return encoded
 
     @staticmethod
-
     def decode_base64(encoded_data: str, shape: tuple, dtype: str = 'float64') -> np.ndarray:
         """
         Декодирует base64 строку в массив поверхности
@@ -401,7 +398,6 @@ class SimulationConfigConverter:
     """
 
     @staticmethod
-
     def dict_to_standard(config_dict: Dict[str, Any]) -> Dict[str, Any]:
         """
         Преобразует словарь конфигурации в стандартный формат
@@ -425,7 +421,6 @@ class SimulationConfigConverter:
         }
 
     @staticmethod
-
     def standard_to_dict(config_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Преобразует стандартный формат конфигурации в словарь
@@ -449,7 +444,6 @@ class AnalyticsReportConverter:
     """
 
     @staticmethod
-
     def dict_to_standard(metrics_dict: Dict[str, Any], analysis_type: str) -> Dict[str, Any]:
         """
         Преобразует словарь метрик в стандартный формат отчета
@@ -473,7 +467,6 @@ class AnalyticsReportConverter:
         }
 
     @staticmethod
-
     def standard_to_dict(report_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Преобразует стандартный формат отчета в словарь метрик
