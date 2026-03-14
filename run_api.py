@@ -8,6 +8,20 @@ import argparse
 import sys
 from pathlib import Path
 
+# Установка UTF-8 кодировки для Windows
+if sys.platform == "win32":
+    import os
+    os.system("chcp 65001 >nul")
+    # Перенастройка stdout для UTF-8
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
+    except AttributeError:
+        # Python < 3.7
+        import io
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
 
 def main():
     """Основная функция"""

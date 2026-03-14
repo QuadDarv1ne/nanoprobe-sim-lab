@@ -15,6 +15,18 @@ from datetime import datetime
 from typing import Dict, Any, Optional, Tuple
 from pathlib import Path
 
+# Установка UTF-8 кодировки для Windows
+if sys.platform == "win32":
+    import os
+    os.system("chcp 65001 >nul")
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
+    except AttributeError:
+        import io
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
 from flask import Flask, render_template, request, jsonify, Response
 from flask_socketio import SocketIO, emit
 
@@ -36,6 +48,14 @@ from utils.database import DatabaseManager, get_database
 from utils.surface_comparator import compare_surfaces as compare_surfaces_util
 from utils.defect_analyzer import analyze_defects as analyze_defects_util
 from utils.cli_utils import Colors
+
+# Интеграция с Backend (FastAPI)
+try:
+    from api.reverse_proxy import register_proxy
+    PROXY_ENABLED = True
+except ImportError:
+    PROXY_ENABLED = False
+    register_proxy = None
 
 
 class WebDashboard:
@@ -88,6 +108,13 @@ class WebDashboard:
 
         # Регистрация обработчиков SocketIO
         self._register_socket_handlers()
+
+        # Регистрация reverse proxy для интеграции с FastAPI
+        if PROXY_ENABLED and register_proxy:
+            register_proxy(self.app)
+            self.logger.log_system_event("Reverse proxy зарегистрирован (FastAPI интеграция)", "INFO")
+        else:
+            self.logger.log_system_event("Reverse proxy недоступен (FastAPI интеграция отключена)", "WARNING")
 
         self.logger.log_system_event("Веб-панель инициализирована", "INFO")
 

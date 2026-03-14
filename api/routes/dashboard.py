@@ -3,7 +3,7 @@ Dashboard API routes for Nanoprobe Sim Lab
 Provides aggregated stats and system health endpoints
 """
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, status
 from fastapi.responses import JSONResponse
 from fastapi import Header
 from datetime import datetime, timedelta

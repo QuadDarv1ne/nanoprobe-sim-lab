@@ -712,35 +712,129 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
-        /* Stats Grid */
+        /* Stats Grid - Compact & Modern */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .stats-grid.compact {
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 0.5rem;
         }
 
         .stat-card {
             background: var(--bg-secondary);
-            padding: 1.25rem;
-            border-radius: 0.75rem;
+            padding: 0.875rem 0.75rem;
+            border-radius: 0.625rem;
             text-align: center;
             border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--gradient-primary);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary);
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-card.compact {
+            padding: 0.625rem 0.5rem;
         }
 
         .stat-value {
-            font-size: 2rem;
+            font-size: 1.75rem;
             font-weight: 700;
             background: var(--gradient-primary);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            line-height: 1.2;
+        }
+
+        .stat-card.compact .stat-value {
+            font-size: 1.375rem;
         }
 
         .stat-label {
-            font-size: 0.875rem;
+            font-size: 0.75rem;
             color: var(--text-secondary);
             margin-top: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 500;
+        }
+
+        .stat-card.compact .stat-label {
+            font-size: 0.625rem;
+        }
+
+        /* Stat with trend indicator */
+        .stat-trend {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+            margin-top: 0.25rem;
+            font-size: 0.75rem;
+        }
+
+        .stat-trend.up {
+            color: var(--success);
+        }
+
+        .stat-trend.down {
+            color: var(--danger);
+        }
+
+        /* Mini stats row */
+        .stats-row {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-badge {
+            flex: 1;
+            min-width: 80px;
+            background: var(--bg-hover);
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-badge-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .stat-badge-label {
+            font-size: 0.625rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         /* Chart Container */
@@ -1034,40 +1128,56 @@
                             <i class="fas fa-calculator"></i>
                         </div>
                     </div>
-                    <div class="stats-grid">
-                        <div class="stat-card">
+                    
+                    <!-- Основная статистика - компактная -->
+                    <div class="stats-grid compact">
+                        <div class="stat-card compact">
                             <div class="stat-value" id="stat-scans">0</div>
                             <div class="stat-label">Сканирований</div>
                         </div>
-                        <div class="stat-card">
+                        <div class="stat-card compact">
                             <div class="stat-value" id="stat-simulations">0</div>
                             <div class="stat-label">Симуляций</div>
                         </div>
-                        <div class="stat-card">
+                        <div class="stat-card compact">
+                            <div class="stat-value" id="stat-images">0</div>
+                            <div class="stat-label">Изображений</div>
+                        </div>
+                        <div class="stat-card compact">
                             <div class="stat-value" id="stat-analyses">0</div>
                             <div class="stat-label">Анализов</div>
                         </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="stat-uptime">0</div>
-                            <div class="stat-label">Часов работы</div>
+                        <div class="stat-card compact">
+                            <div class="stat-value" id="stat-comparisons">0</div>
+                            <div class="stat-label">Сравнений</div>
+                        </div>
+                        <div class="stat-card compact">
+                            <div class="stat-value" id="stat-reports">0</div>
+                            <div class="stat-label">Отчётов</div>
                         </div>
                     </div>
-                    <div class="stats-grid" style="margin-top: 1rem;">
-                        <div class="stat-card">
-                            <div class="stat-value" id="stat-components-active" style="color: var(--success);">0</div>
-                            <div class="stat-label">Активных компонентов</div>
+                    
+                    <!-- Системные метрики - badges -->
+                    <div class="stats-row">
+                        <div class="stat-badge">
+                            <div class="stat-badge-value" id="stat-uptime">0ч</div>
+                            <div class="stat-badge-label">Аптайм</div>
                         </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="stat-cpu" style="color: var(--primary);">0%</div>
-                            <div class="stat-label">CPU</div>
+                        <div class="stat-badge">
+                            <div class="stat-badge-value" id="stat-components-active" style="color: var(--success);">0</div>
+                            <div class="stat-badge-label">Компоненты</div>
                         </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="stat-memory" style="color: var(--warning);">0%</div>
-                            <div class="stat-label">Память</div>
+                        <div class="stat-badge">
+                            <div class="stat-badge-value" id="stat-cpu" style="color: var(--primary);">0%</div>
+                            <div class="stat-badge-label">CPU</div>
                         </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="stat-disk" style="color: var(--info);">0%</div>
-                            <div class="stat-label">Диск</div>
+                        <div class="stat-badge">
+                            <div class="stat-badge-value" id="stat-memory" style="color: var(--warning);">0%</div>
+                            <div class="stat-badge-label">RAM</div>
+                        </div>
+                        <div class="stat-badge">
+                            <div class="stat-badge-value" id="stat-disk" style="color: var(--info);">0%</div>
+                            <div class="stat-badge-label">Диск</div>
                         </div>
                     </div>
                 </div>
@@ -1440,25 +1550,30 @@
 
         // Обновление статистики БД
         function updateDatabaseStats(stats) {
+            // Основная статистика - компактная
             if (stats.total_scans !== undefined) {
-                const el = document.getElementById('stat-total-scans');
+                const el = document.getElementById('stat-scans');
                 if (el) el.textContent = stats.total_scans;
             }
             if (stats.total_simulations !== undefined) {
-                const el = document.getElementById('stat-total-simulations');
+                const el = document.getElementById('stat-simulations');
                 if (el) el.textContent = stats.total_simulations;
             }
             if (stats.total_images !== undefined) {
-                const el = document.getElementById('stat-total-images');
+                const el = document.getElementById('stat-images');
                 if (el) el.textContent = stats.total_images;
             }
+            if (stats.total_defect_analyses !== undefined) {
+                const el = document.getElementById('stat-analyses');
+                if (el) el.textContent = stats.total_defect_analyses;
+            }
             if (stats.total_comparisons !== undefined) {
-                const el = document.getElementById('stat-total-comparisons');
+                const el = document.getElementById('stat-comparisons');
                 if (el) el.textContent = stats.total_comparisons;
             }
-            if (stats.total_defect_analyses !== undefined) {
-                const el = document.getElementById('stat-total-defects');
-                if (el) el.textContent = stats.total_defect_analyses;
+            if (stats.total_pdf_reports !== undefined) {
+                const el = document.getElementById('stat-reports');
+                if (el) el.textContent = stats.total_pdf_reports;
             }
             if (stats.db_size_mb !== undefined) {
                 const el = document.getElementById('stat-db-size');
@@ -1497,39 +1612,83 @@
             if (data.project_info) {
                 document.getElementById('project-name').textContent = data.project_info.name || 'Nanoprobe Sim Lab';
                 document.getElementById('project-version').textContent = data.project_info.version || '1.0.0';
-                
+
                 if (data.project_info.uptime) {
-                    const hours = Math.floor(data.project_info.uptime / 3600);
-                    document.getElementById('stat-uptime').textContent = hours;
+                    const seconds = data.project_info.uptime;
+                    const hours = Math.floor(seconds / 3600);
+                    const mins = Math.floor((seconds % 3600) / 60);
+                    // Формат: "12ч 30м" или "< 1ч" если меньше часа
+                    if (hours > 0) {
+                        document.getElementById('stat-uptime').textContent = `${hours}ч ${mins > 0 ? mins + 'м' : ''}`;
+                    } else {
+                        document.getElementById('stat-uptime').textContent = `${mins}м`;
+                    }
                 }
             }
 
-            // System Metrics
+            // System Metrics - обновление badge
             if (data.system_metrics || data.cpu_percent !== undefined) {
                 const cpuPercent = data.system_metrics?.cpu_percent || data.cpu_percent || 0;
                 const memoryPercent = data.system_metrics?.memory_percent || data.memory_percent || 0;
+                const diskPercent = data.system_metrics?.disk_percent || data.disk_percent || 0;
 
-                document.getElementById('cpu-progress').style.width = cpuPercent + '%';
-                document.getElementById('cpu-value').textContent = cpuPercent.toFixed(1) + '%';
+                // Обновление CPU badge
+                const cpuEl = document.getElementById('stat-cpu');
+                if (cpuEl) {
+                    cpuEl.textContent = cpuPercent.toFixed(1) + '%';
+                    // Цвет в зависимости от загрузки
+                    if (cpuPercent > 80) {
+                        cpuEl.style.color = 'var(--danger)';
+                    } else if (cpuPercent > 50) {
+                        cpuEl.style.color = 'var(--warning)';
+                    } else {
+                        cpuEl.style.color = 'var(--primary)';
+                    }
+                }
 
-                document.getElementById('memory-progress').style.width = memoryPercent + '%';
-                document.getElementById('memory-value').textContent = memoryPercent.toFixed(1) + '%';
+                // Обновление RAM badge
+                const memoryEl = document.getElementById('stat-memory');
+                if (memoryEl) {
+                    memoryEl.textContent = memoryPercent.toFixed(1) + '%';
+                    if (memoryPercent > 80) {
+                        memoryEl.style.color = 'var(--danger)';
+                    } else if (memoryPercent > 50) {
+                        memoryEl.style.color = 'var(--warning)';
+                    } else {
+                        memoryEl.style.color = 'var(--success)';
+                    }
+                }
 
-                if (data.system_metrics?.memory_used && data.system_metrics?.memory_total) {
-                    const used = (data.system_metrics.memory_used / 1024 ** 3).toFixed(1);
-                    const total = (data.system_metrics.memory_total / 1024 ** 3).toFixed(1);
-                    document.getElementById('memory-detail').textContent = `${used} / ${total} GB`;
+                // Обновление Disk badge
+                const diskEl = document.getElementById('stat-disk');
+                if (diskEl) {
+                    diskEl.textContent = diskPercent.toFixed(1) + '%';
+                    if (diskPercent > 80) {
+                        diskEl.style.color = 'var(--danger)';
+                    } else if (diskPercent > 50) {
+                        diskEl.style.color = 'var(--warning)';
+                    } else {
+                        diskEl.style.color = 'var(--info)';
+                    }
                 }
             }
 
-            // Stats from /api/stats
+            // Stats from /api/stats - компоненты
             if (data.stats) {
                 if (data.stats.components) {
-                    document.getElementById('stat-components-active').textContent = data.stats.components.active;
-                }
-                if (data.stats.system) {
-                    document.getElementById('stat-cpu').textContent = data.stats.system.cpu_percent.toFixed(1) + '%';
-                    document.getElementById('stat-memory').textContent = data.stats.system.memory_percent.toFixed(1) + '%';
+                    const activeComponents = data.stats.components.active || 0;
+                    const compEl = document.getElementById('stat-components-active');
+                    if (compEl) {
+                        compEl.textContent = activeComponents;
+                        // Цвет в зависимости от количества активных
+                        if (activeComponents === 0) {
+                            compEl.style.color = 'var(--text-muted)';
+                        } else if (activeComponents <= 2) {
+                            compEl.style.color = 'var(--success)';
+                        } else {
+                            compEl.style.color = 'var(--info)';
+                        }
+                    }
                 }
             }
 
