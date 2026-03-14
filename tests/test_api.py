@@ -50,7 +50,7 @@ class TestAuth:
         """Успешный вход"""
         response = client.post(
             "/api/v1/auth/login",
-            json={"username": "admin", "password": "Admin123"},
+            json={"username": "admin", "password": "Admin123!"},
         )
         assert response.status_code == 200
         data = response.json()
@@ -62,7 +62,7 @@ class TestAuth:
         """Неверные учетные данные"""
         response = client.post(
             "/api/v1/auth/login",
-            json={"username": "invalid", "password": "Wrong123"},
+            json={"username": "invalid", "password": "Wrong123!"},
         )
         assert response.status_code == 401
 
@@ -144,7 +144,7 @@ class TestAnalysis:
             "/api/v1/analysis/defects",
             json={"image_path": "/nonexistent/image.png"},
         )
-        assert response.status_code == 400
+        assert response.status_code == 422  # ValidationError - путь не существует
 
 
 class TestComparison:

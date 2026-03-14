@@ -97,7 +97,6 @@ class BatchJob:
     def set_progress_callback(self, callback: Callable):
         """Установка callback для обновления прогресса"""
         self.progress_callback = callback
-        self.callback = callback
 
     def update_progress(self, processed: int, success: bool = True):
         """Обновление прогресса"""
@@ -106,13 +105,6 @@ class BatchJob:
             self.failed_items += 1
         if self.progress_callback:
             self.progress_callback(self.job_id, self.progress_percent)
-        if self.callback:
-            self.callback(self.job_id, {
-                'processed': processed,
-                'total': self.total_items,
-                'percent': self.progress_percent,
-                'status': self.status
-            })
 
     def to_dict(self) -> Dict[str, Any]:
         """Конвертация в словарь"""
@@ -185,7 +177,8 @@ class BatchProcessor:
         items: List[Any],
         processor: Callable,
         parameters: Dict = None,
-        priority: int = 0
+        priority: int = 0,
+        callback: Callable = None
     ) -> str:
         """
         Создание нового задания
@@ -196,6 +189,7 @@ class BatchProcessor:
             processor: Функция обработки
             parameters: Параметры
             priority: Приоритет (чем выше, тем важнее)
+            callback: Callback для обновления прогресса
 
         Returns:
             ID созданного задания
