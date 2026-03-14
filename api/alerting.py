@@ -7,6 +7,7 @@ import os
 import smtplib
 import requests
 import asyncio
+import logging
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
@@ -16,6 +17,8 @@ import json
 import hashlib
 from dataclasses import dataclass, asdict
 from enum import Enum
+
+logger = logging.getLogger(__name__)
 
 
 class AlertSeverity(Enum):
@@ -209,8 +212,8 @@ class AlertManager:
         for callback in self._on_alert_callbacks:
             try:
                 callback(alert)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Ошибка в callback алерта: {e}")
 
         # Определение каналов для отправки
         if channels is None:

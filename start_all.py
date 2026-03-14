@@ -85,7 +85,7 @@ class ServiceManager:
             result = sock.connect_ex(('localhost', port))
             sock.close()
             return result == 0  # Порт занят если результат 0
-        except:
+        except (socket.error, OSError):
             return False
 
     def _wait_for_port(self, port: int, timeout: int = 30) -> bool:
@@ -104,7 +104,7 @@ class ServiceManager:
             import requests
             response = requests.get(url, timeout=3)
             return response.status_code == 200
-        except:
+        except (requests.RequestException, requests.Timeout):
             return False
 
     def _sync_backend_frontend(self) -> bool:
@@ -283,7 +283,7 @@ class ServiceManager:
                 self._log(f"Ошибка остановки Frontend: {e}", "ERROR")
                 try:
                     self.frontend_process.kill()
-                except:
+                except (subprocess.SubprocessError, OSError):
                     pass
 
         # Остановка backend
@@ -297,7 +297,7 @@ class ServiceManager:
                 self._log(f"Ошибка остановки Backend: {e}", "ERROR")
                 try:
                     self.backend_process.kill()
-                except:
+                except (subprocess.SubprocessError, OSError):
                     pass
 
         # Остановка sync manager (если запущен)
@@ -311,7 +311,7 @@ class ServiceManager:
                 self._log(f"Ошибка остановки Sync Manager: {e}", "ERROR")
                 try:
                     self.sync_process.kill()
-                except:
+                except (subprocess.SubprocessError, OSError):
                     pass
 
         self._log("Все сервисы остановлены")
@@ -363,7 +363,7 @@ class ServiceManager:
         # Открытие браузера
         try:
             webbrowser.open(f"http://{FRONTEND_HOST}:{FRONTEND_PORT}")
-        except:
+        except (OSError, webbrowser.Error):
             pass
 
         return True

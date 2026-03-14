@@ -124,7 +124,7 @@ def get_retry_after(exc: RateLimitExceeded) -> Optional[int]:
             if len(parts) > 1:
                 time_str = parts[1].strip().split()[0]
                 return int(time_str)
-    except Exception:
+    except (ValueError, IndexError, AttributeError):
         pass
 
     return 60  # Default 1 минута

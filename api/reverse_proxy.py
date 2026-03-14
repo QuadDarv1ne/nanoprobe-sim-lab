@@ -97,7 +97,7 @@ def proxy_login():
             )
             session['user_id'] = payload.get('sub')
             session['username'] = payload.get('username')
-        except Exception:
+        except (jwt.PyJWTError, KeyError, TypeError):
             pass
 
         return jsonify(tokens)
