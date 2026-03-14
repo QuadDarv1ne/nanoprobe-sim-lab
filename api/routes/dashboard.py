@@ -15,7 +15,6 @@ from api.schemas import (
     DashboardStats,
     SystemHealth,
     RealtimeMetrics,
-    PaginatedResponse,
     ErrorResponse,
 )
 from api.error_handlers import DatabaseError, ValidationError
