@@ -7,6 +7,9 @@ import time
 import os
 from functools import wraps
 
+from fastapi import Response
+from fastapi.responses import PlainTextResponse
+
 try:
     from prometheus_client import (
         Counter,
@@ -366,9 +369,6 @@ async def get_metrics():
         from api.metrics import get_metrics
         app.add_api_route('/metrics', get_metrics)
     """
-    from fastapi import Response
-    from fastapi.responses import PlainTextResponse
-
     if not PROMETHEUS_AVAILABLE:
         return PlainTextResponse(
             "Prometheus client not installed. Install with: pip install prometheus-client",
