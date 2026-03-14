@@ -1,71 +1,71 @@
 """
 Enhanced Dashboard API with advanced metrics and real-time data
-Расширенные эндпоинты для современного дашборда
 """
 
-from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect, HTTPException
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 import psutil
-import os
-import json
 from pathlib import Path
 import asyncio
+import aiohttp
 
-from api.schemas import DashboardStats, SystemHealth, RealtimeMetrics
 from utils.database import DatabaseManager
-from utils.redis_cache import cache
 
 router = APIRouter()
 
-# Глобальные подключения WebSocket
+# WebSocket подключения
 active_websockets: List[WebSocket] = []
+
+# Кэш для метрик
+_metrics_cache: Optional[Dict[str, Any]] = None
+_cache_timestamp: Optional[datetime] = None
+CACHE_TTL = 1  # секунда для real-time метрик
 
 
 @router.get("/stats/detailed")
 async def get_detailed_stats():
     """
-    Расширенная статистика дашборда
-    Включает детальную информацию по всем компонентам
+    Get detailed dashboard statistics
     """
-    db_manager = DatabaseManager("data/nanoprobe.db")
-    
+    db_manager = None
     try:
+        db_manager = DatabaseManager("data/nanoprobe.db")
+
         # Базовая статистика
         scans_count = db_manager.count_scans()
         simulations_count = db_manager.count_simulations()
         analysis_count = db_manager.count_analysis_results()
         comparisons_count = db_manager.count_comparisons()
         reports_count = db_manager.count_reports()
-        
+
         # Детальная статистика по сканированиям
         scans_by_type = db_manager.execute_query(
             "SELECT scan_type, COUNT(*) as count FROM scans GROUP BY scan_type"
         )
-        
+
         # Последние активности
         recent_scans = db_manager.execute_query(
             "SELECT id, scan_type, resolution, created_at FROM scans ORDER BY created_at DESC LIMIT 5"
         )
-        
+
         # Статистика по симуляциям
         sim_stats = db_manager.execute_query(
             "SELECT simulation_type, COUNT(*) as count, "
             "AVG(duration_sec) as avg_duration FROM simulations "
             "GROUP BY simulation_type"
         )
-        
+
         # Использование ресурсов
         cpu_percent = psutil.cpu_percent(interval=0.1)
         memory = psutil.virtual_memory()
         disk = psutil.disk_usage('/')
-        
+
         # Uptime системы
         boot_time = datetime.fromtimestamp(psutil.boot_time())
         uptime = datetime.now() - boot_time
-        
-        detailed_stats = {
+
+        return {
             "summary": {
                 "total_scans": scans_count,
                 "total_simulations": simulations_count,
@@ -108,11 +108,11 @@ async def get_detailed_stats():
                 "uptime": str(uptime).split('.')[0]
             }
         }
-        
-        return detailed_stats
-        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get detailed stats: {str(e)}")
     finally:
-        db_manager.close_pool()
+        if db_manager:
+            db_manager.close_pool()
 
 
 @router.get("/metrics/realtime")
@@ -330,21 +330,17 @@ async def metrics_websocket(websocket: WebSocket):
     """
     await websocket.accept()
     active_websockets.append(websocket)
-    
+
     try:
         while True:
-            # Получение метрик
             metrics = await get_realtime_metrics()
-            
-            # Отправка клиенту
             await websocket.send_json(metrics)
-            
-            # Пауза 1 секунда
             await asyncio.sleep(1)
-            
+
     except WebSocketDisconnect:
-        active_websockets.remove(websocket)
-    except Exception as e:
+        if websocket in active_websockets:
+            active_websockets.remove(websocket)
+    except Exception:
         if websocket in active_websockets:
             active_websockets.remove(websocket)
         raise
@@ -376,69 +372,71 @@ async def check_alerts():
     """
     Проверка текущих алертов
     """
-    alerts = []
-    
-    cpu_percent = psutil.cpu_percent(interval=0.1)
-    memory = psutil.virtual_memory()
-    disk = psutil.disk_usage('/')
-    
-    # CPU алерты
-    if cpu_percent >= 90:
-        alerts.append({
-            "level": "critical",
-            "type": "cpu",
-            "message": f"Критическая загрузка CPU: {cpu_percent}%",
-            "value": cpu_percent,
-            "threshold": 90
-        })
-    elif cpu_percent >= 70:
-        alerts.append({
-            "level": "warning",
-            "type": "cpu",
-            "message": f"Высокая загрузка CPU: {cpu_percent}%",
-            "value": cpu_percent,
-            "threshold": 70
-        })
-    
-    # Memory алерты
-    if memory.percent >= 90:
-        alerts.append({
-            "level": "critical",
-            "type": "memory",
-            "message": f"Критическое использование RAM: {memory.percent}%",
-            "value": memory.percent,
-            "threshold": 90
-        })
-    elif memory.percent >= 70:
-        alerts.append({
-            "level": "warning",
-            "type": "memory",
-            "message": f"Высокое использование RAM: {memory.percent}%",
-            "value": memory.percent,
-            "threshold": 70
-        })
-    
-    # Disk алерты
-    if disk.percent >= 95:
-        alerts.append({
-            "level": "critical",
-            "type": "disk",
-            "message": f"Критическое заполнение диска: {disk.percent}%",
-            "value": disk.percent,
-            "threshold": 95
-        })
-    elif disk.percent >= 80:
-        alerts.append({
-            "level": "warning",
-            "type": "disk",
-            "message": f"Высокое заполнение диска: {disk.percent}%",
-            "value": disk.percent,
-            "threshold": 80
-        })
-    
-    return {
-        "timestamp": datetime.now().isoformat(),
-        "alerts": alerts,
-        "has_critical": any(a["level"] == "critical" for a in alerts),
-        "has_warning": any(a["level"] == "warning" for a in alerts)
-    }
+    try:
+        alerts = []
+        cpu_percent = psutil.cpu_percent(interval=0.1)
+        memory = psutil.virtual_memory()
+        disk = psutil.disk_usage('/')
+
+        # CPU алерты
+        if cpu_percent >= 90:
+            alerts.append({
+                "level": "critical",
+                "type": "cpu",
+                "message": f"Critical CPU usage: {cpu_percent}%",
+                "value": cpu_percent,
+                "threshold": 90
+            })
+        elif cpu_percent >= 70:
+            alerts.append({
+                "level": "warning",
+                "type": "cpu",
+                "message": f"High CPU usage: {cpu_percent}%",
+                "value": cpu_percent,
+                "threshold": 70
+            })
+
+        # Memory алерты
+        if memory.percent >= 90:
+            alerts.append({
+                "level": "critical",
+                "type": "memory",
+                "message": f"Critical memory usage: {memory.percent}%",
+                "value": memory.percent,
+                "threshold": 90
+            })
+        elif memory.percent >= 70:
+            alerts.append({
+                "level": "warning",
+                "type": "memory",
+                "message": f"High memory usage: {memory.percent}%",
+                "value": memory.percent,
+                "threshold": 70
+            })
+
+        # Disk алерты
+        if disk.percent >= 95:
+            alerts.append({
+                "level": "critical",
+                "type": "disk",
+                "message": f"Critical disk usage: {disk.percent}%",
+                "value": disk.percent,
+                "threshold": 95
+            })
+        elif disk.percent >= 80:
+            alerts.append({
+                "level": "warning",
+                "type": "disk",
+                "message": f"High disk usage: {disk.percent}%",
+                "value": disk.percent,
+                "threshold": 80
+            })
+
+        return {
+            "timestamp": datetime.now().isoformat(),
+            "alerts": alerts,
+            "has_critical": any(a["level"] == "critical" for a in alerts),
+            "has_warning": any(a["level"] == "warning" for a in alerts)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to check alerts: {str(e)}")
