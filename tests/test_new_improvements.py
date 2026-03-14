@@ -22,9 +22,9 @@ class TestSchemasValidation:
         """Тест валидного запроса логина"""
         from api.schemas import LoginRequest
 
-        request = LoginRequest(username="test_user", password="Password123")
+        request = LoginRequest(username="test_user", password="Password123!")
         assert request.username == "test_user"
-        assert request.password == "Password123"
+        assert request.password == "Password123!"
 
     def test_login_request_password_too_short(self):
         """Тест слишком короткого пароля"""
