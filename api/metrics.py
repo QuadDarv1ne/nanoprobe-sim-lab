@@ -17,8 +17,6 @@ try:
         Summary,
         generate_latest,
         CONTENT_TYPE_LATEST,
-        CollectorRegistry,  # noqa: F401
-        multiprocess,  # noqa: F401
         start_http_server,
     )
     from prometheus_client import REGISTRY
