@@ -1,13 +1,13 @@
-# Универсальный запуск проекта
+# Nanoprobe Sim Lab - Launch Guide
 
-## 🚀 Быстрый старт
+## Quick Start
 
-### Интерактивный режим (выбор версии):
+### Interactive mode (select version):
 ```bash
 python start.py
 ```
 
-### Конкретная версия:
+### Specific version:
 ```bash
 # Flask frontend (v1.0)
 python start.py flask
@@ -15,31 +15,41 @@ python start.py flask
 # Next.js frontend (v2.0)
 python start.py nextjs
 
-# Только Backend API
+# Only Backend API
 python start.py api-only
 ```
 
 ---
 
-## 📌 Версии
+## Versions
 
-### 🔹 Flask Dashboard (v1.0)
-- **Порт:** http://localhost:5000
-- **Технологии:** Flask + Jinja2 + Socket.IO
-- **Запуск:** `python start.py flask`
+### Flask Dashboard (v1.0 - Legacy/Stable)
+- **Port:** http://localhost:5000
+- **Technologies:** Flask + Jinja2 + Socket.IO + Chart.js
+- **Launch:** `python start.py flask`
 
-### 🔹 Next.js Dashboard (v2.0)
-- **Порт:** http://localhost:3000
-- **Технологии:** Next.js 14 + TypeScript + Tailwind CSS
-- **Запуск:** `python start.py nextjs`
+### Next.js Dashboard (v2.0 - Modern/Production)
+- **Port:** http://localhost:3000
+- **Technologies:** Next.js 14 + TypeScript + Tailwind CSS + Zustand
+- **Launch:** `python start.py nextjs`
 
-### 🔹 Backend API
-- **Порт:** http://localhost:8000
+### Backend API
+- **Port:** http://localhost:8000
 - **Swagger:** http://localhost:8000/docs
-- **Запуск:** `python start.py api-only`
+- **Launch:** `python start.py api-only`
 
 ---
 
-## 📖 Подробная документация
+## Features
 
-См. [`FRONTEND_VERSIONS.md`](FRONTEND_VERSIONS.md) - полное сравнение версий.
+- **Automatic port checking** - waits for services to start
+- **Auto-open browser** - opens frontend/backend in browser
+- **Process monitoring** - watches all services
+- **Graceful shutdown** - Ctrl+C stops all services
+
+---
+
+## Documentation
+
+- **Frontend comparison:** [`FRONTEND_VERSIONS.md`](FRONTEND_VERSIONS.md)
+- **Main README:** [`README.md`](README.md)

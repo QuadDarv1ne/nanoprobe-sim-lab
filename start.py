@@ -30,28 +30,28 @@ NEXTJS_PORT = 3000
 def print_banner():
     """Вывод заголовка"""
     print("=" * 70)
-    print("  Nanoprobe Sim Lab - Универсальный запуск")
+    print("  Nanoprobe Sim Lab - Universal Launcher")
     print("=" * 70)
     print()
 
 
 def print_versions():
     """Информация о версиях"""
-    print("📌 Доступные версии frontend:")
+    print("Available frontend versions:")
     print()
-    print("  1️⃣  Flask Dashboard (v1.0 - Legacy/Stable)")
-    print("     • Порт: http://localhost:5000")
-    print("     • Технологии: Flask + Jinja2 + Socket.IO")
-    print("     • Файл: src/web/web_dashboard.py")
+    print("  1. Flask Dashboard (v1.0 - Legacy/Stable)")
+    print("     - Port: http://localhost:5000")
+    print("     - Technologies: Flask + Jinja2 + Socket.IO")
+    print("     - File: src/web/web_dashboard.py")
     print()
-    print("  2️⃣  Next.js Dashboard (v2.0 - Modern/Production)")
-    print("     • Порт: http://localhost:3000")
-    print("     • Технологии: Next.js 14 + TypeScript + Tailwind CSS")
-    print("     • Папка: frontend/")
+    print("  2. Next.js Dashboard (v2.0 - Modern/Production)")
+    print("     - Port: http://localhost:3000")
+    print("     - Technologies: Next.js 14 + TypeScript + Tailwind CSS")
+    print("     - Folder: frontend/")
     print()
-    print("  3️⃣  Только Backend API")
-    print("     • Порт: http://localhost:8000")
-    print("     • Swagger: http://localhost:8000/docs")
+    print("  3. Only Backend API")
+    print("     - Port: http://localhost:8000")
+    print("     - Swagger: http://localhost:8000/docs")
     print()
     print("=" * 70)
     print()
@@ -71,8 +71,8 @@ def check_backend_port():
 
 def start_backend():
     """Запуск Backend (FastAPI)"""
-    print("🚀 Запуск Backend (FastAPI)...")
-    print(f"   Порт: http://localhost:{BACKEND_PORT}")
+    print("Starting Backend (FastAPI)...")
+    print(f"   Port: http://localhost:{BACKEND_PORT}")
     print(f"   Swagger: http://localhost:{BACKEND_PORT}/docs")
     print()
     
@@ -90,18 +90,18 @@ def start_backend():
     time.sleep(3)
     
     if check_backend_port():
-        print("✅ Backend запущен!")
+        print("[OK] Backend started!")
         print()
         return process
     else:
-        print("❌ Не удалось запустить Backend!")
+        print("[ERROR] Failed to start Backend!")
         return None
 
 
 def start_flask_frontend():
     """Запуск Flask frontend"""
-    print("🚀 Запуск Flask Frontend...")
-    print(f"   Порт: http://localhost:{FLASK_PORT}")
+    print("Starting Flask Frontend...")
+    print(f"   Port: http://localhost:{FLASK_PORT}")
     print()
     
     flask_script = PROJECT_ROOT / "src" / "web" / "web_dashboard.py"
@@ -115,15 +115,15 @@ def start_flask_frontend():
     )
     
     time.sleep(2)
-    print("✅ Flask Frontend запущен!")
+    print("[OK] Flask Frontend started!")
     print()
     return process
 
 
 def start_nextjs_frontend():
     """Запуск Next.js frontend"""
-    print("🚀 Запуск Next.js Frontend...")
-    print(f"   Порт: http://localhost:{NEXTJS_PORT}")
+    print("Starting Next.js Frontend...")
+    print(f"   Port: http://localhost:{NEXTJS_PORT}")
     print()
     
     frontend_dir = PROJECT_ROOT / "frontend"
@@ -134,7 +134,7 @@ def start_nextjs_frontend():
     # Проверка node_modules
     node_modules = frontend_dir / "node_modules"
     if not node_modules.exists():
-        print("⚠️  Node modules не найдены. Установка зависимостей...")
+        print("[WARN] Node modules not found. Installing dependencies...")
         subprocess.run(["npm", "install"], cwd=str(frontend_dir))
     
     process = subprocess.Popen(
@@ -143,7 +143,7 @@ def start_nextjs_frontend():
     )
     
     time.sleep(5)  # Next.js запускается дольше
-    print("✅ Next.js Frontend запущен!")
+    print("[OK] Next.js Frontend started!")
     print()
     return process
 
@@ -158,7 +158,7 @@ def open_browser(version: str):
     
     url = urls.get(version, urls["api-only"])
     
-    print(f"🌐 Открытие браузера: {url}")
+    print(f"Opening browser: {url}")
     webbrowser.open(url)
     time.sleep(1)
 
@@ -168,7 +168,7 @@ def interactive_choice():
     print_versions()
     
     while True:
-        choice = input("Выберите версию (1/2/3 или flask/nextjs/api-only): ").strip().lower()
+        choice = input("Select version (1/2/3 or flask/nextjs/api-only): ").strip().lower()
         
         if choice in ["1", "flask"]:
             return "flask"
@@ -177,7 +177,7 @@ def interactive_choice():
         elif choice in ["3", "api-only", "api"]:
             return "api-only"
         else:
-            print("❌ Неверный выбор. Попробуйте ещё раз.")
+            print("[ERROR] Invalid choice. Try again.")
             print()
 
 
@@ -189,15 +189,15 @@ def main():
     if len(sys.argv) > 1:
         mode = sys.argv[1].lower()
         if mode not in ["flask", "nextjs", "api-only", "api"]:
-            print(f"❌ Неверный аргумент: {mode}")
-            print("Используйте: flask, nextjs, или api-only")
+            print(f"[ERROR] Invalid argument: {mode}")
+            print("Use: flask, nextjs, or api-only")
             return
     else:
         mode = interactive_choice()
     
     print()
     print("=" * 70)
-    print(f"  Режим запуска: {mode.upper()}")
+    print(f"  Launch mode: {mode.upper()}")
     print("=" * 70)
     print()
     
@@ -222,23 +222,23 @@ def main():
         open_browser("nextjs")
         
     elif mode == "api-only":
-        print("📡 Запущен только Backend API")
+        print("Backend API only")
         print("   Swagger UI: http://localhost:8000/docs")
         print()
         open_browser("api-only")
     
     print("=" * 70)
-    print("  ✅ Все сервисы запущены!")
+    print("  [OK] All services started!")
     print("=" * 70)
     print()
-    print("📌 Полезные ссылки:")
-    print(f"   • Backend API: http://localhost:{BACKEND_PORT}/docs")
+    print("Useful links:")
+    print(f"   - Backend API: http://localhost:{BACKEND_PORT}/docs")
     if mode == "flask":
-        print(f"   • Flask Frontend: http://localhost:{FLASK_PORT}")
+        print(f"   - Flask Frontend: http://localhost:{FLASK_PORT}")
     elif mode == "nextjs":
-        print(f"   • Next.js Frontend: http://localhost:{NEXTJS_PORT}")
+        print(f"   - Next.js Frontend: http://localhost:{NEXTJS_PORT}")
     print()
-    print("💡 Для остановки нажмите Ctrl+C")
+    print("Press Ctrl+C to stop")
     print()
     
     # Ожидание остановки
@@ -246,10 +246,10 @@ def main():
         for proc in processes:
             proc.wait()
     except KeyboardInterrupt:
-        print("\n\n⏹️  Остановка сервисов...")
+        print("\n\n[INFO] Stopping services...")
         for proc in processes:
             proc.terminate()
-        print("✅ Все сервисы остановлены.")
+        print("[OK] All services stopped.")
 
 
 if __name__ == "__main__":
