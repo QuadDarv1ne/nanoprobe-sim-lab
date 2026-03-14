@@ -5,7 +5,6 @@ import tempfile
 import json
 import sys
 from pathlib import Path
-from typing import Any, Dict
 
 # Добавляем путь к модулям
 sys.path.insert(0, str(Path(__file__).parent.parent))

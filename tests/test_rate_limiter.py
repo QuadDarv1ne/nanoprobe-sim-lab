@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from utils.rate_limiter import RateLimiter, rate_limit, limiter
+from utils.rate_limiter import RateLimiter, limiter
 
 
 def test_rate_limiter_singleton():
@@ -90,7 +90,7 @@ def test_progressive_blocking():
 
     status = limiter.get_status(key, max_requests, window)
     assert status["violation_count"] == 1, "Должно быть 1 нарушение"
-    assert status["blocked"] == True, "Должен быть заблокирован"
+    assert status["blocked"] is True, "Должен быть заблокирован"
 
     # Блокировка должна быть > 100 секунд (2 минуты)
     assert status["retry_after"] > 100, f"Блокировка должна быть > 100 сек, получено {status['retry_after']}"
@@ -107,11 +107,11 @@ def test_get_status():
     max_requests = 10
     window = 60
 
-    #初始状态
+    # Начальное состояние
     status = limiter.get_status(key, max_requests, window)
     assert status["requests_made"] == 0
     assert status["requests_remaining"] == 10
-    assert status["blocked"] == False
+    assert status["blocked"] is False
 
     # Сделать 5 запросов
     for _ in range(5):
