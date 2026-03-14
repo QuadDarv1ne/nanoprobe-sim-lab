@@ -120,61 +120,79 @@ async def get_detailed_stats():
 @router.get("/metrics/realtime")
 async def get_realtime_metrics():
     """
-    Real-time метрики системы
-    Обновляется каждую секунду
+    Get real-time system metrics
+    Кэш: 1 секунда для real-time данных
     """
-    # CPU по ядрам
-    cpu_percent_per_core = psutil.cpu_percent(percpu=True, interval=0.1)
+    global _metrics_cache, _cache_timestamp
     
-    # Memory детально
-    memory = psutil.virtual_memory()
+    # Проверка кэша
+    if _metrics_cache and _cache_timestamp:
+        age = (datetime.now() - _cache_timestamp).total_seconds()
+        if age < CACHE_TTL:
+            return _metrics_cache
     
-    # Disk I/O
-    disk_io = psutil.disk_io_counters()
-    
-    # Network I/O
-    net_io = psutil.net_io_counters()
-    
-    # Процессы Python
-    python_processes = []
-    for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent']):
-        try:
-            if 'python' in proc.info['name'].lower():
-                python_processes.append({
-                    "pid": proc.info['pid'],
-                    "name": proc.info['name'],
-                    "cpu_percent": proc.info['cpu_percent'] or 0,
-                    "memory_percent": proc.info['memory_percent'] or 0
-                })
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            continue
-    
-    return {
-        "timestamp": datetime.now().isoformat(),
-        "cpu": {
-            "total": psutil.cpu_percent(interval=0.1),
-            "per_core": cpu_percent_per_core,
-            "cores": len(cpu_percent_per_core)
-        },
-        "memory": {
-            "percent": memory.percent,
-            "used_mb": round(memory.used / (1024**2), 2),
-            "available_mb": round(memory.available / (1024**2), 2),
-            "total_mb": round(memory.total / (1024**2), 2)
-        },
-        "disk": {
-            "percent": psutil.disk_usage('/').percent,
-            "read_mb": round(disk_io.read_bytes / (1024**2), 2) if disk_io else 0,
-            "write_mb": round(disk_io.write_bytes / (1024**2), 2) if disk_io else 0
-        },
-        "network": {
-            "bytes_sent_mb": round(net_io.bytes_sent / (1024**2), 2) if net_io else 0,
-            "bytes_recv_mb": round(net_io.bytes_recv / (1024**2), 2) if net_io else 0,
-            "packets_sent": net_io.packets_sent if net_io else 0,
-            "packets_recv": net_io.packets_recv if net_io else 0
-        },
-        "python_processes": python_processes[:5]  # Топ 5 процессов
-    }
+    try:
+        # CPU по ядрам
+        cpu_percent_per_core = psutil.cpu_percent(percpu=True, interval=0.1)
+        
+        # Memory детально
+        memory = psutil.virtual_memory()
+        
+        # Disk I/O
+        disk_io = psutil.disk_io_counters()
+        
+        # Network I/O
+        net_io = psutil.net_io_counters()
+        
+        # Python процессы
+        python_processes = []
+        for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent']):
+            try:
+                if 'python' in proc.info['name'].lower():
+                    python_processes.append({
+                        "pid": proc.info['pid'],
+                        "name": proc.info['name'],
+                        "cpu_percent": proc.info['cpu_percent'] or 0,
+                        "memory_percent": proc.info['memory_percent'] or 0
+                    })
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                continue
+        
+        metrics = {
+            "timestamp": datetime.now().isoformat(),
+            "cpu": {
+                "total": psutil.cpu_percent(interval=0.1),
+                "per_core": cpu_percent_per_core,
+                "cores": len(cpu_percent_per_core)
+            },
+            "memory": {
+                "percent": memory.percent,
+                "used_mb": round(memory.used / (1024**2), 2),
+                "available_mb": round(memory.available / (1024**2), 2),
+                "total_mb": round(memory.total / (1024**2), 2)
+            },
+            "disk": {
+                "percent": psutil.disk_usage('/').percent,
+                "read_mb": round(disk_io.read_bytes / (1024**2), 2) if disk_io else 0,
+                "write_mb": round(disk_io.write_bytes / (1024**2), 2) if disk_io else 0
+            },
+            "network": {
+                "bytes_sent_mb": round(net_io.bytes_sent / (1024**2), 2) if net_io else 0,
+                "bytes_recv_mb": round(net_io.bytes_recv / (1024**2), 2) if net_io else 0,
+                "packets_sent": net_io.packets_sent if net_io else 0,
+                "packets_recv": net_io.packets_recv if net_io else 0
+            },
+            "python_processes": python_processes[:5]
+        }
+        
+        # Кэширование
+        _metrics_cache = metrics
+        _cache_timestamp = datetime.now()
+        
+        return metrics
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get real-time metrics: {str(e)}")
 
 
 @router.get("/activity/timeline")
@@ -357,7 +375,7 @@ async def metrics_websocket(websocket: WebSocket):
 @router.get("/alerts/config")
 async def get_alerts_config():
     """
-    Конфигурация системы алертов
+    Get alerts configuration
     """
     return {
         "thresholds": {
@@ -376,9 +394,10 @@ async def get_alerts_config():
 
 
 @router.get("/alerts/check")
+@cache.cached(timeout=5, key_prefix="dashboard:alerts:check")
 async def check_alerts():
     """
-    Проверка текущих алертов
+    Check current system alerts (cached for 5 seconds)
     """
     try:
         alerts = []
