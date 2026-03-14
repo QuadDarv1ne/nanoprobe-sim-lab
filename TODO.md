@@ -1,6 +1,6 @@
 # Nanoprobe Sim Lab - TODO & Progress
 
-**Last Updated:** 2026-03-13
+**Last Updated:** 2026-03-14
 **Current Version:** 1.0.0
 
 ---
@@ -14,6 +14,8 @@
 - [x] Centralized error handling (8 custom exceptions)
 - [x] Database migrations (Alembic)
 - [x] Circuit Breaker pattern for external services
+- [x] Security Headers (XSS, Clickjacking, MIME sniffing protection)
+- [x] Integration tests API + Database (14 tests)
 
 ### High Priority
 - [x] WebSocket real-time updates (channels, heartbeat)
@@ -27,6 +29,37 @@
 - [x] Refactored to custom exceptions
 - [x] Removed unused imports
 - [x] HTTP session with connection pooling
+
+---
+
+## 🔧 Latest Improvements (2026-03-14)
+
+### Security Headers
+- [x] SecurityHeadersMiddleware (~180 строк)
+- [x] X-Frame-Options: DENY (clickjacking защита)
+- [x] X-Content-Type-Options: nosniff (MIME sniffing защита)
+- [x] X-XSS-Protection: 1; mode=block (XSS защита)
+- [x] Referrer-Policy: strict-origin-when-cross-origin
+- [x] Permissions-Policy: ограничение функций браузера
+- [x] HSTS (HTTPS enforcement, production mode)
+- [x] Content-Security-Policy (CSP)
+- [x] Удаление Server и X-Powered-By заголовков
+- [x] 10 тестов для security headers
+- [x] Интеграция в api/main.py
+- [x] ENVIRONMENT variable для production режима
+
+### Integration Tests
+- [x] test_integration_db.py (~360 строк)
+- [x] 14 интеграционных тестов API + БД
+- [x] CRUD операции (Create, Read, Update, Delete)
+- [x] Тестирование сканирований и симуляций
+- [x] Проверка аутентификации
+- [x] Тест транзакций и отката при ошибках
+- [x] Параллельные запросы (concurrent requests)
+- [x] Проверка индексов БД (Alembic migrations)
+- [x] Dashboard statistics API
+- [x] Health check API
+- [x] Автоматическая очистка тестовой БД
 
 ---
 
