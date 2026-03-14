@@ -23,6 +23,7 @@ from api.schemas import (
 )
 from api.error_handlers import DatabaseError, ValidationError
 from utils.enhanced_monitor import get_monitor, format_uptime
+from utils.redis_cache import cache
 
 router = APIRouter()
 
@@ -30,6 +31,14 @@ router = APIRouter()
 _stats_cache = {}
 _stats_cache_time = None
 CACHE_TTL = 5  # секунд
+
+# Префиксы для Redis кэша
+CACHE_PREFIX = {
+    "stats": "dashboard:stats",
+    "metrics": "dashboard:metrics",
+    "health": "dashboard:health",
+    "storage": "dashboard:storage",
+}
 
 
 def get_project_root() -> Path:
@@ -105,9 +114,19 @@ async def get_dashboard_stats(
     - Использование хранилища
     - Аптайм системы
     - Расширенная статистика БД
+    
+    Кэширование: 5 секунд (Redis + in-memory)
     """
     # Проверка кэша если не требуется свежий ответ
     if cache_control != "no-cache":
+        # Redis кэш
+        if cache.is_available():
+            redis_key = f"{CACHE_PREFIX['stats']}:all"
+            cached = cache.get(redis_key)
+            if cached:
+                return DashboardStats(**cached)
+        
+        # In-memory кэш
         cached = get_cached_stats()
         if cached:
             return DashboardStats(**cached)
@@ -153,9 +172,11 @@ async def get_dashboard_stats(
             scans_by_type=db_stats.get('scans_by_type', {}),
             db_size_mb=db_size_mb,
         )
-        
-        # Кэширование результата
+
+        # Кэширование результата (Redis + in-memory)
         cache_stats(result.model_dump())
+        if cache.is_available():
+            cache.set(f"{CACHE_PREFIX['stats']}:all", result.model_dump(), expire=5)
 
         return result
     except Exception as e:
@@ -279,7 +300,19 @@ async def get_realtime_metrics(
 ):
     """
     Метрики системы в реальном времени для графиков
+    
+    Кэширование: 1 секунда (Redis) - для real-time данных
     """
+    cache_key = f"{CACHE_PREFIX['metrics']}:realtime"
+    if include_history:
+        cache_key += ":with_history"
+    
+    # Проверка Redis кэша
+    if cache.is_available():
+        cached = cache.get(cache_key)
+        if cached:
+            return cached
+    
     try:
         monitor = get_monitor()
         metrics = monitor.get_current_metrics()
@@ -294,14 +327,19 @@ async def get_realtime_metrics(
             network_download_mbps=network_speed["download_mbps"],
         )
 
+        response_data = result.model_dump()
         if include_history:
             history = monitor.get_metrics_history(limit=60)
-            return {
+            response_data = {
                 "current": result.model_dump(),
                 "history": history,
             }
 
-        return result
+        # Кэширование в Redis (1 секунда для real-time)
+        if cache.is_available():
+            cache.set(cache_key, response_data, expire=1)
+
+        return response_data
     except Exception as e:
         raise DatabaseError(f"Ошибка получения метрик: {str(e)}")
 

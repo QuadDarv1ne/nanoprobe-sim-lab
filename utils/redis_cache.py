@@ -145,6 +145,26 @@ class RedisCache:
             finally:
                 self._client = None
 
+    def invalidate_by_prefix(self, prefix: str) -> int:
+        """
+        Инвалидация кэша по префиксу
+        
+        Args:
+            prefix: Префикс ключей для удаления
+            
+        Returns:
+            Количество удалённых ключей
+        """
+        return self.clear_pattern(f"{prefix}:*")
+
+    def cache_json(self, key: str, data: Any, expire: int = 300) -> bool:
+        """Кэширование JSON данных"""
+        return self.set(f"json:{key}", data, expire)
+
+    def get_json(self, key: str) -> Optional[dict]:
+        """Получение JSON данных из кэша"""
+        return self.get(f"json:{key}")
+
 
 cache = RedisCache()
 
@@ -152,7 +172,7 @@ cache = RedisCache()
 def cached(prefix: str = "api", expire: int = 300):
     """
     Декоратор для кэширования результатов async функций.
-    
+
     Args:
         prefix: Префикс для ключа кэша
         expire: Время жизни кэша в секундах
@@ -161,26 +181,61 @@ def cached(prefix: str = "api", expire: int = 300):
         @wraps(func)
         async def wrapper(*args, **kwargs):
             from api.main import redis_cache
-            
+
             # Генерация ключа
             cache_key = f"{prefix}:{func.__name__}:"
             cache_key += hashlib.md5(
                 f"{args}:{kwargs}".encode()
             ).hexdigest()[:16]
-            
+
             # Попытка получить из кэша
             if redis_cache and redis_cache.is_available():
                 cached_value = redis_cache.get(cache_key)
                 if cached_value is not None:
                     return cached_value
-            
+
             # Вызов функции
             result = await func(*args, **kwargs)
-            
+
             # Сохранение в кэш
             if redis_cache and redis_cache.is_available():
                 redis_cache.set(cache_key, result, expire)
+
+            return result
+        return wrapper
+    return decorator
+
+
+def cached_sync(prefix: str = "api", expire: int = 300):
+    """
+    Декоратор для кэширования результатов sync функций.
+    
+    Args:
+        prefix: Префикс для ключа кэша
+        expire: Время жизни кэша в секундах
+    """
+    def decorator(func: Callable) -> Callable:
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            from utils.redis_cache import cache
             
+            # Генерация ключа
+            cache_key = f"{prefix}:{func.__name__}:"
+            cache_key += hashlib.md5(
+                f"{sorted(kwargs.items())}".encode()
+            ).hexdigest()[:16]
+
+            # Попытка получить из кэша
+            cached_value = cache.get(cache_key)
+            if cached_value is not None:
+                return cached_value
+
+            # Вызов функции
+            result = func(*args, **kwargs)
+
+            # Сохранение в кэш
+            cache.set(cache_key, result, expire)
+
             return result
         return wrapper
     return decorator
