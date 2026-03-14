@@ -151,9 +151,9 @@ class ConfigManager:
                     config[k] = {}
                 config = config[k]
             config[keys[-1]] = value
-            if save:
-                return self.save_config()
-            return True
+        if save:
+            return self.save_config()
+        return True
 
     def get_default_config(self) -> Dict[str, Any]:
         """
