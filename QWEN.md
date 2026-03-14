@@ -68,12 +68,41 @@ Backend (FastAPI:8000) ←→ Sync Manager ←→ Frontend (Flask:5000)
 
 #### Файлы:
 - ✅ `templates/dashboard.html` - Обновлён (CSS, HTML, JS)
-- ✅ `docs/UI_IMPROVEMENTS.md` - Документация улучшений
 
 #### Цветовая индикация:
 - 🟢 0-50%: норма (зелёный/синий)
 - 🟡 50-80%: внимание (жёлтый)
 - 🔴 80-100%: критично (красный)
+
+---
+
+### 2026-03-14: TODO.md - Актуальный статус
+
+**Completed (2026-03-14):**
+- ✅ Redis Full Integration - кэширование API (stats: 5с, metrics: 1с)
+- ✅ Database Indexes - 10 индексов для ускорения запросов
+- ✅ Rate Limiting - SlowAPI middleware (100 запросов/мин default)
+- ✅ Test Coverage - +15 тестов (Redis Cache, Sync Manager)
+
+**TODO.md Low Priority (обновлено):**
+- [ ] Mobile Application (React Native/Flutter)
+- [ ] External Integrations (NASA, Zenodo, Figshare upload)
+- [ ] Frontend Modernization (React/Vue, TypeScript, PWA)
+- [x] Redis for full caching - ВЫПОЛНЕНО
+- [x] Database indexes - ВЫПОЛНЕНО
+- [ ] Performance monitoring dashboard
+- [x] Rate limiting - ВЫПОЛНЕНО
+- [ ] CORS configuration for production
+- [ ] Security headers, audits
+- [ ] Increase test coverage to 80%+ (частично выполнено)
+- [ ] Integration tests API + DB
+- [ ] Load testing, Security testing
+
+**Следующие приоритеты (когда готово):**
+1. Integration tests API + DB
+2. CORS production configuration
+3. Security headers
+4. Load testing
 
 ---
 
