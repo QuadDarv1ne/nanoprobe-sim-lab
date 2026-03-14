@@ -39,7 +39,6 @@ def test_logger_setup():
             handler.close()
 
         print("[PASS] LoggerSetup")
-        return True
 
 
 def test_rotating_file_handler():
@@ -68,7 +67,6 @@ def test_rotating_file_handler():
         assert len(log_files) >= 1, "Файл лога должен существовать"
 
         print(f"[PASS] Ротация файлов (создано файлов: {len(log_files)})")
-        return True
 
 
 def test_json_formatter():
@@ -104,7 +102,6 @@ def test_json_formatter():
         assert log_data["level"] == "INFO"
 
         print("[PASS] JSON formatter")
-        return True
 
 
 def test_context_logging():
@@ -154,7 +151,6 @@ def test_context_logging():
         logger_mgr.log_system_event("Test event without context")
 
         print("[PASS] Контекстное логирование")
-        return True
     finally:
         # Очистка тестовой директории
         try:
@@ -197,7 +193,6 @@ def test_error_logging_with_exception():
         assert "ValueError" in content
 
         print("[PASS] Логирование ошибок")
-        return True
 
 
 def test_multiple_loggers():
@@ -239,7 +234,6 @@ def test_multiple_loggers():
         assert log2.exists()
 
         print("[PASS] Множественные логгеры")
-        return True
 
 
 def test_log_api_event():
@@ -275,7 +269,6 @@ def test_log_api_event():
         assert "Authentication failed" in content
 
         print("[PASS] API события")
-        return True
 
 
 def main():
