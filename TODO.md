@@ -173,6 +173,16 @@ None currently - project is stable and ready for rest.
 - [ ] Database query optimization
 - [x] Add database indexes - ВЫПОЛНЕНО
 - [ ] Performance monitoring dashboard
+- [ ] **Dashboard Endpoints Consolidation** (Приоритет: Средний)
+  - [ ] Объединить `dashboard.py` (559 строк) и `enhanced_dashboard.py` (470 строк)
+  - [ ] Устранить дублирование функционала
+  - [ ] Унифицировать кэширование (Redis для всех endpoints)
+  - [ ] Создать единый роут с префиксом `/api/v1/dashboard`
+- [ ] **Database Performance** (Приоритет: Низкий)
+  - [ ] Проверить существующие индексы (Alembic migrations)
+  - [ ] Добавить недостающие индексы для частых query
+  - [ ] Оптимизировать медленные запросы (EXPLAIN ANALYZE)
+  - [ ] Добавить query profiling
 
 ### Security
 - [x] Rate limiting on all endpoints - ВЫПОЛНЕНО
@@ -224,10 +234,19 @@ None currently - project is stable and ready for rest.
    - Doppler correction
 
 ### Когда готово:
-1. **Test Coverage 80%+** — Unit tests для оставшихся модулей (~6 часов)
-2. **NASA API Key** — Получить полноценный ключ (~1 час)
-3. **Mobile App** — React Native/Flutter (~8 часов)
-4. **Redis Full Integration** — Полное кэширование (~4 часа)
+1. **Dashboard Endpoints Consolidation** (~4 часа)
+   - Объединение dashboard.py + enhanced_dashboard.py
+   - Устранение дублирования
+   - Унификация кэширования
+
+2. **Database Performance** (~3 часа)
+   - Проверка индексов
+   - Оптимизация медленных запросов
+   - Query profiling
+
+3. **Test Coverage 80%+** — Unit tests для оставшихся модулей (~6 часов)
+4. **NASA API Key** — Получить полноценный ключ (~1 час)
+5. **Mobile App** — React Native/Flutter (~8 часов)
 
 ---
 
