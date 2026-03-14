@@ -247,11 +247,9 @@ def track_metrics(endpoint_name: str = None):
     Использование:
         @track_metrics('analyze_defects')
         def analyze_defects(...):
-            """TODO: Add description"""
             pass
     """
     def decorator(func):
-        """TODO: Add description"""
         @wraps(func)
         async def async_wrapper(*args, **kwargs):
             name = endpoint_name or func.__name__

@@ -3,24 +3,23 @@ FastAPI REST API для Nanoprobe Simulation Lab
 Совместная работа с Flask веб-интерфейсом
 """
 
-from fastapi import FastAPI, Depends, status, WebSocket, WebSocketDisconnect
+from contextlib import asynccontextmanager
+from datetime import datetime
+from pathlib import Path
+from typing import List, Optional
+
+import json
+import logging
+import os
+
+import uvicorn
+from fastapi import Depends, FastAPI, Request, status, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import JSONResponse
-from fastapi import Request
-from contextlib import asynccontextmanager
-import uvicorn
-from pathlib import Path
-from datetime import datetime
-from typing import List, Optional
-import json
-import os
-import logging
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from api.error_handlers import ValidationError
-
-logger = logging.getLogger(__name__)
+from api.error_handlers import ValidationError, register_error_handlers
 
 # Импорт существующих утилит
 from utils.database import DatabaseManager
@@ -34,6 +33,7 @@ from utils.redis_cache import RedisCache
 from api.routes import scans, simulations, analysis, comparison, reports, auth, admin, dashboard
 from api.routes import graphql, ml_analysis, external_services
 
+logger = logging.getLogger(__name__)
 
 # Глобальные переменные
 db_manager: Optional[DatabaseManager] = None
@@ -176,9 +176,7 @@ try:
 except ImportError as e:
     print(f"[WARN] Rate limiting disabled: {e}")
 
-
 # Регистрация централизованных обработчиков ошибок
-from api.error_handlers import register_error_handlers
 register_error_handlers(app)
 
 
