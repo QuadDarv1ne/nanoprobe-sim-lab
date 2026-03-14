@@ -118,7 +118,12 @@ class SurfaceVisualizer:
         plt.colorbar(im, ax=ax, label="Высота")
 
         def update(frame):
-            """TODO: Add description"""
+            """
+            Обновление кадра анимации
+            
+            Args:
+                frame: Индекс текущего кадра
+            """
             im.set_array(scan_data_list[frame])
             ax.set_title(f"{title} - Шаг {frame + 1}")
             return [im]

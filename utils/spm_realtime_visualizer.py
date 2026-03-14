@@ -328,7 +328,12 @@ class RealTimeSPMVisualizer:
             self.initialize_plot()
 
         def animate(frame):
-            """TODO: Add description"""
+            """
+            Функция анимации для обновления данных
+            
+            Args:
+                frame: Номер текущего кадра
+            """
             if data_source:
                 try:
                     new_data = data_source(frame)

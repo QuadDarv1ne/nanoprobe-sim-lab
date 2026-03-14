@@ -381,7 +381,12 @@ class SystemHealthMonitor:
         self.active = True
 
         def monitor():
-            """TODO: Add description"""
+            """
+            Функция мониторинга системы в фоновом потоке
+            
+            Получает метрики системы, оценивает их состояние
+            и генерирует оповещения при превышении порогов.
+            """
             while self.active:
                 try:
                     # Получаем текущие метрики
@@ -630,7 +635,12 @@ def main():
     # Добавляем обработчик оповещений
 
     def alert_handler(alert):
-        """TODO: Add description"""
+        """
+        Обработчик оповещений для вывода в консоль
+        
+        Args:
+            alert: Объект оповещения с сообщением и уровнем критичности
+        """
         print(f"🚨 ОПОВЕЩЕНИЕ: {alert.message} (Уровень: {alert.severity})")
 
     health_monitor.add_alert_handler(alert_handler)
