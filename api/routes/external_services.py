@@ -13,6 +13,7 @@ from urllib3.util.retry import Retry
 from datetime import datetime
 
 from api.error_handlers import NotFoundError
+from utils.circuit_breaker import circuit_breaker, get_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -46,10 +47,6 @@ def close_http_session():
     global http_session
     if http_session:
         http_session.close()
-
-
-# Circuit breaker для внешних API
-from utils.circuit_breaker import circuit_breaker, get_circuit_breaker
 
 
 @router.get(
