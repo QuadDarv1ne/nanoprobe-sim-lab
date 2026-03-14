@@ -36,41 +36,38 @@
 
 ## 🔧 Latest Improvements (2026-03-14)
 
-### Security Headers
-- [x] SecurityHeadersMiddleware (~180 строк)
-- [x] X-Frame-Options: DENY (clickjacking защита)
-- [x] X-Content-Type-Options: nosniff (MIME sniffing защита)
-- [x] X-XSS-Protection: 1; mode=block (XSS защита)
-- [x] Referrer-Policy: strict-origin-when-cross-origin
-- [x] Permissions-Policy: ограничение функций браузера
-- [x] HSTS (HTTPS enforcement, production mode)
-- [x] Content-Security-Policy (CSP)
-- [x] Удаление Server и X-Powered-By заголовков
-- [x] 10 тестов для security headers
-- [x] Интеграция в api/main.py
-- [x] ENVIRONMENT variable для production режима
+### Redis Caching in Enhanced Dashboard
+- [x] Added Redis caching to `/stats/detailed` (5s TTL)
+- [x] Added Redis caching to `/activity/timeline` (60s TTL)
+- [x] Added Redis caching to `/storage/detailed` (30s TTL)
+- [x] Improved error handling in all cached endpoints
+- [x] Proper resource cleanup with finally blocks
 
-### Integration Tests
-- [x] test_integration_db.py (~360 строк)
-- [x] 14 интеграционных тестов API + БД
-- [x] CRUD операции (Create, Read, Update, Delete)
-- [x] Тестирование сканирований и симуляций
-- [x] Проверка аутентификации
-- [x] Тест транзакций и отката при ошибках
-- [x] Параллельные запросы (concurrent requests)
-- [x] Проверка индексов БД (Alembic migrations)
-- [x] Dashboard statistics API
-- [x] Health check API
-- [x] Автоматическая очистка тестовой БД
+### WebSocket Improvements
+- [x] Exponential backoff for reconnection (1s → 30s max)
+- [x] Reconnection attempt limit (MAX_RECONNECT_ATTEMPTS = 5)
+- [x] HTTP status code validation (res.ok)
+- [x] Proper state cleanup on unsubscribe
+- [x] Improved WebSocket error handling
 
-### Load Testing
-- [x] load_test.py (~450 строк)
-- [x] Нагрузочное тестирование API
-- [x] Многопоточная нагрузка (10-50 пользователей)
-- [x] Статистика: RPS, Response Time, P95, P99
-- [x] Success Rate мониторинг
-- [x] JSON отчёт о результатах
-- [x] docs/LOAD_TESTING.md (руководство)
+### Enhanced Dashboard API
+- [x] HTTPException handling in all endpoints
+- [x] Improved resource cleanup (finally blocks)
+- [x] Unified error messages (English)
+- [x] WebSocket disconnect handling
+
+### start.py Improvements
+- [x] Dependency checking (uvicorn, Flask)
+- [x] Improved error handling
+- [x] wait_for_port() function
+- [x] Graceful shutdown
+
+### Next.js Frontend
+- [x] Next.js 14 + TypeScript
+- [x] Modern UI components (15+)
+- [x] WebSocket real-time metrics
+- [x] Zustand state management
+- [x] Dark/Light theme support
 
 ---
 
@@ -133,17 +130,37 @@ None currently - project is stable and ready for rest.
 
 ## 📋 TODO - Low Priority (Future)
 
+### ISS/MKS Integration (Приоритет после получения RTL-SDR V4)
+- [ ] **RTL-SDR V4 Integration** - приём сигналов на 145.800 MHz
+  - [ ] Подключение RTL-SDR dongle
+  - [ ] Настройка антенны на 145.800 MHz
+  - [ ] Тестирование waterfall (145.800 MHz)
+  - [ ] SSTV декодирование с МКС
+- [ ] **SSTV Decoder Enhancement**
+  - [ ] Интеграция pysstv для полноценного декодирования
+  - [ ] Поддержка всех режимов (Martin, Scottie, PD, Robot)
+  - [ ] Автоматическое определение режима
+  - [ ] Сохранение метадрованных изображений в базу
+- [ ] **ISS Tracking API**
+  - [ ] Интеграция с N2YO API (расписание пролётов)
+  - [ ] AOS/LOS калькулятор (время восхода/заката спутника)
+  - [ ] Doppler correction для частоты
+  - [ ] TLE данные для отслеживания
+- [ ] **NASA API Enhancement**
+  - [ ] Получить полноценный API ключ (не DEMO)
+  - [ ] Кэширование ответов NASA API (Redis)
+  - [ ] Earth Observatory API интеграция
+  - [ ] GIBS/Worldview API для спутниковых снимков
+- [ ] **Satellite Data Integration**
+  - [ ] Zenodo data upload автоматизация
+  - [ ] Figshare data upload автоматизация
+  - [ ] Интеграция с научными репозиториями
+
 ### Mobile Application
 - [ ] React Native or Flutter app
 - [ ] System monitoring dashboard
 - [ ] Push notifications
 - [ ] Scan results viewer
-
-### External Integrations
-- [ ] NASA API full integration (beyond APOD)
-- [ ] Zenodo data upload
-- [ ] Figshare data upload
-- [ ] Integration with scientific repositories
 
 ### Frontend Modernization
 - [ ] Migrate from Flask templates to React/Vue
@@ -152,22 +169,22 @@ None currently - project is stable and ready for rest.
 - [ ] WCAG 2.1 accessibility
 
 ### Performance
-- [ ] Redis for full caching (not just tokens)
+- [x] Redis for caching (stats, activity, storage) - ВЫПОЛНЕНО
 - [ ] Database query optimization
-- [ ] Add database indexes
+- [x] Add database indexes - ВЫПОЛНЕНО
 - [ ] Performance monitoring dashboard
 
 ### Security
-- [ ] Rate limiting on all endpoints
-- [ ] CORS configuration for production
-- [ ] Security headers
+- [x] Rate limiting on all endpoints - ВЫПОЛНЕНО
+- [x] CORS configuration for production - ВЫПОЛНЕНО
+- [x] Security headers - ВЫПОЛНЕНО
 - [ ] Regular security audits
 
 ### Testing
 - [ ] Increase test coverage to 80%+
-- [x] Integration tests for API + DB
-- [x] Load testing
-- [x] Security testing
+- [x] Integration tests for API + DB - ВЫПОЛНЕНО
+- [x] Load testing - ВЫПОЛНЕНО
+- [x] Security testing - ВЫПОЛНЕНО
 
 ---
 
@@ -189,9 +206,27 @@ None currently - project is stable and ready for rest.
 
 ## 🚀 Next Steps (When Ready)
 
+### После получения RTL-SDR V4:
+1. **RTL-SDR Testing** (~2 часа)
+   - Подключение устройства
+   - Запуск --check
+   - Тестирование waterfall (145.800 MHz)
+   - SSTV декодирование с МКС
+
+2. **SSTV Decoder Integration** (~4 часа)
+   - Интеграция pysstv
+   - Тестирование всех режимов
+   - Сохранение в базу данных
+
+3. **ISS Tracking API** (~6 часов)
+   - N2YO API интеграция
+   - AOS/LOS калькулятор
+   - Doppler correction
+
+### Когда готово:
 1. **Test Coverage 80%+** — Unit tests для оставшихся модулей (~6 часов)
-2. **Mobile App** — React Native/Flutter (~8 часов)
-3. **Frontend Migration** — React/Vue + TypeScript (~16 часов)
+2. **NASA API Key** — Получить полноценный ключ (~1 час)
+3. **Mobile App** — React Native/Flutter (~8 часов)
 4. **Redis Full Integration** — Полное кэширование (~4 часа)
 
 ---
