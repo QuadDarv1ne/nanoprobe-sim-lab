@@ -245,6 +245,7 @@ class SurfaceDataConverter(BaseDataConverter):
         # Изменяем форму
         return surface_array.reshape(shape)
 
+
 class ScanResultsConverter(BaseDataConverter):
     """
     Класс для конвертации результатов сканирования
@@ -293,6 +294,7 @@ class ScanResultsConverter(BaseDataConverter):
             raise ValueError("Invalid scan results format")
 
         return np.array(scan_data[cls.data_key])
+
 
 class ImageDataConverter(BaseDataConverter):
     """
@@ -390,6 +392,7 @@ class SSTVSignalConverter(BaseDataConverter):
 
         return np.array(signal_data[cls.data_key])
 
+
 class SimulationConfigConverter:
     """
     Класс для конвертации конфигурации симуляции
@@ -435,6 +438,7 @@ class SimulationConfigConverter:
             raise ValueError("Invalid simulation config format")
 
         return config_data['parameters']
+
 
 class AnalyticsReportConverter:
     """
@@ -482,13 +486,13 @@ class AnalyticsReportConverter:
 
         return report_data['metrics']
 
+
 class DataExchangeManager:
     """
     Класс менеджера обмена данными
     Обеспечивает централизованное управление конвертацией данных
     между различными форматами.
     """
-
 
     def __init__(self):
         """Инициализирует менеджер обмена данными"""
@@ -500,7 +504,6 @@ class DataExchangeManager:
             DataFormatSpec.FORMAT_SIMULATION_CONFIG: SimulationConfigConverter,
             DataFormatSpec.FORMAT_ANALYTICS_REPORT: AnalyticsReportConverter
         }
-
 
     def convert(self, data: Any, from_format: str, to_format: str) -> Any:
         """
@@ -551,12 +554,9 @@ class DataExchangeManager:
             return self.converters[to_format].numpy_to_standard(numpy_data, surface_id)
         elif to_format == DataFormatSpec.FORMAT_IMAGE_DATA:
             return self.converters[to_format].numpy_to_standard(numpy_data)
-        elif to_format == DataFormatSpec.FORMAT_SSTV_SIGNAL:
-            return self.converters[to_format].numpy_to_standard(numpy_data)
         else:
             # Если целевой формат неизвестен, возвращаем numpy данные
             return numpy_data
-
 
     def validate(self, data: Any, format_type: str) -> bool:
         """
@@ -571,7 +571,6 @@ class DataExchangeManager:
         """
         return DataFormatSpec.validate_format(data, format_type)
 
-
     def get_supported_formats(self) -> List[str]:
         """
         Возвращает список поддерживаемых форматов
@@ -580,6 +579,7 @@ class DataExchangeManager:
             Список поддерживаемых форматов
         """
         return list(self.converters.keys())
+
 
 def main():
     """Главная функция для демонстрации возможностей модуля обмена данными"""
@@ -619,6 +619,6 @@ def main():
 
     print("Модуль обмена данными успешно протестирован")
 
+
 if __name__ == "__main__":
     main()
-
