@@ -301,6 +301,14 @@ app.include_router(reports.router, prefix="/api/v1/reports", tags=["Отчёты
 app.include_router(admin.router, prefix="/api/v1", tags=["Администрирование"])
 app.include_router(dashboard.router, prefix="/api/v1/dashboard", tags=["Дашборд"])
 
+# Enhanced Dashboard API (новые расширенные эндпоинты)
+try:
+    from api.routes import enhanced_dashboard
+    app.include_router(enhanced_dashboard.router, prefix="/api/v1/dashboard", tags=["Дашборд Расширенный"])
+    print("[OK] Enhanced dashboard routes registered")
+except ImportError as e:
+    print(f"[WARN] Enhanced dashboard routes disabled: {e}")
+
 try:
     from api.routes import alerting
     app.include_router(alerting.router, prefix="/api/v1/alerting", tags=["Алертинг"])
