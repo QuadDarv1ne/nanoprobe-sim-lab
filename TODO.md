@@ -17,6 +17,7 @@
 - [x] Security Headers (XSS, Clickjacking, MIME sniffing protection)
 - [x] Integration tests API + Database (14 tests)
 - [x] Load Testing (performance testing script)
+- [x] **Security Testing** (automated vulnerability scanning)
 
 ### High Priority
 - [x] WebSocket real-time updates (channels, heartbeat)
@@ -166,7 +167,7 @@ None currently - project is stable and ready for rest.
 - [ ] Increase test coverage to 80%+
 - [x] Integration tests for API + DB
 - [x] Load testing
-- [ ] Security testing
+- [x] Security testing
 
 ---
 
@@ -174,25 +175,24 @@ None currently - project is stable and ready for rest.
 
 | Metric | Value |
 |--------|-------|
-| Total Tests | 120+ |
+| Total Tests | **130+** |
 | Test Pass Rate | 100% |
 | API Endpoints | 33+ |
-| Lines of Code | ~27,000 |
+| Lines of Code | ~28,000 |
 | CI/CD Workflows | 5 |
 | Custom Exceptions | 8 |
 | GraphQL Types | 6 |
 | ML Models | 3 |
-| Recent Commits | 12 |
+| Recent Commits | 14+ |
 
 ---
 
 ## 🚀 Next Steps (When Ready)
 
-1. **Security Testing** - Penetration testing (~4 hours)
-2. **Test Coverage 80%+** - Unit tests for remaining modules (~6 hours)
-3. **Mobile App** - React Native/Flutter (~8 hours)
-4. **Frontend Migration** - React/Vue (~16 hours)
-5. **Redis Full Integration** - Complete caching (~4 hours)
+1. **Test Coverage 80%+** — Unit tests для оставшихся модулей (~6 часов)
+2. **Mobile App** — React Native/Flutter (~8 часов)
+3. **Frontend Migration** — React/Vue + TypeScript (~16 часов)
+4. **Redis Full Integration** — Полное кэширование (~4 часа)
 
 ---
 
@@ -200,9 +200,10 @@ None currently - project is stable and ready for rest.
 
 - Project is production-ready
 - All critical improvements completed (2026-03-14)
-- Latest: Load Testing, Security Headers, Integration Tests
+- Latest: Security Testing, Load Testing, Security Headers, Integration Tests
 - dev and main branches are synchronized
-- Recent commits: 12+ (Security, Testing, Documentation)
+- Recent commits: 14+ (Security, Testing, Documentation)
+- **130+ тестов** (Security, Load, Integration, Unit)
 
 ---
 
