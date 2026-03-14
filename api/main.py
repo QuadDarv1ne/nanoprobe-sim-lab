@@ -168,6 +168,14 @@ try:
 except ImportError as e:
     print(f"[WARN] Rate limiting disabled: {e}")
 
+# Security Headers для защиты от XSS, Clickjacking, MIME sniffing
+try:
+    from api.security_headers import setup_security_headers
+    is_production = os.getenv("ENVIRONMENT", "development") == "production"
+    setup_security_headers(app, production=is_production)
+except ImportError as e:
+    print(f"[WARN] Security headers disabled: {e}")
+
 # Регистрация централизованных обработчиков ошибок
 register_error_handlers(app)
 

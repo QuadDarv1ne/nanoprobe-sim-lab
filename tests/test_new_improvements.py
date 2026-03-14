@@ -8,7 +8,6 @@ import pytest
 import sys
 import os
 import time
-from datetime import datetime
 from pathlib import Path
 
 # Добавляем путь к проекту
@@ -156,7 +155,7 @@ class TestDatabaseCache:
     def test_scan_methods_use_cache(self, db):
         """Тест использования кэша в методах сканирований"""
         # Добавляем тестовое сканирование
-        scan_id = db.add_scan_result(
+        _ = db.add_scan_result(
             scan_type="spm",
             surface_type="test",
             width=100,
@@ -319,7 +318,6 @@ class TestDatabaseCacheIntegration:
         db.add_scan_result_batch(scans_data)
 
         # Проверяем, что кэш очищен
-        cache_stats = db.get_cache_stats()
         # После вставки кэш должен быть очищен для scans:
         scan_keys = [k for k in db._query_cache.keys() if "scans:" in k]
         assert len(scan_keys) == 0
@@ -333,7 +331,7 @@ class TestDatabaseCacheIntegration:
 
         # Первый запрос
         count_all = db.count_scans()
-        count_spm = db.count_scans("spm")
+        _ = db.count_scans("spm")
 
         # Проверяем кэш
         cache_stats = db.get_cache_stats()

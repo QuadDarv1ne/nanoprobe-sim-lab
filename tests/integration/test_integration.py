@@ -8,7 +8,6 @@ import sys
 import os
 import tempfile
 import numpy as np
-from pathlib import Path
 
 # Добавляем путь к исходному коду
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -21,7 +20,6 @@ from api.data_exchange import (
     SSTVSignalConverter
 )
 from utils.database import DatabaseManager
-from utils.data_manager import DataManager
 
 
 class TestDataExchangeIntegration(unittest.TestCase):

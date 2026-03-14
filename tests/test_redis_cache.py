@@ -4,12 +4,11 @@
 """
 
 import sys
-import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from utils.redis_cache import RedisCache, cache, cached_sync
+from utils.redis_cache import RedisCache, cached_sync
 
 
 def test_redis_cache_singleton():
@@ -31,6 +30,7 @@ def test_redis_cache_basic():
     # Тест без Redis (должен вернуть False/None)
     result = test_cache.set("test_key", {"data": "value"}, expire=60)
     # Без Redis результат будет False
+    assert result is False, "Без Redis результат должен быть False"
 
     result_get = test_cache.get("test_key")
     assert result_get is None, "Без Redis должен вернуть None"
@@ -116,7 +116,7 @@ def test_cache_json():
 
     # Без Redis должен вернуть False
     result = test_cache.cache_json("test_data", {"key": "value"}, expire=60)
-    assert result == False, "Без Redis должен вернуть False"
+    assert result is False, "Без Redis должен вернуть False"
 
     result_get = test_cache.get_json("test_data")
     assert result_get is None, "Без Redis должен вернуть None"
@@ -132,7 +132,7 @@ def test_cache_exists():
 
     # Без Redis должен вернуть False
     result = test_cache.exists("nonexistent_key")
-    assert result == False, "Без Redis должен вернуть False"
+    assert result is False, "Без Redis должен вернуть False"
 
     print("[PASS] Проверка существования (offline mode)")
 
@@ -146,7 +146,7 @@ def test_cache_stats():
     stats = test_cache.get_stats()
 
     # Без Redis должен вернуть available=False
-    assert stats["available"] == False, "Без Redis available должен быть False"
+    assert stats["available"] is False, "Без Redis available должен быть False"
 
     print("[PASS] Статистика (offline mode)")
 

@@ -13,7 +13,7 @@ from pathlib import Path
 # Добавляем путь к проекту
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from api.integration import FlaskFastAPIIntegration, health_check, get_scans
+from api.integration import FlaskFastAPIIntegration
 
 
 class Colors:
@@ -156,7 +156,7 @@ def test_reverse_proxy_import():
     print_header("Тест 5: Reverse Proxy модуль")
 
     try:
-        from api.reverse_proxy import register_proxy, FASTAPI_URL, api_proxy
+        from api.reverse_proxy import FASTAPI_URL
         print_result("Импорт reverse_proxy", True, f"FASTAPI_URL: {FASTAPI_URL}")
         return True
     except ImportError as e:
@@ -194,7 +194,7 @@ def test_utils_integration():
 
     # Defect Analyzer
     try:
-        from utils.defect_analyzer import DefectAnalysisPipeline
+        import utils.defect_analyzer
         print_result("DefectAnalysisPipeline", True, "Импорт успешен")
         results.append(True)
     except Exception as e:

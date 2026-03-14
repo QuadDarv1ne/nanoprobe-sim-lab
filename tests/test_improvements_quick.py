@@ -21,7 +21,7 @@ def test_schemas_validation():
 
     # Тест 1: Валидный запрос
     try:
-        request = LoginRequest(username="test_user", password="Password123")
+        _ = LoginRequest(username="test_user", password="Password123")
         print("[PASS] Валидный логин")
     except Exception as e:
         print(f"[FAIL] Валидный логин: {e}")

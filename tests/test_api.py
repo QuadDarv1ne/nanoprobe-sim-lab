@@ -4,7 +4,6 @@
 
 import pytest
 from fastapi.testclient import TestClient
-from datetime import datetime
 import os
 
 # Создаём тестовую директорию для БД

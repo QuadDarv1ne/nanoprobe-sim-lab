@@ -4,7 +4,6 @@
 """
 
 import sys
-import time
 from pathlib import Path
 
 # Добавляем корень проекта в path
@@ -22,7 +21,7 @@ def test_sync_manager_init():
 
     assert sync.backend_url == "http://localhost:8000", "Default backend URL"
     assert sync.frontend_url == "http://localhost:5000", "Default frontend URL"
-    assert sync._running == False, "Не должен быть запущен"
+    assert sync._running is False, "Не должен быть запущен"
     assert sync._last_sync_time is None, "Время синхронизации должно быть None"
 
     print("[PASS] Инициализация")
@@ -58,7 +57,7 @@ def test_sync_manager_get_status():
     assert "backend_connections" in status, "Статус должен содержать 'backend_connections'"
     assert "frontend_connections" in status, "Статус должен содержать 'frontend_connections'"
 
-    assert status["running"] == False, "Не должен быть запущен"
+    assert status["running"] is False, "Не должен быть запущен"
     assert status["backend_url"] == "http://localhost:8000"
     assert status["frontend_url"] == "http://localhost:5000"
 
@@ -100,7 +99,7 @@ def test_sync_manager_stop():
     # Остановка без запуска не должна вызывать ошибок
     sync.stop_sync_loop()
 
-    assert sync._running == False
+    assert sync._running is False
 
     print("[PASS] Остановка")
 
@@ -108,8 +107,6 @@ def test_sync_manager_stop():
 async def test_sync_manager_async_methods():
     """Тест async методов (требует запущенных сервисов)"""
     print("Тест async методов (skip без сервисов)...")
-
-    sync = BackendFrontendSync()
 
     # Без запущенных сервисов health check должен вернуть False
     # Это нормальное поведение

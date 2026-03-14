@@ -81,7 +81,6 @@ class TestProbeModel(unittest.TestCase):
     def test_adjust_to_surface(self):
         """Тестирует адаптацию зонда к поверхности"""
         surface = SurfaceModel(10, 10)  # Минимальный размер 10x10
-        initial_z = self.probe.z
         adjusted_z = self.probe.adjust_to_surface(surface)
 
         # Адаптированная высота должна быть близка к высоте поверхности + 0.5
