@@ -1058,15 +1058,12 @@ class DatabaseManager:
         Использование:
             @db.cached_query(ttl=600)
             def get_expensive_query(...):
-                """TODO: Add description"""
                 ...
         """
         def decorator(func: Callable) -> Callable:
-            """TODO: Add description"""
             @wraps(func)
             def wrapper(*args, **kwargs):
                 # Генерация ключа кэша на основе имени функции и аргументов
-                """TODO: Add description"""
                 cache_key_parts = [func.__name__]
                 for arg in args[1:]:  # Пропускаем self
                     cache_key_parts.append(str(arg))
