@@ -38,7 +38,7 @@ class TestConfigManager(unittest.TestCase):
 
         with open(self.config_file, 'w', encoding='utf-8') as f:
             json.dump(self.test_config, f)
-        
+
         # Сброс singleton для изоляции тестов
         ConfigManager._instance = None
         ConfigManager._initialized = False

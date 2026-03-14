@@ -25,7 +25,7 @@ def log_message(message: str, level: str = "INFO"):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_entry = f"[{timestamp}] [{level}] {message}"
     print(log_entry)
-    
+
     with open(LOG_FILE, "a", encoding="utf-8") as f:
         f.write(log_entry + "\n")
 
@@ -38,10 +38,10 @@ def log_error(error: str, details: str = ""):
         "error": error,
         "details": details
     }
-    
+
     with open(ERROR_LOG, "a", encoding="utf-8") as f:
         f.write(json.dumps(error_entry, ensure_ascii=False) + "\n")
-    
+
     log_message(f"ERROR: {error}", "ERROR")
 
 
@@ -85,7 +85,7 @@ def check_api_endpoints() -> dict:
         "/api/v1/dashboard/stats",
         "/docs",
     ]
-    
+
     results = {}
     for endpoint in endpoints:
         try:
@@ -101,7 +101,7 @@ def check_api_endpoints() -> dict:
                 "ok": False,
                 "error": str(e)
             }
-    
+
     return results
 
 
@@ -111,10 +111,10 @@ def monitor_loop(interval: int = 60):
     log_message("Запуск мониторинга API Nanoprobe Sim Lab")
     log_message(f"Интервал проверки: {interval} сек")
     log_message("=" * 60)
-    
+
     consecutive_errors = 0
     max_errors = 5
-    
+
     while True:
         try:
             # Проверка health
@@ -125,22 +125,22 @@ def monitor_loop(interval: int = 60):
             else:
                 log_error("Health check failed", health.get("error", ""))
                 consecutive_errors += 1
-            
+
             # Проверка detailed health
             detailed = check_health_detailed()
             if detailed["status"] == "ok":
                 data = detailed["data"]
                 metrics = data.get("metrics", {})
-                
+
                 # Проверка метрик
                 cpu = metrics.get("cpu", {}).get("percent", 0)
                 memory = metrics.get("memory", {}).get("percent", 0)
                 disk = metrics.get("disk", {}).get("percent", 0)
-                
+
                 log_message(
                     f"Metrics | CPU: {cpu:.1f}% | Memory: {memory:.1f}% | Disk: {disk:.1f}%"
                 )
-                
+
                 # Предупреждения
                 if disk > 90:
                     log_message("WARNING: Disk usage > 90%!", "WARNING")
@@ -150,14 +150,14 @@ def monitor_loop(interval: int = 60):
                     log_message("WARNING: CPU usage > 90%!", "WARNING")
             else:
                 log_error("Detailed health check failed", detailed.get("error", ""))
-            
+
             # Проверка API эндпоинтов (каждые 5 циклов)
             if consecutive_errors % 5 == 0:
                 endpoints = check_api_endpoints()
                 failed = [ep for ep, r in endpoints.items() if not r.get("ok", True)]
                 if failed:
                     log_message(f"Failed endpoints: {failed}", "WARNING")
-            
+
             # Проверка на критические ошибки
             if consecutive_errors >= max_errors:
                 log_message(
@@ -165,24 +165,24 @@ def monitor_loop(interval: int = 60):
                     "API may be down.",
                     "CRITICAL"
                 )
-            
+
         except Exception as e:
             log_error(f"Unexpected error: {e}", str(type(e)))
             consecutive_errors += 1
-        
+
         time.sleep(interval)
 
 
 if __name__ == "__main__":
     interval = 30  # секунды
-    
+
     if len(sys.argv) > 1:
         try:
             interval = int(sys.argv[1])
         except ValueError:
             print(f"Использование: {sys.argv[0]} [interval_seconds]")
             sys.exit(1)
-    
+
     try:
         monitor_loop(interval)
     except KeyboardInterrupt:

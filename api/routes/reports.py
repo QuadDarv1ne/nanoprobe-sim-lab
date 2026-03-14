@@ -79,22 +79,22 @@ async def generate_pdf_report(
         # Бизнес-метрики
         if report_path:
             BusinessMetrics.inc_report_generated(request.report_type.value)
-        
+
         elif request.report_type == ReportType.BATCH:
             report_path = report_generator.generate_batch_report(
                 batch_data=request.data,
                 title=request.title,
             )
-        
+
         else:
             raise ValidationError(f"Неизвестный тип отчёта: {request.report_type}")
 
         if not report_path:
             raise DatabaseError("Не удалось сгенерировать отчёт")
-        
+
         # Получение размера файла
         file_size = Path(report_path).stat().st_size
-        
+
         # Сохранение в БД
         if hasattr(db, 'add_pdf_report'):
             db.add_pdf_report(
@@ -103,7 +103,7 @@ async def generate_pdf_report(
                 title=request.title,
                 file_size_bytes=file_size,
             )
-        
+
         return PDFReportResponse(
             report_id=report_id,
             report_path=report_path,
@@ -113,7 +113,7 @@ async def generate_pdf_report(
             pages_count=None,  # Можно добавить подсчёт страниц
             created_at=datetime.now().isoformat(),
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -158,14 +158,14 @@ async def download_report(
     try:
         # Поиск отчёта по ID (в БД или по имени файла)
         reports_dir = Path("reports/pdf")
-        
+
         # Поиск по имени файла
         report_file = None
         for f in reports_dir.glob("*.pdf"):
             if report_id in f.name or f.stem == report_id:
                 report_file = f
                 break
-        
+
         if not report_file:
             raise NotFoundError(f"Отчёт с ID {report_id} не найден", resource_type="pdf_report")
 

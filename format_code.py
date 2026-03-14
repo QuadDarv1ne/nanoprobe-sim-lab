@@ -166,6 +166,7 @@ class CodeFormatter:
 
             for i, line in enumerate(lines[:3]):  # Проверяем первые 3 строки
                 if '# -*- coding:' in line or '# coding:' in line or '#coding:' in line:
+#!/usr/bin/env python3
                     has_encoding = True
                     encoding_line_idx = i
                     break

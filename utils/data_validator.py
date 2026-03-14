@@ -219,7 +219,7 @@ class DataValidator:
         """
         if not isinstance(df, pd.DataFrame):
             raise ValueError("Ожижается DataFrame")
-        
+
         if not schema:
             raise ValueError("Схема валидации не может быть пустой")
 

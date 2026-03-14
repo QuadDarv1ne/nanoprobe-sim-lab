@@ -17,7 +17,7 @@ from utils.error_handler import ErrorInfo, ErrorSeverity
 def test_error_info_serialization():
     """Тест сериализации ErrorInfo"""
     print("Тест сериализации ErrorInfo...")
-    
+
     error = ErrorInfo(
         timestamp=datetime.now(),
         severity=ErrorSeverity.WARNING,
@@ -29,23 +29,23 @@ def test_error_info_serialization():
         user_context={"user": "test_user"},
         error_id="test_123"
     )
-    
+
     # Сериализация
     data = error.to_dict()
-    
+
     assert "timestamp" in data
     assert "severity" in data
     assert "message" in data
     assert "error_id" in data
     assert "resolved" in data
-    
+
     # Десериализация
     restored = ErrorInfo.from_dict(data)
-    
+
     assert restored.message == error.message
     assert restored.error_id == error.error_id
     assert restored.severity == error.severity
-    
+
     print("✓ Сериализация ErrorInfo: PASS")
     return True
 
@@ -53,13 +53,13 @@ def test_error_info_serialization():
 def test_error_severity_enum():
     """Тест Enum уровней ошибок"""
     print("Тест ErrorSeverity Enum...")
-    
+
     assert ErrorSeverity.DEBUG.value == 10
     assert ErrorSeverity.INFO.value == 20
     assert ErrorSeverity.WARNING.value == 30
     assert ErrorSeverity.ERROR.value == 40
     assert ErrorSeverity.CRITICAL.value == 50
-    
+
     print("✓ ErrorSeverity Enum: PASS")
     return True
 
@@ -69,15 +69,15 @@ def main():
     print("=" * 60)
     print("ТЕСТЫ СИСТЕМЫ ОБРАБОТКИ ОШИБОК")
     print("=" * 60)
-    
+
     tests = [
         test_error_info_serialization,
         test_error_severity_enum,
     ]
-    
+
     passed = 0
     failed = 0
-    
+
     for test in tests:
         try:
             if test():
@@ -89,10 +89,10 @@ def main():
             import traceback
             traceback.print_exc()
             failed += 1
-    
+
     print("\n" + "=" * 60)
     print(f"ИТОГИ: {passed}/{len(tests)} тестов пройдено ({passed/len(tests)*100:.1f}%)")
-    
+
     if passed == len(tests):
         print("🎉 Все тесты пройдены!")
         return 0

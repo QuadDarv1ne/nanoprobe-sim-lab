@@ -36,7 +36,7 @@ class TestDatabaseManager(unittest.TestCase):
             file_path="data/scan_001.txt",
             metadata={"voltage": 5.0, "current": 1.2}
         )
-        
+
         self.assertIsInstance(scan_id, int)
         self.assertGreater(scan_id, 0)
 
@@ -50,9 +50,9 @@ class TestDatabaseManager(unittest.TestCase):
                 width=50,
                 height=50
             )
-        
+
         results = self.db.get_scan_results(limit=10)
-        
+
         self.assertEqual(len(results), 5)
         self.assertIn('scan_type', results[0])
 
@@ -60,10 +60,10 @@ class TestDatabaseManager(unittest.TestCase):
         """Тестирует фильтрацию результатов."""
         self.db.add_scan_result(scan_type="spm", surface_type="type_a")
         self.db.add_scan_result(scan_type="image", surface_type="type_b")
-        
+
         spm_results = self.db.get_scan_results(scan_type="spm")
         image_results = self.db.get_scan_results(scan_type="image")
-        
+
         self.assertEqual(len(spm_results), 1)
         self.assertEqual(len(image_results), 1)
 
@@ -74,7 +74,7 @@ class TestDatabaseManager(unittest.TestCase):
             simulation_type="spm_scan",
             parameters={"speed": 1.0, "resolution": "high"}
         )
-        
+
         self.assertIsInstance(sim_id, int)
 
     def test_update_simulation(self):
@@ -83,10 +83,10 @@ class TestDatabaseManager(unittest.TestCase):
             simulation_id="sim_002",
             simulation_type="image_analysis"
         )
-        
+
         # Обновляем статус
         self.db.update_simulation("sim_002", status="completed")
-        
+
         simulations = self.db.get_simulations(status="completed")
         # Проверяем, что симуляция обновлена
         self.assertEqual(len(simulations), 1)
@@ -98,9 +98,9 @@ class TestDatabaseManager(unittest.TestCase):
                 simulation_id=f"sim_{i:03d}",
                 simulation_type="test"
             )
-        
+
         simulations = self.db.get_simulations(limit=10)
-        
+
         self.assertEqual(len(simulations), 3)
 
     def test_add_image(self):
@@ -113,7 +113,7 @@ class TestDatabaseManager(unittest.TestCase):
             height=768,
             channels=3
         )
-        
+
         self.assertIsInstance(image_id, int)
         self.assertGreater(image_id, 0)
 
@@ -125,10 +125,10 @@ class TestDatabaseManager(unittest.TestCase):
                 image_type="surface" if i % 2 == 0 else "space",
                 source="local"
             )
-        
+
         all_images = self.db.get_images(limit=10)
         surface_images = self.db.get_images(image_type="surface")
-        
+
         self.assertEqual(len(all_images), 4)
         self.assertEqual(len(surface_images), 2)
 
@@ -141,7 +141,7 @@ class TestDatabaseManager(unittest.TestCase):
             source_id=1,
             file_size_bytes=1024
         )
-        
+
         self.assertIsInstance(export_id, int)
 
     def test_get_statistics(self):
@@ -151,9 +151,9 @@ class TestDatabaseManager(unittest.TestCase):
         self.db.add_scan_result(scan_type="image")
         self.db.add_simulation(simulation_id="sim_1", simulation_type="test")
         self.db.add_image(image_path="test.png")
-        
+
         stats = self.db.get_statistics()
-        
+
         self.assertIn('total_scans', stats)
         self.assertIn('total_simulations', stats)
         self.assertIn('total_images', stats)
@@ -165,20 +165,20 @@ class TestDatabaseManager(unittest.TestCase):
         """Тестирует поиск по сканированиям."""
         self.db.add_scan_result(scan_type="test", surface_type="graphite", metadata={"note": "sample_1"})
         self.db.add_scan_result(scan_type="test", surface_type="silicon", metadata={"note": "sample_2"})
-        
+
         results = self.db.search_scans(query="graphite")
-        
+
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0]['surface_type'], "graphite")
 
     def test_delete_scan(self):
         """Тестирует удаление сканирования."""
         scan_id = self.db.add_scan_result(scan_type="test")
-        
+
         # Удаляем
         deleted = self.db.delete_scan(scan_id)
         self.assertTrue(deleted)
-        
+
         # Проверяем, что удалено
         results = self.db.get_scan_results()
         self.assertEqual(len(results), 0)
@@ -187,16 +187,16 @@ class TestDatabaseManager(unittest.TestCase):
         """Тестирует экспорт БД в JSON."""
         self.db.add_scan_result(scan_type="test")
         self.db.add_simulation(simulation_id="sim_test", simulation_type="test")
-        
+
         output_path = os.path.join(self.temp_dir, "export.json")
         result_path = self.db.export_to_json(output_path)
-        
+
         self.assertTrue(result_path.exists())
-        
+
         import json
         with open(result_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
-        
+
         self.assertIn('scan_results', data)
         self.assertIn('simulations', data)
 
@@ -204,7 +204,7 @@ class TestDatabaseManager(unittest.TestCase):
         """Тестирует singleton паттерн get_database."""
         db1 = get_database()
         db2 = get_database()
-        
+
         self.assertIs(db1, db2)
 
 

@@ -196,7 +196,7 @@ except Exception as e:
 # 12. Start Component Action (NEW)
 print("\n12. Start Component Action (NEW)...")
 try:
-    r = requests.post(f"{BASE_FLASK}/api/actions/start_component", 
+    r = requests.post(f"{BASE_FLASK}/api/actions/start_component",
                      json={"component": "test_component"}, timeout=5)
     if r.status_code == 200:
         data = r.json()

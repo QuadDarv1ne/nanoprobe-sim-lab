@@ -102,11 +102,11 @@ def on_reload(server):
 def when_ready(server):
     """Вызывается когда server готов принимать соединения"""
     print(f"[{datetime.now().isoformat()}] ✅ Server ready on {bind}")
-    
+
     # Создание директории для логов если не существует
     import os
     from pathlib import Path
-    
+
     log_dirs = ['logs', 'logs/gunicorn']
     for log_dir in log_dirs:
         Path(log_dir).mkdir(parents=True, exist_ok=True)

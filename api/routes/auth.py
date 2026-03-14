@@ -165,10 +165,10 @@ def create_refresh_token(data: dict) -> str:
     jti = secrets.token_urlsafe(16)  # Unique token ID
     to_encode.update({"exp": expire, "type": "refresh", "jti": jti})
     encoded_jwt = jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
-    
+
     # Сохранение jti в Redis
     _store_refresh_token(jti, data.get("sub", "unknown"))
-    
+
     return encoded_jwt
 
 
@@ -260,7 +260,7 @@ async def refresh_access_token(request: RefreshTokenRequest):
         )
 
         logger.info(f"Token refreshed for user: {username}")
-        
+
         return Token(
             access_token=new_access_token,
             refresh_token=new_refresh_token,
@@ -280,13 +280,13 @@ async def refresh_access_token(request: RefreshTokenRequest):
 async def setup_2fa(current_user: dict = Depends(get_current_user)):
     """Настройка 2FA"""
     from utils.two_factor_auth import get_2fa_manager
-    
+
     username = current_user["username"]
     user_email = f"{username}@nanoprobe.local"
-    
+
     two_factor = get_2fa_manager()
     secret, provisioning_uri = two_factor.setup_2fa(username, user_email)
-    
+
     return {
         "secret": secret,
         "provisioning_uri": provisioning_uri,
@@ -305,10 +305,10 @@ async def verify_2fa_setup(
 ):
     """Верификация 2FA"""
     from utils.two_factor_auth import get_2fa_manager
-    
+
     username = current_user["username"]
     two_factor = get_2fa_manager()
-    
+
     if two_factor.verify_2fa_setup(username, otp_code):
         return {"success": True, "message": "2FA успешно включена"}
 
@@ -342,7 +342,7 @@ async def verify_2fa_login(
             # Пробуем резервный код
             if not two_factor.verify_backup_code(username, otp_code):
                 raise AuthenticationError("Неверный 2FA код")
-    
+
     # Генерация токенов
     access_token = create_access_token(
         data={"sub": user["username"], "user_id": user["id"]}
@@ -350,7 +350,7 @@ async def verify_2fa_login(
     refresh_token = create_refresh_token(
         data={"sub": user["username"], "user_id": user["id"]}
     )
-    
+
     return LoginResponse(
         access_token=access_token,
         refresh_token=refresh_token,
@@ -373,10 +373,10 @@ async def verify_2fa_login(
 async def get_2fa_status(current_user: dict = Depends(get_current_user)):
     """Статус 2FA"""
     from utils.two_factor_auth import get_2fa_manager
-    
+
     username = current_user["username"]
     two_factor = get_2fa_manager()
-    
+
     return {
         "enabled": two_factor.is_2fa_enabled(username),
         "username": username
@@ -394,7 +394,7 @@ async def disable_2fa(
 ):
     """Отключение 2FA"""
     from utils.two_factor_auth import get_2fa_manager
-    
+
     username = current_user["username"]
     two_factor = get_2fa_manager()
 
@@ -412,12 +412,12 @@ async def disable_2fa(
 async def generate_backup_codes(current_user: dict = Depends(get_current_user)):
     """Генерация резервных кодов"""
     from utils.two_factor_auth import get_2fa_manager
-    
+
     username = current_user["username"]
     two_factor = get_2fa_manager()
-    
+
     codes = two_factor.generate_backup_codes(username, count=10)
-    
+
     return {
         "backup_codes": codes,
         "message": "Сохраните эти коды в безопасном месте!"
@@ -432,10 +432,10 @@ async def generate_backup_codes(current_user: dict = Depends(get_current_user)):
 async def get_current_user_info(current_user: dict = Depends(get_current_user)):
     """Получение информации о текущем пользователе"""
     from utils.two_factor_auth import get_2fa_manager
-    
+
     username = current_user["username"]
     two_factor = get_2fa_manager()
-    
+
     return {
         "id": current_user["id"],
         "username": current_user["username"],
@@ -460,7 +460,7 @@ async def logout(refresh_token: Optional[str] = None):
                 revoke_refresh_token(jti)
         except jwt.PyJWTError:
             pass
-    
+
     return {"message": "Успешный выход. Удалите токены на клиенте."}
 
 
@@ -472,10 +472,10 @@ async def logout(refresh_token: Optional[str] = None):
 async def get_rate_limit_status(request: Request):
     """Получение статуса rate limiting"""
     from utils.rate_limiter import limiter
-    
+
     client_ip = request.client.host
     login_key = f"login:{client_ip}"
-    
+
     status = limiter.get_status(login_key, max_requests=5, window_seconds=300)
     return {
         "ip": client_ip,

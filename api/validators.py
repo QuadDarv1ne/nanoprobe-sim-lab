@@ -8,6 +8,7 @@ class ValidationError(Exception):
     """Исключение валидации."""
 
     def __init__(self, message: str, field: str = None):
+        """TODO: Add description"""
         self.message = message
         self.field = field
         super().__init__(self.message)

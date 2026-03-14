@@ -26,7 +26,7 @@ class TestPDFReportGenerator(unittest.TestCase):
     def test_comparison_report_generation(self):
         """Тест генерации отчёта о сравнении поверхностей"""
         generator = ScientificPDFReport(str(self.output_dir))
-        
+
         comparison_data = {
             'ssim': 0.92,
             'psnr': 35.5,
@@ -37,19 +37,19 @@ class TestPDFReportGenerator(unittest.TestCase):
             'max_diff': 0.12,
             'std_diff': 0.02,
         }
-        
+
         filepath = generator.generate_comparison_report(
             comparison_data,
             title="Тестовое сравнение поверхностей"
         )
-        
+
         self.assertTrue(Path(filepath).exists())
         self.assertTrue(filepath.endswith('.pdf'))
 
     def test_simulation_report_generation(self):
         """Тест генерации отчёта о симуляции"""
         generator = ScientificPDFReport(str(self.output_dir))
-        
+
         simulation_data = {
             'simulation_type': 'SPM Contact Mode',
             'scan_size': '10x10 мкм',
@@ -61,19 +61,19 @@ class TestPDFReportGenerator(unittest.TestCase):
             'data_size': '2.1 MB',
             'results_summary': 'Симуляция завершена успешно. Получены данные топографии поверхности.',
         }
-        
+
         filepath = generator.generate_simulation_report(
             simulation_data,
             title="Тестовая симуляция СЗМ"
         )
-        
+
         self.assertTrue(Path(filepath).exists())
         self.assertTrue(filepath.endswith('.pdf'))
 
     def test_batch_report_generation(self):
         """Тест генерации отчёта о пакетной обработке"""
         generator = ScientificPDFReport(str(self.output_dir))
-        
+
         batch_data = {
             'total_items': 100,
             'processed_items': 98,
@@ -82,62 +82,62 @@ class TestPDFReportGenerator(unittest.TestCase):
             'duration': '15 мин 32 с',
             'error_details': ['Файл не найден: sample_042.dat', 'Ошибка чтения: sample_067.dat', 'Неверный формат: sample_089.dat'],
         }
-        
+
         filepath = generator.generate_batch_report(
             batch_data,
             title="Тестовая пакетная обработка"
         )
-        
+
         self.assertTrue(Path(filepath).exists())
         self.assertTrue(filepath.endswith('.pdf'))
 
     def test_comparison_conclusions_high_similarity(self):
         """Тест выводов для высокого сходства"""
         generator = ScientificPDFReport(str(self.output_dir))
-        
+
         data = {'similarity': 0.92, 'ssim': 0.95}
         content = generator._create_comparison_conclusions(data)
-        
+
         self.assertGreater(len(content), 0)
 
     def test_comparison_conclusions_low_similarity(self):
         """Тест выводов для низкого сходства"""
         generator = ScientificPDFReport(str(self.output_dir))
-        
+
         data = {'similarity': 0.35, 'ssim': 0.40}
         content = generator._create_comparison_conclusions(data)
-        
+
         self.assertGreater(len(content), 0)
 
     def test_difference_analysis_identical(self):
         """Тест анализа различий - идентичные поверхности"""
         generator = ScientificPDFReport(str(self.output_dir))
-        
+
         data = {'mean_diff': 0.02, 'max_diff': 0.05, 'std_diff': 0.01}
         content = generator._create_difference_analysis(data)
-        
+
         self.assertGreater(len(content), 0)
 
     def test_difference_analysis_different(self):
         """Тест анализа различий - различные поверхности"""
         generator = ScientificPDFReport(str(self.output_dir))
-        
+
         data = {'mean_diff': 0.25, 'max_diff': 0.45, 'std_diff': 0.15}
         content = generator._create_difference_analysis(data)
-        
+
         self.assertGreater(len(content), 0)
 
     def test_batch_statistics_with_errors(self):
         """Тест статистики пакетной обработки с ошибками"""
         generator = ScientificPDFReport(str(self.output_dir))
-        
+
         data = {
             'total_items': 100,
             'success_count': 85,
             'error_details': ['Error 1', 'Error 2'],
         }
         content = generator._create_batch_statistics(data)
-        
+
         self.assertGreater(len(content), 0)
         self.assertIn('85.0%', str(content))
 
@@ -148,7 +148,7 @@ class TestPDFReportGenerator(unittest.TestCase):
             {'ssim': 0.85, 'psnr': 32.0, 'similarity': 0.80, 'mse': 0.01, 'pearson': 0.88, 'mean_diff': 0.05, 'max_diff': 0.15, 'std_diff': 0.03},
             output_dir=str(self.output_dir)
         )
-        
+
         self.assertTrue(Path(filepath).exists())
 
     def test_global_generate_pdf_report_simulation(self):
@@ -158,7 +158,7 @@ class TestPDFReportGenerator(unittest.TestCase):
             {'simulation_type': 'Test', 'duration': '10 с', 'points_count': 1000, 'data_size': '1 MB'},
             output_dir=str(self.output_dir)
         )
-        
+
         self.assertTrue(Path(filepath).exists())
 
     def test_global_generate_pdf_report_batch(self):
@@ -168,7 +168,7 @@ class TestPDFReportGenerator(unittest.TestCase):
             {'total_items': 50, 'success_count': 48, 'error_count': 2, 'duration': '5 мин'},
             output_dir=str(self.output_dir)
         )
-        
+
         self.assertTrue(Path(filepath).exists())
 
     def test_invalid_report_type(self):

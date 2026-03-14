@@ -106,10 +106,10 @@ class SSTVDecoder:
             # Сохраняем временный WAV файл
             import wave
             import tempfile
-            
+
             temp_file = tempfile.NamedTemporaryFile(suffix='.wav', delete=False)
             temp_path = temp_file.name
-            
+
             # Нормализуем и конвертируем в 16-bit
             max_val = np.max(np.abs(samples.real))
             if max_val > 0:
@@ -125,11 +125,11 @@ class SSTVDecoder:
 
             # Декодируем
             image = self.decode_from_audio(temp_path)
-            
+
             # Удаляем временный файл
             import os
             os.unlink(temp_path)
-            
+
             return image
         except Exception as e:
             print(f"Ошибка декодирования из сэмплов: {e}")
@@ -165,7 +165,7 @@ class SSTVDecoder:
             self.decode_realtime_init()
 
         self.rt_buffer.append(samples)
-        
+
         # Ограничиваем размер буфера
         total_samples = sum(len(s) for s in self.rt_buffer)
         if total_samples > self.rt_max_buffer:
@@ -178,20 +178,20 @@ class SSTVDecoder:
         if len(self.rt_buffer) > 0:
             combined = np.concatenate(self.rt_buffer[-10:])  # Последние 10 блоков
             signal_strength = np.mean(np.abs(combined))
-            
+
             if signal_strength > 0.1 and not self.rt_is_decoding:
                 # Обнаружен сигнал - начинаем декодирование
                 self.rt_is_decoding = True
                 print("SSTV сигнал обнаружен, декодирование...")
-                
+
                 if self.rt_callback:
                     self.rt_callback('status', 'decoding')
-                
+
                 # Пробуем декодировать
                 try:
                     all_samples = np.concatenate(self.rt_buffer)
                     self.rt_image = self.decode_from_samples(all_samples, self.rt_sample_rate)
-                    
+
                     if self.rt_image:
                         print(f"✓ SSTV декодировано: {self.rt_image.size[0]}x{self.rt_image.size[1]}")
                         if self.rt_callback:
@@ -207,7 +207,7 @@ class SSTVDecoder:
                     print(f"Ошибка декодирования: {e}")
                     if self.rt_callback:
                         self.rt_callback('status', 'error')
-                
+
                 self.rt_is_decoding = False
 
         return None

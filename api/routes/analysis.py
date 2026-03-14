@@ -58,7 +58,7 @@ async def analyze_image_defects(
         # Бизнес-метрики
         defects_list = result.get('defects', [])
         BusinessMetrics.inc_defect_analysis(request.model_name, defects_list)
-        
+
         # Конвертация дефектов в формат схемы
         defects = [
             DefectInfo(
@@ -72,13 +72,13 @@ async def analyze_image_defects(
             )
             for d in result.get('defects', [])
         ]
-        
+
         # Вычисление средней уверенности
         confidence_score = (
             sum(d.confidence for d in defects) / len(defects)
             if defects else 0.0
         )
-        
+
         return DefectAnalysisResponse(
             analysis_id=result.get('analysis_id', f"defect_{uuid.uuid4().hex[:8]}"),
             image_path=str(image_path),
@@ -89,7 +89,7 @@ async def analyze_image_defects(
             processing_time_ms=result.get('processing_time_ms', 0),
             timestamp=datetime.now().isoformat(),
         )
-        
+
     except (ValidationError, NotFoundError):
         raise
     except Exception as e:

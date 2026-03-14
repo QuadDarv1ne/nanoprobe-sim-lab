@@ -233,7 +233,7 @@ class BatchProcessor:
             ID задания
         """
         from components.py_sstv_groundstation.src.sstv_decoder import SSTVDecoder
-        
+
         def decode_sstv_file(path: str) -> Dict:
             """Декодирование одного SSTV файла"""
             result = {
@@ -244,29 +244,29 @@ class BatchProcessor:
                 'mode': None,
                 'error': None
             }
-            
+
             try:
                 decoder = SSTVDecoder()
                 image = decoder.decode_from_audio(path)
-                
+
                 if image:
                     Path(output_dir).mkdir(parents=True, exist_ok=True)
                     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                     output_path = f"{output_dir}/sstv_{Path(path).stem}_{timestamp}.png"
                     image.save(output_path)
-                    
+
                     result['image_path'] = output_path
                     result['mode'] = decoder.metadata.get('mode', 'unknown')
                 else:
                     result['status'] = 'failed'
                     result['error'] = 'Decoding failed'
-                    
+
             except Exception as e:
                 result['status'] = 'failed'
                 result['error'] = str(e)
-            
+
             return result
-        
+
         return self.create_job(
             job_type='sstv_decode',
             items=audio_files,
@@ -297,7 +297,7 @@ class BatchProcessor:
             ID задания
         """
         from components.py_sstv_groundstation.src.satellite_tracker import SatelliteTracker
-        
+
         def calculate_passes(sat_name: str) -> Dict:
             """Расчёт пролётов для одного спутника"""
             result = {
@@ -306,7 +306,7 @@ class BatchProcessor:
                 'passes': [],
                 'error': None
             }
-            
+
             try:
                 tracker = SatelliteTracker(
                     ground_station_lat=ground_station_lat,
@@ -317,13 +317,13 @@ class BatchProcessor:
                     hours_ahead=hours_ahead
                 )
                 result['passes'] = passes
-                
+
             except Exception as e:
                 result['status'] = 'failed'
                 result['error'] = str(e)
-            
+
             return result
-        
+
         return self.create_job(
             job_type='satellite_passes',
             items=satellite_names,

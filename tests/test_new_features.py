@@ -15,61 +15,61 @@ class TestDataExporter(unittest.TestCase):
     def test_export_csv(self):
         """Тестирует экспорт в CSV."""
         from utils.data_exporter import DataExporter
-        
+
         with tempfile.TemporaryDirectory() as tmpdir:
             exporter = DataExporter(tmpdir)
             data = {'x': [1, 2, 3], 'y': [4, 5, 6]}
             filepath = exporter.export(data, 'test.csv', fmt='csv')
-            
+
             self.assertTrue(filepath.exists())
             self.assertEqual(filepath.suffix, '.csv')
 
     def test_export_json(self):
         """Тестирует экспорт в JSON."""
         from utils.data_exporter import DataExporter
-        
+
         with tempfile.TemporaryDirectory() as tmpdir:
             exporter = DataExporter(tmpdir)
             data = {'key': 'value', 'number': 42}
             filepath = exporter.export(data, 'test.json', fmt='json')
-            
+
             self.assertTrue(filepath.exists())
             self.assertEqual(filepath.suffix, '.json')
 
     def test_export_npy(self):
         """Тестирует экспорт в NumPy формат."""
         from utils.data_exporter import DataExporter
-        
+
         with tempfile.TemporaryDirectory() as tmpdir:
             exporter = DataExporter(tmpdir)
             data = np.array([[1, 2], [3, 4]])
             filepath = exporter.export(data, 'test.npy', fmt='npy')
-            
+
             self.assertTrue(filepath.exists())
             self.assertEqual(filepath.suffix, '.npy')
 
     def test_export_surface_data(self):
         """Тестирует экспорт данных поверхности."""
         from utils.data_exporter import DataExporter
-        
+
         with tempfile.TemporaryDirectory() as tmpdir:
             exporter = DataExporter(tmpdir)
             surface_data = np.random.rand(10, 10)
             filepath = exporter.export_surface_data(surface_data, fmt='json')
-            
+
             self.assertTrue(filepath.exists())
 
     def test_import_json(self):
         """Тестирует импорт из JSON."""
         from utils.data_exporter import DataExporter, DataImporter
-        
+
         with tempfile.TemporaryDirectory() as tmpdir:
             exporter = DataExporter(tmpdir)
             importer = DataImporter(tmpdir)
-            
+
             data = {'key': 'value', 'number': 42}
             filepath = exporter.export(data, 'test.json', fmt='json')
-            
+
             imported = importer.import_file(filepath)
             self.assertEqual(imported['key'], 'value')
             self.assertEqual(imported['number'], 42)
@@ -81,7 +81,7 @@ class TestCLIUtils(unittest.TestCase):
     def test_colors_basic(self):
         """Тестирует базовые цвета."""
         from utils.cli_utils import Colors, colorize
-        
+
         red_text = colorize("test", Colors.RED)
         self.assertIn(Colors.RED, red_text)
         self.assertIn(Colors.RESET, red_text)
@@ -89,7 +89,7 @@ class TestCLIUtils(unittest.TestCase):
     def test_colorize_function(self):
         """Тестирует функцию colorize."""
         from utils.cli_utils import colorize, Colors
-        
+
         result = colorize("hello", Colors.GREEN)
         self.assertIsInstance(result, str)
         self.assertIn("hello", result)
@@ -97,7 +97,7 @@ class TestCLIUtils(unittest.TestCase):
     def test_progress_bar_creation(self):
         """Тестирует создание progress bar."""
         from utils.cli_utils import ProgressBar
-        
+
         pb = ProgressBar(total=10, desc="Test")
         self.assertEqual(pb.total, 10)
         self.assertEqual(pb.desc, "Test")
@@ -105,12 +105,12 @@ class TestCLIUtils(unittest.TestCase):
     def test_progress_bar_iteration(self):
         """Тестирует итерацию progress bar."""
         from utils.cli_utils import ProgressBar
-        
+
         pb = ProgressBar(total=5, desc="Test")
         count = 0
         for i in pb:
             count += 1
-        
+
         self.assertEqual(count, 5)
 
 
@@ -125,40 +125,40 @@ class TestSPMMultiprocessing(unittest.TestCase):
     def test_parallel_scan(self):
         """Тестирует параллельное сканирование."""
         from spm_simulator import SurfaceModel, SPMController
-        
+
         surface = SurfaceModel(20, 20)
         controller = SPMController()
         controller.set_surface(surface)
-        
+
         # Параллельное сканирование
         controller.scan_surface(parallel=True, num_processes=2)
-        
+
         self.assertIsNotNone(controller.scan_data)
         self.assertEqual(controller.scan_data.shape, (20, 20))
 
     def test_sequential_scan(self):
         """Тестирует последовательное сканирование."""
         from spm_simulator import SurfaceModel, SPMController
-        
+
         surface = SurfaceModel(10, 10)
         controller = SPMController()
         controller.set_surface(surface)
-        
+
         # Последовательное сканирование
         controller.scan_surface(parallel=False)
-        
+
         self.assertIsNotNone(controller.scan_data)
         self.assertEqual(controller.scan_data.shape, (10, 10))
 
     def test_scan_data_range(self):
         """Тестирует диапазон данных сканирования."""
         from spm_simulator import SurfaceModel, SPMController
-        
+
         surface = SurfaceModel(15, 15)
         controller = SPMController()
         controller.set_surface(surface)
         controller.scan_surface(parallel=False)
-        
+
         # Все значения должны быть в разумном диапазоне
         self.assertTrue(np.all(controller.scan_data >= 0))
         self.assertTrue(np.all(controller.scan_data <= 2))

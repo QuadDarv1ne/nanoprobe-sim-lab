@@ -34,7 +34,7 @@ class CircuitBreakerOpenError(CircuitBreakerError):
 class CircuitBreaker:
     """
     Circuit Breaker для защиты от каскадных сбоев
-    
+
     Паттерн:
     - CLOSED: Нормальная работа, отслеживаем ошибки
     - OPEN: Превышен порог ошибок, блокируем запросы на timeout
@@ -253,13 +253,16 @@ def circuit_breaker(
     Usage:
         @circuit_breaker(name="external_api", failure_threshold=3)
         def call_external_api():
+            """TODO: Add description"""
             ...
     """
     def decorator(func: Callable) -> Callable:
+        """TODO: Add description"""
         breaker = get_circuit_breaker(name, failure_threshold, recovery_timeout)
 
         @wraps(func)
         def wrapper(*args, **kwargs):
+            """TODO: Add description"""
             try:
                 return breaker.call(func, *args, **kwargs)
             except CircuitBreakerOpenError:

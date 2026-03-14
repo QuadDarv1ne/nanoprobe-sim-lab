@@ -22,6 +22,7 @@ def run_command(cmd):
 
 
 def main():
+    """TODO: Add description"""
     if len(sys.argv) < 2:
         print("Usage: python migrate.py [command]")
         print("Commands:")

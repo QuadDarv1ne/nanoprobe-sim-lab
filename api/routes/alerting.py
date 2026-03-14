@@ -43,14 +43,14 @@ async def send_alert(
         details=details,
         channels=channels,
     )
-    
+
     if result.get("status") == "duplicate":
         return {"success": False, "reason": "duplicate", "message": "Дубликат алерта"}
     elif result.get("status") == "rate_limited":
         return {"success": False, "reason": "rate_limited", "message": "Превышен лимит"}
     elif result.get("status") == "silenced":
         return {"success": False, "reason": "silenced", "message": "Алерт заглушен"}
-    
+
     return {"success": True, **result}
 
 
@@ -156,13 +156,13 @@ async def get_alert_history(
 ):
     """Получить историю алертов"""
     history = alert_manager.alert_history
-    
+
     if severity:
         history = [a for a in history if a.get("severity") == severity]
-    
+
     total = len(history)
     paginated = history[offset:offset + limit]
-    
+
     return {
         "alerts": paginated,
         "total": total,

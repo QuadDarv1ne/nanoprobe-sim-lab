@@ -112,10 +112,10 @@ def get_batch_processor() -> BatchProcessor:
 def get_client_ip(request: Request) -> str:
     """
     Получение IP адреса клиента
-    
+
     Args:
         request: FastAPI request объект
-        
+
     Returns:
         str: IP адрес клиента
     """
@@ -142,6 +142,7 @@ def rate_limit(max_requests: int = 10, window_seconds: int = 60):
     from utils.rate_limiter import RateLimiter
 
     def decorator(func):
+        """TODO: Add description"""
         @wraps(func)
         async def wrapper(request: Request, *args, **kwargs):
             from api.dependencies import get_client_ip

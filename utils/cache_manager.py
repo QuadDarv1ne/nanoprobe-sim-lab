@@ -55,11 +55,11 @@ class CacheManager:
             ValueError: Если project_root не существует
         """
         self.project_root: Path = Path(project_root).resolve()
-        
+
         # Проверяем существование директории проекта
         if not self.project_root.exists():
             raise ValueError(f"Корневая директория проекта не найдена: {project_root}")
-        
+
         self.config_file: Path = self.project_root / "config" / config_file
         self.cache_config: Dict[str, Any] = self._load_config()
         self.cache_directories: List[Path] = self._get_cache_directories()

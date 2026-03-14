@@ -12,6 +12,7 @@ from datetime import datetime
 
 
 class Colors:
+    """TODO: Add description"""
     GREEN = '\033[0;32m'
     YELLOW = '\033[1;33m'
     RED = '\033[0;31m'
@@ -20,6 +21,7 @@ class Colors:
 
 
 def print_header(text):
+    """TODO: Add description"""
     print(f"\n{Colors.GREEN}{'='*50}{Colors.END}")
     print(f"{Colors.GREEN}  {text}{Colors.END}")
     print(f"{Colors.GREEN}{'='*50}{Colors.END}\n")
@@ -38,15 +40,15 @@ def generate_self_signed_cert(domain, email, cert_dir, days=365):
     """Генерация самоподписанного сертификата"""
     cert_dir = Path(cert_dir)
     cert_dir.mkdir(parents=True, exist_ok=True)
-    
+
     cert_path = cert_dir / f"{domain}.crt"
     key_path = cert_dir / f"{domain}.key"
-    
+
     print(f"{Colors.YELLOW}Генерация самоподписанного сертификата...{Colors.END}")
     print(f"  Domain: {domain}")
     print(f"  Days: {days}")
     print(f"  Output: {cert_dir}")
-    
+
     # OpenSSL команда
     cmd = [
         'openssl', 'req', '-x509', '-nodes', '-days', str(days),
@@ -56,18 +58,18 @@ def generate_self_signed_cert(domain, email, cert_dir, days=365):
         '-subj', f"/C=RU/ST=Moscow/L=Moscow/O=Nanoprobe Sim Lab/OU=IT/CN={domain}/emailAddress={email}",
         '-addext', f"subjectAltName=DNS:{domain},DNS:localhost,IP:127.0.0.1"
     ]
-    
+
     try:
         subprocess.run(cmd, check=True, capture_output=True, text=True)
-        
+
         # Установка правильных прав
         os.chmod(key_path, 0o600)
         os.chmod(cert_path, 0o644)
-        
+
         print(f"\n{Colors.GREEN}✓ Сертификаты сгенерированы:{Colors.END}")
         print(f"  Certificate: {cert_path}")
         print(f"  Private Key: {key_path}")
-        
+
         return True
     except subprocess.CalledProcessError as e:
         print(f"{Colors.RED}Ошибка генерации: {e.stderr}{Colors.END}")
@@ -83,21 +85,22 @@ def verify_cert(cert_path):
             text=True,
             check=True
         )
-        
+
         # Вывод информации о сертификате
         lines = result.stdout.split('\n')[:20]
         print(f"\n{Colors.YELLOW}Информация о сертификате:{Colors.END}")
         for line in lines:
             print(f"  {line}")
-        
+
         return True
     except subprocess.CalledProcessError:
         return False
 
 
 def main():
+    """TODO: Add description"""
     import argparse
-    
+
     parser = argparse.ArgumentParser(
         description='Генерация SSL сертификатов для Nanoprobe Sim Lab',
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -108,7 +111,7 @@ def main():
   python generate_ssl_certs.py myapp.com admin@myapp.com
         """
     )
-    
+
     parser.add_argument(
         '--domain', '-d',
         default='nanoprobe-lab.local',
@@ -135,11 +138,11 @@ def main():
         action='store_true',
         help="Показать инструкцию для Let's Encrypt"
     )
-    
+
     args = parser.parse_args()
-    
+
     print_header("Генерация SSL сертификатов")
-    
+
     # Проверка OpenSSL
     if not check_openssl():
         print(f"{Colors.RED}Ошибка: OpenSSL не найден{Colors.END}")
@@ -148,9 +151,9 @@ def main():
         print("  macOS: brew install openssl")
         print("  Windows: choco install openssl")
         return 1
-    
+
     print(f"{Colors.CYAN}OpenSSL найден{Colors.END}\n")
-    
+
     # Генерация сертификата
     success = generate_self_signed_cert(
         domain=args.domain,
@@ -158,31 +161,31 @@ def main():
         cert_dir=args.output,
         days=args.days
     )
-    
+
     if not success:
         return 1
-    
+
     # Проверка сертификата
     cert_path = Path(args.output) / f"{args.domain}.crt"
     verify_cert(cert_path)
-    
+
     print(f"\n{Colors.GREEN}{'='*50}{Colors.END}")
     print(f"{Colors.GREEN}  Готово!{Colors.END}")
     print(f"{Colors.GREEN}{'='*50}{Colors.END}")
-    
+
     if args.letsencrypt:
         print(f"\n{Colors.YELLOW}Для production используйте Let's Encrypt:{Colors.END}")
         print(f"""
   # Установка Certbot
   sudo apt-get install certbot python3-certbot-nginx
-  
+
   # Генерация сертификата
   sudo certbot --nginx -d {args.domain}
-  
+
   # Автоматическое обновление
   sudo certbot renew --dry-run
         """)
-    
+
     return 0
 
 

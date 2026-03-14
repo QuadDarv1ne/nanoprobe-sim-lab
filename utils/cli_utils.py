@@ -8,12 +8,12 @@ from datetime import datetime
 
 class Colors:
     """ANSI цвета для терминала."""
-    
+
     RESET = '\033[0m'
     BOLD = '\033[1m'
     DIM = '\033[2m'
     UNDERLINE = '\033[4m'
-    
+
     # Цвета текста
     BLACK = '\033[30m'
     RED = '\033[31m'
@@ -23,7 +23,7 @@ class Colors:
     MAGENTA = '\033[35m'
     CYAN = '\033[36m'
     WHITE = '\033[37m'
-    
+
     # Яркие цвета
     BRIGHT_RED = '\033[91m'
     BRIGHT_GREEN = '\033[92m'
@@ -31,7 +31,7 @@ class Colors:
     BRIGHT_BLUE = '\033[94m'
     BRIGHT_MAGENTA = '\033[95m'
     BRIGHT_CYAN = '\033[96m'
-    
+
     # Фоны
     BG_BLACK = '\033[40m'
     BG_RED = '\033[41m'
@@ -103,7 +103,7 @@ class ProgressBar:
         """Обновляет прогресс на n шагов."""
         if self.start_time is None:
             self.start_time = time.time()
-        
+
         self.current += n
         self._render()
 
@@ -201,26 +201,26 @@ def print_table(headers: list, rows: list, col_widths: list = None):
         col_widths: Ширина столбцов (авто если None)
     """
     if col_widths is None:
-        col_widths = [max(len(str(row[i])) if i < len(row) else 0 
-                         for row in [headers] + rows) + 2 
+        col_widths = [max(len(str(row[i])) if i < len(row) else 0
+                         for row in [headers] + rows) + 2
                      for i in range(len(headers))]
 
     # Разделитель
     separator = '+' + '+'.join('─' * w for w in col_widths) + '+'
-    
+
     print(f"{Colors.CYAN}{separator}{Colors.RESET}")
-    
+
     # Заголовки
     header_line = '|' + '|'.join(str(h).center(w) for h, w in zip(headers, col_widths)) + '|'
     print(f"{Colors.BOLD}{Colors.BRIGHT_CYAN}{header_line}{Colors.RESET}")
     print(f"{Colors.CYAN}{separator}{Colors.RESET}")
-    
+
     # Данные
     for row in rows:
-        row_line = '|' + '|'.join(str(row[i]).ljust(w) if i < len(row) else ''.ljust(w) 
+        row_line = '|' + '|'.join(str(row[i]).ljust(w) if i < len(row) else ''.ljust(w)
                                   for i, w in enumerate(col_widths)) + '|'
         print(row_line)
-    
+
     print(f"{Colors.CYAN}{separator}{Colors.RESET}")
 
 
@@ -260,7 +260,7 @@ class Spinner:
         self._running = False
         if self._thread:
             self._thread.join()
-        
+
         if success:
             print(f"{Colors.BRIGHT_GREEN}✓{Colors.RESET} {self.message}")
         else:

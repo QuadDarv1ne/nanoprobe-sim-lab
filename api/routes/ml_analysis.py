@@ -25,7 +25,7 @@ async def analyze_with_pretrained(
 ):
     """
     Анализ изображения на дефекты
-    
+
     Поддерживаемые типы дефектов:
     - normal (без дефектов)
     - scratch (царапины)
@@ -37,16 +37,16 @@ async def analyze_with_pretrained(
     - roughness (шероховатость)
     """
     from utils.pretrained_defect_analyzer import get_analyzer
-    
+
     # Сохранение временного файла
     temp_path = Path("data/temp") / image.filename
     temp_path.parent.mkdir(parents=True, exist_ok=True)
-    
+
     try:
         with open(temp_path, "wb") as f:
             content = await image.read()
             f.write(content)
-        
+
         # Анализ
         analyzer = get_analyzer(model_type=model_type)
         result = analyzer.analyze_image(str(temp_path))
@@ -75,12 +75,12 @@ async def analyze_with_pretrained(
 async def get_available_models():
     """Информация о доступных моделях"""
     from utils.pretrained_defect_analyzer import PretrainedDefectAnalyzer
-    
+
     models_info = {}
     for model_type in PretrainedDefectAnalyzer.MODEL_TYPES:
         analyzer = PretrainedDefectAnalyzer(model_type=model_type)
         models_info[model_type] = analyzer.get_model_info()
-    
+
     return {
         "models": models_info,
         "defect_classes": PretrainedDefectAnalyzer.DEFECT_CLASSES,
@@ -100,7 +100,7 @@ async def fine_tune_model(
 ):
     """
     Дообучение модели на кастомных данных
-    
+
     Требуется директория с данными в формате:
     data/train/
         class_1/
@@ -110,7 +110,7 @@ async def fine_tune_model(
             image3.jpg
     """
     from utils.pretrained_defect_analyzer import get_analyzer
-    
+
     train_path = Path("data/ml_train")
 
     if not train_path.exists():
@@ -145,7 +145,7 @@ async def save_model(
 ):
     """Сохранение модели"""
     from utils.pretrained_defect_analyzer import get_analyzer
-    
+
     analyzer = get_analyzer(model_type=model_type)
 
     if not analyzer._model_loaded:
@@ -175,7 +175,7 @@ async def batch_analyze(
     """Пакетный анализ изображений"""
     import json
     from utils.pretrained_defect_analyzer import get_analyzer
-    
+
     try:
         paths = json.loads(image_paths)
     except json.JSONDecodeError:

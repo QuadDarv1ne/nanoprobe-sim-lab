@@ -27,7 +27,7 @@ class ErrorSeverity(str, Enum):
 
 class APIError(Exception):
     """Базовое исключение API"""
-    
+
     def __init__(
         self,
         message: str,
@@ -46,8 +46,9 @@ class APIError(Exception):
 
 class ValidationError(APIError):
     """Ошибка валидации данных"""
-    
+
     def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        """TODO: Add description"""
         super().__init__(
             message=message,
             status_code=422,
@@ -59,8 +60,9 @@ class ValidationError(APIError):
 
 class NotFoundError(APIError):
     """Ресурс не найден"""
-    
+
     def __init__(self, message: str, resource_type: Optional[str] = None):
+        """TODO: Add description"""
         super().__init__(
             message=message,
             status_code=404,
@@ -72,8 +74,9 @@ class NotFoundError(APIError):
 
 class AuthenticationError(APIError):
     """Ошибка аутентификации"""
-    
+
     def __init__(self, message: str = "Неверные учетные данные"):
+        """TODO: Add description"""
         super().__init__(
             message=message,
             status_code=401,
@@ -85,8 +88,9 @@ class AuthenticationError(APIError):
 
 class AuthorizationError(APIError):
     """Ошибка авторизации (нет прав)"""
-    
+
     def __init__(self, message: str = "Недостаточно прав"):
+        """TODO: Add description"""
         super().__init__(
             message=message,
             status_code=403,
@@ -98,8 +102,9 @@ class AuthorizationError(APIError):
 
 class RateLimitError(APIError):
     """Превышен лимит запросов"""
-    
+
     def __init__(self, retry_after: int = 60):
+        """TODO: Add description"""
         super().__init__(
             message="Слишком много запросов",
             status_code=429,
@@ -111,8 +116,9 @@ class RateLimitError(APIError):
 
 class DatabaseError(APIError):
     """Ошибка базы данных"""
-    
+
     def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        """TODO: Add description"""
         super().__init__(
             message=message,
             status_code=503,
@@ -124,8 +130,9 @@ class DatabaseError(APIError):
 
 class ExternalServiceError(APIError):
     """Ошибка внешнего сервиса"""
-    
+
     def __init__(self, service_name: str, message: str):
+        """TODO: Add description"""
         super().__init__(
             message=f"Ошибка сервиса {service_name}: {message}",
             status_code=503,
@@ -142,9 +149,9 @@ def create_error_response(
     severity: ErrorSeverity = ErrorSeverity.ERROR
 ) -> JSONResponse:
     """Создание унифицированного ответа об ошибке"""
-    
+
     error_id = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-    
+
     logger.error(
         f"[{severity.value.upper()}] {error_id} - {type(error).__name__}: {str(error)}",
         extra={
@@ -154,7 +161,7 @@ def create_error_response(
             "client_ip": request.client.host if request.client else "unknown"
         }
     )
-    
+
     return JSONResponse(
         status_code=status_code,
         content={
@@ -204,7 +211,7 @@ async def validation_error_handler(
     exc: RequestValidationError
 ) -> JSONResponse:
     """Обработчик ошибок валидации"""
-    
+
     errors = []
     for error in exc.errors():
         errors.append({
@@ -212,7 +219,7 @@ async def validation_error_handler(
             "message": error.get("msg", ""),
             "type": error.get("type", "")
         })
-    
+
     logger.warning(
         f"Validation error: {errors}",
         extra={
@@ -220,7 +227,7 @@ async def validation_error_handler(
             "method": request.method
         }
     )
-    
+
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={
@@ -236,10 +243,10 @@ async def validation_error_handler(
 
 async def general_error_handler(request: Request, exc: Exception) -> JSONResponse:
     """Обработчик общих исключений"""
-    
+
     error_trace = traceback.format_exc()
     error_id = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-    
+
     logger.error(
         f"[CRITICAL] {error_id} - {type(exc).__name__}: {str(exc)}\n{error_trace}",
         extra={
@@ -249,10 +256,10 @@ async def general_error_handler(request: Request, exc: Exception) -> JSONRespons
             "client_ip": request.client.host if request.client else "unknown"
         }
     )
-    
+
     # В production не показываем детали ошибки клиенту
     show_details = os.getenv("API_DEBUG", "false").lower() == "true"
-    
+
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
@@ -293,13 +300,13 @@ def register_error_handlers(app):
     app.add_exception_handler(RateLimitError, api_error_handler_wrapper)
     app.add_exception_handler(DatabaseError, api_error_handler_wrapper)
     app.add_exception_handler(ExternalServiceError, api_error_handler_wrapper)
-    
+
     logger.info("Error handlers registered")
 
 
 def handle_errors(func):
     """Декоратор для автоматической обработки ошибок в endpoint'ах"""
-    
+
     @wraps(func)
     async def wrapper(*args, **kwargs):
         try:
@@ -309,5 +316,5 @@ def handle_errors(func):
         except Exception as e:
             logger.exception(f"Error in {func.__name__}: {str(e)}")
             raise
-    
+
     return wrapper

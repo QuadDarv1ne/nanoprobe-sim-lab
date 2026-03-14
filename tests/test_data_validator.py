@@ -129,6 +129,7 @@ class TestDataValidator(unittest.TestCase):
     def test_add_validation_rule(self):
         """Тестирует добавление правила валидации"""
         def custom_validator(value):
+            """TODO: Add description"""
             return value > 0
 
         self.validator.add_validation_rule(

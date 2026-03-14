@@ -20,6 +20,7 @@ class ConnectionPool:
     """Пул соединений для SQLite"""
 
     def __init__(self, db_path: str, pool_size: int = 5):
+        """TODO: Add description"""
         self.db_path = db_path
         self.pool_size = pool_size
         self._pool: Queue = Queue(maxsize=pool_size)
@@ -84,6 +85,7 @@ class AsyncConnectionPool:
     """Асинхронный пул соединений для SQLite"""
 
     def __init__(self, db_path: str, pool_size: int = 5):
+        """TODO: Add description"""
         self.db_path = db_path
         self.pool_size = pool_size
         self._pool: asyncio.Queue = asyncio.Queue(maxsize=pool_size)
@@ -804,20 +806,20 @@ class DatabaseManager:
         """
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            
+
             query = "SELECT * FROM simulations"
             params = []
-            
+
             if status:
                 query += " WHERE status = ?"
                 params.append(status)
-            
+
             query += " ORDER BY created_at DESC LIMIT ?"
             params.append(limit)
-            
+
             cursor.execute(query, params)
             rows = cursor.fetchall()
-            
+
             return [self._row_to_dict(row) for row in rows]
 
     def add_image(
@@ -848,7 +850,7 @@ class DatabaseManager:
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO images 
+                INSERT INTO images
                 (image_path, image_type, source, width, height, channels, metadata)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (
@@ -881,28 +883,28 @@ class DatabaseManager:
         """
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            
+
             query = "SELECT * FROM images"
             params = []
             conditions = []
-            
+
             if image_type:
                 conditions.append("image_type = ?")
                 params.append(image_type)
-            
+
             if source:
                 conditions.append("source = ?")
                 params.append(source)
-            
+
             if conditions:
                 query += " WHERE " + " AND ".join(conditions)
-            
+
             query += " ORDER BY created_at DESC LIMIT ?"
             params.append(limit)
-            
+
             cursor.execute(query, params)
             rows = cursor.fetchall()
-            
+
             return [self._row_to_dict(row) for row in rows]
 
     def add_export(
@@ -929,7 +931,7 @@ class DatabaseManager:
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO exports 
+                INSERT INTO exports
                 (export_path, export_format, source_type, source_id, file_size_bytes)
                 VALUES (?, ?, ?, ?, ?)
             """, (
@@ -1049,35 +1051,38 @@ class DatabaseManager:
     def cached_query(ttl: int = 300):
         """
         Декоратор для кэширования результатов запросов.
-        
+
         Args:
             ttl: Время жизни кэша в секундах (по умолчанию 300 = 5 минут)
-        
+
         Использование:
             @db.cached_query(ttl=600)
             def get_expensive_query(...):
+                """TODO: Add description"""
                 ...
         """
         def decorator(func: Callable) -> Callable:
+            """TODO: Add description"""
             @wraps(func)
             def wrapper(*args, **kwargs):
                 # Генерация ключа кэша на основе имени функции и аргументов
+                """TODO: Add description"""
                 cache_key_parts = [func.__name__]
                 for arg in args[1:]:  # Пропускаем self
                     cache_key_parts.append(str(arg))
                 for k, v in sorted(kwargs.items()):
                     cache_key_parts.append(f"{k}={v}")
-                
+
                 cache_key = hashlib.md5("|".join(cache_key_parts).encode()).hexdigest()
-                
+
                 # Проверка кэша
                 cached = self._get_cached(cache_key)
                 if cached is not None:
                     return cached
-                
+
                 # Выполнение функции
                 result = func(*args, **kwargs)
-                
+
                 # Кэширование результата
                 self._cache_result(cache_key, result, ttl=ttl)
                 return result
@@ -1101,15 +1106,15 @@ class DatabaseManager:
         """
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            
+
             search_pattern = f"%{query}%"
             cursor.execute("""
-                SELECT * FROM scan_results 
+                SELECT * FROM scan_results
                 WHERE surface_type LIKE ? OR metadata LIKE ?
                 ORDER BY timestamp DESC
                 LIMIT ?
             """, (search_pattern, search_pattern, limit))
-            
+
             rows = cursor.fetchall()
             return [self._row_to_dict(row) for row in rows]
 
@@ -1314,7 +1319,7 @@ class DatabaseManager:
         """Получает историю AI анализов."""
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            
+
             if image_path:
                 cursor.execute("""
                     SELECT * FROM defect_analysis
@@ -1326,7 +1331,7 @@ class DatabaseManager:
                     SELECT * FROM defect_analysis
                     ORDER BY created_at DESC LIMIT ?
                 """, (limit,))
-            
+
             return [self._row_to_dict(row) for row in cursor.fetchall()]
 
     # Методы для PDF отчётов
@@ -1373,7 +1378,7 @@ class DatabaseManager:
         """Получает список PDF отчётов."""
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            
+
             if report_type:
                 cursor.execute("""
                     SELECT * FROM pdf_reports
@@ -1385,7 +1390,7 @@ class DatabaseManager:
                     SELECT * FROM pdf_reports
                     ORDER BY created_at DESC LIMIT ?
                 """, (limit,))
-            
+
             return [self._row_to_dict(row) for row in cursor.fetchall()]
 
     # Методы для пакетной обработки
@@ -1434,30 +1439,30 @@ class DatabaseManager:
         """Обновляет статус задания пакетной обработки."""
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            
+
             updates = []
             params = []
-            
+
             if status:
                 updates.append("status = ?")
                 params.append(status)
-                
+
                 if status in ('completed', 'failed', 'cancelled'):
                     updates.append("completed_at = ?")
                     params.append(datetime.now().isoformat())
-            
+
             if processed_items is not None:
                 updates.append("processed_items = ?")
                 params.append(processed_items)
-            
+
             if failed_items is not None:
                 updates.append("failed_items = ?")
                 params.append(failed_items)
-            
+
             if results_summary:
                 updates.append("results_summary = ?")
                 params.append(json.dumps(results_summary))
-            
+
             params.append(job_id)
             query = f"UPDATE batch_jobs SET {', '.join(updates)} WHERE job_id = ?"
             cursor.execute(query, params)
@@ -1466,7 +1471,7 @@ class DatabaseManager:
         """Получает список заданий пакетной обработки."""
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            
+
             if status:
                 cursor.execute("""
                     SELECT * FROM batch_jobs
@@ -1478,7 +1483,7 @@ class DatabaseManager:
                     SELECT * FROM batch_jobs
                     ORDER BY created_at DESC LIMIT ?
                 """, (limit,))
-            
+
             return [self._row_to_dict(row) for row in cursor.fetchall()]
 
     # Методы для real-time метрик производительности
@@ -1530,29 +1535,29 @@ class DatabaseManager:
         """Получает метрики производительности."""
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            
+
             query = "SELECT * FROM performance_metrics WHERE 1=1"
             params = []
-            
+
             if metric_type:
                 query += " AND metric_type = ?"
                 params.append(metric_type)
-            
+
             if metric_name:
                 query += " AND metric_name = ?"
                 params.append(metric_name)
-            
+
             if start_time:
                 query += " AND timestamp >= ?"
                 params.append(start_time)
-            
+
             if end_time:
                 query += " AND timestamp <= ?"
                 params.append(end_time)
-            
+
             query += " ORDER BY timestamp DESC LIMIT ?"
             params.append(limit)
-            
+
             cursor.execute(query, params)
             return [self._row_to_dict(row) for row in cursor.fetchall()]
 
@@ -1588,7 +1593,7 @@ class DatabaseManager:
         """
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            
+
             data = {
                 'export_timestamp': datetime.now().isoformat(),
                 'scan_results': [],
@@ -1596,28 +1601,28 @@ class DatabaseManager:
                 'images': [],
                 'exports': []
             }
-            
+
             # Экспорт сканирований
             cursor.execute("SELECT * FROM scan_results")
             data['scan_results'] = [self._row_to_dict(row) for row in cursor.fetchall()]
-            
+
             # Экспорт симуляций
             cursor.execute("SELECT * FROM simulations")
             data['simulations'] = [self._row_to_dict(row) for row in cursor.fetchall()]
-            
+
             # Экспорт изображений
             cursor.execute("SELECT * FROM images")
             data['images'] = [self._row_to_dict(row) for row in cursor.fetchall()]
-            
+
             # Экспорт экспортов
             cursor.execute("SELECT * FROM exports")
             data['exports'] = [self._row_to_dict(row) for row in cursor.fetchall()]
-            
+
             # Сохранение
             output = Path(output_path)
             with open(output, 'w', encoding='utf-8') as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
-            
+
             return output
 
     def optimize_database(self) -> Dict[str, Any]:
@@ -1628,25 +1633,25 @@ class DatabaseManager:
             Статистика оптимизации
         """
         stats = {"vacuum": False, "analyze": False, "size_before": 0, "size_after": 0}
-        
+
         try:
             stats["size_before"] = self.db_path.stat().st_size if self.db_path.exists() else 0
-            
+
             with self.get_connection() as conn:
                 # Анализ таблиц для оптимизации запросов
                 conn.execute("ANALYZE")
                 stats["analyze"] = True
-                
+
                 # Очистка и дефрагментация
                 conn.execute("VACUUM")
                 stats["vacuum"] = True
-            
+
             stats["size_after"] = self.db_path.stat().st_size if self.db_path.exists() else 0
             stats["space_saved"] = stats["size_before"] - stats["size_after"]
-            
+
         except Exception as e:
             stats["error"] = str(e)
-        
+
         return stats
 
     def get_database_stats(self) -> Dict[str, Any]:
@@ -1657,12 +1662,12 @@ class DatabaseManager:
             Статистика по таблицам
         """
         stats = {"tables": {}, "total_size": 0}
-        
+
         with self.get_connection() as conn:
-            tables = ["scan_results", "simulations", "images", "exports", 
-                     "surface_comparisons", "defect_analysis", "pdf_reports", 
+            tables = ["scan_results", "simulations", "images", "exports",
+                     "surface_comparisons", "defect_analysis", "pdf_reports",
                      "batch_jobs", "performance_metrics"]
-            
+
             for table in tables:
                 try:
                     cursor = conn.execute(f"SELECT COUNT(*) FROM {table}")
@@ -1670,15 +1675,15 @@ class DatabaseManager:
                     stats["tables"][table] = count
                 except Exception:
                     stats["tables"][table] = 0
-            
+
             stats["total_size"] = self.db_path.stat().st_size if self.db_path.exists() else 0
             stats["size_mb"] = round(stats["total_size"] / (1024 * 1024), 2)
-        
+
         return stats
 
     def cleanup_old_records(
-        self, 
-        table: str, 
+        self,
+        table: str,
         days: int = 30,
         date_column: str = "created_at"
     ) -> int:
@@ -1694,9 +1699,9 @@ class DatabaseManager:
             Количество удалённых записей
         """
         from datetime import timedelta
-        
+
         cutoff_date = (datetime.now() - timedelta(days=days)).isoformat()
-        
+
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(

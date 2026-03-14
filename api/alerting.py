@@ -66,16 +66,16 @@ class AlertManager:
         self.alert_history: List[Dict] = []
         self.alert_log_path = Path('logs/alerts.log')
         self.alert_log_path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         # Deduplication
         self._alert_hashes: Dict[str, str] = {}
         self._silenced_alerts: set = set()
-        
+
         # Rate limiting
         self._rate_limits: Dict[str, List[datetime]] = {}
         self._rate_limit_window = timedelta(minutes=5)
         self._rate_limit_max = 10
-        
+
         # Callbacks
         self._on_alert_callbacks: List[Callable[[Alert], None]] = []
 
@@ -121,17 +121,17 @@ class AlertManager:
         now = datetime.now()
         if alert_name not in self._rate_limits:
             self._rate_limits[alert_name] = []
-        
+
         # Очистка старых записей
         cutoff = now - self._rate_limit_window
         self._rate_limits[alert_name] = [
             ts for ts in self._rate_limits[alert_name] if ts > cutoff
         ]
-        
+
         # Проверка лимита
         if len(self._rate_limits[alert_name]) >= self._rate_limit_max:
             return False
-        
+
         self._rate_limits[alert_name].append(now)
         return True
 
@@ -145,12 +145,13 @@ class AlertManager:
     def silence_alert(self, alert_id: str, duration_minutes: int = 60):
         """Заглушить алерт на указанное время"""
         self._silenced_alerts.add(alert_id)
-        
+
         # Автоматическое удаление через указанное время
         def unsilence():
+            """TODO: Add description"""
             import threading
             threading.Timer(duration_minutes * 60, self._silenced_alerts.discard, [alert_id]).start()
-        
+
         unsilence()
 
     def on_alert(self, callback: Callable[[Alert], None]):
@@ -178,17 +179,17 @@ class AlertManager:
         # Проверка на дубликат
         if self._is_duplicate(alert_name, description):
             return {"status": "duplicate", "sent": False}
-        
+
         # Проверка rate limiting
         if not self._check_rate_limit(alert_name):
             return {"status": "rate_limited", "sent": False}
-        
+
         alert_id = self._generate_alert_id(alert_name, description)
-        
+
         # Проверка на silenced
         if alert_id in self._silenced_alerts:
             return {"status": "silenced", "sent": False}
-        
+
         alert = Alert(
             alert_id=alert_id,
             timestamp=datetime.now().isoformat(),
@@ -198,7 +199,7 @@ class AlertManager:
             details=details or {},
             status=AlertStatus.FIRING.value,
         )
-        
+
         self.alerts[alert_id] = alert
         self.alert_history.append(asdict(alert))
         self._log_alert(asdict(alert))
@@ -256,11 +257,11 @@ class AlertManager:
         """Закрытие алерта"""
         if alert_id not in self.alerts:
             return False
-        
+
         alert = self.alerts[alert_id]
         alert.status = AlertStatus.RESOLVED.value
         alert.resolved_at = datetime.now().isoformat()
-        
+
         self.alert_history.append(asdict(alert))
         return True
 
@@ -268,10 +269,10 @@ class AlertManager:
         """Подтверждение алерта"""
         if alert_id not in self.alerts:
             return False
-        
+
         alert = self.alerts[alert_id]
         alert.acknowledged_by = acknowledged_by
-        
+
         self.alert_history.append(asdict(alert))
         return True
 
@@ -287,19 +288,19 @@ class AlertManager:
         now = datetime.now()
         last_hour = now - timedelta(hours=1)
         last_24h = now - timedelta(hours=24)
-        
+
         recent_alerts = [
             a for a in self.alert_history
             if datetime.fromisoformat(a['timestamp']) > last_hour
         ]
-        
+
         by_severity = {}
         by_status = {}
-        
+
         for alert in self.alerts.values():
             by_severity[alert.severity] = by_severity.get(alert.severity, 0) + 1
             by_status[alert.status] = by_status.get(alert.status, 0) + 1
-        
+
         return {
             "total_alerts": len(self.alerts),
             "active_alerts": len(self.get_active_alerts()),
@@ -564,6 +565,7 @@ class AlertingMiddleware:
     """
 
     def __init__(self, app, alert_on_5xx: bool = True, alert_threshold: int = 5):
+        """TODO: Add description"""
         self.app = app
         self.alert_on_5xx = alert_on_5xx
         self.alert_threshold = alert_threshold

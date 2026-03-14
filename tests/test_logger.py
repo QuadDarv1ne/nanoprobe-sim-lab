@@ -20,7 +20,7 @@ import logging
 def test_logger_setup():
     """Тест настройки логгера"""
     print("Тест LoggerSetup...")
-    
+
     with tempfile.TemporaryDirectory() as tmpdir:
         setup = LoggerSetup(
             log_dir=tmpdir,
@@ -28,12 +28,12 @@ def test_logger_setup():
             max_bytes=1024*1024,
             backup_count=3
         )
-        
+
         logger = setup.create_logger("test_logger")
-        
+
         assert logger.level == logging.DEBUG
         assert len(logger.handlers) == 2  # Console + File
-        
+
         # Закрываем обработчики
         for handler in logger.handlers:
             handler.close()
@@ -114,7 +114,9 @@ def test_context_logging():
     try:
         # Создаем фиктивный config_manager
         class FakeConfig:
+            """TODO: Add description"""
             def get(self, key, default):
+                """TODO: Add description"""
                 if key == "paths.log_dir":
                     return str(tmpdir)
                 if key == "logging.level":
@@ -165,7 +167,9 @@ def test_error_logging_with_exception():
 
     with tempfile.TemporaryDirectory() as tmpdir:
         class FakeConfig:
+            """TODO: Add description"""
             def get(self, key, default):
+                """TODO: Add description"""
                 if key == "paths.log_dir":
                     return tmpdir
                 if key == "logging.level":
@@ -201,7 +205,9 @@ def test_multiple_loggers():
 
     with tempfile.TemporaryDirectory() as tmpdir:
         class FakeConfig:
+            """TODO: Add description"""
             def get(self, key, default):
+                """TODO: Add description"""
                 if key == "paths.log_dir":
                     return tmpdir
                 if key == "logging.level":
@@ -242,7 +248,9 @@ def test_log_api_event():
 
     with tempfile.TemporaryDirectory() as tmpdir:
         class FakeConfig:
+            """TODO: Add description"""
             def get(self, key, default):
+                """TODO: Add description"""
                 if key == "paths.log_dir":
                     return tmpdir
                 if key == "logging.level":

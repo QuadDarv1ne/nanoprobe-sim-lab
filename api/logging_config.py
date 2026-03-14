@@ -15,7 +15,7 @@ LOG_DIR.mkdir(parents=True, exist_ok=True)
 LOGGING_CONFIG = {
     'version': 1,
     'disable_existing_loggers': False,
-    
+
     'formatters': {
         'default': {
             '()': 'uvicorn.logging.DefaultFormatter',
@@ -35,7 +35,7 @@ LOGGING_CONFIG = {
             'datefmt': '%Y-%m-%d %H:%M:%S',
         },
     },
-    
+
     'handlers': {
         # Console handlers
         'console': {
@@ -50,7 +50,7 @@ LOGGING_CONFIG = {
             'stream': 'ext://sys.stderr',
             'level': 'DEBUG',
         },
-        
+
         # File handlers
         'file_info': {
             'formatter': 'detailed',
@@ -89,7 +89,7 @@ LOGGING_CONFIG = {
             'level': 'INFO',
         },
     },
-    
+
     'loggers': {
         # Uvicorn loggers
         'uvicorn': {
@@ -107,14 +107,14 @@ LOGGING_CONFIG = {
             'level': 'INFO',
             'propagate': False,
         },
-        
+
         # Application logger
         'nanoprobe': {
             'handlers': ['console', 'file_info', 'file_debug', 'file_errors', 'file_json'],
             'level': 'DEBUG',
             'propagate': False,
         },
-        
+
         # SQLAlchemy logger
         'sqlalchemy': {
             'handlers': ['file_info', 'file_errors'],
@@ -122,7 +122,7 @@ LOGGING_CONFIG = {
             'propagate': False,
         },
     },
-    
+
     'root': {
         'handlers': ['console', 'file_info', 'file_errors'],
         'level': 'INFO',
@@ -133,10 +133,10 @@ LOGGING_CONFIG = {
 def get_logger(name: str = 'nanoprobe') -> logging.Logger:
     """
     Получение настроенного логгера
-    
+
     Args:
         name: Имя логгера
-    
+
     Returns:
         Настроенный логгер
     """
@@ -151,10 +151,10 @@ def setup_logging():
     Вызывать при старте приложения
     """
     logging.config.dictConfig(LOGGING_CONFIG)
-    
+
     logger = logging.getLogger('nanoprobe')
     logger.info(f"Логирование инициализировано: {datetime.now().isoformat()}")
-    
+
     return logger
 
 

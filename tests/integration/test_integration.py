@@ -46,20 +46,20 @@ class TestDataExchangeIntegration(unittest.TestCase):
         """Тестирует полный цикл конвертации данных поверхности"""
         # Конвертируем в стандартный формат
         standard_data = SurfaceDataConverter.numpy_to_standard(self.test_surface)
-        
+
         # Проверяем валидацию
         self.assertTrue(DataFormatSpec.validate_format(
-            standard_data, 
+            standard_data,
             DataFormatSpec.FORMAT_SURFACE_DATA
         ))
-        
+
         # Конвертируем обратно
         restored_surface = SurfaceDataConverter.standard_to_numpy(standard_data)
-        
+
         # Проверяем целостность данных
         self.assertEqual(self.test_surface.shape, restored_surface.shape)
         np.testing.assert_array_almost_equal(
-            self.test_surface, 
+            self.test_surface,
             restored_surface,
             decimal=10
         )
@@ -67,26 +67,26 @@ class TestDataExchangeIntegration(unittest.TestCase):
     def test_scan_results_conversion_pipeline(self):
         """Тестирует полный цикл конвертации результатов сканирования"""
         surface_id = "test_surface_001"
-        
+
         # Конвертируем в стандартный формат
         standard_data = ScanResultsConverter.numpy_to_standard(
-            self.test_surface, 
+            self.test_surface,
             surface_id
         )
-        
+
         # Проверяем валидацию
         self.assertTrue(DataFormatSpec.validate_format(
             standard_data,
             DataFormatSpec.FORMAT_SCAN_RESULTS
         ))
-        
+
         # Проверяем метаданные
         self.assertEqual(standard_data['surface_id'], surface_id)
         self.assertIn('timestamp', standard_data)
-        
+
         # Конвертируем обратно
         restored_scan = ScanResultsConverter.standard_to_numpy(standard_data)
-        
+
         # Проверяем целостность данных
         self.assertEqual(self.test_surface.shape, restored_scan.shape)
 
@@ -94,40 +94,40 @@ class TestDataExchangeIntegration(unittest.TestCase):
         """Тестирует полный цикл конвертации данных изображения"""
         # Конвертируем в стандартный формат
         standard_data = ImageDataConverter.numpy_to_standard(self.test_image)
-        
+
         # Проверяем валидацию
         self.assertTrue(DataFormatSpec.validate_format(
             standard_data,
             DataFormatSpec.FORMAT_IMAGE_DATA
         ))
-        
+
         # Проверяем метаданные
         self.assertEqual(standard_data['width'], 50)
         self.assertEqual(standard_data['height'], 50)
         self.assertEqual(standard_data['channels'], 3)
-        
+
         # Конвертируем обратно
         restored_image = ImageDataConverter.standard_to_numpy(standard_data)
-        
+
         # Проверяем целостность данных
         self.assertEqual(self.test_image.shape, restored_image.shape)
 
     def test_sstv_signal_conversion_pipeline(self):
         """Тестирует полный цикл конвертации SSTV сигнала"""
         sample_rate = 44100
-        
+
         # Конвертируем в стандартный формат
         standard_data = SSTVSignalConverter.numpy_to_standard(
             self.test_signal,
             sample_rate
         )
-        
+
         # Проверяем валидацию
         self.assertTrue(DataFormatSpec.validate_format(
             standard_data,
             DataFormatSpec.FORMAT_SSTV_SIGNAL
         ))
-        
+
         # Проверяем метаданные
         self.assertEqual(standard_data['sample_rate'], sample_rate)
         self.assertAlmostEqual(
@@ -135,10 +135,10 @@ class TestDataExchangeIntegration(unittest.TestCase):
             len(self.test_signal) / sample_rate,
             places=5
         )
-        
+
         # Конвертируем обратно
         restored_signal = SSTVSignalConverter.standard_to_numpy(standard_data)
-        
+
         # Проверяем целостность данных
         self.assertEqual(self.test_signal.shape, restored_signal.shape)
 
@@ -146,14 +146,14 @@ class TestDataExchangeIntegration(unittest.TestCase):
         """Тестирует кодирование и декодирование base64"""
         # Кодируем поверхность
         encoded = SurfaceDataConverter.encode_base64(self.test_surface)
-        
+
         # Декодируем обратно
         decoded = SurfaceDataConverter.decode_base64(
             encoded,
             shape=self.test_surface.shape,
             dtype=str(self.test_surface.dtype)
         )
-        
+
         # Проверяем целостность
         np.testing.assert_array_almost_equal(
             self.test_surface,
@@ -200,10 +200,10 @@ class TestDatabaseIntegration(unittest.TestCase):
             height=50,
             file_path='/data/scan_002.json'
         )
-        
+
         # Получаем статистику
         stats = self.db.get_statistics()
-        
+
         # Проверяем статистику
         self.assertIn('total_scans', stats)
         self.assertGreaterEqual(stats['total_scans'], 2)

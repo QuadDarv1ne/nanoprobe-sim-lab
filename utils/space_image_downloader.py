@@ -22,7 +22,7 @@ class SpaceImageDownloader:
         """Инициализирует загрузчик."""
         self.download_dir = Path(download_dir)
         self.download_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # API endpoints
         self.apis = {
             'hubble': 'https://mast.stsci.edu/api/v0.1/Discovery/api/',
@@ -55,7 +55,7 @@ class SpaceImageDownloader:
 
         if target:
             params['target_name'] = target
-        
+
         if observation_type:
             params['observation_type'] = observation_type
 
@@ -208,17 +208,17 @@ class SpaceImageProcessor:
         """Конвертирует в чёрно-белое."""
         if self.image is None:
             raise ValueError("Изображение не загружено")
-        
+
         self.processed_image = self.image.convert('L')
         return self.processed_image
 
     def enhance_contrast(self, factor: float = 1.5) -> Image.Image:
         """Улучшает контраст."""
         from PIL import ImageEnhance
-        
+
         if self.image is None:
             raise ValueError("Изображение не загружено")
-        
+
         enhancer = ImageEnhance.Contrast(self.image)
         self.processed_image = enhancer.enhance(factor)
         return self.processed_image
@@ -226,10 +226,10 @@ class SpaceImageProcessor:
     def enhance_brightness(self, factor: float = 1.2) -> Image.Image:
         """Улучшает яркость."""
         from PIL import ImageEnhance
-        
+
         if self.image is None:
             raise ValueError("Изображение не загружено")
-        
+
         enhancer = ImageEnhance.Brightness(self.image)
         self.processed_image = enhancer.enhance(factor)
         return self.processed_image
@@ -238,18 +238,18 @@ class SpaceImageProcessor:
         """Применяет цветовую карту к чёрно-белому изображению."""
         if self.image is None:
             raise ValueError("Изображение не загружено")
-        
+
         # Конвертируем в numpy массив
         img_array = np.array(self.image.convert('L'))
-        
+
         # Нормализуем
         img_normalized = (img_array - img_array.min()) / (img_array.max() - img_array.min())
-        
+
         # Применяем цветовую карту matplotlib
         import matplotlib.pyplot as plt
         colormap = plt.get_cmap(cmap)
         colored = (colormap(img_normalized) * 255).astype(np.uint8)
-        
+
         self.processed_image = Image.fromarray(colored[:, :, :3])
         return self.processed_image
 
@@ -272,7 +272,7 @@ class SpaceImageProcessor:
         """
         try:
             img = self.processed_image if self.processed_image else self.image
-            
+
             if img is None:
                 raise ValueError("Нет изображения для сохранения")
 
@@ -420,20 +420,20 @@ def download_and_print_hubble_image(
         Словарь с путями к файлам для печати
     """
     print(f"🔭 Поиск изображений Hubble: {target}")
-    
+
     # Загрузка
     downloader = SpaceImageDownloader()
     results = downloader.search_hubble(target, pagesize=5)
-    
+
     if not results:
         print("❌ Изображения не найдены")
         return {}
 
     print(f"✅ Найдено {len(results)} изображений")
-    
+
     # Берём первое изображение
     first_result = results[0]
-    
+
     # Получаем URL
     image_url = None
     if 'url' in first_result:
@@ -447,7 +447,7 @@ def download_and_print_hubble_image(
 
     print(f"📥 Загрузка: {image_url}")
     downloaded_path = downloader.download_image(image_url)
-    
+
     if not downloaded_path:
         print("❌ Ошибка загрузки")
         return {}
@@ -456,15 +456,15 @@ def download_and_print_hubble_image(
     print("🎨 Обработка изображений...")
     processor = SpaceImageProcessor()
     processor.load_image(str(downloaded_path))
-    
+
     # Создаём версии для печати
     base_name = downloaded_path.stem
     print_versions = processor.create_print_versions(base_name, output_dir)
-    
+
     print("✅ Готово к печати!")
     for version, path in print_versions.items():
         print(f"  - {version}: {path}")
-    
+
     return print_versions
 
 
@@ -472,7 +472,7 @@ def download_and_print_hubble_image(
 if __name__ == '__main__':
     # Загрузка и обработка изображения Hubble
     results = download_and_print_hubble_image("M31")
-    
+
     if results:
         print("\n🖨️  Файлы готовы для печати:")
         for name, path in results.items():
