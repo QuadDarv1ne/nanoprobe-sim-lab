@@ -428,7 +428,7 @@ def get_metrics_as_dict() -> Dict:
                         'value': sample.value,
                         'labels': sample.labels
                     })
-        except Exception:
+        except (ValueError, TypeError, AttributeError):
             continue
 
     return metrics

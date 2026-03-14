@@ -69,7 +69,7 @@ class FlaskFastAPIIntegration:
                         algorithms=["HS256"]
                     )
                     self._token_expiry = datetime.fromtimestamp(payload.get("exp", 0))
-                except Exception:
+                except (jwt.PyJWTError, KeyError, TypeError, ValueError):
                     self._token_expiry = datetime.now()
 
                 return tokens

@@ -181,7 +181,7 @@ class WebDashboard:
                     resp = requests.get("http://localhost:8000/api/v1/dashboard/stats", timeout=2)
                     if resp.status_code == 200:
                         return jsonify(resp.json())
-                except:
+                except (requests.RequestException, requests.Timeout):
                     pass
 
                 # Фоллбэк на локальные данные
