@@ -8,9 +8,10 @@ from typing import Dict, List, Optional, Any
 import psutil
 from pathlib import Path
 import asyncio
-import aiohttp
+import json
 
 from utils.database import DatabaseManager
+from utils.redis_cache import cache
 
 router = APIRouter()
 
@@ -24,9 +25,10 @@ CACHE_TTL = 1  # секунда для real-time метрик
 
 
 @router.get("/stats/detailed")
+@cache.cached(timeout=5, key_prefix="dashboard:stats:detailed")
 async def get_detailed_stats():
     """
-    Get detailed dashboard statistics
+    Get detailed dashboard statistics (cached for 5 seconds)
     """
     db_manager = None
     try:
@@ -176,53 +178,53 @@ async def get_realtime_metrics():
 
 
 @router.get("/activity/timeline")
+@cache.cached(timeout=60, key_prefix="dashboard:activity:timeline")
 async def get_activity_timeline(days: int = Query(7, ge=1, le=30)):
     """
-    Активность по дням за указанный период
-    Для построения графиков активности
+    Get activity timeline (cached for 60 seconds)
     """
-    db_manager = DatabaseManager("data/nanoprobe.db")
-    
+    db_manager = None
     try:
+        db_manager = DatabaseManager("data/nanoprobe.db")
         end_date = datetime.now()
         start_date = end_date - timedelta(days=days)
-        
+
         # Активность сканирований по дням
         scans_timeline = db_manager.execute_query(
             """
-            SELECT DATE(created_at) as date, COUNT(*) as count 
-            FROM scans 
-            WHERE created_at >= ? 
+            SELECT DATE(created_at) as date, COUNT(*) as count
+            FROM scans
+            WHERE created_at >= ?
             GROUP BY DATE(created_at)
             ORDER BY date
             """,
             (start_date.isoformat(),)
         )
-        
+
         # Активность симуляций по дням
         sims_timeline = db_manager.execute_query(
             """
-            SELECT DATE(created_at) as date, COUNT(*) as count 
-            FROM simulations 
-            WHERE created_at >= ? 
+            SELECT DATE(created_at) as date, COUNT(*) as count
+            FROM simulations
+            WHERE created_at >= ?
             GROUP BY DATE(created_at)
             ORDER BY date
             """,
             (start_date.isoformat(),)
         )
-        
+
         # Активность анализа по дням
         analysis_timeline = db_manager.execute_query(
             """
-            SELECT DATE(created_at) as date, COUNT(*) as count 
-            FROM analysis_results 
-            WHERE created_at >= ? 
+            SELECT DATE(created_at) as date, COUNT(*) as count
+            FROM analysis_results
+            WHERE created_at >= ?
             GROUP BY DATE(created_at)
             ORDER BY date
             """,
             (start_date.isoformat(),)
         )
-        
+
         # Формирование таймлайна
         timeline = {}
         for i in range(days):
@@ -232,22 +234,22 @@ async def get_activity_timeline(days: int = Query(7, ge=1, le=30)):
                 "simulations": 0,
                 "analysis": 0
             }
-        
+
         for row in (scans_timeline or []):
             date = row["date"]
             if date in timeline:
                 timeline[date]["scans"] = row["count"]
-        
+
         for row in (sims_timeline or []):
             date = row["date"]
             if date in timeline:
                 timeline[date]["simulations"] = row["count"]
-        
+
         for row in (analysis_timeline or []):
             date = row["date"]
             if date in timeline:
                 timeline[date]["analysis"] = row["count"]
-        
+
         return {
             "period": {
                 "start": start_date.strftime('%Y-%m-%d'),
@@ -264,28 +266,31 @@ async def get_activity_timeline(days: int = Query(7, ge=1, le=30)):
                 for date, data in timeline.items()
             ]
         }
-        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get activity timeline: {str(e)}")
     finally:
-        db_manager.close_pool()
+        if db_manager:
+            db_manager.close_pool()
 
 
 @router.get("/storage/detailed")
+@cache.cached(timeout=30, key_prefix="dashboard:storage:detailed")
 async def get_detailed_storage():
     """
-    Детальная статистика хранилища
+    Get detailed storage statistics (cached for 30 seconds)
     """
     root = Path(__file__).parent.parent.parent
     data_dir = root / "data"
     output_dir = root / "output"
     logs_dir = root / "logs"
-    
+
     def get_dir_stats(directory: Path) -> Dict:
         if not directory.exists():
             return {"files": 0, "size_mb": 0, "largest_file": None}
-        
+
         files = []
         total_size = 0
-        
+
         for item in directory.rglob("*"):
             if item.is_file():
                 try:
@@ -298,28 +303,31 @@ async def get_detailed_storage():
                     })
                 except (OSError, IOError):
                     continue
-        
+
         files.sort(key=lambda x: x["size_mb"], reverse=True)
-        
+
         return {
             "files": len(files),
             "size_mb": round(total_size / (1024**2), 2),
             "largest_files": files[:5]
         }
-    
-    disk = psutil.disk_usage('/')
-    
-    return {
-        "data": get_dir_stats(data_dir),
-        "output": get_dir_stats(output_dir),
-        "logs": get_dir_stats(logs_dir),
-        "disk": {
-            "total_gb": round(disk.total / (1024**3), 2),
-            "used_gb": round(disk.used / (1024**3), 2),
-            "free_gb": round(disk.free / (1024**3), 2),
-            "percent": disk.percent
+
+    try:
+        disk = psutil.disk_usage('/')
+
+        return {
+            "data": get_dir_stats(data_dir),
+            "output": get_dir_stats(output_dir),
+            "logs": get_dir_stats(logs_dir),
+            "disk": {
+                "total_gb": round(disk.total / (1024**3), 2),
+                "used_gb": round(disk.used / (1024**3), 2),
+                "free_gb": round(disk.free / (1024**3), 2),
+                "percent": disk.percent
+            }
         }
-    }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get storage stats: {str(e)}")
 
 
 @router.websocket("/ws/metrics")
