@@ -218,6 +218,24 @@ python run_api.py --reload
 # http://localhost:8000/docs
 ```
 
+## 🌐 Frontend Версии
+
+В проекте **две версии frontend**, которые работают параллельно:
+
+### 🔹 Flask Dashboard (v1.0 - Legacy/Stable)
+- **Порт:** http://localhost:5000
+- **Файл:** `templates/dashboard.html`
+- **Технологии:** Flask + Jinja2 + Socket.IO + Chart.js
+- **Статус:** ✅ Стабильная, проверенная версия
+
+### 🔹 Next.js Dashboard (v2.0 - Modern/Production)
+- **Порт:** http://localhost:3000
+- **Папка:** `frontend/`
+- **Технологии:** Next.js 14 + TypeScript + Tailwind CSS + Zustand
+- **Статус:** ✅ Новая, современная версия
+
+📖 **Подробное сравнение:** см. [`FRONTEND_VERSIONS.md`](FRONTEND_VERSIONS.md)
+
 ## Новые системы оптимизации и улучшения
 
 ### 🔍 Анализатор кода (`utils/code_analyzer.py`)
