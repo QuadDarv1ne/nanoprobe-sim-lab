@@ -49,7 +49,6 @@ class ValidationError(APIError):
     """Ошибка валидации данных"""
 
     def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
-        """TODO: Add description"""
         super().__init__(
             message=message,
             status_code=422,
@@ -63,7 +62,6 @@ class NotFoundError(APIError):
     """Ресурс не найден"""
 
     def __init__(self, message: str, resource_type: Optional[str] = None):
-        """TODO: Add description"""
         super().__init__(
             message=message,
             status_code=404,
@@ -77,7 +75,6 @@ class AuthenticationError(APIError):
     """Ошибка аутентификации"""
 
     def __init__(self, message: str = "Неверные учетные данные"):
-        """TODO: Add description"""
         super().__init__(
             message=message,
             status_code=401,
@@ -91,7 +88,6 @@ class AuthorizationError(APIError):
     """Ошибка авторизации (нет прав)"""
 
     def __init__(self, message: str = "Недостаточно прав"):
-        """TODO: Add description"""
         super().__init__(
             message=message,
             status_code=403,
@@ -105,7 +101,6 @@ class RateLimitError(APIError):
     """Превышен лимит запросов"""
 
     def __init__(self, retry_after: int = 60):
-        """TODO: Add description"""
         super().__init__(
             message="Слишком много запросов",
             status_code=429,
@@ -119,7 +114,6 @@ class DatabaseError(APIError):
     """Ошибка базы данных"""
 
     def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
-        """TODO: Add description"""
         super().__init__(
             message=message,
             status_code=503,
@@ -133,7 +127,6 @@ class ExternalServiceError(APIError):
     """Ошибка внешнего сервиса"""
 
     def __init__(self, service_name: str, message: str):
-        """TODO: Add description"""
         super().__init__(
             message=f"Ошибка сервиса {service_name}: {message}",
             status_code=503,

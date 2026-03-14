@@ -101,7 +101,6 @@ class ScanResponse(BaseModel):
     created_at: str
 
     class Config:
-        """TODO: Add description"""
         from_attributes = True
 
 
@@ -143,7 +142,6 @@ class SimulationResponse(BaseModel):
     created_at: str
 
     class Config:
-        """TODO: Add description"""
         from_attributes = True
 
 
@@ -309,12 +307,12 @@ class PaginationParams(BaseModel):
 
     @property
     def offset(self) -> int:
-        """TODO: Add description"""
+        """Вычисляет смещение для пагинации"""
         return (self.page - 1) * self.page_size
 
     @property
     def limit(self) -> int:
-        """TODO: Add description"""
+        """Возвращает лимит записей на страницу"""
         return self.page_size
 
 

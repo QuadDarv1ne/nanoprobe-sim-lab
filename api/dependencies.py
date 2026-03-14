@@ -142,7 +142,7 @@ def rate_limit(max_requests: int = 10, window_seconds: int = 60):
     from utils.rate_limiter import RateLimiter
 
     def decorator(func):
-        """TODO: Add description"""
+        """Декоратор для ограничения частоты запросов"""
         @wraps(func)
         async def wrapper(request: Request, *args, **kwargs):
             from api.dependencies import get_client_ip
