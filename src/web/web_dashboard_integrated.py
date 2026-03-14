@@ -9,16 +9,14 @@
 
 import os
 import sys
-import time
 import threading
 import webbrowser
 import subprocess
 from datetime import datetime
-from typing import Dict, Any
 from pathlib import Path
 import requests
 
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask import Flask, render_template, request, jsonify, session
 from flask_socketio import SocketIO, emit
 from functools import wraps
 
@@ -39,7 +37,6 @@ from utils.data_exporter import DataExporter
 from utils.database import DatabaseManager, get_database
 from utils.surface_comparator import compare_surfaces as compare_surfaces_util
 from utils.defect_analyzer import analyze_defects as analyze_defects_util
-from utils.cli_utils import Colors
 
 # Импорт reverse proxy
 try:
