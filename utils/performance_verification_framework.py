@@ -1,17 +1,16 @@
 """Модуль тестирования производительности для проекта Лаборатория моделирования нанозонда."""
 
+import os
+import sys
 import time
-import statistics
-from pathlib import Path
-from typing import Dict, Any, List
-from datetime import datetime
 import json
+import statistics
 import psutil
 import tracemalloc
+from pathlib import Path
+from datetime import datetime
+from typing import Dict, Any, List
 from dataclasses import dataclass
-
-import sys
-import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

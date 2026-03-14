@@ -1,18 +1,18 @@
 """Модуль самоисцеляющейся системы для проекта Лаборатория моделирования нанозонда."""
 
+import os
+import sys
 import time
 import threading
 import json
-from pathlib import Path
-from typing import Dict, Any, List, Optional, Callable
-from datetime import datetime
-from dataclasses import dataclass
-import logging
-import psutil
 import gc
+import logging
+from pathlib import Path
+from datetime import datetime
+from typing import Dict, Any, List, Optional, Callable
+from dataclasses import dataclass
 
-import sys
-import os
+import psutil
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

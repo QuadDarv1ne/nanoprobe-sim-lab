@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-#!/usr/bin/env python3
 
 """
 Модуль реального времени для проекта Лаборатория моделирования нанозонда
@@ -7,21 +6,21 @@
 производительности и оптимизационных метрик в реальном времени.
 """
 
+import os
+import sys
 import time
 import threading
 import json
+import webbrowser
+import mimetypes
 from typing import Dict, Any, List
 from datetime import datetime
+from dataclasses import dataclass
+from http.server import HTTPServer, BaseHTTPRequestHandler
+
 import psutil
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from dataclasses import dataclass
-import webbrowser
-from http.server import HTTPServer, BaseHTTPRequestHandler
-import mimetypes
-
-import sys
-import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

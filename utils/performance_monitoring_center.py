@@ -1,20 +1,20 @@
 """Модуль центра мониторинга производительности для проекта Лаборатория моделирования нанозонда."""
 
+import os
+import sys
 import time
 import threading
 import json
-from pathlib import Path
-from typing import Dict, Any, List, Callable, Optional
-from datetime import datetime, timedelta
-import psutil
 import statistics
-import pandas as pd
+import psutil
+from pathlib import Path
+from datetime import datetime, timedelta
+from typing import Dict, Any, List, Callable, Optional
 from dataclasses import dataclass
-import matplotlib.pyplot as plt
 from collections import defaultdict, deque
 
-import sys
-import os
+import pandas as pd
+import matplotlib.pyplot as plt
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

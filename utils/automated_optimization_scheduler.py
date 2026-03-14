@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-#!/usr/bin/env python3
 
 """
 Модуль автоматического планировщика оптимизации для проекта Лаборатория моделирования нанозонда
@@ -7,18 +6,17 @@
 операций оптимизации на основе предиктивной аналитики и текущего состояния системы.
 """
 
+import os
+import sys
 import time
 import threading
 import json
+import queue
+import logging
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Callable
 from datetime import datetime
 from dataclasses import dataclass
-import logging
-import queue
-
-import sys
-import os
+from typing import Dict, Any, List, Optional, Callable
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
