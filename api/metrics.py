@@ -26,6 +26,7 @@ except ImportError:
     PROMETHEUS_AVAILABLE = False
     CONTENT_TYPE_LATEST = "text/plain"
     REGISTRY = None
+
     # Заглушки если prometheus_client не установлен
     class Counter:
         def __init__(self, *args, **kwargs): pass
@@ -175,7 +176,6 @@ class PrometheusMiddleware:
     """
 
     def __init__(self, app):
-        """TODO: Add description"""
         self.app = app
 
     async def __call__(self, scope, receive, send):
@@ -265,7 +265,7 @@ def track_metrics(endpoint_name: str = None):
 
         @wraps(func)
         def sync_wrapper(*args, **kwargs):
-            """TODO: Add description"""
+            """Обёртка для синхронных функций с метриками"""
             name = endpoint_name or func.__name__
             start_time = time.time()
 
