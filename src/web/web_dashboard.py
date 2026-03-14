@@ -12,7 +12,7 @@ import threading
 import webbrowser
 import subprocess
 from datetime import datetime
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any
 from pathlib import Path
 
 # Установка UTF-8 кодировки для Windows
@@ -27,7 +27,7 @@ if sys.platform == "win32":
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
         sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
-from flask import Flask, render_template, request, jsonify, Response
+from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO, emit
 
 # Добавляем путь к utils для импорта служебных модулей
@@ -47,7 +47,6 @@ from utils.data_exporter import DataExporter
 from utils.database import DatabaseManager, get_database
 from utils.surface_comparator import compare_surfaces as compare_surfaces_util
 from utils.defect_analyzer import analyze_defects as analyze_defects_util
-from utils.cli_utils import Colors
 
 # Интеграция с Backend (FastAPI)
 try:
@@ -925,7 +924,6 @@ class WebDashboard:
         def api_database_export():
             """API для экспорта базы данных"""
             try:
-                import json
                 from datetime import datetime
 
                 db = get_database()
