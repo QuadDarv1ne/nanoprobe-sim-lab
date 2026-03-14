@@ -7,7 +7,6 @@ import time
 import os
 from functools import wraps
 
-from fastapi import Response
 from fastapi.responses import PlainTextResponse
 
 try:
@@ -18,8 +17,8 @@ try:
         Summary,
         generate_latest,
         CONTENT_TYPE_LATEST,
-        CollectorRegistry,
-        multiprocess,
+        CollectorRegistry,  # noqa: F401
+        multiprocess,  # noqa: F401
         start_http_server,
     )
     from prometheus_client import REGISTRY

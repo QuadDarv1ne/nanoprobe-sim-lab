@@ -338,7 +338,7 @@ async def metrics():
 async def graphql_endpoint(request: Request):
     """GraphQL endpoint для запросов"""
     from api.graphql_schema import schema
-    import json
+    import json  # noqa: F401
 
     body = await request.json()
     query = body.get("query")
