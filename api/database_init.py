@@ -7,6 +7,7 @@ from alembic.config import Config
 from alembic import command
 from alembic.script import ScriptDirectory
 from alembic.runtime.migration import MigrationContext
+from sqlalchemy import create_engine, text
 import os
 
 logger = logging.getLogger(__name__)

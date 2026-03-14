@@ -6,6 +6,7 @@ Prometheus метрики для Nanoprobe FastAPI приложения
 import time
 import os
 from functools import wraps
+from typing import List, Dict, Any, Optional
 
 from fastapi.responses import PlainTextResponse
 
