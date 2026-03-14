@@ -23,9 +23,9 @@ async def graphql_query(
 ):
     """
     GraphQL endpoint для выполнения запросов
-    
+
     Примеры запросов:
-    
+
     ```graphql
     query {
         stats {
@@ -36,7 +36,7 @@ async def graphql_query(
         }
     }
     ```
-    
+
     ```graphql
     query {
         scans(limit: 10) {
@@ -47,7 +47,7 @@ async def graphql_query(
         }
     }
     ```
-    
+
     ```graphql
     mutation {
         createScan(scanType: "spm", width: 100, height: 100) {
@@ -59,27 +59,27 @@ async def graphql_query(
     ```
     """
     from api.graphql_schema import schema
-    
+
     try:
         result = await schema.execute(
             query,
             variable_values=variables,
             operation_name=operation_name
         )
-        
+
         if result.errors:
             return {
                 "data": result.data,
                 "errors": [str(e) for e in result.errors],
                 "success": False
             }
-        
+
         return {
             "data": result.data,
             "errors": None,
             "success": True
         }
-        
+
     except Exception as e:
         raise DatabaseError(f"GraphQL execution error: {str(e)}")
 

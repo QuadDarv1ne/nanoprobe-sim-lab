@@ -55,6 +55,7 @@ def login_required(f):
     """Декоратор для защиты маршрутов аутентификацией"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        """TODO: Add description"""
         if not session.get('logged_in'):
             return jsonify({'error': 'Требуется аутентификация'}), 401
         return f(*args, **kwargs)
@@ -157,7 +158,7 @@ class IntegratedWebDashboard:
 
                 if response.status_code == 200:
                     tokens = response.json()
-                    
+
                     # Сохранение токенов в сессии
                     session['access_token'] = tokens.get('access_token')
                     session['refresh_token'] = tokens.get('refresh_token')
@@ -218,7 +219,7 @@ class IntegratedWebDashboard:
             try:
                 url = f"{self.fastapi_url}{endpoint}"
                 headers = {}
-                
+
                 # Добавляем токен авторизации
                 token = session.get('access_token')
                 if token:
@@ -589,18 +590,18 @@ class IntegratedWebDashboard:
             """Перезапустить все активные компоненты"""
             restarted = []
             failed = []
-            
+
             self._stop_all_components()
-            
+
             import time
             time.sleep(1)
-            
+
             component_paths = {
                 "spm_simulator": project_root / "components" / "cpp-spm-hardware-sim" / "src" / "spm_simulator.py",
                 "image_analyzer": project_root / "components" / "py-surface-image-analyzer" / "src" / "main.py",
                 "sstv_station": project_root / "components" / "py-sstv-groundstation" / "src" / "main.py",
             }
-            
+
             for component, path in component_paths.items():
                 if path.exists():
                     try:

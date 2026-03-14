@@ -42,7 +42,7 @@ class ScientificPDFReport:
         """
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Стили
         self.styles = getSampleStyleSheet()
         self._setup_styles()
@@ -410,7 +410,7 @@ class ScientificPDFReport:
 
         # Общая информация
         content.append(Paragraph("1. Общая информация", self.styles['SectionHeader']))
-        
+
         info_data = [
             ['Параметр', 'Значение'],
             ['Количество дефектов', str(defect_data.get('defects_count', 0))],
@@ -438,11 +438,11 @@ class ScientificPDFReport:
 
         # Детали дефектов
         content.append(Paragraph("2. Детектированные дефекты", self.styles['SectionHeader']))
-        
+
         defects = defect_data.get('defects', [])
         if defects:
             defect_table_data = [['#', 'Тип', 'Координаты', 'Размер (нм)', 'Достоверность']]
-            
+
             for i, defect in enumerate(defects, 1):
                 defect_table_data.append([
                     str(i),
@@ -451,7 +451,7 @@ class ScientificPDFReport:
                     f"{defect.get('size', 0):.2f}",
                     f"{defect.get('confidence', 0):.2%}"
                 ])
-            
+
             defect_table = Table(defect_table_data, colWidths=[0.8*cm, 3*cm, 3.5*cm, 2.5*cm, 2.5*cm])
             defect_table.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#16213e')),
@@ -474,7 +474,7 @@ class ScientificPDFReport:
         # Выводы
         content.append(PageBreak())
         content.append(Paragraph("3. Рекомендации", self.styles['SectionHeader']))
-        
+
         if defects:
             content.append(Paragraph(
                 "• Рекомендуется провести дополнительный анализ дефектных областей",
@@ -761,7 +761,7 @@ def generate_pdf_report(
 if __name__ == "__main__":
     # Тестовая генерация отчёта
     print("=== Генерация тестового PDF отчёта ===")
-    
+
     # Тестовые данные
     test_data = {
         'surface_type': 'Кремниевая подложка',
@@ -774,7 +774,7 @@ if __name__ == "__main__":
         'kurtosis': 2.345,
         'rms': 3.567,
     }
-    
+
     # Генерация отчёта
     report_path = generate_pdf_report('surface', test_data)
     print(f"✓ Отчёт сгенерирован: {report_path}")

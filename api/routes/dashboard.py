@@ -114,7 +114,7 @@ async def get_dashboard_stats(
     - Использование хранилища
     - Аптайм системы
     - Расширенная статистика БД
-    
+
     Кэширование: 5 секунд (Redis + in-memory)
     """
     # Проверка кэша если не требуется свежий ответ
@@ -125,7 +125,7 @@ async def get_dashboard_stats(
             cached = cache.get(redis_key)
             if cached:
                 return DashboardStats(**cached)
-        
+
         # In-memory кэш
         cached = get_cached_stats()
         if cached:
@@ -300,19 +300,19 @@ async def get_realtime_metrics(
 ):
     """
     Метрики системы в реальном времени для графиков
-    
+
     Кэширование: 1 секунда (Redis) - для real-time данных
     """
     cache_key = f"{CACHE_PREFIX['metrics']}:realtime"
     if include_history:
         cache_key += ":with_history"
-    
+
     # Проверка Redis кэша
     if cache.is_available():
         cached = cache.get(cache_key)
         if cached:
             return cached
-    
+
     try:
         monitor = get_monitor()
         metrics = monitor.get_current_metrics()

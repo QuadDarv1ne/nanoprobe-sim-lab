@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class BackendFrontendSync:
     """
     Менеджер синхронизации между Backend и Frontend
-    
+
     Обеспечивает:
     1. Трансляцию событий из Backend во Frontend
     2. Синхронизацию WebSocket подключений
@@ -87,7 +87,7 @@ class BackendFrontendSync:
     async def sync_dashboard_stats(self) -> Optional[Dict[str, Any]]:
         """
         Синхронизация статистики дашборда
-        
+
         Получает данные из Backend и возвращает для передачи во Frontend
         """
         try:
@@ -111,7 +111,7 @@ class BackendFrontendSync:
     async def sync_realtime_metrics(self) -> Optional[Dict[str, Any]]:
         """
         Синхронизация метрик реального времени
-        
+
         Получает метрики из Backend для передачи во Frontend
         """
         try:
@@ -133,7 +133,7 @@ class BackendFrontendSync:
     async def broadcast_to_frontend(self, event: str, data: Dict[str, Any]):
         """
         Отправка события во Frontend через Socket.IO
-        
+
         Args:
             event: Имя события
             data: Данные события
@@ -146,7 +146,7 @@ class BackendFrontendSync:
                 "data": data,
                 "timestamp": datetime.now().isoformat(),
             }
-            
+
             # Отправка через Flask-SocketIO HTTP endpoint
             async with self.session.post(
                 f"{self.frontend_url}/socketio/event",
@@ -163,7 +163,7 @@ class BackendFrontendSync:
     async def start_sync_loop(self, interval: float = 5.0):
         """
         Запуск цикла синхронизации
-        
+
         Args:
             interval: Интервал синхронизации в секундах
         """
@@ -220,7 +220,7 @@ class BackendFrontendSync:
 def setup_flask_sync_integration(app, socketio):
     """
     Настройка интеграции синхронизации с Flask приложением
-    
+
     Args:
         app: Flask приложение
         socketio: Flask-SocketIO экземпляр
@@ -278,7 +278,7 @@ def setup_flask_sync_integration(app, socketio):
     def handle_backend_event():
         """
         HTTP endpoint для приёма событий от Backend
-        
+
         Backend может отправлять события сюда для трансляции во Frontend
         """
         from flask import request, jsonify

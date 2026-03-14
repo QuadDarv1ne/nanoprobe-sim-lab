@@ -20,20 +20,20 @@ indexes = [
     # scan_results
     ("idx_scan_created_at", "scan_results", "created_at"),
     ("idx_scan_type_count", "scan_results", "scan_type, id"),
-    
+
     # simulations
     ("idx_simulations_created_at", "simulations", "created_at"),
     ("idx_simulations_status_date", "simulations", "status, start_time"),
-    
+
     # images
     ("idx_image_created_at", "images", "created_at"),
     ("idx_image_processed", "images", "processed"),
     ("idx_image_type_created", "images", "image_type, created_at"),
-    
+
     # exports
     ("idx_export_created_at", "exports", "created_at"),
     ("idx_export_source", "exports", "source_type, source_id"),
-    
+
     # surface_comparisons
     ("idx_comparison_created_at_full", "surface_comparisons", "created_at"),
 ]
@@ -57,13 +57,13 @@ for idx_name, table_name, columns in indexes:
             print(f"⏭️  {idx_name} (уже существует)")
             skipped += 1
             continue
-        
+
         # Создание индекса
         sql = f"CREATE INDEX IF NOT EXISTS {idx_name} ON {table_name} ({columns})"
         cursor.execute(sql)
         print(f"✅ {idx_name} на {table_name} ({columns})")
         created += 1
-        
+
     except Exception as e:
         print(f"❌ {idx_name}: {e}")
         errors += 1

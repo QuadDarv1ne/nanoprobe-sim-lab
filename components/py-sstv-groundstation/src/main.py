@@ -93,7 +93,7 @@ def mode_receive_sdr(args):
         if args.auto_decode:
             print("Декодирование записанного сигнала...")
             decoder = SSTVDecoder()
-            
+
             # Пробуем декодировать из сэмплов если есть
             if hasattr(sdr, 'recorded_samples') and sdr.recorded_samples:
                 import numpy as np
@@ -106,7 +106,7 @@ def mode_receive_sdr(args):
                 output_image = args.output_image or "decoded_sstv.png"
                 decoder.save_decoded_image(output_image)
                 print(f"Изображение сохранено: {output_image}")
-                
+
                 # Показываем метаданные
                 metadata = decoder.metadata
                 if metadata:
@@ -215,7 +215,7 @@ def mode_demo(args):
 def mode_waterfall(args):
     """Waterfall дисплей спектра."""
     from waterfall_display import WaterfallDisplay, WaterfallRecorder
-    
+
     print(f"\nWATERFALL ДИСПЛЕЙ")
     print(f"Частота: {args.frequency} МГц")
     print(f"Длительность: {args.duration}с")
@@ -240,45 +240,46 @@ def mode_waterfall(args):
         sample_rate=sdr.sample_rate,
         center_freq=sdr.center_freq * 1e6
     )
-    
+
     recorder = WaterfallRecorder() if args.save_waterfall else None
     if recorder:
         recorder.start()
 
     try:
         print(f"Приём... Нажмите Ctrl+C для остановки")
-        
+
         # Callback для обработки сэмплов
         def sample_callback(samples):
+            """TODO: Add description"""
             rgb_row = waterfall.push_samples(samples)
             if rgb_row is not None and recorder:
                 recorder.add_frame(rgb_row)
-        
+
         # Запускаем приём
         sdr.start_recording(
             duration_seconds=args.duration,
             realtime_callback=sample_callback
         )
-        
+
         # Ожидаем завершения
         while sdr.is_recording:
             time.sleep(1)
             # Показываем прогресс
             elapsed = args.duration - sum(1 for _ in range(int(sdr.sample_rate / 1024)))
             print(f"\rОсталось: {max(0, elapsed)}с ", end='', flush=True)
-        
+
         print("\n")
-        
+
         # Сохраняем waterfall
         if args.save_waterfall and recorder:
             output_path = recorder.stop()
             if output_path:
                 print(f"Waterfall сохранён: {output_path}")
-        
+
         # Сохраняем статическое изображение
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         waterfall.save_image(f"output/waterfall/waterfall_{timestamp}.png")
-        
+
         return True
 
     except KeyboardInterrupt:
@@ -294,16 +295,16 @@ def mode_waterfall(args):
 def mode_list_satellites(args):
     """Список спутников."""
     from satellite_tracker import SatelliteTracker
-    
+
     tracker = SatelliteTracker(ground_station_lat=args.lat, ground_station_lon=args.lon)
-    
+
     print("\nСПУТНИКИ")
     print("-" * 50)
-    
+
     for sat_name in tracker.get_all_satellites():
         freq = tracker.SSTV_FREQUENCIES.get(sat_name.lower(), 0)
         position = tracker.get_current_position(sat_name)
-        
+
         print(f"\n{sat_name}")
         print(f"  Частота SSTV: {freq:.3f} МГц" if freq > 0 else "  Частота SSTV: N/A")
         if position:
@@ -315,33 +316,33 @@ def mode_list_satellites(args):
 def mode_satellite_schedule(args):
     """Расписание пролётов спутников."""
     from satellite_tracker import SatelliteTracker
-    
+
     tracker = SatelliteTracker(ground_station_lat=args.lat, ground_station_lon=args.lon)
-    
+
     print(f"\nРАСПИСАНИЕ ПРОЛЁТОВ")
     print(f"Наземная станция: {args.lat}°N, {args.lon}°E")
     print("-" * 60)
-    
+
     schedule = tracker.get_sstv_schedule(hours_ahead=24)
-    
+
     if not schedule:
         print("Пролётов не найдено")
         return
-    
+
     for pass_info in schedule[:10]:  # Показываем первые 10
         sat_name = pass_info['satellite']
         aos = pass_info['aos']
         los = pass_info['los']
         max_el = pass_info['max_elevation']
         freq = pass_info['frequency']
-        
+
         print(f"\n{sat_name}")
         print(f"  Начало: {aos.strftime('%H:%M:%S')} ({aos.strftime('%d.%m.%Y')})")
         print(f"  Конец: {los.strftime('%H:%M:%S')}")
         print(f"  Длительность: {pass_info['duration_minutes']} мин")
         print(f"  Макс. высота: {max_el:.1f}°")
         print(f"  Частота: {freq:.3f} МГц")
-        
+
         # Рекомендация
         if max_el > 45:
             print(f"  ✓ Отличный пролёт для приёма!")
@@ -375,7 +376,7 @@ def mode_realtime_sstv(args):
     try:
         print(f"Запуск real-time приёма... Нажмите Ctrl+C для остановки")
         success = sdr.start_realtime_sstv(decoder, duration_seconds=args.duration)
-        
+
         if success:
             # Ожидаем завершения
             while sdr.is_recording:
@@ -398,7 +399,7 @@ def mode_realtime_sstv(args):
 def mode_auto_record(args):
     """Автоматическая запись при пролёте спутника."""
     from auto_recorder import AutoRecordingScheduler
-    
+
     print(f"\nАВТОЗАПИСЬ СПУТНИКОВ")
     print(f"Наземная станция: {args.lat}°N, {args.lon}°E")
     print(f"Расписание: {args.schedule_hours} часов")
@@ -411,63 +412,64 @@ def mode_auto_record(args):
         pre_pass_minutes=args.pre_pass,
         post_pass_minutes=args.post_pass
     )
-    
+
     # Callback для уведомлений
     def recording_callback(event_type: str, data: dict):
+        """TODO: Add description"""
         timestamp = datetime.now().strftime('%H:%M:%S')
-        
+
         if event_type == 'schedule_loaded':
             print(f"[{timestamp}] Загружено расписание: {data['count']} пролётов")
             if data['next_pass']:
                 print(f"[{timestamp}]    Следующий: {data['next_pass']}")
-        
+
         elif event_type == 'monitoring_started':
             print(f"[{timestamp}] Мониторинг запущен")
-        
+
         elif event_type == 'recording_started':
             print(f"[{timestamp}] ЗАПИСЬ: {data['satellite']} на {data['frequency']} MHz")
             print(f"[{timestamp}]    Путь: {data['output_dir']}")
-        
+
         elif event_type == 'recording_completed':
             print(f"[{timestamp}] ЗАПИСЬ ЗАВЕРШЕНА: {data['satellite']}")
             print(f"[{timestamp}]    Путь: {data['output_dir']}")
-        
+
         elif event_type == 'recording_failed':
             print(f"[{timestamp}] ОШИБКА: {data['satellite']} - {data['error']}")
-        
+
         elif event_type == 'monitoring_stopped':
             print(f"[{timestamp}] Мониторинг остановлен")
-    
+
     scheduler.set_callback(recording_callback)
-    
+
     # Загружаем расписание
     recordings = scheduler.load_schedule(hours_ahead=args.schedule_hours)
-    
+
     if not recordings:
         print("Нет запланированных пролётов")
         return
-    
+
     # Показываем ближайшие пролёты
     print("\nБлижайшие пролёты:")
     for i, rec in enumerate(recordings[:5]):
         print(f"  {i+1}. {rec.satellite} - {rec.aos.strftime('%d.%m %H:%M')} ({rec.frequency} MHz)")
-    
+
     print("\nЗапуск мониторинга... Нажмите Ctrl+C для остановки")
     print("=" * 60)
-    
+
     try:
         scheduler.start_monitoring()
-        
+
         # Основной цикл
         while True:
             time.sleep(1)
-            
+
             # Показываем статус каждые 60 секунд
             if int(time.time()) % 60 == 0:
                 status = scheduler.get_status()
                 if status['active_recordings'] > 0:
                     print(f"\rИдёт запись: {status['active_recordings']} спутник(ов)   ", end='', flush=True)
-        
+
     except KeyboardInterrupt:
         print("\n\nОстановка по пользователю...")
         scheduler.stop_monitoring()
@@ -478,7 +480,7 @@ def main():
     """Основная функция SSTV станции."""
     print("\nПРОВЕРКА RTL-SDR УСТРОЙСТВА")
     print("-" * 40)
-    
+
     # Проверка импорта
     print("1. Проверка rtlsdr...")
     try:
@@ -488,7 +490,7 @@ def main():
         print("   ✗ rtlsdr не найден")
         print("   Установите: pip install rtlsdr pyrtlsdr")
         return False
-    
+
     # Поиск устройств
     print("\n2. Поиск устройств...")
     try:
@@ -500,7 +502,7 @@ def main():
     except Exception as e:
         print(f"   ✗ Ошибка: {e}")
         return False
-    
+
     # Информация об устройстве
     print("\n3. Информация об устройстве:")
     for i in range(num_devices):
@@ -509,20 +511,20 @@ def main():
             device_name = sdr.get_device_name() if hasattr(sdr, 'get_device_name') else 'Unknown'
             serial = sdr.get_serial_number() if hasattr(sdr, 'get_serial_number') else 'Unknown'
             manufacturer = sdr.get_manufacturer() if hasattr(sdr, 'get_manufacturer') else 'Unknown'
-            
+
             print(f"   Устройство #{i}:")
             print(f"      Название: {device_name}")
             print(f"      Серийный: {serial}")
             print(f"      Производитель: {manufacturer}")
-            
+
             # Определение V4
             if 'R828D' in device_name.upper() or 'V4' in device_name.upper():
                 print(f"      ✓ RTL-SDR V4 обнаружен")
-            
+
             sdr.close()
         except Exception as e:
             print(f"   Устройство #{i}: Ошибка - {e}")
-    
+
     print("\n✓ RTL-SDR готов к работе")
     return True
 
@@ -531,7 +533,7 @@ def mode_check_device(args):
     """Проверка подключения RTL-SDR устройства."""
     print("\nПРОВЕРКА RTL-SDR УСТРОЙСТВА")
     print("-" * 40)
-    
+
     # Проверка импорта
     print("1. Проверка rtlsdr...")
     try:

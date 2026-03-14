@@ -199,13 +199,13 @@ class WebDashboard:
                     project_root / "components" / "cpp-spm-hardware-sim" / "build" / "spm-simulator"
                 )
                 spm_exists = spm_python.exists() or spm_cpp.exists()
-                
+
                 # Проверяем, запущен ли компонент
                 spm_running = False
                 if "spm_simulator" in self._active_processes:
                     proc = self._active_processes["spm_simulator"]
                     spm_running = proc.poll() is None
-                
+
                 component_status["spm_simulator"] = {
                     "name": "SPM Simulator",
                     "status": "running" if spm_running else ("ready" if spm_exists else "not_installed"),
@@ -220,7 +220,7 @@ class WebDashboard:
                 if "image_analyzer" in self._active_processes:
                     proc = self._active_processes["image_analyzer"]
                     analyzer_running = proc.poll() is None
-                    
+
                 component_status["image_analyzer"] = {
                     "name": "Image Analyzer",
                     "status": "running" if analyzer_running else ("ready" if analyzer_path.exists() else "not_installed"),
@@ -235,7 +235,7 @@ class WebDashboard:
                 if "sstv_station" in self._active_processes:
                     proc = self._active_processes["sstv_station"]
                     sstv_running = proc.poll() is None
-                    
+
                 component_status["sstv_station"] = {
                     "name": "SSTV Station",
                     "status": "running" if sstv_running else ("ready" if sstv_path.exists() else "not_installed"),
@@ -244,7 +244,7 @@ class WebDashboard:
 
                 component_status["web_dashboard"] = {
                     "name": "Web Dashboard",
-                    "status": "running", 
+                    "status": "running",
                     "processes": 1
                 }
 
@@ -392,7 +392,7 @@ class WebDashboard:
             """API для получения сводной статистики"""
             try:
                 import psutil
-                
+
                 # Статистика процессов
                 active_count = 0
                 stopped_count = 0
@@ -799,7 +799,7 @@ class WebDashboard:
                             'status': 'error',
                             'message': f'Не удалось запустить (код {process.returncode})'
                         }, broadcast=True)
-                    
+
                     return jsonify({
                         "success": False,
                         "error": f"Не удалось запустить (код {process.returncode})"
@@ -1097,7 +1097,7 @@ class WebDashboard:
             """Обработка быстрого действия через WebSocket"""
             try:
                 action = data.get("action", "")
-                
+
                 if action == "clean_cache":
                     result = self.cache_manager.auto_cleanup()
                     emit("quick_action_result", {

@@ -12,12 +12,14 @@ import threading
 
 class JsonFormatter(logging.Formatter):
     """Форматтер для JSON логов"""
-    
+
     def __init__(self, name: str):
+        """TODO: Add description"""
         super().__init__()
         self.name = name
-    
+
     def format(self, record: logging.LogRecord) -> str:
+        """TODO: Add description"""
         log_data = {
             "timestamp": datetime.utcnow().isoformat(),
             "level": record.levelname,
@@ -27,10 +29,10 @@ class JsonFormatter(logging.Formatter):
             "function": record.funcName,
             "line": record.lineno,
         }
-        
+
         if record.exc_info:
             log_data["exception"] = self.formatException(record.exc_info)
-        
+
         return json.dumps(log_data, ensure_ascii=False)
 
 
@@ -107,7 +109,7 @@ class LoggerSetup:
             log_file = f"{name}.log"
 
         file_path = self.log_dir / log_file
-        
+
         # RotatingFileHandler для управления размером файлов
         file_handler = RotatingFileHandler(
             file_path,

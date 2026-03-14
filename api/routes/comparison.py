@@ -62,10 +62,10 @@ async def compare_surfaces(
 
         # Бизнес-метрики
         BusinessMetrics.inc_comparison()
-        
+
         # Генерация ID
         comparison_id = f"comp_{uuid.uuid4().hex[:8]}"
-        
+
         # Сохранение в БД
         if hasattr(db, 'add_surface_comparison'):
             db.add_surface_comparison(
@@ -81,7 +81,7 @@ async def compare_surfaces(
                     'similarity': result.get('similarity', 0),
                 },
             )
-        
+
         return SurfaceComparisonResponse(
             comparison_id=comparison_id,
             image1_path=str(image1_path),
@@ -97,7 +97,7 @@ async def compare_surfaces(
             difference_map_path=result.get('difference_map_path'),
             created_at=datetime.now().isoformat(),
         )
-        
+
     except ValidationError:
         raise
     except Exception as e:

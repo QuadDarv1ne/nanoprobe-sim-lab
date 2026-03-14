@@ -20,7 +20,7 @@ class TestConfigManager(unittest.TestCase):
         """Подготовка тестового окружения"""
         self.temp_dir = tempfile.mkdtemp()
         self.config_file = Path(self.temp_dir) / "config.json"
-        
+
         # Создаём тестовую конфигурацию
         self.test_config = {
             "project": {
@@ -38,7 +38,7 @@ class TestConfigManager(unittest.TestCase):
                 "output_dir": "output"
             }
         }
-        
+
         with open(self.config_file, 'w', encoding='utf-8') as f:
             json.dump(self.test_config, f, ensure_ascii=False)
 
@@ -76,7 +76,7 @@ class TestConfigManager(unittest.TestCase):
         cm = ConfigManager(str(self.config_file))
         success = cm.set("project.new_field", "new_value")
         self.assertTrue(success)
-        
+
         # Перезагружаем и проверяем
         cm2 = ConfigManager(str(self.config_file))
         self.assertEqual(cm2.get("project.new_field"), "new_value")
@@ -93,10 +93,10 @@ class TestConfigManager(unittest.TestCase):
             },
             "paths": {"data_dir": "data"}
         }
-        
+
         with open(self.config_file, 'w', encoding='utf-8') as f:
             json.dump(full_config, f)
-        
+
         cm = ConfigManager(str(self.config_file))
         result = cm.validate_config()
         self.assertTrue(result)
@@ -107,10 +107,10 @@ class TestConfigManager(unittest.TestCase):
             "components": {"spm_simulator": {}},
             "paths": {"data_dir": "data"}
         }
-        
+
         with open(self.config_file, 'w', encoding='utf-8') as f:
             json.dump(invalid_config, f)
-        
+
         cm = ConfigManager(str(self.config_file))
         result = cm.validate_config()
         self.assertFalse(result)
@@ -119,7 +119,7 @@ class TestConfigManager(unittest.TestCase):
         """Тестирует получение конфигурации по умолчанию"""
         cm = ConfigManager(str(self.config_file))
         default_config = cm.get_default_config()
-        
+
         self.assertIn("project", default_config)
         self.assertIn("components", default_config)
         self.assertIn("paths", default_config)
@@ -127,12 +127,12 @@ class TestConfigManager(unittest.TestCase):
     def test_update_component_config(self):
         """Тестирует обновление конфигурации компонента"""
         cm = ConfigManager(str(self.config_file))
-        
+
         new_settings = {"param2": "value2", "param3": "value3"}
         success = cm.update_component_config("test_component", new_settings)
-        
+
         self.assertTrue(success)
-        
+
         # Проверяем, что старые параметры сохранились и новые добавились
         cm2 = ConfigManager(str(self.config_file))
         component_config = cm2.get_component_config("test_component")
@@ -143,7 +143,7 @@ class TestConfigManager(unittest.TestCase):
         """Тестирует получение конфигурации существующего компонента"""
         cm = ConfigManager(str(self.config_file))
         config = cm.get_component_config("test_component")
-        
+
         self.assertIsNotNone(config)
         self.assertEqual(config["param1"], "value1")
 
@@ -151,21 +151,21 @@ class TestConfigManager(unittest.TestCase):
         """Тестирует получение конфигурации несуществующего компонента"""
         cm = ConfigManager(str(self.config_file))
         config = cm.get_component_config("nonexistent_component")
-        
+
         self.assertIsNone(config)
 
     def test_save_config(self):
         """Тестирует сохранение конфигурации"""
         cm = ConfigManager(str(self.config_file))
         cm.config["test_key"] = "test_value"
-        
+
         success = cm.save_config()
         self.assertTrue(success)
-        
+
         # Проверяем, что файл обновился
         with open(self.config_file, 'r', encoding='utf-8') as f:
             saved_config = json.load(f)
-        
+
         self.assertEqual(saved_config["test_key"], "test_value")
 
 
@@ -183,7 +183,7 @@ class TestConfigManagerEdgeCases(unittest.TestCase):
         temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False)
         temp_file.write("{ invalid json }")
         temp_file.close()
-        
+
         try:
             cm = ConfigManager(temp_file.name)
             # Должна вернуться конфигурация по умолчанию

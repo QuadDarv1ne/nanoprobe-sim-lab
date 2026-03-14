@@ -60,7 +60,7 @@ class FlaskFastAPIIntegration:
             if response.status_code == 200:
                 tokens = response.json()
                 self._token_cache = tokens.get("access_token")
-                
+
                 # Декодирование токена для получения срока действия
                 try:
                     payload = jwt.decode(
@@ -188,7 +188,7 @@ class FlaskFastAPIIntegration:
         params = {"limit": limit, "offset": offset}
         if scan_type:
             params["scan_type"] = scan_type
-        
+
         result = self.call_fastapi("/api/v1/scans", method="GET", data=params)
         return result.get("items", []) if result else []
 
@@ -212,7 +212,7 @@ class FlaskFastAPIIntegration:
         params = {"limit": limit}
         if status:
             params["status"] = status
-        
+
         result = self.call_fastapi("/api/v1/simulations", method="GET", data=params)
         return result.get("items", []) if result else []
 
@@ -341,7 +341,7 @@ class FlaskFastAPIIntegration:
         params = {"limit": limit}
         if scan_type:
             params["type"] = scan_type
-        
+
         result = self.call_flask("/api/database/scans", data=params)
         return result.get("scans", []) if result else []
 
@@ -350,7 +350,7 @@ class FlaskFastAPIIntegration:
         params = {"limit": limit}
         if status:
             params["status"] = status
-        
+
         result = self.call_flask("/api/database/simulations", data=params)
         return result.get("simulations", []) if result else []
 
@@ -390,7 +390,7 @@ class FlaskFastAPIIntegration:
             start = datetime.now()
             response = requests.get(f"{self.fastapi_url}/health", timeout=5)
             elapsed = (datetime.now() - start).total_seconds() * 1000
-            
+
             if response.status_code == 200:
                 result["fastapi"] = {"status": "healthy", "response_time_ms": round(elapsed, 2)}
             else:
@@ -403,7 +403,7 @@ class FlaskFastAPIIntegration:
             start = datetime.now()
             response = requests.get(f"{self.flask_url}/api/system_info", timeout=5)
             elapsed = (datetime.now() - start).total_seconds() * 1000
-            
+
             if response.status_code == 200:
                 result["flask"] = {"status": "healthy", "response_time_ms": round(elapsed, 2)}
             else:

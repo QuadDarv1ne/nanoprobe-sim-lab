@@ -115,6 +115,7 @@ class DataExporter:
     def _export_json(self, data: Union[Dict, List], filepath: Path, **kwargs):
         """Экспорт в JSON."""
         def convert_to_serializable(obj):
+            """TODO: Add description"""
             if isinstance(obj, np.ndarray):
                 return obj.tolist()
             elif isinstance(obj, (np.int64, np.int32)):
@@ -232,7 +233,7 @@ class DataImporter:
             Данные
         """
         filepath = Path(filepath)
-        
+
         if fmt is None:
             fmt = filepath.suffix.lstrip('.').lower()
 
@@ -259,7 +260,7 @@ class DataImporter:
         """Импорт из HDF5."""
         if not PANDAS_AVAILABLE:
             raise ImportError("pandas required for HDF5 import")
-        
+
         result = {}
         with pd.HDFStore(filepath, mode='r') as store:
             for key in store.keys():

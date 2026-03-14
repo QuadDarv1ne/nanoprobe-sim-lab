@@ -20,8 +20,9 @@ class JSONFormatter(logging.Formatter):
     JSON форматтер для структурированного логирования
     Подходит для отправки в ELK Stack, Splunk, etc.
     """
-    
+
     def format(self, record):
+        """TODO: Add description"""
         log_data = {
             'timestamp': datetime.utcnow().isoformat(),
             'level': record.levelname,
@@ -31,7 +32,7 @@ class JSONFormatter(logging.Formatter):
             'function': record.funcName,
             'line': record.lineno,
         }
-        
+
         # Добавляем exception если есть
         if record.exc_info:
             log_data['exception'] = {
@@ -39,7 +40,7 @@ class JSONFormatter(logging.Formatter):
                 'message': str(record.exc_info[1]) if record.exc_info[1] else None,
                 'traceback': traceback.format_exception(*record.exc_info)
             }
-        
+
         # Добавляем extra поля
         for key, value in record.__dict__.items():
             if key not in ('name', 'msg', 'args', 'created', 'filename', 'funcName',
@@ -47,7 +48,7 @@ class JSONFormatter(logging.Formatter):
                           'pathname', 'process', 'processName', 'relativeCreated',
                           'stack_info', 'exc_info', 'thread', 'threadName'):
                 log_data[key] = value
-        
+
         return json.dumps(log_data, ensure_ascii=False, default=str)
 
 
@@ -55,7 +56,7 @@ class ProductionLogger:
     """
     Менеджер production логирования
     """
-    
+
     def __init__(
         self,
         name: str = 'nanoprobe',
@@ -67,7 +68,7 @@ class ProductionLogger:
     ):
         """
         Инициализация production логгера
-        
+
         Args:
             name: Имя логгера
             log_dir: Директория для логов
@@ -78,11 +79,11 @@ class ProductionLogger:
         """
         self.logger = logging.getLogger(name)
         self.logger.setLevel(level)
-        
+
         # Создание директории для логов
         log_path = Path(log_dir)
         log_path.mkdir(parents=True, exist_ok=True)
-        
+
         # Форматтеры
         if enable_json:
             formatter = JSONFormatter()
@@ -91,13 +92,13 @@ class ProductionLogger:
                 '%(asctime)s | %(levelname)-8s | %(name)s | %(message)s',
                 datefmt='%Y-%m-%d %H:%M:%S'
             )
-        
+
         # Console handler
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setLevel(level)
         console_handler.setFormatter(formatter)
         self.logger.addHandler(console_handler)
-        
+
         # Rotating file handler (основной лог)
         rotating_handler = RotatingFileHandler(
             log_path / f'{name}.log',
@@ -108,7 +109,7 @@ class ProductionLogger:
         rotating_handler.setLevel(level)
         rotating_handler.setFormatter(formatter)
         self.logger.addHandler(rotating_handler)
-        
+
         # Timed rotating handler (для ежедневных логов)
         timed_handler = TimedRotatingFileHandler(
             log_path / f'{name}_daily.log',
@@ -120,7 +121,7 @@ class ProductionLogger:
         timed_handler.setLevel(level)
         timed_handler.setFormatter(formatter)
         self.logger.addHandler(timed_handler)
-        
+
         # Error file handler (только ошибки)
         error_handler = RotatingFileHandler(
             log_path / f'{name}_errors.log',
@@ -131,30 +132,36 @@ class ProductionLogger:
         error_handler.setLevel(logging.ERROR)
         error_handler.setFormatter(formatter)
         self.logger.addHandler(error_handler)
-        
+
         # Предотвращение дублирования в родительских логгерах
         self.logger.propagate = False
-    
+
     def get_logger(self) -> logging.Logger:
         """Получение настроенного логгера"""
         return self.logger
-    
+
     def debug(self, message: str, **kwargs):
+        """TODO: Add description"""
         self.logger.debug(message, extra=kwargs if kwargs else {})
-    
+
     def info(self, message: str, **kwargs):
+        """TODO: Add description"""
         self.logger.info(message, extra=kwargs if kwargs else {})
-    
+
     def warning(self, message: str, **kwargs):
+        """TODO: Add description"""
         self.logger.warning(message, extra=kwargs if kwargs else {})
-    
+
     def error(self, message: str, **kwargs):
+        """TODO: Add description"""
         self.logger.error(message, extra=kwargs if kwargs else {})
-    
+
     def critical(self, message: str, **kwargs):
+        """TODO: Add description"""
         self.logger.critical(message, extra=kwargs if kwargs else {})
-    
+
     def exception(self, message: str, **kwargs):
+        """TODO: Add description"""
         self.logger.exception(message, extra=kwargs if kwargs else {})
 
 
@@ -219,22 +226,23 @@ class HTTPLoggingMiddleware:
     Использование в FastAPI:
         app.add_middleware(HTTPLoggingMiddleware)
     """
-    
+
     def __init__(self, app):
+        """TODO: Add description"""
         self.app = app
         self.logger = get_api_logger().get_logger()
-    
+
     async def __call__(self, scope, receive, send):
         if scope['type'] != 'http':
             return await self.app(scope, receive, send)
-        
+
         # Начало запроса
         method = scope['method']
         path = scope['path']
         start_time = datetime.now()
-        
+
         self.logger.info(f"→ {method} {path}")
-        
+
         # Обработка запроса
         try:
             await self.app(scope, receive, send)
@@ -242,7 +250,7 @@ class HTTPLoggingMiddleware:
             duration = (datetime.now() - start_time).total_seconds() * 1000
             self.logger.error(f"✗ {method} {path} - {duration:.2f}ms - {str(e)}")
             raise
-        
+
         # Завершение (логирование в send не работает для response status)
         # Для полного логирования нужно кастомизировать send
 
@@ -255,20 +263,23 @@ class LogExecutionTime:
         with LogExecutionTime("Операция", logger):
             # код
     """
-    
+
     def __init__(self, operation: str, logger: logging.Logger = None):
+        """TODO: Add description"""
         self.operation = operation
         self.logger = logger or get_logger().get_logger()
         self.start_time = None
-    
+
     def __enter__(self):
+        """TODO: Add description"""
         self.start_time = datetime.now()
         self.logger.debug(f"Начало: {self.operation}")
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
+        """TODO: Add description"""
         duration = (datetime.now() - self.start_time).total_seconds()
-        
+
         if exc_type:
             self.logger.error(
                 f"Ошибка: {self.operation} - {duration:.3f}s - {str(exc_val)}",
@@ -276,7 +287,7 @@ class LogExecutionTime:
             )
         else:
             self.logger.debug(f"Завершено: {self.operation} - {duration:.3f}s")
-        
+
         return False  # Не подавляем исключения
 
 
@@ -287,16 +298,19 @@ def log_function_call(logger: logging.Logger = None):
     Использование:
         @log_function_call(api_logger.get_logger())
         def my_function():
+            """TODO: Add description"""
             pass
     """
     def decorator(func):
+        """TODO: Add description"""
         import functools
-        
+
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
+            """TODO: Add description"""
             log = logger or get_logger().get_logger()
             log.debug(f"Вызов {func.__name__} с args={args}, kwargs={kwargs}")
-            
+
             start = datetime.now()
             try:
                 result = func(*args, **kwargs)
@@ -307,7 +321,7 @@ def log_function_call(logger: logging.Logger = None):
                 duration = (datetime.now() - start).total_seconds() * 1000
                 log.error(f"{func.__name__} ошибка через {duration:.2f}ms: {e}", exc_info=True)
                 raise
-        
+
         return wrapper
     return decorator
 
@@ -315,30 +329,30 @@ def log_function_call(logger: logging.Logger = None):
 # Пример использования
 if __name__ == "__main__":
     print("=== Тестирование Production логирования ===\n")
-    
+
     # Создание логгера
     logger = get_logger('test')
-    
+
     # Тестирование различных уровней
     logger.debug("Debug сообщение", extra={'user_id': 123, 'action': 'test'})
     logger.info("Info сообщение")
     logger.warning("Warning сообщение")
     logger.error("Error сообщение")
-    
+
     # Тест exception
     try:
         1 / 0
     except ZeroDivisionError:
         logger.exception("Произошло исключение деления на ноль")
-    
+
     # Тест JSON форматтера
     json_logger = ProductionLogger(name='json_test', enable_json=True)
     json_logger.info("JSON сообщение", extra={'data': {'key': 'value'}})
-    
+
     # Тест контекстного менеджера
     with LogExecutionTime("Тестовая операция", logger.get_logger()):
         import time
         time.sleep(0.1)
-    
+
     print("\n✓ Тестирование завершено")
     print("Проверьте логи в директории logs/")

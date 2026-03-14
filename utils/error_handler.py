@@ -108,7 +108,7 @@ class ErrorHandler:
         """
         if hasattr(self, "_initialized") and self._initialized:
             return
-            
+
         self.log_file = Path(log_file)
         self.max_log_size = max_log_size
         self.auto_save = auto_save
@@ -210,14 +210,14 @@ class ErrorHandler:
 
         with self.lock:
             self.error_history.append(error_info)
-            
+
             # Track error count by component
             self._error_counts[component] = self._error_counts.get(component, 0) + 1
-            
+
             # Auto-save if enabled
             if self.auto_save:
                 self.save_error_history()
-            
+
             # Periodic cleanup
             self._maybe_cleanup()
 
@@ -233,20 +233,20 @@ class ErrorHandler:
             by_severity = {}
             by_component = {}
             recent_24h = 0
-            
+
             now = datetime.now()
             for error in self.error_history:
                 # By severity
                 sev_name = error.severity.name
                 by_severity[sev_name] = by_severity.get(sev_name, 0) + 1
-                
+
                 # By component
                 by_component[error.component] = by_component.get(error.component, 0) + 1
-                
+
                 # Recent 24h
                 if now - error.timestamp < timedelta(hours=24):
                     recent_24h += 1
-            
+
             return {
                 "total_errors": total,
                 "errors_last_24h": recent_24h,
@@ -346,16 +346,16 @@ class ErrorHandler:
         with self.lock:
             cutoff = datetime.now() - timedelta(days=max_age_days)
             original_count = len(self.error_history)
-            
+
             self.error_history = [
                 error for error in self.error_history
                 if error.timestamp > cutoff
             ]
-            
+
             removed = original_count - len(self.error_history)
             if removed > 0:
                 self.save_error_history()
-            
+
             return removed
 
     def get_recent_errors(self, hours: int = 24) -> List[ErrorInfo]:

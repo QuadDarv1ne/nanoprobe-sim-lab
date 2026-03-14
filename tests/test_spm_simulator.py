@@ -128,7 +128,7 @@ class TestSPMController(unittest.TestCase):
         """Тестирует сохранение результатов сканирования"""
         import tempfile
         self.controller.scan_surface()
-        
+
         with tempfile.NamedTemporaryFile(delete=False, suffix='.txt') as tmp:
             result = self.controller.save_scan_results(tmp.name)
             self.assertTrue(result)
@@ -137,7 +137,7 @@ class TestSPMController(unittest.TestCase):
         """Тестирует визуализацию результатов"""
         import tempfile
         self.controller.scan_surface()
-        
+
         with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp:
             # Визуализация должна сохранить файл без ошибок
             try:

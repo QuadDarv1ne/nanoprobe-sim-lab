@@ -83,13 +83,13 @@ class SDRInterface:
 
             # Пробуем открыть устройство
             self.sdr = RtlSdr(device_index=self.device_index)
-            
+
             # Определяем тип устройства
             self._detect_device_type()
-            
+
             # Настраиваем параметры в зависимости от устройства
             self._configure_device()
-            
+
             self.metadata['device'] = self.device_name or f"SDR #{self.device_index}"
             self.metadata['sample_rate'] = self.sample_rate
             self.metadata['center_freq'] = self.center_freq
@@ -174,7 +174,7 @@ class SDRInterface:
         if self.device_type == 'r828d':
             self.sample_rate = 2400000  # 2.4 MSPS
             print("  Оптимизировано для RTL-SDR V4")
-        
+
         # Классические RTL-SDR работают на 1-3 MSPS
         elif self.device_type in ['rtl2832u', 'rtl2838', 'r820t']:
             if self.sample_rate < 1000000:
@@ -185,7 +185,7 @@ class SDRInterface:
         self.sdr.sample_rate = self.sample_rate
         self.sdr.center_freq = self.center_freq * 1e6
         self.sdr.gain = self.gain
-        
+
         # Для RTL-SDR V4 включаем прямой режим (direct sampling) если нужно
         if self.device_type == 'r828d':
             try:
@@ -402,7 +402,7 @@ class SDRInterface:
                 samples = self.sdr.read_samples(batch_size)
                 if samples is not None:
                     all_samples.append(samples)
-            
+
             if all_samples:
                 return np.concatenate(all_samples)
             return None
@@ -503,6 +503,7 @@ class SDRInterface:
         self.recorded_samples = []
 
         def record_thread():
+            """TODO: Add description"""
             start_time = time.time()
             num_buffers = int(duration_seconds * self.sample_rate / 1024)
 
@@ -567,6 +568,7 @@ class SDRInterface:
 
         # Callback для обработки сэмплов
         def sample_callback(samples):
+            """TODO: Add description"""
             decoder.decode_realtime_push(samples)
 
         # Запускаем запись с real-time обработкой
@@ -716,6 +718,7 @@ class SDRInterface:
         self.is_scanning = True
 
         def scan_thread():
+            """TODO: Add description"""
             freq_min, freq_max = freq_range
             current_freq = freq_min
 
@@ -763,7 +766,7 @@ class SDRInterface:
 
             # Вычисляем среднюю мощность сигнала
             power = np.mean(np.abs(samples) ** 2)
-            
+
             # Конвертируем в dB (приблизительно)
             if power > 0:
                 strength_db = 10 * np.log10(power)

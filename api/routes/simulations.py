@@ -70,14 +70,14 @@ async def get_simulation(
 ):
     """Получить симуляцию по ID"""
     from api.main import redis_cache
-    
+
     cache_key = f"simulation:{simulation_id}"
-    
+
     if redis_cache and redis_cache.is_available():
         cached = redis_cache.get(cache_key)
         if cached:
             return SimulationResponse(**cached)
-    
+
     simulations = db.get_simulations(limit=100)
     sim = next((s for s in simulations if s.get('simulation_id') == simulation_id), None)
 
@@ -85,10 +85,10 @@ async def get_simulation(
         raise NotFoundError(f"Симуляция с ID {simulation_id} не найдена", resource_type="simulation")
 
     result = SimulationResponse.model_validate(sim)
-    
+
     if redis_cache and redis_cache.is_available():
         redis_cache.set(cache_key, result.model_dump(), expire=600)
-    
+
     return result
 
 
@@ -104,7 +104,7 @@ async def create_simulation(
 ):
     """Создать новую симуляцию"""
     from api.main import redis_cache
-    
+
     sim_id = f"sim_{uuid.uuid4().hex[:8]}"
 
     db.add_simulation(
@@ -136,7 +136,7 @@ async def update_simulation(
 ):
     """Обновить статус симуляции"""
     from api.main import redis_cache
-    
+
     db.update_simulation(
         simulation_id=simulation_id,
         status=status,

@@ -69,15 +69,15 @@ class EnhancedSystemMonitor:
         self.monitoring = False
         self.monitoring_thread: Optional[threading.Thread] = None
         self.update_interval = 1.0  # секунды
-        
+
         # История метрик
         self.metrics_history: deque = deque(maxlen=history_size)
         self.current_metrics: Optional[SystemMetrics] = None
-        
+
         # Статистика
         self.start_time: Optional[datetime] = None
         self.total_samples = 0
-        
+
         # Пороги для алертов
         self.thresholds = {
             "cpu_warning": 80.0,
@@ -87,11 +87,11 @@ class EnhancedSystemMonitor:
             "disk_warning": 80.0,
             "disk_critical": 95.0,
         }
-        
+
         # Алерты
         self.alerts: List[Alert] = []
         self.alert_callbacks: List[Callable[[Alert], None]] = []
-        
+
         # Последнее время сбора метрик
         self.last_net_io = psutil.net_io_counters()
         self.last_net_time = time.time()
@@ -126,51 +126,51 @@ class EnhancedSystemMonitor:
                 self.current_metrics = metrics
                 self.metrics_history.append(asdict(metrics))
                 self.total_samples += 1
-                
+
                 # Проверка алертов
                 self._check_alerts(metrics)
-                
+
             except Exception as e:
                 logger.error(f"Error collecting metrics: {e}")
-            
+
             time.sleep(self.update_interval)
 
     def _collect_metrics(self) -> SystemMetrics:
         """Сбор текущих метрик"""
         now = datetime.now()
         timestamp = now.isoformat()
-        
+
         # CPU
         cpu_percent = psutil.cpu_percent(interval=None)
         cpu_freq = psutil.cpu_freq()
         cpu_freq_mhz = cpu_freq.current if cpu_freq else None
-        
+
         # Memory
         memory = psutil.virtual_memory()
         memory_used_gb = memory.used / (1024 ** 3)
         memory_total_gb = memory.total / (1024 ** 3)
         memory_available_gb = memory.available / (1024 ** 3)
-        
+
         # Disk
         disk = psutil.disk_usage('/')
         disk_used_gb = disk.used / (1024 ** 3)
         disk_total_gb = disk.total / (1024 ** 3)
         disk_free_gb = disk.free / (1024 ** 3)
-        
+
         # Network
         net_io = psutil.net_io_counters()
         network_bytes_sent = net_io.bytes_sent
         network_bytes_recv = net_io.bytes_recv
         network_packets_sent = net_io.packets_sent
         network_packets_recv = net_io.packets_recv
-        
+
         # Processes
         processes_count = len(psutil.pids())
-        
+
         # Uptime
         boot_time = datetime.fromtimestamp(psutil.boot_time()).isoformat()
         uptime_seconds = int((now - datetime.fromtimestamp(psutil.boot_time())).total_seconds())
-        
+
         return SystemMetrics(
             timestamp=timestamp,
             cpu_percent=cpu_percent,
@@ -197,14 +197,14 @@ class EnhancedSystemMonitor:
         """Проверка метрик на превышение порогов"""
         # CPU alerts
         if metrics.cpu_percent >= self.thresholds["cpu_critical"]:
-            self._add_alert("critical", "cpu", 
+            self._add_alert("critical", "cpu",
                           f"Критическая загрузка CPU: {metrics.cpu_percent:.1f}%",
                           metrics.cpu_percent, self.thresholds["cpu_critical"])
         elif metrics.cpu_percent >= self.thresholds["cpu_warning"]:
             self._add_alert("warning", "cpu",
                           f"Высокая загрузка CPU: {metrics.cpu_percent:.1f}%",
                           metrics.cpu_percent, self.thresholds["cpu_warning"])
-        
+
         # Memory alerts
         if metrics.memory_percent >= self.thresholds["memory_critical"]:
             self._add_alert("critical", "memory",
@@ -214,7 +214,7 @@ class EnhancedSystemMonitor:
             self._add_alert("warning", "memory",
                           f"Высокое использование памяти: {metrics.memory_percent:.1f}%",
                           metrics.memory_percent, self.thresholds["memory_warning"])
-        
+
         # Disk alerts
         if metrics.disk_percent >= self.thresholds["disk_critical"]:
             self._add_alert("critical", "disk",
@@ -225,7 +225,7 @@ class EnhancedSystemMonitor:
                           f"Высокое заполнение диска: {metrics.disk_percent:.1f}%",
                           metrics.disk_percent, self.thresholds["disk_warning"])
 
-    def _add_alert(self, level: str, component: str, message: str, 
+    def _add_alert(self, level: str, component: str, message: str,
                    value: Optional[float] = None, threshold: Optional[float] = None):
         """Добавление алерта"""
         alert = Alert(
@@ -237,11 +237,11 @@ class EnhancedSystemMonitor:
             threshold=threshold
         )
         self.alerts.append(alert)
-        
+
         # Оставляем только последние 100 алертов
         if len(self.alerts) > 100:
             self.alerts = self.alerts[-100:]
-        
+
         # Вызов callback'ов
         for callback in self.alert_callbacks:
             try:
@@ -267,21 +267,24 @@ class EnhancedSystemMonitor:
         """Получение статистики"""
         if not self.metrics_history:
             return {}
-        
+
         history_list = list(self.metrics_history)
-        
+
         def avg(key):
+            """TODO: Add description"""
             values = [m[key] for m in history_list if key in m]
             return sum(values) / len(values) if values else 0
-        
+
         def max_val(key):
+            """TODO: Add description"""
             values = [m[key] for m in history_list if key in m]
             return max(values) if values else 0
-        
+
         def min_val(key):
+            """TODO: Add description"""
             values = [m[key] for m in history_list if key in m]
             return min(values) if values else 0
-        
+
         return {
             "samples": self.total_samples,
             "uptime_seconds": self.current_metrics.uptime_seconds if self.current_metrics else 0,
@@ -309,17 +312,17 @@ class EnhancedSystemMonitor:
         """Получение скорости сети (байт/сек)"""
         now = time.time()
         current_net_io = psutil.net_io_counters()
-        
+
         time_diff = now - self.last_net_time
         if time_diff <= 0:
             time_diff = 1.0
-        
+
         upload_speed = (current_net_io.bytes_sent - self.last_net_io.bytes_sent) / time_diff
         download_speed = (current_net_io.bytes_recv - self.last_net_io.bytes_recv) / time_diff
-        
+
         self.last_net_io = current_net_io
         self.last_net_time = now
-        
+
         return {
             "upload_bps": upload_speed,
             "download_bps": download_speed,
@@ -330,7 +333,7 @@ class EnhancedSystemMonitor:
     def get_process_list(self, limit: int = 10, sort_by: str = "cpu") -> List[Dict[str, Any]]:
         """Получение списка процессов"""
         processes = []
-        
+
         for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent']):
             try:
                 processes.append({
@@ -341,13 +344,13 @@ class EnhancedSystemMonitor:
                 })
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 continue
-        
+
         # Сортировка
         if sort_by == "cpu":
             processes.sort(key=lambda x: x["cpu_percent"], reverse=True)
         elif sort_by == "memory":
             processes.sort(key=lambda x: x["memory_percent"], reverse=True)
-        
+
         return processes[:limit]
 
     def set_thresholds(self, thresholds: Dict[str, float]):
@@ -358,10 +361,10 @@ class EnhancedSystemMonitor:
     def get_alerts(self, limit: int = 50, level: Optional[str] = None) -> List[Dict[str, Any]]:
         """Получение алертов"""
         alerts = self.alerts
-        
+
         if level:
             alerts = [a for a in alerts if a.level == level]
-        
+
         return [asdict(a) for a in alerts[-limit:]]
 
     def clear_alerts(self):
@@ -466,7 +469,7 @@ def format_uptime(seconds: int) -> str:
     days = seconds // 86400
     hours = (seconds % 86400) // 3600
     minutes = (seconds % 3600) // 60
-    
+
     parts = []
     if days > 0:
         parts.append(f"{days} дн")
@@ -474,30 +477,30 @@ def format_uptime(seconds: int) -> str:
         parts.append(f"{hours} ч")
     if minutes > 0:
         parts.append(f"{minutes} мин")
-    
+
     return " ".join(parts) if parts else "< 1 мин"
 
 
 if __name__ == "__main__":
     # Тестирование
     import pprint
-    
+
     monitor = get_monitor()
-    
+
     print("Testing EnhancedSystemMonitor...")
     time.sleep(3)
-    
+
     print("\nCurrent Metrics:")
     pprint.pprint(monitor.get_current_metrics())
-    
+
     print("\nStatistics:")
     pprint.pprint(monitor.get_statistics())
-    
+
     print("\nTop 5 Processes by CPU:")
     pprint.pprint(monitor.get_process_list(limit=5))
-    
+
     print("\nNetwork Speed:")
     pprint.pprint(monitor.get_network_speed())
-    
+
     stop_monitor()
     print("\nMonitor stopped.")

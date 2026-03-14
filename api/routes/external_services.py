@@ -23,7 +23,7 @@ router = APIRouter(prefix="/external", tags=["External Services"])
 def create_session() -> requests.Session:
     """Создание HTTP сессии с retry и connection pooling"""
     session = requests.Session()
-    
+
     # Retry стратегия
     retry = Retry(
         total=3,
@@ -34,7 +34,7 @@ def create_session() -> requests.Session:
     adapter = HTTPAdapter(max_retries=retry, pool_connections=10, pool_maxsize=20)
     session.mount("https://", adapter)
     session.mount("http://", adapter)
-    
+
     return session
 
 
@@ -66,10 +66,10 @@ from utils.circuit_breaker import circuit_breaker, get_circuit_breaker
 async def get_nasa_apod(date: Optional[str] = None):
     """
     Получение Astronomy Picture of the Day от NASA
-    
+
     Args:
         date: Дата в формате YYYY-MM-DD (по умолчанию сегодня)
-    
+
     Returns:
         Данные APOD
     """
@@ -103,11 +103,11 @@ async def search_zenodo(
 ):
     """
     Поиск научных данных на Zenodo
-    
+
     Args:
         query: Поисковый запрос
         size: Количество результатов
-    
+
     Returns:
         Результаты поиска
     """
@@ -142,11 +142,11 @@ async def search_figshare(
 ):
     """
     Поиск данных на Figshare
-    
+
     Args:
         query: Поисковый запрос
         limit: Количество результатов
-    
+
     Returns:
         Результаты поиска
     """
@@ -195,7 +195,7 @@ async def reset_circuit_breakers():
 async def get_circuit_breaker_status(name: str):
     """Статус конкретного circuit breaker"""
     from utils.circuit_breaker import get_circuit_breaker
-    
+
     try:
         breaker = get_circuit_breaker(name)
         return breaker.get_stats()
@@ -211,7 +211,7 @@ async def get_circuit_breaker_status(name: str):
 async def reset_circuit_breaker(name: str):
     """Сброс конкретного circuit breaker"""
     from utils.circuit_breaker import get_circuit_breaker
-    
+
     try:
         breaker = get_circuit_breaker(name)
         breaker.reset()
@@ -233,7 +233,7 @@ async def check_external_services_health():
         "zenodo": {"url": "https://zenodo.org", "status": "unknown"},
         "figshare": {"url": "https://api.figshare.com", "status": "unknown"},
     }
-    
+
     for name, service in services.items():
         try:
             response = http_session.head(service["url"], timeout=5)

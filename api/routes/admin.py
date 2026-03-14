@@ -49,7 +49,7 @@ async def get_redis_cache_status(
 async def get_system_info(current_user: dict = Depends(get_current_user)):
     """Системная информация"""
     require_admin(current_user)
-    
+
     return {
         "platform": os.name,
         "python_version": os.sys.version,
@@ -72,16 +72,16 @@ async def get_system_resources(current_user: dict = Depends(get_current_user)):
     # CPU
     cpu_percent = psutil.cpu_percent(interval=1)
     cpu_per_core = psutil.cpu_percent(interval=1, percpu=True)
-    
+
     # Память
     memory = psutil.virtual_memory()
-    
+
     # Диск
     disk = psutil.disk_usage("/")
-    
+
     # Сеть
     net_io = psutil.net_io_counters()
-    
+
     return {
         "cpu": {
             "percent": cpu_percent,
@@ -122,7 +122,7 @@ async def get_system_processes(current_user: dict = Depends(get_current_user)):
 
     current_pid = os.getpid()
     process = psutil.Process(current_pid)
-    
+
     return {
         "pid": current_pid,
         "name": process.name(),
@@ -151,7 +151,7 @@ async def list_logs(current_user: dict = Depends(get_current_user)):
     logs_dir = Path("logs")
     if not logs_dir.exists():
         return {"files": []}
-    
+
     files = []
     for f in logs_dir.glob("*.log"):
         files.append({
@@ -159,7 +159,7 @@ async def list_logs(current_user: dict = Depends(get_current_user)):
             "size": f.stat().st_size,
             "modified": datetime.fromtimestamp(f.stat().st_mtime).isoformat(),
         })
-    
+
     return {"files": sorted(files, key=lambda x: x["modified"], reverse=True)}
 
 
@@ -354,9 +354,9 @@ async def create_user(
 
     if username in USERS_DB:
         raise ValidationError("Пользователь уже существует")
-    
+
     new_id = max(u["id"] for u in USERS_DB.values()) + 1 if USERS_DB else 1
-    
+
     USERS_DB[username] = {
         "id": new_id,
         "username": username,
@@ -364,7 +364,7 @@ async def create_user(
         "role": role,
         "created_at": datetime.now().isoformat(),
     }
-    
+
     return {
         "message": f"Пользователь {username} создан",
         "user": {
@@ -412,10 +412,10 @@ async def get_cache_stats(current_user: dict = Depends(get_current_user)):
     """Статистика кэша"""
     if current_user.get("role") != "admin":
         raise AuthorizationError("Требуется роль администратора")
-    
+
     cache_dirs = ["cache", "temp", "__pycache__"]
     stats = {}
-    
+
     for dir_name in cache_dirs:
         dir_path = Path(dir_name)
         if dir_path.exists():
@@ -427,7 +427,7 @@ async def get_cache_stats(current_user: dict = Depends(get_current_user)):
             }
         else:
             stats[dir_name] = {"size_bytes": 0, "file_count": 0}
-    
+
     return stats
 
 

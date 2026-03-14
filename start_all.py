@@ -53,6 +53,7 @@ class ServiceManager:
     """Менеджер сервисов для синхронизированного запуска"""
 
     def __init__(self):
+        """TODO: Add description"""
         self.backend_process: Optional[subprocess.Popen] = None
         self.frontend_process: Optional[subprocess.Popen] = None
         self.sync_process: Optional[subprocess.Popen] = None
@@ -69,14 +70,14 @@ class ServiceManager:
         self.sync_enabled = True
         self.last_sync_time: Optional[datetime] = None
         self.sync_stats: Dict[str, Any] = {}
-    
+
     def _signal_handler(self, signum, frame):
         """Обработчик сигналов остановки"""
         print(f"\n[INFO] Получен сигнал {signum}, остановка сервисов...")
         self.running = False
         self._stop_all()
         sys.exit(0)
-    
+
     def _check_port(self, port: int) -> bool:
         """Проверка занятости порта"""
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -86,7 +87,7 @@ class ServiceManager:
             return result == 0  # Порт занят если результат 0
         except:
             return False
-    
+
     def _wait_for_port(self, port: int, timeout: int = 30) -> bool:
         """Ожидание доступности порта"""
         start_time = time.time()
@@ -96,7 +97,7 @@ class ServiceManager:
             else:
                 return True
         return False
-    
+
     def _check_health(self, url: str) -> bool:
         """Проверка health endpoint"""
         try:
@@ -109,49 +110,49 @@ class ServiceManager:
     def _sync_backend_frontend(self) -> bool:
         """
         Синхронизация Backend и Frontend
-        
+
         Получает статистику из Backend и передаёт во Frontend
         """
         try:
             import requests
-            
+
             # Получение статистики из Backend
             backend_stats_url = f"http://localhost:{BACKEND_PORT}/api/v1/dashboard/stats"
             response = requests.get(backend_stats_url, timeout=5)
-            
+
             if response.status_code == 200:
                 stats = response.json()
                 self.sync_stats = stats
                 self.last_sync_time = datetime.now()
-                
+
                 # Отправка статистики во Frontend (опционально)
                 # Frontend может сам запрашивать данные через reverse proxy
-                
+
                 self._log(f"✅ Синхронизация: {len(stats)} полей данных", "SUCCESS")
                 return True
             else:
                 self._log(f"⚠️ Backend вернул статус {response.status_code}", "WARNING")
                 return False
-                
+
         except Exception as e:
             self._log(f"⚠️ Ошибка синхронизации: {e}", "WARNING")
             return False
-    
+
     def _log(self, message: str, level: str = "INFO"):
         """Логирование сообщения"""
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         log_entry = f"[{timestamp}] [{level}] {message}"
         print(log_entry)
-        
+
         # Запись в лог
         log_file = LOG_DIR / "startup.log"
         with open(log_file, "a", encoding="utf-8") as f:
             f.write(log_entry + "\n")
-    
+
     def _check_dependencies(self) -> Tuple[bool, list]:
         """Проверка необходимых зависимостей"""
         missing = []
-        
+
         # Проверка для backend
         backend_deps = ["fastapi", "uvicorn", "pydantic", "sqlalchemy"]
         for dep in backend_deps:
@@ -159,7 +160,7 @@ class ServiceManager:
                 __import__(dep.replace("-", "_"))
             except ImportError:
                 missing.append(f"backend: {dep}")
-        
+
         # Проверка для frontend
         frontend_deps = ["flask", "flask_socketio"]
         for dep in frontend_deps:
@@ -170,32 +171,32 @@ class ServiceManager:
                     __import__(dep)
             except ImportError:
                 missing.append(f"frontend: {dep}")
-        
+
         # Проверка requests для мониторинга
         try:
             import requests
         except ImportError:
             missing.append("monitoring: requests")
-        
+
         return len(missing) == 0, missing
-    
+
     def _start_backend(self) -> bool:
         """Запуск Backend (FastAPI)"""
         self._log("=" * 60)
         self._log("Запуск Backend (FastAPI)...")
         self._log(f"URL: http://{BACKEND_HOST}:{BACKEND_PORT}")
         self._log(f"Docs: http://{BACKEND_HOST}:{BACKEND_PORT}/docs")
-        
+
         # Проверка порта
         if self._check_port(BACKEND_PORT):
             self._log(f"Порт {BACKEND_PORT} занят!", "ERROR")
             return False
-        
+
         # Окружение для UTF-8
         env = os.environ.copy()
         env["PYTHONUTF8"] = "1"
         env["PYTHONIOENCODING"] = "utf-8"
-        
+
         # Запуск процесса
         log_file = LOG_DIR / "backend.log"
         with open(log_file, "w", encoding="utf-8") as f:
@@ -206,39 +207,39 @@ class ServiceManager:
                 env=env,
                 creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == "win32" else 0
             )
-        
+
         self._log(f"Backend запущен (PID: {self.backend_process.pid})")
-        
+
         # Ожидание доступности
         self._log(f"Ожидание готовности Backend (до {HEALTH_CHECK_TIMEOUT} сек)...")
         if not self._wait_for_port(BACKEND_PORT, HEALTH_CHECK_TIMEOUT):
             self._log("Backend не запустился вовремя!", "ERROR")
             return False
-        
+
         # Проверка health
         if not self._check_health(f"http://localhost:{BACKEND_PORT}/health"):
             self._log("Backend не отвечает на health check!", "ERROR")
             return False
-        
+
         self._log("✅ Backend готов к работе", "SUCCESS")
         return True
-    
+
     def _start_frontend(self) -> bool:
         """Запуск Frontend (Flask)"""
         self._log("=" * 60)
         self._log("Запуск Frontend (Flask)...")
         self._log(f"URL: http://{FRONTEND_HOST}:{FRONTEND_PORT}")
-        
+
         # Проверка порта
         if self._check_port(FRONTEND_PORT):
             self._log(f"Порт {FRONTEND_PORT} занят!", "ERROR")
             return False
-        
+
         # Окружение для UTF-8
         env = os.environ.copy()
         env["PYTHONUTF8"] = "1"
         env["PYTHONIOENCODING"] = "utf-8"
-        
+
         # Запуск процесса
         log_file = LOG_DIR / "frontend.log"
         with open(log_file, "w", encoding="utf-8") as f:
@@ -249,23 +250,23 @@ class ServiceManager:
                 env=env,
                 creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == "win32" else 0
             )
-        
+
         self._log(f"Frontend запущен (PID: {self.frontend_process.pid})")
-        
+
         # Ожидание доступности
         self._log(f"Ожидание готовности Frontend (до {HEALTH_CHECK_TIMEOUT} сек)...")
         if not self._wait_for_port(FRONTEND_PORT, HEALTH_CHECK_TIMEOUT):
             self._log("Frontend не запустился вовремя!", "ERROR")
             return False
-        
+
         # Проверка доступности
         if not self._check_health(f"http://localhost:{FRONTEND_PORT}/api/status"):
             self._log("Frontend не отвечает на API check!", "WARNING")
             # Это не критично, продолжаем
-        
+
         self._log("✅ Frontend готов к работе", "SUCCESS")
         return True
-    
+
     def _stop_all(self):
         """Остановка всех сервисов"""
         self._log("=" * 60)
@@ -314,7 +315,7 @@ class ServiceManager:
                     pass
 
         self._log("Все сервисы остановлены")
-    
+
     def start_all(self) -> bool:
         """Запуск всех сервисов"""
         print("\n" + "=" * 70)
@@ -323,7 +324,7 @@ class ServiceManager:
         self._log(f"Время запуска: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         self._log(f"Python: {PYTHON_EXECUTABLE}")
         self._log(f"Project: {PROJECT_ROOT}")
-        
+
         # Проверка зависимостей
         self._log("Проверка зависимостей...")
         deps_ok, missing = self._check_dependencies()
@@ -332,22 +333,22 @@ class ServiceManager:
             self._log("Установите: pip install -r requirements.txt -r requirements-api.txt", "ERROR")
             return False
         self._log("✅ Все зависимости установлены")
-        
+
         # Запуск backend
         if not self._start_backend():
             self._log("Не удалось запустить Backend!", "CRITICAL")
             self._stop_all()
             return False
-        
+
         # Небольшая задержка перед запуском frontend
         time.sleep(2)
-        
+
         # Запуск frontend
         if not self._start_frontend():
             self._log("Не удалось запустить Frontend!", "CRITICAL")
             self._stop_all()
             return False
-        
+
         # Финальная проверка
         self._log("=" * 70)
         self._log("🎉 ВСЕ СЕРВИСЫ ЗАПУЩЕНЫ!")
@@ -358,15 +359,15 @@ class ServiceManager:
         self._log(f"🔄 Sync Manager:  Интервал {SYNC_INTERVAL}с")
         self._log("=" * 70)
         self._log("Нажмите Ctrl+C для остановки всех сервисов")
-        
+
         # Открытие браузера
         try:
             webbrowser.open(f"http://{FRONTEND_HOST}:{FRONTEND_PORT}")
         except:
             pass
-        
+
         return True
-    
+
     def run(self):
         """Основной цикл работы"""
         if not self.start_all():
@@ -375,7 +376,7 @@ class ServiceManager:
         # Мониторинг процессов
         self._log("Мониторинг сервисов...")
         sync_counter = 0
-        
+
         while self.running:
             time.sleep(1)
 

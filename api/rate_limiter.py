@@ -23,7 +23,7 @@ limiter = Limiter(
 def setup_rate_limiter(app):
     """
     Настройка rate limiter для FastAPI приложения
-    
+
     Args:
         app: FastAPI приложение
     """
@@ -36,11 +36,11 @@ def setup_rate_limiter(app):
 def auth_limit(max_requests: int = 10, window: int = 60):
     """
     Лимит для auth endpoints (login, register)
-    
+
     Args:
         max_requests: Максимум запросов
         window: Окно времени в секундах
-    
+
     Returns:
         Декоратор rate limit
     """
@@ -50,11 +50,11 @@ def auth_limit(max_requests: int = 10, window: int = 60):
 def api_limit(max_requests: int = 100, window: int = 60):
     """
     Лимит для обычных API endpoints
-    
+
     Args:
         max_requests: Максимум запросов
         window: Окно времени в секундах
-    
+
     Returns:
         Декоратор rate limit
     """
@@ -64,11 +64,11 @@ def api_limit(max_requests: int = 100, window: int = 60):
 def write_limit(max_requests: int = 30, window: int = 60):
     """
     Лимит для write операций (POST, PUT, DELETE)
-    
+
     Args:
         max_requests: Максимум запросов
         window: Окно времени в секундах
-    
+
     Returns:
         Декоратор rate limit
     """
@@ -78,11 +78,11 @@ def write_limit(max_requests: int = 30, window: int = 60):
 def download_limit(max_requests: int = 20, window: int = 60):
     """
     Лимит для download endpoints
-    
+
     Args:
         max_requests: Максимум запросов
         window: Окно времени в секундах
-    
+
     Returns:
         Декоратор rate limit
     """
@@ -94,7 +94,7 @@ def download_limit(max_requests: int = 20, window: int = 60):
 def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
     """
     Кастомный обработчик превышения лимита
-    
+
     Returns:
         JSONResponse с информацией о лимите
     """
@@ -112,7 +112,7 @@ def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) -> JSO
 def get_retry_after(exc: RateLimitExceeded) -> Optional[int]:
     """
     Получение времени до сброса лимита
-    
+
     Returns:
         Количество секунд до сброса
     """
@@ -127,7 +127,7 @@ def get_retry_after(exc: RateLimitExceeded) -> Optional[int]:
                 return int(time_str)
     except:
         pass
-    
+
     return 60  # Default 1 минута
 
 
@@ -153,7 +153,7 @@ def inc_rate_limit_blocked(endpoint: str):
 def get_rate_limit_stats() -> Dict:
     """
     Получение статистики rate limit
-    
+
     Returns:
         Статистика по endpoint'ам
     """

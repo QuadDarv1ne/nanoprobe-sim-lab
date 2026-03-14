@@ -334,7 +334,7 @@ class SPMController:
         try:
             np.savetxt(filename, self.scan_data)
             print(f"Результаты сканирования сохранены в файл: {filename}")
-            
+
             # Сохраняем в базу данных
             if HAS_DB:
                 try:
@@ -353,7 +353,7 @@ class SPMController:
                     print("Результаты также сохранены в базу данных")
                 except Exception as e:
                     print(f"Предупреждение: Не удалось сохранить в БД: {e}")
-            
+
             return True
         except Exception as e:
             print(f"Ошибка при сохранении результатов сканирования: {str(e)}")
@@ -400,7 +400,7 @@ class SPMController:
             print(f"Визуализация сохранена: {save_path}")
         else:
             plt.show()
-        
+
         plt.close()
 
 
@@ -437,7 +437,7 @@ def main():
     # Контроллер и сканирование
     controller = SPMController()
     controller.set_surface(surface)
-    
+
     print(f"Запуск сканирования (параллельное: {args.parallel})...")
     controller.scan_surface(parallel=args.parallel)
 

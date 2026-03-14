@@ -48,12 +48,12 @@ async def lifespan(app: FastAPI):
 
     # Применение миграций БД
     from api.database_init import ensure_database
-    
+
     if ensure_database("data/nanoprobe.db"):
         print("[OK] Database migrations applied")
     else:
         print("[ERROR] Database initialization failed")
-    
+
     # Инициализация БД менеджера
     db_manager = DatabaseManager("data/nanoprobe.db")
     print("[OK] Database initialized")
@@ -198,26 +198,26 @@ async def health_check():
 async def detailed_health_check():
     """Детальная проверка здоровья системы"""
     import psutil
-    
+
     cpu_percent = psutil.cpu_percent(interval=0.1)
     memory = psutil.virtual_memory()
     disk = psutil.disk_usage('/')
-    
+
     health_status = "healthy"
     issues = []
-    
+
     if cpu_percent > 90:
         health_status = "warning"
         issues.append("Высокая загрузка CPU")
-    
+
     if memory.percent > 90:
         health_status = "warning"
         issues.append("Высокое использование памяти")
-    
+
     if disk.percent > 90:
         health_status = "critical"
         issues.append("Критическое заполнение диска")
-    
+
     return {
         "status": health_status,
         "timestamp": datetime.now().isoformat(),
@@ -254,7 +254,7 @@ async def detailed_health_check():
 async def realtime_metrics():
     """Метрики в реальном времени"""
     import psutil
-    
+
     return {
         "timestamp": datetime.now().isoformat(),
         "cpu_percent": psutil.cpu_percent(interval=0.1),
@@ -330,11 +330,11 @@ app.include_router(external_services.router, prefix="/api/v1", tags=["External S
 async def metrics():
     """Prometheus метрики"""
     from utils.enhanced_monitor import get_monitor
-    
+
     # Получаем метрики из enhanced monitor
     monitor = get_monitor()
     prometheus_metrics = monitor.export_prometheus_metrics()
-    
+
     from fastapi.responses import PlainTextResponse
     return PlainTextResponse(
         content=prometheus_metrics,
@@ -348,21 +348,21 @@ async def graphql_endpoint(request: Request):
     """GraphQL endpoint для запросов"""
     from api.graphql_schema import schema
     import json
-    
+
     body = await request.json()
     query = body.get("query")
     variables = body.get("variables")
     operation_name = body.get("operationName")
-    
+
     result = await schema.execute(
         query,
         variable_values=variables,
         operation_name=operation_name
     )
-    
+
     if result.errors:
         logger.error(f"GraphQL errors: {result.errors}")
-    
+
     return {"data": result.data, "errors": result.errors}
 
 
@@ -395,9 +395,9 @@ query {
 async def websocket_endpoint(websocket: WebSocket):
     """WebSocket для real-time обновлений с поддержкой каналов"""
     await websocket.accept()
-    
+
     import psutil
-    
+
     subscribed_channels = set()
     last_pong = datetime.now()
 
@@ -468,15 +468,15 @@ async def websocket_endpoint(websocket: WebSocket):
 async def push_realtime_updates():
     """Периодическая отправка обновлений подписчикам"""
     import psutil
-    
+
     while True:
         try:
             await asyncio.sleep(5)  # Каждые 5 секунд
-            
+
             # Здесь должна быть интеграция с ConnectionManager для рассылки
             # Пока просто логируем
             logger.debug("Realtime update tick")
-            
+
         except Exception as e:
             logger.error(f"Error in push_realtime_updates: {e}")
 

@@ -196,7 +196,7 @@ class Mutation:
             width=width,
             height=height
         )
-        
+
         results = db.get_scan_results(limit=1)
         if results:
             r = results[0]
@@ -210,7 +210,7 @@ class Mutation:
                 file_path=r.get('file_path'),
                 created_at=r.get('created_at', '')
             )
-        
+
         return Scan(
             id=scan_id,
             timestamp=datetime.now().isoformat(),

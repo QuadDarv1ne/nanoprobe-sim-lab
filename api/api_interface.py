@@ -137,7 +137,7 @@ class NanoprobeAPI:
         """
         try:
             data = request.get_json()
-            
+
             # Валидация входных данных
             is_valid, error_message = DataValidator.validate_scan_params(data)
             if not is_valid:
@@ -194,7 +194,7 @@ class NanoprobeAPI:
         """
         try:
             data = request.get_json()
-            
+
             # Валидация входных данных
             is_valid, error_message = DataValidator.validate_image_data(data)
             if not is_valid:
@@ -246,7 +246,7 @@ class NanoprobeAPI:
         """
         try:
             data = request.get_json()
-            
+
             # Валидация входных данных
             is_valid, error_message = DataValidator.validate_audio_data(data)
             if not is_valid:
@@ -291,7 +291,7 @@ class NanoprobeAPI:
     def start_simulation(self) -> Tuple[Response, int]:
         """
         Запускает новую симуляцию
-        
+
         Returns:
             JSON ответ с результатом запуска
         """
@@ -417,7 +417,7 @@ class NanoprobeAPI:
 
         Args:
             simulation_id: ID симуляции
-            
+
         Returns:
             JSON ответ со статусом симуляции
         """
@@ -433,7 +433,7 @@ class NanoprobeAPI:
 
         Args:
             simulation_id: ID симуляции
-            
+
         Returns:
             JSON ответ с результатами симуляции
         """
@@ -454,7 +454,7 @@ class NanoprobeAPI:
     def upload_data(self) -> Tuple[Response, int]:
         """
         Загружает данные в систему
-        
+
         Returns:
             JSON ответ с результатом загрузки
         """
@@ -488,7 +488,7 @@ class NanoprobeAPI:
     def list_data(self) -> Tuple[Response, int]:
         """
         Возвращает список доступных данных
-        
+
         Returns:
             JSON ответ со списком файлов
         """
@@ -523,7 +523,7 @@ class NanoprobeAPI:
     def get_system_info(self) -> Response:
         """
         Возвращает информацию о системе
-        
+
         Returns:
             JSON ответ с информацией о системе
         """
@@ -560,7 +560,7 @@ class NanoprobeAPI:
     def get_system_status(self) -> Response:
         """
         Возвращает статус системы
-        
+
         Returns:
             JSON ответ со статусом системы
         """

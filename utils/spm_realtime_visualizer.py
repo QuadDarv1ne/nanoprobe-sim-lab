@@ -169,7 +169,7 @@ class RealTimeSPMVisualizer:
     def create_figure(self, title: str = "СЗМ Real-time Визуализация"):
         """Создание фигуры для визуализации"""
         plt.close('all')
-        
+
         self.fig = plt.figure(figsize=self.figsize)
         self.fig.suptitle(title, fontsize=14, fontweight='bold')
 
@@ -328,6 +328,7 @@ class RealTimeSPMVisualizer:
             self.initialize_plot()
 
         def animate(frame):
+            """TODO: Add description"""
             if data_source:
                 try:
                     new_data = data_source(frame)

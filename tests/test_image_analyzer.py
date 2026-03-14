@@ -141,7 +141,7 @@ class TestImageProcessorExtended(unittest.TestCase):
         self.processor = ImageProcessor()
         # Создаем тестовое изображение
         self.test_image = np.random.randint(0, 255, (50, 50, 3), dtype=np.uint8)
-        
+
         import tempfile
         self.temp_file = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
         from PIL import Image
@@ -168,7 +168,7 @@ class TestImageProcessorExtended(unittest.TestCase):
         """Тестирует получение статистики изображения"""
         self.processor.load_image(self.temp_file.name)
         stats = self.processor.get_statistics()
-        
+
         self.assertIsNotNone(stats)
         self.assertIn('mean', stats)
         self.assertIn('std', stats)
@@ -180,7 +180,7 @@ class TestImageProcessorExtended(unittest.TestCase):
         """Тестирует получение гистограммы"""
         self.processor.load_image(self.temp_file.name)
         hist = self.processor.get_histogram()
-        
+
         self.assertIsNotNone(hist)
         self.assertEqual(hist.shape, (256, 1))
 
@@ -208,9 +208,9 @@ class TestImageProcessorExtended(unittest.TestCase):
         """Тестирует получение метаданных"""
         self.processor.load_image(self.temp_file.name)
         self.processor.apply_noise_reduction('median')
-        
+
         metadata = self.processor.get_metadata()
-        
+
         self.assertIn('filepath', metadata)
         self.assertIn('filter_applied', metadata)
         self.assertEqual(metadata['filter_applied'], 'median')

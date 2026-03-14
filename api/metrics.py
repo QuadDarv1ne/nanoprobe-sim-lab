@@ -31,20 +31,24 @@ except ImportError:
     REGISTRY = None
     # Заглушки если prometheus_client не установлен
     class Counter:
+        """TODO: Add description"""
         def __init__(self, *args, **kwargs): pass
         def inc(self, *args, **kwargs): pass
         def labels(self, *args, **kwargs): return self
     class Histogram:
+        """TODO: Add description"""
         def __init__(self, *args, **kwargs): pass
         def observe(self, *args, **kwargs): pass
         def labels(self, *args, **kwargs): return self
     class Gauge:
+        """TODO: Add description"""
         def __init__(self, *args, **kwargs): pass
         def set(self, *args, **kwargs): pass
         def inc(self, *args, **kwargs): pass
         def dec(self, *args, **kwargs): pass
         def labels(self, *args, **kwargs): return self
     class Summary:
+        """TODO: Add description"""
         def __init__(self, *args, **kwargs): pass
         def observe(self, *args, **kwargs): pass
 
@@ -175,6 +179,7 @@ class PrometheusMiddleware:
     """
 
     def __init__(self, app):
+        """TODO: Add description"""
         self.app = app
 
     async def __call__(self, scope, receive, send):
@@ -242,9 +247,11 @@ def track_metrics(endpoint_name: str = None):
     Использование:
         @track_metrics('analyze_defects')
         def analyze_defects(...):
+            """TODO: Add description"""
             pass
     """
     def decorator(func):
+        """TODO: Add description"""
         @wraps(func)
         async def async_wrapper(*args, **kwargs):
             name = endpoint_name or func.__name__
@@ -264,6 +271,7 @@ def track_metrics(endpoint_name: str = None):
 
         @wraps(func)
         def sync_wrapper(*args, **kwargs):
+            """TODO: Add description"""
             name = endpoint_name or func.__name__
             start_time = time.time()
 

@@ -37,27 +37,29 @@ class RateLimiter:
         return cls._instance
 
     def __init__(self):
+        """TODO: Add description"""
         if hasattr(self, '_initialized') and self._initialized:
             return
         self.requests: Dict[str, RateLimitInfo] = defaultdict(RateLimitInfo)
         self._cleanup_lock = threading.Lock()
         self._initialized = True
-        
+
         # Конфигурация прогрессивной блокировки
         self.progressive_blocking = True
         self.block_multipliers = [2, 5, 15, 60]  # множители блокировки в минутах
 
     def is_allowed(self, key: str, max_requests: int, window_seconds: int) -> bool:
+        """TODO: Add description"""
         now = time.time()
         window_start = now - window_seconds
 
         with self._cleanup_lock:
             info = self.requests[key]
-            
+
             # Проверка блокировки
             if info.blocked_until > now:
                 return False
-            
+
             # Очистка старых запросов
             info.requests = [ts for ts in info.requests if ts > window_start]
 
@@ -74,16 +76,17 @@ class RateLimiter:
             return True
 
     def get_retry_after(self, key: str, max_requests: int, window_seconds: int) -> int:
+        """TODO: Add description"""
         info = self.requests.get(key)
         if not info:
             return 0
-        
+
         now = time.time()
-        
+
         # Если заблокирован
         if info.blocked_until > now:
             return int(info.blocked_until - now)
-        
+
         if not info.requests:
             return 0
 
@@ -103,7 +106,7 @@ class RateLimiter:
                 if info.blocked_until < now:
                     info.blocked_until = 0.0
                     info.violation_count = 0
-                
+
                 info.requests = [ts for ts in info.requests if ts > cutoff]
                 if not info.requests and info.blocked_until == 0:
                     empty_keys.append(key)
@@ -124,7 +127,7 @@ class RateLimiter:
         """Получение статуса rate limiting"""
         now = time.time()
         info = self.requests.get(key)
-        
+
         if not info:
             return {
                 "requests_made": 0,
@@ -132,11 +135,11 @@ class RateLimiter:
                 "blocked": False,
                 "retry_after": 0,
             }
-        
+
         window_start = now - window_seconds
         requests_in_window = len([ts for ts in info.requests if ts > window_start])
         blocked = info.blocked_until > now
-        
+
         return {
             "requests_made": requests_in_window,
             "requests_remaining": max(0, max_requests - requests_in_window),
@@ -164,6 +167,7 @@ def rate_limit(max_requests: int = 10, window_seconds: int = 60):
         window_seconds: Размер окна в секундах
     """
     def decorator(func):
+        """TODO: Add description"""
         @wraps(func)
         async def wrapper(request: Request, *args, **kwargs):
             client_ip = request.client.host

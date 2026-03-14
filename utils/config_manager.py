@@ -38,7 +38,7 @@ class ConfigManager:
         """
         if hasattr(self, '_initialized') and self._initialized:
             return
-            
+
         self.config_file: Path
         self.config: Dict[str, Any]
         self._last_modified: Optional[datetime] = None

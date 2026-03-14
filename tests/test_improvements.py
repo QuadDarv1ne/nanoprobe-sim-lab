@@ -175,7 +175,7 @@ class TestEnhancedMonitor:
     def test_format_uptime(self):
         """Тест форматирования аптайма"""
         from utils.enhanced_monitor import format_uptime
-        
+
         # Тест дней
         assert "дн" in format_uptime(86400)
         # Тест часов
@@ -198,11 +198,11 @@ class TestIntegration:
         # FastAPI health
         api_health = requests.get(f"{BASE_API}/health", timeout=5)
         assert api_health.status_code == 200
-        
+
         # FastAPI detailed health
         api_detailed = requests.get(f"{BASE_API}/health/detailed", timeout=5)
         assert api_detailed.status_code == 200
-        
+
         # Flask main page
         flask_main = requests.get(f"{BASE_FLASK}/", timeout=5)
         assert flask_main.status_code == 200

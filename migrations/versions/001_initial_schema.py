@@ -1,7 +1,7 @@
 """Initial schema
 
 Revision ID: initial
-Revises: 
+Revises:
 Create Date: 2026-03-12
 
 """
@@ -18,6 +18,7 @@ depends_on = None
 
 def upgrade():
     # Таблица результатов сканирований
+    """TODO: Add description"""
     op.create_table('scan_results',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('timestamp', sa.Text(), nullable=False),
@@ -162,6 +163,7 @@ def upgrade():
 
 
 def downgrade():
+    """TODO: Add description"""
     op.drop_index('idx_metrics_timestamp', table_name='performance_metrics')
     op.drop_table('performance_metrics')
     op.drop_index('idx_batch_status', table_name='batch_jobs')

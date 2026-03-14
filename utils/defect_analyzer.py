@@ -654,7 +654,7 @@ class AdvancedDefectAnalyzer:
         # Детектирование разными методами
         if_detector = DefectDetector('isolation_forest')
         km_detector = DefectDetector('kmeans')
-        
+
         if_result = if_detector.detect_defects(image)
         km_result = km_detector.detect_defects(image)
 
