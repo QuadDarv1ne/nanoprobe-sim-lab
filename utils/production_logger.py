@@ -298,16 +298,13 @@ def log_function_call(logger: logging.Logger = None):
     Использование:
         @log_function_call(api_logger.get_logger())
         def my_function():
-            """TODO: Add description"""
             pass
     """
     def decorator(func):
-        """TODO: Add description"""
         import functools
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            """TODO: Add description"""
             log = logger or get_logger().get_logger()
             log.debug(f"Вызов {func.__name__} с args={args}, kwargs={kwargs}")
 
