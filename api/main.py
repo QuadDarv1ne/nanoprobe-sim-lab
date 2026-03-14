@@ -134,7 +134,6 @@ app = FastAPI(
 _cors_env = os.getenv("CORS_ORIGINS", "")
 if _cors_env.startswith("["):
     # JSON формат: ["url1","url2"]
-    import json  # noqa: F401
     CORS_ORIGINS = json.loads(_cors_env)
 else:
     # CSV формат: url1,url2,url3

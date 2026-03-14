@@ -64,7 +64,7 @@ def proxy_request(method, endpoint, **kwargs):
         )
 
         return response
-    except requests.RequestException as e:
+    except requests.RequestException:
         return None
 
 

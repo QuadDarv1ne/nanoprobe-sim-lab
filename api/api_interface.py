@@ -200,20 +200,18 @@ class NanoprobeAPI:
             if not is_valid:
                 return jsonify(ResponseBuilder.validation_error("image_data", error_message)), 400
 
-            image_data = data.get('image_data')  # base64 encoded
-            filter_type = data.get('filter', 'gaussian')
-
             # Декодируем изображение из base64
-            # image = self.decode_base64_image(image_data)
+            # image = self.decode_base64_image(data.get('image_data'))
 
             # Применяем фильтр
-            # processed_image = self.image_processor.apply_noise_reduction(filter_type)
+            # processed_image = self.image_processor.apply_noise_reduction(data.get('filter', 'gaussian'))
 
             # Для демонстрации возвращаем фиктивный результат
             processed_data = np.random.rand(100, 100).tolist()
 
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             results_filename = f"processed_image_{timestamp}.json"
+            filter_type = data.get('filter', 'gaussian')
 
             with open(results_filename, 'w', encoding='utf-8') as f:
                 json.dump({
@@ -252,20 +250,18 @@ class NanoprobeAPI:
             if not is_valid:
                 return jsonify(ResponseBuilder.validation_error("audio_data", error_message)), 400
 
-            audio_data = data.get('audio_data')  # base64 encoded
-            mode = data.get('mode', 'MartinM1')
-
             # Декодируем аудио из base64
-            # audio = self.decode_base64_audio(audio_data)
+            # audio = self.decode_base64_audio(data.get('audio_data'))
 
             # Декодируем SSTV
-            # decoded_image = self.sstv_decoder.decode_from_audio(audio)
+            # decoded_image = self.sstv_decoder.decode_from_audio(audio, data.get('mode', 'MartinM1'))
 
             # Для демонстрации возвращаем фиктивное изображение
             decoded_image_data = np.random.rand(320, 240, 3).tolist()
 
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             results_filename = f"sstv_decoded_{timestamp}.json"
+            mode = data.get('mode', 'MartinM1')
 
             with open(results_filename, 'w', encoding='utf-8') as f:
                 json.dump({
@@ -598,7 +594,7 @@ def main():
     print("=== API ИНТЕРФЕЙС ПРОЕКТА ===")
 
     # Создаем API интерфейс
-    api = NanoprobeAPI()
+    NanoprobeAPI()
 
     print("✓ API интерфейс инициализирован")
     print("Доступные маршруты:")

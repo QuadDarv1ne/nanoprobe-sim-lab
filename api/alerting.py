@@ -510,25 +510,6 @@ class AlertManager:
         """Получение истории алертов"""
         return self.alert_history[-limit:]
 
-    def get_alert_statistics(self) -> Dict:
-        """Получение статистики алертов"""
-        stats = {
-            'total': len(self.alert_history),
-            'firing': sum(1 for a in self.alert_history if a['status'] == 'firing'),
-            'resolved': sum(1 for a in self.alert_history if a['status'] == 'resolved'),
-            'by_severity': {},
-            'by_name': {},
-        }
-
-        for alert in self.alert_history:
-            severity = alert['severity']
-            name = alert['alert_name']
-
-            stats['by_severity'][severity] = stats['by_severity'].get(severity, 0) + 1
-            stats['by_name'][name] = stats['by_name'].get(name, 0) + 1
-
-        return stats
-
 
 # Глобальный экземпляр
 _alert_manager: Optional[AlertManager] = None

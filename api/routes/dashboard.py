@@ -129,8 +129,7 @@ async def get_dashboard_stats(
             return DashboardStats(**cached)
 
     try:
-        monitor = get_monitor()
-        stats = monitor.get_statistics()
+        get_monitor()
         storage = get_storage_stats()
 
         # Интеграция с БД для реальных данных

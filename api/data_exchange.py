@@ -604,7 +604,7 @@ def main():
 
     # Конвертируем в стандартный формат
     surface_standard = SurfaceDataConverter.numpy_to_standard(test_surface)
-    print(f"✓ Поверхность сконвертирована в стандартный формат")
+    print("✓ Поверхность сконвертирована в стандартный формат")
 
     # Проверяем формат
     is_valid = DataFormatSpec.validate_format(surface_standard, DataFormatSpec.FORMAT_SURFACE_DATA)
@@ -612,7 +612,7 @@ def main():
 
     # Конвертируем обратно
     surface_back = SurfaceDataConverter.standard_to_numpy(surface_standard)
-    print(f"✓ Поверхность восстановлена из стандартного формата")
+    print("✓ Поверхность восстановлена из стандартного формата")
 
     # Проверяем, что данные совпадают
     arrays_equal = np.array_equal(test_surface, surface_back)
