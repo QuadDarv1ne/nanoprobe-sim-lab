@@ -24,6 +24,7 @@ from api.schemas import (
 )
 from api.dependencies import rate_limit, get_current_user
 from api.error_handlers import AuthenticationError, ValidationError
+from api.rate_limiter import auth_limit
 
 logger = logging.getLogger(__name__)
 
@@ -188,6 +189,7 @@ def revoke_refresh_token(jti: str):
     },
 )
 @rate_limit(max_requests=5, window_seconds=60)
+@auth_limit(max_requests=10, window=60)
 async def login(request: Request, login_data: LoginRequest):
     """Вход в систему"""
     user = USERS_DB.get(login_data.username)

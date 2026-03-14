@@ -23,6 +23,9 @@ websockets>=12.0
 # Кэширование
 redis>=5.0.0
 
+# Rate Limiting
+slowapi>=0.1.8
+
 # Для production
 gunicorn>=21.2.0
 aiofiles>=23.2.1

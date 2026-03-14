@@ -168,6 +168,14 @@ try:
 except ImportError:
     pass
 
+# Rate Limiting для защиты от DDoS/bruteforce
+try:
+    from api.rate_limiter import setup_rate_limiter
+    setup_rate_limiter(app)
+    print("[OK] Rate limiting enabled")
+except ImportError as e:
+    print(f"[WARN] Rate limiting disabled: {e}")
+
 
 # Регистрация централизованных обработчиков ошибок
 from api.error_handlers import register_error_handlers
