@@ -1,18 +1,18 @@
 """Модуль аналитики производительности для проекта Лаборатория моделирования нанозонда."""
 
+import os
+import sys
 import time
 import threading
 import json
-from pathlib import Path
-from typing import Dict, Any, List
-from datetime import datetime, timedelta
 import statistics
-import matplotlib.pyplot as plt
+from pathlib import Path
+from datetime import datetime, timedelta
+from typing import Dict, Any, List
 from dataclasses import dataclass
-import numpy as np
 
-import sys
-import os
+import numpy as np
+import matplotlib.pyplot as plt
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

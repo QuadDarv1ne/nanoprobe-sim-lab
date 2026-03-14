@@ -1,17 +1,17 @@
 """Модуль предиктивной аналитики для проекта Лаборатория моделирования нанозонда."""
 
+import os
+import sys
 import time
 import threading
+import pickle
 from pathlib import Path
-from typing import Dict, Any, List, Tuple, Optional
 from datetime import datetime, timedelta
+from typing import Dict, Any, List, Tuple, Optional
+from dataclasses import dataclass
+
 import numpy as np
 from scipy import stats
-from dataclasses import dataclass
-import pickle
-
-import sys
-import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

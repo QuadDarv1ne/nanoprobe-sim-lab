@@ -1,14 +1,14 @@
 """Модуль оркестратора оптимизации для проекта Лаборатория моделирования нанозонда."""
 
-import time
-from pathlib import Path
-from typing import Dict, Any, List
-from datetime import datetime
-import json
-import psutil
-
-import sys
 import os
+import sys
+import time
+import json
+from pathlib import Path
+from datetime import datetime
+from typing import Dict, Any, List
+
+import psutil
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

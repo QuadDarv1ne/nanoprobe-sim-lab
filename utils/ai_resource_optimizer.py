@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-#!/usr/bin/env python3
 
 """
 Модуль ИИ-оптимизатора ресурсов для проекта Лаборатория моделирования нанозонда
@@ -7,18 +6,18 @@
 ресурсов на основе машинного обучения и адаптивных алгоритмов.
 """
 
+import os
+import sys
 import time
 import threading
-import numpy as np
+import pickle
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime
 from dataclasses import dataclass
-import pickle
 from collections import deque
+from typing import Dict, Any, List, Optional, Tuple
 
-import sys
-import os
+import numpy as np
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
