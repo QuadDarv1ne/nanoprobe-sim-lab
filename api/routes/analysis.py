@@ -11,12 +11,11 @@ from api.schemas import (
     DefectAnalysisRequest,
     DefectAnalysisResponse,
     DefectInfo,
-    ErrorResponse,
 )
 from api.dependencies import get_db
 from api.error_handlers import NotFoundError, ValidationError
 from utils.database import DatabaseManager
-from utils.defect_analyzer import DefectAnalysisPipeline, analyze_defects
+from utils.defect_analyzer import DefectAnalysisPipeline
 
 
 router = APIRouter()

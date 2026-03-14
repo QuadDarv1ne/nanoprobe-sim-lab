@@ -13,7 +13,7 @@ from urllib3.util.retry import Retry
 from datetime import datetime
 
 from api.error_handlers import NotFoundError
-from utils.circuit_breaker import circuit_breaker, get_circuit_breaker
+from utils.circuit_breaker import circuit_breaker
 
 logger = logging.getLogger(__name__)
 

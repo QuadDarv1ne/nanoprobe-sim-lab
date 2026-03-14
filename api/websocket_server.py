@@ -6,7 +6,6 @@ from datetime import datetime
 import threading
 import time
 import psutil
-import logging
 
 from utils.config_manager import ConfigManager
 from utils.logger import setup_project_logging

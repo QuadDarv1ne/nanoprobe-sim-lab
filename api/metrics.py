@@ -6,8 +6,6 @@ Prometheus метрики для Nanoprobe FastAPI приложения
 import time
 import os
 from functools import wraps
-from collections import defaultdict
-from typing import Dict, Optional
 
 try:
     from prometheus_client import (
