@@ -3,9 +3,8 @@ API роуты для пакетной обработки
 """
 
 from fastapi import APIRouter, Depends, Query, Body
-from typing import List, Optional, Dict, Any
 
-from api.schemas import ErrorResponse, BatchJobCreate, BatchJobResponse
+from api.schemas import ErrorResponse
 from api.dependencies import get_batch_processor
 from api.error_handlers import NotFoundError, ValidationError
 from utils.batch_processor import BatchProcessor

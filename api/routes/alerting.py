@@ -3,7 +3,6 @@ API роуты для алертинга и мониторинга
 """
 
 from fastapi import APIRouter, Depends, Query, Body
-from typing import List, Optional, Dict, Any
 from datetime import datetime
 
 from api.schemas import ErrorResponse

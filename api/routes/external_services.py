@@ -4,7 +4,7 @@ External Services API routes с Circuit Breaker
 """
 
 from fastapi import APIRouter, Query
-from typing import Optional, Dict, Any
+from typing import Optional
 import logging
 import os
 import requests

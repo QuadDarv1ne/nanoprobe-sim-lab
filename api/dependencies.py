@@ -5,7 +5,7 @@
 
 from fastapi import HTTPException, status, Request, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from typing import Optional, Callable
+from typing import Optional
 from functools import wraps
 from utils.database import DatabaseManager
 from utils.redis_cache import RedisCache

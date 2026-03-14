@@ -7,9 +7,7 @@ import time
 import os
 from functools import wraps
 from collections import defaultdict
-from datetime import datetime
-from typing import Dict, Optional, List
-from threading import Lock
+from typing import Dict, Optional
 
 try:
     from prometheus_client import (

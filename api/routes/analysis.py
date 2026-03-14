@@ -2,8 +2,7 @@
 API роуты для анализа дефектов и изображений
 """
 
-from fastapi import APIRouter, Depends, status
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, Depends
 from pathlib import Path
 from datetime import datetime
 import uuid
