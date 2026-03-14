@@ -5,7 +5,7 @@ FastAPI REST API для Nanoprobe Simulation Lab
 
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import Optional, List, Dict, Any
+from typing import Optional
 
 import asyncio
 import json
@@ -16,7 +16,6 @@ import uvicorn
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi import status
 
 from api.error_handlers import register_error_handlers, ValidationError
 
