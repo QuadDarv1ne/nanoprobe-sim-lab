@@ -4,7 +4,6 @@ GraphQL API routes для Nanoprobe Sim Lab
 
 from fastapi import APIRouter
 from typing import Optional, Dict, Any
-import asyncio
 
 from api.error_handlers import DatabaseError
 

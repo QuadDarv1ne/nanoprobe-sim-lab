@@ -1,7 +1,7 @@
 """Модуль форматов обмена данными для проекта Лаборатория моделирования нанозонда."""
 
 import numpy as np
-from typing import Dict, Any, List, Tuple, Optional
+from typing import Dict, Any, List, Tuple
 from datetime import datetime
 import base64
 from abc import ABC, abstractmethod

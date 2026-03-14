@@ -1,12 +1,11 @@
 """WebSocket сервер для realtime обновлений дашборда."""
 
-from flask import Flask, request
+from flask import Flask
 from flask_socketio import SocketIO, emit
 from datetime import datetime
 import threading
 import time
 import psutil
-import numpy as np
 import logging
 
 from utils.config_manager import ConfigManager

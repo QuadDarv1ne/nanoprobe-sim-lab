@@ -2,8 +2,8 @@
 API роуты для управления симуляциями
 """
 
-from fastapi import APIRouter, Depends, Query, status
-from typing import List, Optional
+from fastapi import APIRouter, Depends, Query
+from typing import Optional
 import uuid
 
 from api.schemas import (

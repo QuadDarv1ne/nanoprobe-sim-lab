@@ -3,8 +3,8 @@ API роуты для управления сканированиями
 CRUD операции для результатов сканирований
 """
 
-from fastapi import APIRouter, Depends, Query, Response, status
-from typing import List, Optional
+from fastapi import APIRouter, Depends, Query, Response
+from typing import Optional
 
 from api.schemas import (
     ScanCreate,

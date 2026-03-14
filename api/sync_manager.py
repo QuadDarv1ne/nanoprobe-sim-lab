@@ -3,13 +3,11 @@
 Централизованное управление WebSocket и API интеграцией
 """
 
-import os
 import asyncio
 import aiohttp
 import json
 from datetime import datetime
 from typing import Dict, Set, Optional, Any
-from pathlib import Path
 import logging
 
 logging.basicConfig(level=logging.INFO)

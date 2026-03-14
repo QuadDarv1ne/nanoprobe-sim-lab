@@ -4,7 +4,7 @@ JWT токен, логин, регистрация с refresh token rotation
 Redis integration для персистентного хранения токенов
 """
 
-from fastapi import APIRouter, Depends, status, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Set

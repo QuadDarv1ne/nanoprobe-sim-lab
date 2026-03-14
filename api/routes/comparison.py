@@ -2,7 +2,7 @@
 API роуты для сравнения поверхностей
 """
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends
 from datetime import datetime
 import uuid
 from pathlib import Path

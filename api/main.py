@@ -5,8 +5,7 @@ FastAPI REST API для Nanoprobe Simulation Lab
 
 from contextlib import asynccontextmanager
 from datetime import datetime
-from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 import asyncio
 import json
@@ -14,20 +13,15 @@ import logging
 import os
 
 import uvicorn
-from fastapi import Depends, FastAPI, Request, status, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from api.error_handlers import ValidationError, register_error_handlers
+from api.error_handlers import register_error_handlers
 
 # Импорт существующих утилит
 from utils.database import DatabaseManager
-from utils.defect_analyzer import DefectAnalysisPipeline, analyze_defects
-from utils.surface_comparator import SurfaceComparator
-from utils.pdf_report_generator import ScientificPDFReport
-from utils.batch_processor import BatchProcessor
 from utils.redis_cache import RedisCache
 
 # Импорты роутов
@@ -39,7 +33,6 @@ logger = logging.getLogger(__name__)
 # Глобальные переменные
 db_manager: Optional[DatabaseManager] = None
 redis_cache: Optional[RedisCache] = None
-security = HTTPBearer()
 
 
 @asynccontextmanager

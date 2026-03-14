@@ -9,7 +9,6 @@ from slowapi.errors import RateLimitExceeded
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from typing import Dict, Optional
-import time
 
 
 # Лимитер с использованием Redis (если доступен) или in-memory

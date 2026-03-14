@@ -1,14 +1,12 @@
 """Модуль валидации данных для API проекта Nanoprobe Simulation Lab."""
 
-from typing import Dict, Any, List, Optional, Tuple
-from datetime import datetime
+from typing import Dict, Any, Optional
 
 
 class ValidationError(Exception):
     """Исключение валидации."""
 
     def __init__(self, message: str, field: str = None):
-        """TODO: Add description"""
         self.message = message
         self.field = field
         super().__init__(self.message)

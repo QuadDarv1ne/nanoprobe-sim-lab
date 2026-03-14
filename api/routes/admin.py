@@ -3,14 +3,12 @@
 Управление пользователями, системные настройки, мониторинг
 """
 
-from fastapi import APIRouter, Depends, status
-from typing import List, Dict, Any
+from fastapi import APIRouter, Depends
 from datetime import datetime
 import psutil
 import os
 from pathlib import Path
 
-from api.schemas import ErrorResponse
 from api.dependencies import get_current_user, require_admin
 from api.dependencies import get_redis_cache, get_batch_processor
 from api.error_handlers import AuthorizationError, NotFoundError, ValidationError
