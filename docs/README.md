@@ -74,6 +74,12 @@ Advanced topics for developers and administrators.
 | [Performance Monitoring](40-performance-monitoring.md) | Prometheus metrics, Grafana dashboards |
 | [Mobile Application](41-mobile-application.md) | Next.js PWA mobile dashboard |
 
+### Category 50-59: Deployment
+
+| Document | Description |
+|----------|-------------|
+| [Deployment Guide](50-deployment-guide.md) | Vercel, Railway, Render, Docker, VPS |
+
 ---
 
 ## 🔗 Quick Links
