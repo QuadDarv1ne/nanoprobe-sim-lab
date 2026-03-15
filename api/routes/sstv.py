@@ -112,16 +112,16 @@ async def get_iss_schedule(
     # Проверяем кэш
     cache_key = f"iss_schedule:{hours_ahead}:{min_elevation}"
     redis_cache = get_redis_cache()
-    
+
     if redis_cache and REDIS_AVAILABLE:
-        cached = await redis_cache.get(cache_key)
+        cached = redis_cache.get(cache_key)
         if cached:
             return {
                 "status": "success",
                 "cached": True,
                 "data": cached
             }
-    
+
     # Получаем предсказания
     try:
         passes = tracker.get_pass_predictions(
@@ -129,7 +129,7 @@ async def get_iss_schedule(
             hours_ahead=hours_ahead,
             min_elevation=min_elevation
         )
-        
+
         # Форматируем результат
         result = []
         for pass_info in passes:
@@ -141,10 +141,10 @@ async def get_iss_schedule(
                 "duration_minutes": pass_info['duration_minutes'],
                 "mode": "SSTV Martin 1" if pass_info['frequency'] == 145.800 else "Unknown"
             })
-        
+
         # Кэшируем на 5 минут
         if redis_cache and REDIS_AVAILABLE:
-            await redis_cache.set(cache_key, result, expire=300)
+            redis_cache.set(cache_key, result, expire=300)
         
         return {
             "status": "success",
@@ -172,26 +172,26 @@ async def get_iss_next_pass():
     # Проверяем кэш
     cache_key = "iss_next_pass"
     redis_cache = get_redis_cache()
-    
+
     if redis_cache and REDIS_AVAILABLE:
-        cached = await redis_cache.get(cache_key)
+        cached = redis_cache.get(cache_key)
         if cached:
             return {
                 "status": "success",
                 "cached": True,
                 "data": cached
             }
-    
+
     try:
         next_pass = tracker.get_next_pass('iss')
-        
+
         if not next_pass:
             return {
                 "status": "success",
                 "message": "No passes found in next 24 hours",
                 "data": None
             }
-        
+
         result = {
             "aos": next_pass['aos'].isoformat(),
             "los": next_pass['los'].isoformat(),
@@ -200,10 +200,10 @@ async def get_iss_next_pass():
             "duration_minutes": next_pass['duration_minutes'],
             "time_until_aos": str(next_pass['aos'] - datetime.now())
         }
-        
+
         # Кэшируем на 2 минуты
         if redis_cache and REDIS_AVAILABLE:
-            await redis_cache.set(cache_key, result, expire=120)
+            redis_cache.set(cache_key, result, expire=120)
         
         return {
             "status": "success",
@@ -230,22 +230,22 @@ async def get_iss_current_position():
     # Проверяем кэш (позиция обновляется каждые 30 секунд)
     cache_key = "iss_position"
     redis_cache = get_redis_cache()
-    
+
     if redis_cache and REDIS_AVAILABLE:
-        cached = await redis_cache.get(cache_key)
+        cached = redis_cache.get(cache_key)
         if cached:
             return {
                 "status": "success",
                 "cached": True,
                 "data": cached
             }
-    
+
     try:
         position = tracker.get_current_position('iss')
-        
+
         if not position:
             raise HTTPException(status_code=404, detail="ISS position not available")
-        
+
         result = {
             "latitude": position['latitude'],
             "longitude": position['longitude'],
@@ -254,10 +254,10 @@ async def get_iss_current_position():
             "footprint_km": position['footprint_km'],
             "timestamp": datetime.now().isoformat()
         }
-        
+
         # Кэшируем на 30 секунд
         if redis_cache and REDIS_AVAILABLE:
-            await redis_cache.set(cache_key, result, expire=30)
+            redis_cache.set(cache_key, result, expire=30)
         
         return {
             "status": "success",
