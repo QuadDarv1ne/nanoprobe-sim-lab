@@ -15,7 +15,7 @@ from api.schemas import (
 )
 from api.dependencies import get_db
 from api.error_handlers import ValidationError, DatabaseError, NotFoundError
-from utils.database import DatabaseManager
+from utils.database.database import DatabaseManager
 from utils.pdf_report_generator import ScientificPDFReport
 
 

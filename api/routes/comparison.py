@@ -15,7 +15,7 @@ from api.schemas import (
     ComparisonMetrics,
 )
 from api.dependencies import get_db
-from utils.database import DatabaseManager
+from utils.database.database import DatabaseManager
 from utils.surface_comparator import SurfaceComparator
 
 

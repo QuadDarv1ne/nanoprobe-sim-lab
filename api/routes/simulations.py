@@ -13,8 +13,8 @@ from api.schemas import (
 )
 from api.dependencies import get_db, get_redis_cache
 from api.error_handlers import NotFoundError
-from utils.database import DatabaseManager
-from utils.redis_cache import RedisCache
+from utils.database.database import DatabaseManager
+from utils.caching.redis_cache import RedisCache
 
 
 router = APIRouter()
