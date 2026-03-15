@@ -3,12 +3,15 @@
 Обеспечивает взаимодействие между Flask веб-интерфейсом и FastAPI REST API
 """
 
+import logging
 import os
 import requests
 from typing import Optional, Dict, Any, List
 from datetime import datetime
 import jwt
 import json
+
+logger = logging.getLogger(__name__)
 
 
 class FlaskFastAPIIntegration:
@@ -75,7 +78,7 @@ class FlaskFastAPIIntegration:
                 return tokens
             return None
         except requests.RequestException as e:
-            print(f"Ошибка аутентификации: {e}")
+            logger.error(f"Ошибка аутентификации: {e}")
             return None
 
     def get_token(self) -> Optional[str]:
@@ -134,11 +137,11 @@ class FlaskFastAPIIntegration:
                 except json.JSONDecodeError:
                     return {"status": "success"}
             else:
-                print(f"Ошибка FastAPI [{response.status_code}]: {response.text}")
+                logger.error(f"Ошибка FastAPI [{response.status_code}]: {response.text}")
                 return None
 
         except requests.RequestException as e:
-            print(f"Ошибка вызова FastAPI: {e}")
+            logger.error(f"Ошибка вызова FastAPI: {e}")
             return None
 
     # ==================== Flask вызовы ====================
@@ -174,11 +177,11 @@ class FlaskFastAPIIntegration:
             if response.status_code == 200:
                 return response.json()
             else:
-                print(f"Ошибка Flask [{response.status_code}]: {response.text}")
+                logger.error(f"Ошибка Flask [{response.status_code}]: {response.text}")
                 return None
 
         except requests.RequestException as e:
-            print(f"Ошибка вызова Flask: {e}")
+            logger.error(f"Ошибка вызова Flask: {e}")
             return None
 
     # ==================== Сканирования ====================
