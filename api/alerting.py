@@ -146,12 +146,18 @@ class AlertManager:
         return False
 
     def silence_alert(self, alert_id: str, duration_minutes: int = 60):
-        """Заглушить алерт на указанное время"""
+        """
+        Заглушить алерт на указанное время.
+        
+        Args:
+            alert_id: ID алерта для заглушения
+            duration_minutes: Длительность заглушения в минутах (по умолчанию 60)
+        """
         self._silenced_alerts.add(alert_id)
 
         # Автоматическое удаление через указанное время
         def unsilence():
-            """TODO: Add description"""
+            """Автоматическое снятие заглушения через таймер"""
             import threading
             threading.Timer(duration_minutes * 60, self._silenced_alerts.discard, [alert_id]).start()
 
@@ -549,7 +555,14 @@ class AlertingMiddleware:
     """
 
     def __init__(self, app, alert_on_5xx: bool = True, alert_threshold: int = 5):
-        """TODO: Add description"""
+        """
+        Инициализация middleware.
+        
+        Args:
+            app: FastAPI приложение
+            alert_on_5xx: Включить алертинг на 5xx ошибки (по умолчанию True)
+            alert_threshold: Порог ошибок для алерта (по умолчанию 5)
+        """
         self.app = app
         self.alert_on_5xx = alert_on_5xx
         self.alert_threshold = alert_threshold
