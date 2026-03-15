@@ -265,69 +265,6 @@ class SSTVDecoder:
         self.metadata['mode'] = 'fallback'
         return decoded_img
 
-    def decode_from_samples(
-        self,
-        samples: np.ndarray,
-        sample_rate: int = 48000
-    ) -> Optional[Image.Image]:
-        """
-        Декодирует SSTV из numpy массива сэмплов.
-
-        Args:
-            samples: Аудиосэмпл в формате numpy array
-            sample_rate: Частота дискретизации
-
-        Returns:
-            Image.Image: Декодированное изображение
-
-        Raises:
-            ValueError: Если сэмплы некорректны
-        """
-        if samples is None or len(samples) == 0:
-            raise ValueError("Аудиоданные не должны быть пустыми")
-
-        if sample_rate <= 0:
-            raise ValueError("Частота дискретизации должна быть положительной")
-
-        try:
-            from pysstv.sstv import SSTV
-            from pysstv.color import ColorSSTV
-
-            # Пробуем определить режим и декодировать
-            for mode_name in self.SUPPORTED_MODES:
-                try:
-                    # Создаём SSTV декодер для режима
-                    decoder = SSTV(samples, sample_rate, mode_name)
-                    image = decoder.decode()
-                    if image is not None:
-                        self.decoded_image = image
-                        self.decoded_images.append(image)
-                        self.metadata['mode'] = mode_name
-                        self.metadata['sample_rate'] = sample_rate
-                        return image
-                except Exception:
-                    continue
-
-            return None
-        except ImportError:
-            print("pysstv не установлена, используем заглушку")
-            return self._create_placeholder_image(samples)
-        except Exception as e:
-            print(f"Ошибка декодирования из сэмплов: {e}")
-            return None
-
-    def _create_placeholder_image(
-        self,
-        samples: np.ndarray
-    ) -> Image.Image:
-        """Создаёт заглушку изображения на основе аудиоданных."""
-        duration = len(samples) / 48000 if len(samples) > 0 else 0
-
-        img = Image.new("RGB", (320, 240), color=(30, 30, 60))
-        self.metadata['duration_seconds'] = duration
-        self.metadata['mode'] = 'placeholder'
-        return img
-
     def save_decoded_image(self, filepath: str, quality: int = 95) -> bool:
         """
         Сохраняет декодированное изображение в файл.

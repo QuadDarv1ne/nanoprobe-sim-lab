@@ -5,6 +5,7 @@ API для управления SSTV станцией и расписанием 
 
 import asyncio
 import os
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Optional, Dict
@@ -12,8 +13,9 @@ from typing import List, Optional, Dict
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse
 
-import sys
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+# Добавляем корень проекта в path
+PROJECT_ROOT = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
 
 try:
     from utils.redis_cache import RedisCache
@@ -21,9 +23,16 @@ try:
 except ImportError:
     REDIS_AVAILABLE = False
 
+# Импорт SSTV компонентов
 try:
-    import components.py_sstv_groundstation.src.satellite_tracker as tracker_module
-    from components.py_sstv_groundstation.src.sstv_decoder import SSTVDecoder
+    # Добавляем путь к компонентам
+    components_path = PROJECT_ROOT / "components" / "py-sstv-groundstation" / "src"
+    sys.path.insert(0, str(components_path))
+    
+    import satellite_tracker
+    from sstv_decoder import SSTVDecoder
+    
+    tracker_module = satellite_tracker
     SSTV_AVAILABLE = True
 except ImportError:
     SSTV_AVAILABLE = False
