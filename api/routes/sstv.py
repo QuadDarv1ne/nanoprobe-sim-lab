@@ -41,20 +41,23 @@ except ImportError:
 
 router = APIRouter()
 
-# Глобальные объекты
+# Глобальные объекты (ленивая инициализация)
 _redis_cache: Optional[RedisCache] = None
 _sstv_decoder: Optional[SSTVDecoder] = None
 _tracker: Optional[tracker_module.SatelliteTracker] = None
 
 
 def get_redis_cache() -> Optional[RedisCache]:
-    """Получает Redis cache instance."""
+    """Получает Redis cache instance (singleton)."""
     global _redis_cache
     if _redis_cache is None and REDIS_AVAILABLE:
         try:
             redis_host = os.getenv("REDIS_HOST", "localhost")
             redis_port = int(os.getenv("REDIS_PORT", "6379"))
             _redis_cache = RedisCache(host=redis_host, port=redis_port)
+            # Проверка подключения
+            if not _redis_cache.is_available():
+                _redis_cache = None
         except Exception:
             _redis_cache = None
     return _redis_cache
