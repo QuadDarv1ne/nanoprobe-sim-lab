@@ -583,8 +583,17 @@ class MemoryDecorator:
 
         @wraps(func)
         def wrapper(*args, **kwargs):
+            """
+            Обертка для замера памяти до и после выполнения функции.
+
+            Args:
+                *args: Позиционные аргументы функции
+                **kwargs: Именованные аргументы функции
+
+            Returns:
+                Результат выполнения функции
+            """
             # Замеряем память до выполнения
-            """TODO: Add description"""
             before_memory = self.memory_tracker.get_current_memory_usage()
 
             # Выполняем функцию
