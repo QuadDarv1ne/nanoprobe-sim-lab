@@ -26,6 +26,9 @@ websockets>=12.0
 # Кэширование
 redis>=5.0.0
 
+# HTTP клиент (для NASA API)
+aiohttp>=3.9.0
+
 # Rate Limiting
 slowapi>=0.1.8
 
