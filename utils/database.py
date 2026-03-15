@@ -535,6 +535,27 @@ class DatabaseManager:
             self._set_cache(cache_key, result)
             return result
 
+    def execute_query(self, query: str, params: tuple = None) -> List[Dict]:
+        """
+        Выполняет SQL запрос и возвращает результат.
+
+        Args:
+            query: SQL запрос
+            params: Параметры запроса
+
+        Returns:
+            Список словарей с результатами
+        """
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            if params:
+                cursor.execute(query, params)
+            else:
+                cursor.execute(query)
+            rows = cursor.fetchall()
+            columns = [description[0] for description in cursor.description]
+            return [dict(zip(columns, row)) for row in rows]
+
     def get_scan_by_id(self, scan_id: int) -> Optional[Dict]:
         """Получает результат сканирования по ID с кэшированием."""
         cache_key = self._get_cache_key(f"scan:id:{scan_id}")
@@ -645,6 +666,48 @@ class DatabaseManager:
             self._set_cache(cache_key, result)
             return result
 
+    def count_simulations(self, simulation_type: str = None) -> int:
+        """Подсчитывает количество симуляций с кэшированием."""
+        cache_key = self._get_cache_key(f"simulations:count:{simulation_type or 'all'}")
+        cached = self._get_from_cache(cache_key)
+        if cached is not None:
+            return cached
+
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            if simulation_type:
+                cursor.execute(
+                    "SELECT COUNT(*) FROM simulations WHERE simulation_type = ?",
+                    (simulation_type,)
+                )
+            else:
+                cursor.execute("SELECT COUNT(*) FROM simulations")
+            result = cursor.fetchone()[0]
+
+            self._set_cache(cache_key, result)
+            return result
+
+    async def count_simulations_async(self, simulation_type: str = None) -> int:
+        """Асинхронный подсчёт количества симуляций"""
+        cache_key = self._get_cache_key(f"simulations:count:{simulation_type or 'all'}")
+        cached = self._get_from_cache(cache_key)
+        if cached is not None:
+            return cached
+
+        async with self.get_connection_async() as conn:
+            cursor = conn.cursor()
+            if simulation_type:
+                cursor.execute(
+                    "SELECT COUNT(*) FROM simulations WHERE simulation_type = ?",
+                    (simulation_type,)
+                )
+            else:
+                cursor.execute("SELECT COUNT(*) FROM simulations")
+            result = cursor.fetchone()[0]
+
+            self._set_cache(cache_key, result)
+            return result
+
     def add_simulation(
         self,
         simulation_id: str,
@@ -680,6 +743,53 @@ class DatabaseManager:
         self.invalidate_cache("simulations:")
 
         return sim_id
+
+    def count_analysis_results(self) -> int:
+        """Подсчитывает количество записей AI/ML анализа."""
+        cache_key = self._get_cache_key("analysis:count")
+        cached = self._get_from_cache(cache_key)
+        if cached is not None:
+            return cached
+
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM defect_analysis")
+            result = cursor.fetchone()[0]
+            self._set_cache(cache_key, result)
+            return result
+
+    def count_comparisons(self) -> int:
+        """Подсчитывает количество сравнений поверхностей."""
+        cache_key = self._get_cache_key("comparisons:count")
+        cached = self._get_from_cache(cache_key)
+        if cached is not None:
+            return cached
+
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM surface_comparisons")
+            result = cursor.fetchone()[0]
+            self._set_cache(cache_key, result)
+            return result
+
+    def count_reports(self) -> int:
+        """Подсчитывает количество отчётов."""
+        cache_key = self._get_cache_key("reports:count")
+        cached = self._get_from_cache(cache_key)
+        if cached is not None:
+            return cached
+
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            # Отчёты могут храниться в exports или отдельной таблице
+            try:
+                cursor.execute("SELECT COUNT(*) FROM reports")
+            except Exception:
+                # Если таблица reports не существует, используем exports
+                cursor.execute("SELECT COUNT(*) FROM exports WHERE export_format = 'PDF'")
+            result = cursor.fetchone()[0]
+            self._set_cache(cache_key, result)
+            return result
 
     async def add_simulation_async(
         self,

@@ -43,18 +43,18 @@ async def get_detailed_stats():
 
         # Детальная статистика по сканированиям
         scans_by_type = db_manager.execute_query(
-            "SELECT scan_type, COUNT(*) as count FROM scans GROUP BY scan_type"
+            "SELECT scan_type, COUNT(*) as count FROM scan_results GROUP BY scan_type"
         )
 
         # Последние активности
         recent_scans = db_manager.execute_query(
-            "SELECT id, scan_type, resolution, created_at FROM scans ORDER BY created_at DESC LIMIT 5"
+            "SELECT id, scan_type, surface_type, created_at FROM scan_results ORDER BY created_at DESC LIMIT 5"
         )
 
         # Статистика по симуляциям
         sim_stats = db_manager.execute_query(
             "SELECT simulation_type, COUNT(*) as count, "
-            "AVG(duration_sec) as avg_duration FROM simulations "
+            "AVG(duration_seconds) as avg_duration FROM simulations "
             "GROUP BY simulation_type"
         )
 
@@ -83,7 +83,7 @@ async def get_detailed_stats():
                     {
                         "id": row["id"],
                         "type": row["scan_type"],
-                        "resolution": row["resolution"],
+                        "surface_type": row["surface_type"],
                         "created_at": row["created_at"]
                     }
                     for row in (recent_scans or [])
@@ -211,7 +211,7 @@ async def get_activity_timeline(days: int = Query(7, ge=1, le=30)):
         scans_timeline = db_manager.execute_query(
             """
             SELECT DATE(created_at) as date, COUNT(*) as count
-            FROM scans
+            FROM scan_results
             WHERE created_at >= ?
             GROUP BY DATE(created_at)
             ORDER BY date
@@ -235,7 +235,7 @@ async def get_activity_timeline(days: int = Query(7, ge=1, le=30)):
         analysis_timeline = db_manager.execute_query(
             """
             SELECT DATE(created_at) as date, COUNT(*) as count
-            FROM analysis_results
+            FROM defect_analysis
             WHERE created_at >= ?
             GROUP BY DATE(created_at)
             ORDER BY date
