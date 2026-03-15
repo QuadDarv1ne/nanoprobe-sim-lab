@@ -13,7 +13,6 @@ from datetime import datetime
 
 
 class Colors:
-    """TODO: Add description"""
     GREEN = '\033[0;32m'
     YELLOW = '\033[1;33m'
     RED = '\033[0;31m'
@@ -23,29 +22,24 @@ class Colors:
 
 
 def print_header(text):
-    """TODO: Add description"""
     print(f"\n{Colors.GREEN}{Colors.BOLD}{'='*60}{Colors.END}")
     print(f"{Colors.GREEN}{Colors.BOLD}  {text}{Colors.END}")
     print(f"{Colors.GREEN}{Colors.BOLD}{'='*60}{Colors.END}\n")
 
 
 def print_step(text):
-    """TODO: Add description"""
     print(f"\n{Colors.CYAN}▶ {text}{Colors.END}")
 
 
 def print_success(text):
-    """TODO: Add description"""
     print(f"{Colors.GREEN}✓ {text}{Colors.END}")
 
 
 def print_error(text):
-    """TODO: Add description"""
     print(f"{Colors.RED}✗ {text}{Colors.END}")
 
 
 def print_warning(text):
-    """TODO: Add description"""
     print(f"{Colors.YELLOW}⚠ {text}{Colors.END}")
 
 
@@ -53,7 +47,6 @@ class DeploymentChecker:
     """Проверка готовности к развёртыванию"""
 
     def __init__(self):
-        """TODO: Add description"""
         self.project_root = Path(__file__).parent.parent
         self.errors = []
         self.warnings = []
@@ -260,7 +253,6 @@ class DeploymentManager:
     """Менеджер развёртывания"""
 
     def __init__(self, use_docker=False):
-        """TODO: Add description"""
         self.project_root = Path(__file__).parent.parent
         self.use_docker = use_docker
 
@@ -373,7 +365,6 @@ class DeploymentManager:
 
 
 def main():
-    """TODO: Add description"""
     parser = argparse.ArgumentParser(
         description='Развёртывание Nanoprobe Simulation Lab',
         formatter_class=argparse.RawDescriptionHelpFormatter,

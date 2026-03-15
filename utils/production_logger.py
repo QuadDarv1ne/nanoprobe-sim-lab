@@ -22,7 +22,6 @@ class JSONFormatter(logging.Formatter):
     """
 
     def format(self, record):
-        """TODO: Add description"""
         log_data = {
             'timestamp': datetime.utcnow().isoformat(),
             'level': record.levelname,
@@ -141,27 +140,21 @@ class ProductionLogger:
         return self.logger
 
     def debug(self, message: str, **kwargs):
-        """TODO: Add description"""
         self.logger.debug(message, extra=kwargs if kwargs else {})
 
     def info(self, message: str, **kwargs):
-        """TODO: Add description"""
         self.logger.info(message, extra=kwargs if kwargs else {})
 
     def warning(self, message: str, **kwargs):
-        """TODO: Add description"""
         self.logger.warning(message, extra=kwargs if kwargs else {})
 
     def error(self, message: str, **kwargs):
-        """TODO: Add description"""
         self.logger.error(message, extra=kwargs if kwargs else {})
 
     def critical(self, message: str, **kwargs):
-        """TODO: Add description"""
         self.logger.critical(message, extra=kwargs if kwargs else {})
 
     def exception(self, message: str, **kwargs):
-        """TODO: Add description"""
         self.logger.exception(message, extra=kwargs if kwargs else {})
 
 
@@ -228,7 +221,6 @@ class HTTPLoggingMiddleware:
     """
 
     def __init__(self, app):
-        """TODO: Add description"""
         self.app = app
         self.logger = get_api_logger().get_logger()
 
@@ -265,19 +257,16 @@ class LogExecutionTime:
     """
 
     def __init__(self, operation: str, logger: logging.Logger = None):
-        """TODO: Add description"""
         self.operation = operation
         self.logger = logger or get_logger().get_logger()
         self.start_time = None
 
     def __enter__(self):
-        """TODO: Add description"""
         self.start_time = datetime.now()
         self.logger.debug(f"Начало: {self.operation}")
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """TODO: Add description"""
         duration = (datetime.now() - self.start_time).total_seconds()
 
         if exc_type:

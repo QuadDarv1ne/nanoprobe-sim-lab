@@ -17,7 +17,6 @@ class RedisCache:
     """Менеджер Redis кэша"""
 
     def __init__(self, host: str = "localhost", port: int = 6379, db: int = 0):
-        """TODO: Add description"""
         self.host = host
         self.port = port
         self.db = db
@@ -26,7 +25,6 @@ class RedisCache:
 
     @property
     def client(self) -> Optional[redis.Redis]:
-        """TODO: Add description"""
         if self._client is None:
             try:
                 self._client = redis.Redis(
@@ -46,7 +44,6 @@ class RedisCache:
         return self._client
 
     def get(self, key: str) -> Optional[Any]:
-        """TODO: Add description"""
         if not self._enabled or not self.client:
             return None
         try:
@@ -56,7 +53,6 @@ class RedisCache:
             return None
 
     def set(self, key: str, value: Any, expire: int = 300) -> bool:
-        """TODO: Add description"""
         if not self._enabled or not self.client:
             return False
         try:
@@ -66,7 +62,6 @@ class RedisCache:
             return False
 
     def delete(self, key: str) -> bool:
-        """TODO: Add description"""
         if not self._enabled or not self.client:
             return False
         try:
@@ -113,17 +108,14 @@ class RedisCache:
             return False
 
     def generate_key(self, prefix: str, *args) -> str:
-        """TODO: Add description"""
         key_data = ":".join(str(arg) for arg in args)
         key_hash = hashlib.md5(key_data.encode()).hexdigest()[:16]
         return f"{prefix}:{key_hash}"
 
     def is_available(self) -> bool:
-        """TODO: Add description"""
         return self._enabled and self.client is not None
 
     def get_stats(self) -> dict:
-        """TODO: Add description"""
         if not self._enabled or not self.client:
             return {"available": False}
         try:
@@ -186,7 +178,6 @@ def cached(prefix: str = "api", expire: int = 300):
         expire: Время жизни кэша в секундах
     """
     def decorator(func: Callable) -> Callable:
-        """TODO: Add description"""
         @wraps(func)
         async def wrapper(*args, **kwargs):
             from api.main import redis_cache
@@ -224,10 +215,8 @@ def cached_sync(prefix: str = "api", expire: int = 300):
         expire: Время жизни кэша в секундах
     """
     def decorator(func: Callable) -> Callable:
-        """TODO: Add description"""
         @wraps(func)
         def wrapper(*args, **kwargs):
-            """TODO: Add description"""
             from utils.caching.redis_cache import cache
 
             # Генерация ключа

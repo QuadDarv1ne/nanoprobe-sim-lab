@@ -12,7 +12,6 @@ from datetime import datetime
 
 
 class Colors:
-    """TODO: Add description"""
     GREEN = '\033[0;32m'
     YELLOW = '\033[1;33m'
     RED = '\033[0;31m'
@@ -21,7 +20,6 @@ class Colors:
 
 
 def print_header(text):
-    """TODO: Add description"""
     print(f"\n{Colors.GREEN}{'='*50}{Colors.END}")
     print(f"{Colors.GREEN}  {text}{Colors.END}")
     print(f"{Colors.GREEN}{'='*50}{Colors.END}\n")
@@ -98,7 +96,6 @@ def verify_cert(cert_path):
 
 
 def main():
-    """TODO: Add description"""
     import argparse
 
     parser = argparse.ArgumentParser(

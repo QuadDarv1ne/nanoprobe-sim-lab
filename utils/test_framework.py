@@ -236,7 +236,6 @@ class TestFramework:
         """
 
         def worker():
-            """TODO: Add description"""
             start_time = time.time()
             iterations = 0
 

@@ -37,7 +37,6 @@ class RateLimiter:
         return cls._instance
 
     def __init__(self):
-        """TODO: Add description"""
         if hasattr(self, '_initialized') and self._initialized:
             return
         self.requests: Dict[str, RateLimitInfo] = defaultdict(RateLimitInfo)
@@ -49,7 +48,6 @@ class RateLimiter:
         self.block_multipliers = [2, 5, 15, 60]  # множители блокировки в минутах
 
     def is_allowed(self, key: str, max_requests: int, window_seconds: int) -> bool:
-        """TODO: Add description"""
         now = time.time()
         window_start = now - window_seconds
 
@@ -76,7 +74,6 @@ class RateLimiter:
             return True
 
     def get_retry_after(self, key: str, max_requests: int, window_seconds: int) -> int:
-        """TODO: Add description"""
         info = self.requests.get(key)
         if not info:
             return 0
@@ -167,7 +164,6 @@ def rate_limit(max_requests: int = 10, window_seconds: int = 60):
         window_seconds: Размер окна в секундах
     """
     def decorator(func):
-        """TODO: Add description"""
         @wraps(func)
         async def wrapper(request: Request, *args, **kwargs):
             client_ip = request.client.host

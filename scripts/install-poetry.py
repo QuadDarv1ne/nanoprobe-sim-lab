@@ -80,7 +80,6 @@ OPTIONS = {"bold": 1, "underscore": 4, "blink": 5, "reverse": 7, "conceal": 8}
 
 def style(fg, bg, options):
 
-    """TODO: Add description"""
     codes = []
 
     if fg:
@@ -109,7 +108,6 @@ STYLES = {
 
 
 def is_decorated():
-    """TODO: Add description"""
     if WINDOWS:
         return (
             os.getenv("ANSICON") is not None
@@ -127,7 +125,6 @@ def is_decorated():
 
 
 def is_interactive():
-    """TODO: Add description"""
     if not hasattr(sys.stdin, "fileno"):
         return False
 
@@ -137,7 +134,6 @@ def is_interactive():
         return False
 
 def colorize(style, text):
-    """TODO: Add description"""
     if not is_decorated():
         return text
 
@@ -145,13 +141,11 @@ def colorize(style, text):
     return f"{STYLES[style]}{text}\033[0m"
 
 def string_to_bool(value):
-    """TODO: Add description"""
     value = value.lower()
 
     return value in {"true", "1", "y", "yes"}
 
 def data_dir() -> Path:
-    """TODO: Add description"""
     if os.getenv("POETRY_HOME"):
         return Path(os.getenv("POETRY_HOME")).expanduser()
 
@@ -166,7 +160,6 @@ def data_dir() -> Path:
     return base_dir / "pypoetry"
 
 def bin_dir() -> Path:
-    """TODO: Add description"""
     if os.getenv("POETRY_HOME"):
         return Path(os.getenv("POETRY_HOME")).expanduser() / "bin"
 
@@ -177,7 +170,6 @@ def bin_dir() -> Path:
         return Path("~/.local/bin").expanduser()
 
 def _get_win_folder_from_registry(csidl_name):
-    """TODO: Add description"""
     import winreg as _winreg
 
     shell_folder_name = {
@@ -196,7 +188,6 @@ def _get_win_folder_from_registry(csidl_name):
     return path
 
 def _get_win_folder_with_ctypes(csidl_name):
-    """TODO: Add description"""
     import ctypes
 
     csidl_const = {
@@ -291,19 +282,15 @@ echo 'if (-not (Get-Command poetry -ErrorAction Ignore)) {{ $env:Path += ";{poet
 
 class PoetryInstallationError(RuntimeError):
 
-    """TODO: Add description"""
     def __init__(self, return_code: int = 0, log: Optional[str] = None):
-        """TODO: Add description"""
         super().__init__()
         self.return_code = return_code
         self.log = log
 
 
 class VirtualEnvironment:
-    """TODO: Add description"""
 
     def __init__(self, path: Path) -> None:
-        """TODO: Add description"""
         self._path = path
 
         self._bin_path = self._path.joinpath(
@@ -317,17 +304,14 @@ class VirtualEnvironment:
 
     @property
     def path(self):
-        """TODO: Add description"""
         return self._path
 
     @property
     def bin_path(self):
-        """TODO: Add description"""
         return self._bin_path
 
     @classmethod
     def make(cls, target: Path) -> "VirtualEnvironment":
-        """TODO: Add description"""
         if not sys.executable:
             raise ValueError(
                 "Unable to determine sys.executable. Set PATH to a sane value or set it"
@@ -384,7 +368,6 @@ class VirtualEnvironment:
 
     @staticmethod
     def run(*args, **kwargs) -> subprocess.CompletedProcess:
-        """TODO: Add description"""
         completed_process = subprocess.run(
             args,
             stdout=subprocess.PIPE,
@@ -399,68 +382,54 @@ class VirtualEnvironment:
         return completed_process
 
     def python(self, *args, **kwargs) -> subprocess.CompletedProcess:
-        """TODO: Add description"""
         return self.run(self._python, *args, **kwargs)
 
     def pip(self, *args, **kwargs) -> subprocess.CompletedProcess:
-        """TODO: Add description"""
         return self.python("-m", "pip", *args, **kwargs)
 
 
 class Cursor:
-    """TODO: Add description"""
 
     def __init__(self) -> None:
-        """TODO: Add description"""
         self._output = sys.stdout
 
     def move_up(self, lines: int = 1) -> "Cursor":
-        """TODO: Add description"""
         self._output.write(f"\x1b[{lines}A")
         return self
 
     def move_down(self, lines: int = 1) -> "Cursor":
-        """TODO: Add description"""
         self._output.write(f"\x1b[{lines}B")
         return self
 
     def move_right(self, columns: int = 1) -> "Cursor":
-        """TODO: Add description"""
         self._output.write(f"\x1b[{columns}C")
         return self
 
     def move_left(self, columns: int = 1) -> "Cursor":
-        """TODO: Add description"""
         self._output.write(f"\x1b[{columns}D")
         return self
 
     def move_to_column(self, column: int) -> "Cursor":
-        """TODO: Add description"""
         self._output.write(f"\x1b[{column}G")
         return self
 
     def move_to_position(self, column: int, row: int) -> "Cursor":
-        """TODO: Add description"""
         self._output.write(f"\x1b[{row + 1};{column}H")
         return self
 
     def save_position(self) -> "Cursor":
-        """TODO: Add description"""
         self._output.write("\x1b7")
         return self
 
     def restore_position(self) -> "Cursor":
-        """TODO: Add description"""
         self._output.write("\x1b8")
         return self
 
     def hide(self) -> "Cursor":
-        """TODO: Add description"""
         self._output.write("\x1b[?25l")
         return self
 
     def show(self) -> "Cursor":
-        """TODO: Add description"""
         self._output.write("\x1b[?25h\x1b[?0c")
         return self
 
@@ -498,7 +467,6 @@ class Cursor:
 
 class Installer:
 
-    """TODO: Add description"""
     METADATA_URL = "https://pypi.org/pypi/poetry/json"
     VERSION_REGEX = re.compile(
         r"v?(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:\.(\d+))?"
@@ -535,29 +503,24 @@ class Installer:
 
     @property
     def bin_dir(self) -> Path:
-        """TODO: Add description"""
         if not self._bin_dir:
             self._bin_dir = bin_dir()
         return self._bin_dir
 
     @property
     def data_dir(self) -> Path:
-        """TODO: Add description"""
         if not self._data_dir:
             self._data_dir = data_dir()
         return self._data_dir
 
     @property
     def version_file(self) -> Path:
-        """TODO: Add description"""
         return self.data_dir.joinpath("VERSION")
 
     def allows_prereleases(self) -> bool:
-        """TODO: Add description"""
         return self._preview
 
     def run(self) -> int:
-        """TODO: Add description"""
         if self._git:
             version = self._git
         elif self._path:
@@ -575,7 +538,6 @@ class Installer:
         self.ensure_directories()
 
         def _is_self_upgrade_supported(x):
-            """TODO: Add description"""
             mx = self.VERSION_REGEX.match(x)
 
             if mx is None:
@@ -635,7 +597,6 @@ class Installer:
             return 0
 
     def uninstall(self) -> int:
-        """TODO: Add description"""
         if not self.data_dir.exists():
             self._write(
                 "{} is not currently installed.".format(colorize("info", "Poetry"))
@@ -663,7 +624,6 @@ class Installer:
         return 0
 
     def _install_comment(self, version: str, message: str):
-        """TODO: Add description"""
         self._overwrite(
             "Installing {} ({}): {}".format(
                 colorize("info", "Poetry"),
@@ -674,7 +634,6 @@ class Installer:
 
     @contextmanager
     def make_env(self, version: str) -> VirtualEnvironment:
-        """TODO: Add description"""
         env_path = self.data_dir.joinpath("venv")
         env_path_saved = env_path.with_suffix(".save")
 
@@ -709,7 +668,6 @@ class Installer:
                 shutil.rmtree(env_path_saved, ignore_errors=True)
 
     def make_bin(self, version: str, env: VirtualEnvironment) -> None:
-        """TODO: Add description"""
         self._install_comment(version, "Creating script")
         self.bin_dir.mkdir(parents=True, exist_ok=True)
 
@@ -727,7 +685,6 @@ class Installer:
             shutil.copy(target_script, self.bin_dir.joinpath(script))
 
     def install_poetry(self, version: str, env: VirtualEnvironment) -> None:
-        """TODO: Add description"""
         self._install_comment(version, "Installing Poetry")
 
         if self._git:
@@ -740,7 +697,6 @@ class Installer:
         env.pip("install", specification)
 
     def display_pre_message(self) -> None:
-        """TODO: Add description"""
         kwargs = {
             "poetry": colorize("info", "Poetry"),
             "poetry_home_bin": colorize("comment", self.bin_dir),
@@ -748,7 +704,6 @@ class Installer:
         self._write(PRE_MESSAGE.format(**kwargs))
 
     def display_post_message(self, version: str) -> None:
-        """TODO: Add description"""
         if WINDOWS:
             return self.display_post_message_windows(version)
 
@@ -758,7 +713,6 @@ class Installer:
         return self.display_post_message_unix(version)
 
     def display_post_message_windows(self, version: str) -> None:
-        """TODO: Add description"""
         path = self.get_windows_path_var()
 
         message = POST_MESSAGE_NOT_IN_PATH
@@ -780,7 +734,6 @@ class Installer:
         )
 
     def get_windows_path_var(self) -> Optional[str]:
-        """TODO: Add description"""
         import winreg
 
         with winreg.ConnectRegistry(
@@ -792,7 +745,6 @@ class Installer:
             return path
 
     def display_post_message_fish(self, version: str) -> None:
-        """TODO: Add description"""
         fish_user_paths = subprocess.check_output(
             ["fish", "-c", "echo $fish_user_paths"]
         ).decode("utf-8")
@@ -815,7 +767,6 @@ class Installer:
         )
 
     def display_post_message_unix(self, version: str) -> None:
-        """TODO: Add description"""
         paths = os.getenv("PATH", "").split(":")
 
         message = POST_MESSAGE_NOT_IN_PATH
@@ -836,12 +787,10 @@ class Installer:
         )
 
     def ensure_directories(self) -> None:
-        """TODO: Add description"""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.bin_dir.mkdir(parents=True, exist_ok=True)
 
     def get_version(self):
-        """TODO: Add description"""
         current_version = None
 
         if self.version_file.exists():
@@ -852,7 +801,6 @@ class Installer:
         metadata = json.loads(self._get(self.METADATA_URL).decode())
 
         def _compare_versions(x, y):
-            """TODO: Add description"""
             mx = self.VERSION_REGEX.match(x)
             my = self.VERSION_REGEX.match(y)
 
@@ -898,11 +846,9 @@ class Installer:
         return version, current_version
 
     def _write(self, line) -> None:
-        """TODO: Add description"""
         sys.stdout.write(line + "\n")
 
     def _overwrite(self, line) -> None:
-        """TODO: Add description"""
         if not is_decorated():
             return self._write(line)
 
@@ -911,14 +857,12 @@ class Installer:
         self._write(line)
 
     def _get(self, url):
-        """TODO: Add description"""
         request = Request(url, headers={"User-Agent": "Python Poetry"})
 
         with closing(urlopen(request)) as r:
             return r.read()
 
 def main():
-    """TODO: Add description"""
     parser = argparse.ArgumentParser(
         description="Installs the latest (or given) version of poetry"
     )
