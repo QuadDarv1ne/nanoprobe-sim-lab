@@ -17,8 +17,11 @@ depends_on = None
 
 
 def upgrade():
+    """
+    Создание начальной схемы базы данных.
+    Таблицы: scan_results, simulations, images, exports, surface_comparisons, defect_analyses
+    """
     # Таблица результатов сканирований
-    """TODO: Add description"""
     op.create_table('scan_results',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('timestamp', sa.Text(), nullable=False),
@@ -163,7 +166,10 @@ def upgrade():
 
 
 def downgrade():
-    """TODO: Add description"""
+    """
+    Удаление всех таблиц (откат миграции).
+    Таблицы удаляются в порядке, обратном созданию.
+    """
     op.drop_index('idx_metrics_timestamp', table_name='performance_metrics')
     op.drop_table('performance_metrics')
     op.drop_index('idx_batch_status', table_name='batch_jobs')

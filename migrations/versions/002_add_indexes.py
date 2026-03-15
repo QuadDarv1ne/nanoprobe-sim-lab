@@ -61,8 +61,11 @@ def upgrade():
 
 
 def downgrade():
+    """
+    Удаление индексов (откат миграции).
+    Индексы удаляются в порядке, обратном созданию.
+    """
     # ===== scan_results =====
-    """TODO: Add description"""
     op.drop_index('idx_scan_created_at', 'scan_results')
     op.drop_index('idx_scan_type_count', 'scan_results')
 
