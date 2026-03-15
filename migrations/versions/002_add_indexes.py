@@ -17,9 +17,12 @@ depends_on = None
 
 
 def upgrade():
+    """
+    Создание индексов для улучшения производительности запросов.
+    Индексы добавляются для таблиц: scan_results, simulations, images, exports, surface_comparisons
+    """
     # ===== scan_results =====
     # Индекс для частых запросов по created_at
-    """TODO: Add description"""
     op.create_index('idx_scan_created_at', 'scan_results', ['created_at'], unique=False)
 
     # Индекс для подсчёта количества сканирований по типу

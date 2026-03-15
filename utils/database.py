@@ -20,7 +20,13 @@ class ConnectionPool:
     """Пул соединений для SQLite"""
 
     def __init__(self, db_path: str, pool_size: int = 5):
-        """TODO: Add description"""
+        """
+        Инициализация пула соединений.
+        
+        Args:
+            db_path: Путь к файлу базы данных SQLite
+            pool_size: Размер пула соединений (по умолчанию 5)
+        """
         self.db_path = db_path
         self.pool_size = pool_size
         self._pool: Queue = Queue(maxsize=pool_size)
@@ -85,7 +91,13 @@ class AsyncConnectionPool:
     """Асинхронный пул соединений для SQLite"""
 
     def __init__(self, db_path: str, pool_size: int = 5):
-        """TODO: Add description"""
+        """
+        Инициализация асинхронного пула соединений.
+        
+        Args:
+            db_path: Путь к файлу базы данных SQLite
+            pool_size: Размер пула соединений (по умолчанию 5)
+        """
         self.db_path = db_path
         self.pool_size = pool_size
         self._pool: asyncio.Queue = asyncio.Queue(maxsize=pool_size)
