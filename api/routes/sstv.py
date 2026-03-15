@@ -7,9 +7,11 @@ import asyncio
 import logging
 import os
 import sys
+import subprocess
+import signal
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict, Any
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect, Query
 from fastapi.responses import FileResponse
@@ -48,6 +50,11 @@ router = APIRouter()
 _redis_cache: Optional[RedisCache] = None
 _sstv_decoder: Optional[SSTVDecoder] = None
 _tracker: Optional[tracker_module.SatelliteTracker] = None
+
+# Управление записью RTL-SDR
+_recording_process: Optional[subprocess.Popen] = None
+_recording_start_time: Optional[datetime] = None
+_recording_metadata: Dict[str, Any] = {}
 
 
 def get_redis_cache() -> Optional[RedisCache]:
@@ -559,15 +566,233 @@ async def sstv_health_check():
         "sstv_decoder": "available" if SSTV_AVAILABLE else "unavailable",
         "satellite_tracker": "available" if tracker_module is not None else "unavailable",
         "redis_cache": "available" if REDIS_AVAILABLE else "unavailable",
+        "rtl_sdr": "ready" if _recording_process is None else "recording",
         "timestamp": datetime.now().isoformat()
     }
-    
+
     all_ok = all([
         SSTV_AVAILABLE,
         tracker_module is not None
     ])
-    
+
     return {
         "status": "healthy" if all_ok else "degraded",
         "components": status
     }
+
+
+# ============================================================================
+# RTL-SDR Recording Control
+# ============================================================================
+
+@router.post("/record/start")
+async def start_sstv_recording(
+    frequency: float = 145.800,
+    sample_rate: int = 2048000,
+    gain: int = 496,
+    duration: int = 600
+):
+    """
+    Запуск записи с RTL-SDR для приёма SSTV.
+    
+    - **frequency**: Частота в MHz (по умолчанию 145.800 для МКС)
+    - **sample_rate**: Частота дискретизации (по умолчанию 2048000)
+    - **gain**: Усиление RTL-SDR (0-496)
+    - **duration**: Длительность записи в секундах
+    
+    Returns:
+        Статус записи
+    """
+    global _recording_process, _recording_start_time, _recording_metadata
+    
+    if _recording_process is not None:
+        return {
+            "status": "already_recording",
+            "started_at": _recording_start_time.isoformat() if _recording_start_time else None,
+            "message": "Запись уже идёт"
+        }
+    
+    # Создаём директорию для записей
+    output_dir = Path("output/sstv/recordings")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    output_file = output_dir / f"sstv_{frequency}MHz_{timestamp}.wav"
+    
+    # Команда для rtl_fm (часть rtl-sdr)
+    cmd = [
+        "rtl_fm",
+        "-f", str(frequency * 1e6),  # Конвертируем MHz в Hz
+        "-s", str(sample_rate),
+        "-g", str(gain),
+        "-F", "9",
+        "-o", "4",
+        "-p", "0",  # ppm correction (настраивается)
+        "-M", "fm",
+        output_file
+    ]
+    
+    try:
+        # Проверяем наличие rtl_fm
+        result = subprocess.run(["rtl_fm", "-h"], capture_output=True, timeout=5)
+    except FileNotFoundError:
+        # rtl_fm не найден - симулируем для тестирования
+        logger.warning("rtl_fm not found - simulation mode")
+        _recording_start_time = datetime.now()
+        _recording_metadata = {
+            "frequency": frequency,
+            "sample_rate": sample_rate,
+            "gain": gain,
+            "duration": duration,
+            "output_file": str(output_file),
+            "simulated": True
+        }
+        
+        return {
+            "status": "recording_simulated",
+            "frequency_mhz": frequency,
+            "sample_rate": sample_rate,
+            "output_file": str(output_file),
+            "started_at": _recording_start_time.isoformat(),
+            "message": "RTL-SDR не найден. Запись симулируется для тестирования."
+        }
+    
+    try:
+        _recording_process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        _recording_start_time = datetime.now()
+        _recording_metadata = {
+            "frequency": frequency,
+            "sample_rate": sample_rate,
+            "gain": gain,
+            "duration": duration,
+            "output_file": str(output_file),
+            "pid": _recording_process.pid
+        }
+        
+        # Планируем остановку через duration секунд
+        asyncio.create_task(stop_recording_after(duration))
+        
+        return {
+            "status": "recording_started",
+            "frequency_mhz": frequency,
+            "sample_rate": sample_rate,
+            "gain": gain,
+            "output_file": str(output_file),
+            "started_at": _recording_start_time.isoformat(),
+            "pid": _recording_process.pid,
+            "message": f"Запись началась. Остановка через {duration} секунд."
+        }
+        
+    except Exception as e:
+        logger.error(f"Recording start error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to start recording: {str(e)}")
+
+
+async def stop_recording_after(duration: int):
+    """Автоматическая остановка записи через N секунд."""
+    await asyncio.sleep(duration)
+    await stop_sstv_recording()
+
+
+@router.post("/record/stop")
+async def stop_sstv_recording():
+    """Остановка записи SSTV."""
+    global _recording_process, _recording_start_time, _recording_metadata
+    
+    if _recording_process is None and not _recording_metadata.get("simulated"):
+        return {
+            "status": "not_recording",
+            "message": "Запись не идёт"
+        }
+    
+    # Если симуляция
+    if _recording_metadata.get("simulated"):
+        duration = (datetime.now() - _recording_start_time).total_seconds() if _recording_start_time else 0
+        _recording_process = None
+        metadata = _recording_metadata.copy()
+        _recording_metadata = {}
+        
+        return {
+            "status": "recording_stopped_simulated",
+            "duration_seconds": round(duration, 2),
+            "output_file": metadata.get("output_file"),
+            "message": "Симуляция записи остановлена"
+        }
+    
+    # Останавливаем процесс
+    try:
+        _recording_process.send_signal(signal.SIGINT)
+        _recording_process.wait(timeout=5)
+        
+        duration = (datetime.now() - _recording_start_time).total_seconds() if _recording_start_time else 0
+        output_file = _recording_metadata.get("output_file")
+        
+        _recording_process = None
+        metadata = _recording_metadata.copy()
+        _recording_metadata = {}
+        
+        return {
+            "status": "recording_stopped",
+            "duration_seconds": round(duration, 2),
+            "output_file": output_file,
+            "message": "Запись остановлена"
+        }
+        
+    except Exception as e:
+        logger.error(f"Recording stop error: {e}")
+        # Принудительная остановка
+        if _recording_process:
+            _recording_process.kill()
+        _recording_process = None
+        _recording_metadata = {}
+        
+        raise HTTPException(status_code=500, detail=f"Failed to stop recording: {str(e)}")
+
+
+@router.get("/record/status")
+async def get_recording_status():
+    """Получить статус записи."""
+    global _recording_process, _recording_start_time, _recording_metadata
+    
+    if _recording_process is not None or _recording_metadata.get("simulated"):
+        duration = (datetime.now() - _recording_start_time).total_seconds() if _recording_start_time else 0
+        
+        return {
+            "status": "recording",
+            "recording": True,
+            "started_at": _recording_start_time.isoformat() if _recording_start_time else None,
+            "duration_seconds": round(duration, 2),
+            "metadata": _recording_metadata
+        }
+    else:
+        return {
+            "status": "idle",
+            "recording": False,
+            "message": "Запись не идёт"
+        }
+
+
+@router.get("/recordings")
+async def list_recordings(limit: int = 20):
+    """Получить список записей SSTV."""
+    output_dir = Path("output/sstv/recordings")
+    
+    if not output_dir.exists():
+        return {"recordings": []}
+    
+    recordings = []
+    for file in sorted(output_dir.glob("*.wav"), reverse=True)[:limit]:
+        stat = file.stat()
+        recordings.append({
+            "filename": file.name,
+            "path": str(file),
+            "size_bytes": stat.st_size,
+            "created_at": datetime.fromtimestamp(stat.st_ctime).isoformat(),
+            "frequency": file.name.split('_')[1] if '_' in file.name else "unknown"
+        })
+    
+    return {"recordings": recordings}

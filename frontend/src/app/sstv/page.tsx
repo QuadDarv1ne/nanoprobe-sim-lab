@@ -1,47 +1,150 @@
 "use client";
 
 import { DashboardLayout } from "@/components/dashboard-layout";
-import { Radio, Download, Trash2, Eye, Play, Square, Signal } from "lucide-react";
+import { Radio, Download, Trash2, Eye, Play, Square, Signal, Satellite, Clock, HardDrive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { API_BASE } from "@/lib/config";
 import { format } from "date-fns";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
-interface SSTVTransmission {
-  id: number;
-  frequency: number;
-  mode: string;
-  status: string;
-  signal_strength: number;
+interface SSTVRecording {
+  filename: string;
+  path: string;
+  size_bytes: number;
   created_at: string;
+  frequency: string;
+}
+
+interface ISSPass {
+  aos: string;
+  los: string;
+  max_elevation: number;
+  frequency_mhz: number;
+  duration_minutes: number;
+  time_until_aos: string;
+}
+
+interface ISSPosition {
+  latitude: number;
+  longitude: number;
+  altitude_km: number;
+  velocity_kmh: number;
+  footprint_km: number;
+  timestamp: string;
 }
 
 export default function SSTVPage() {
-  const [transmissions, setTransmissions] = useState<SSTVTransmission[]>([]);
-  const [isListening, setIsListening] = useState(false);
+  const [recordings, setRecordings] = useState<SSTVRecording[]>([]);
+  const [isRecording, setIsRecording] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [nextPass, setNextPass] = useState<ISSPass | null>(null);
+  const [issPosition, setIssPosition] = useState<ISSPosition | null>(null);
+  const [recordingDuration, setRecordingDuration] = useState(600);
 
   useEffect(() => {
-    const fetchTransmissions = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/v1/sstv`);
-        if (res.ok) {
-          const data = await res.json();
-          setTransmissions(Array.isArray(data) ? data : []);
-        }
-      } catch (error) {
-        console.error('Failed to fetch SSTV transmissions:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchTransmissions();
+    fetchData();
+    const interval = setInterval(fetchData, 10000); // Обновление каждые 10 секунд
+    return () => clearInterval(interval);
   }, []);
 
-  const toggleListening = () => {
-    setIsListening(!isListening);
-    // Здесь будет логика подключения к RTL-SDR
+  const fetchData = async () => {
+    try {
+      const [recordingsRes, statusRes, passRes, positionRes] = await Promise.all([
+        fetch(`${API_BASE}/api/v1/sstv/recordings`),
+        fetch(`${API_BASE}/api/v1/sstv/record/status`),
+        fetch(`${API_BASE}/api/v1/sstv/iss/next-pass`),
+        fetch(`${API_BASE}/api/v1/sstv/iss/position`)
+      ]);
+
+      if (recordingsRes.ok) {
+        const data = await recordingsRes.json();
+        setRecordings(data.recordings || []);
+      }
+
+      if (statusRes.ok) {
+        const data = await statusRes.json();
+        setIsRecording(data.recording || false);
+      }
+
+      if (passRes.ok) {
+        const data = await passRes.json();
+        if (data.status === "success") {
+          setNextPass(data.data);
+        }
+      }
+
+      if (positionRes.ok) {
+        const data = await positionRes.json();
+        if (data.status === "success") {
+          setIssPosition(data.data);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch SSTV data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const toggleRecording = async () => {
+    if (isRecording) {
+      await stopRecording();
+    } else {
+      await startRecording();
+    }
+  };
+
+  const startRecording = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/sstv/record/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          frequency: 145.800,
+          duration: recordingDuration
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setIsRecording(true);
+        alert(`Запись началась: ${data.message}`);
+      } else {
+        alert(`Ошибка: ${data.detail || data.message}`);
+      }
+    } catch (error) {
+      console.error('Failed to start recording:', error);
+      alert('Ошибка запуска записи');
+    }
+  };
+
+  const stopRecording = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/sstv/record/stop`, {
+        method: 'POST'
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setIsRecording(false);
+        alert(`Запись остановлена: ${data.message}`);
+        fetchData();
+      } else {
+        alert(`Ошибка: ${data.detail || data.message}`);
+      }
+    } catch (error) {
+      console.error('Failed to stop recording:', error);
+      alert('Ошибка остановки записи');
+    }
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
 
   return (
@@ -55,8 +158,12 @@ export default function SSTVPage() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant={isListening ? "destructive" : "default"} onClick={toggleListening}>
-              {isListening ? (
+            <Button 
+              variant={isRecording ? "destructive" : "default"} 
+              onClick={toggleRecording}
+              disabled={!nextPass}
+            >
+              {isRecording ? (
                 <>
                   <Square className="h-4 w-4 mr-2" />
                   Остановить
@@ -64,116 +171,185 @@ export default function SSTVPage() {
               ) : (
                 <>
                   <Play className="h-4 w-4 mr-2" />
-                  Слушать
+                  Записать
                 </>
               )}
             </Button>
           </div>
         </div>
 
-        {/* Status Card */}
-        <div className="glass rounded-xl border border-border p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className={`p-3 rounded-full ${isListening ? 'bg-green-500/20' : 'bg-gray-500/20'}`}>
-                <Signal className={`h-6 w-6 ${isListening ? 'text-green-500' : 'text-gray-500'}`} />
+        {/* Alerts */}
+        {nextPass && (
+          <Alert className={nextPass.time_until_aos.includes('-') ? "destructive" : "default"}>
+            <Satellite className="h-4 w-4" />
+            <AlertDescription>
+              {nextPass.time_until_aos.includes('-') 
+                ? `МКС сейчас не видима. Следующий пролёт: ${format(new Date(nextPass.aos), 'HH:mm:ss')}`
+                : `МКС видима! Максимальная высота: ${nextPass.max_elevation}°. Окончание: ${format(new Date(nextPass.los), 'HH:mm:ss')}`
+              }
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Status Cards */}
+        <div className="grid gap-4 md:grid-cols-3">
+          {/* Recording Status */}
+          <Card className="glass border-border">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Статус записи</CardTitle>
+              <Radio className={`h-4 w-4 ${isRecording ? 'text-green-500 animate-pulse' : 'text-muted-foreground'}`} />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {isRecording ? 'Идёт запись' : 'Ожидание'}
               </div>
-              <div>
-                <h3 className="font-semibold">Статус приёмника</h3>
-                <p className="text-muted-foreground">
-                  {isListening ? 'Активное сканирование частоты 145.800 MHz' : 'Ожидание запуска'}
-                </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Частота: 145.800 MHz
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Next Pass */}
+          <Card className="glass border-border">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Следующий пролёт</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {nextPass ? format(new Date(nextPass.aos), 'HH:mm') : '--:--'}
               </div>
-            </div>
-            {isListening && (
-              <div className="text-right">
-                <div className="text-2xl font-bold text-green-500">145.800</div>
-                <div className="text-sm text-muted-foreground">MHz</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {nextPass ? `${nextPass.duration_minutes} мин, макс. ${nextPass.max_elevation}°` : 'Нет данных'}
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* ISS Position */}
+          <Card className="glass border-border">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Позиция МКС</CardTitle>
+              <Satellite className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {issPosition ? `${issPosition.altitude_km} км` : '-- км'}
               </div>
-            )}
-          </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {issPosition ? `${issPosition.latitude.toFixed(1)}°, ${issPosition.longitude.toFixed(1)}°` : '--'}
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Transmissions Table */}
-        {isLoading ? (
-          <div className="text-center py-12">
-            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-            <p className="text-muted-foreground">Загрузка передач...</p>
-          </div>
-        ) : transmissions.length === 0 ? (
-          <div className="text-center py-12 glass rounded-xl border border-border">
-            <Radio className="h-16 w-16 mx-auto mb-4 opacity-20" />
-            <h3 className="text-lg font-semibold mb-2">Нет передач</h3>
-            <p className="text-muted-foreground mb-4">
-              {isListening ? 'Ожидание сигнала SSTV...' : 'Запустите прослушивание для приёма изображений'}
-            </p>
-            {!isListening && (
-              <Button onClick={toggleListening}>
-                <Play className="h-4 w-4 mr-2" />
-                Начать прослушивание
-              </Button>
-            )}
-          </div>
-        ) : (
-          <div className="glass rounded-xl border border-border overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-secondary/50 border-b border-border">
-                <tr>
-                  <th className="text-left p-4 font-medium text-muted-foreground">ID</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground">Частота</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground">Режим</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground">Сигнал</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground">Статус</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground">Дата</th>
-                  <th className="text-right p-4 font-medium text-muted-foreground">Действия</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transmissions.map((tx) => (
-                  <tr
-                    key={tx.id}
-                    className="border-b border-border last:border-0 hover:bg-secondary/30 transition-colors"
+        {/* Detailed ISS Info */}
+        {nextPass && (
+          <Card className="glass border-border">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Satellite className="h-5 w-5" />
+                Информация о пролёте МКС
+              </CardTitle>
+              <CardDescription>
+                Данные о следующем видимом пролёте Международной Космической Станции
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-4">
+                <div>
+                  <div className="text-sm text-muted-foreground">Начало (AOS)</div>
+                  <div className="text-lg font-semibold">
+                    {format(new Date(nextPass.aos), 'dd.MM.yyyy HH:mm:ss')}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground">Конец (LOS)</div>
+                  <div className="text-lg font-semibold">
+                    {format(new Date(nextPass.los), 'dd.MM.yyyy HH:mm:ss')}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground">Макс. высота</div>
+                  <div className="text-lg font-semibold">{nextPass.max_elevation}°</div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground">Длительность</div>
+                  <div className="text-lg font-semibold">{nextPass.duration_minutes} мин</div>
+                </div>
+              </div>
+              
+              <div className="mt-4 flex items-center gap-4">
+                <div className="flex-1">
+                  <div className="text-sm text-muted-foreground mb-2">Частота приёма</div>
+                  <Badge variant="outline" className="text-lg px-4 py-2">
+                    {nextPass.frequency_mhz} MHz
+                  </Badge>
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm text-muted-foreground mb-2">Время до начала</div>
+                  <Badge className="text-lg px-4 py-2 bg-blue-500">
+                    {nextPass.time_until_aos.replace('-', '')}
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Recordings Table */}
+        <Card className="glass border-border">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <HardDrive className="h-5 w-5" />
+              Записи SSTV
+            </CardTitle>
+            <CardDescription>
+              Список записанных аудиофайлов для декодирования
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="text-center py-12">
+                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                <p className="text-muted-foreground">Загрузка записей...</p>
+              </div>
+            ) : recordings.length === 0 ? (
+              <div className="text-center py-12">
+                <Radio className="h-16 w-16 mx-auto mb-4 opacity-20" />
+                <h3 className="text-lg font-semibold mb-2">Нет записей</h3>
+                <p className="text-muted-foreground mb-4">
+                  {isRecording ? 'Идёт запись...' : 'Запишите сигнал SSTV для декодирования'}
+                </p>
+                {!isRecording && (
+                  <Button onClick={toggleRecording}>
+                    <Play className="h-4 w-4 mr-2" />
+                    Начать запись
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {recordings.map((recording, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-4 rounded-lg border border-border bg-secondary/30 hover:bg-secondary/50 transition-colors"
                   >
-                    <td className="p-4 font-medium">#{tx.id}</td>
-                    <td className="p-4">
-                      <span className="px-2 py-1 rounded-full bg-blue-500/10 text-blue-500 text-sm">
-                        {tx.frequency} MHz
-                      </span>
-                    </td>
-                    <td className="p-4 text-muted-foreground">{tx.mode}</td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-2">
-                        <div className="flex gap-0.5">
-                          {[...Array(5)].map((_, i) => (
-                            <div
-                              key={i}
-                              className={`w-1 h-4 rounded-sm ${
-                                i < Math.floor(tx.signal_strength / 20)
-                                  ? 'bg-green-500'
-                                  : 'bg-gray-500/30'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-sm text-muted-foreground">{tx.signal_strength}%</span>
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 rounded-full bg-blue-500/20">
+                        <Radio className="h-5 w-5 text-blue-500" />
                       </div>
-                    </td>
-                    <td className="p-4">
-                      <span className={`px-2 py-1 rounded-full text-sm ${
-                        tx.status === 'received'
-                          ? 'bg-green-500/10 text-green-500'
-                          : tx.status === 'receiving'
-                          ? 'bg-blue-500/10 text-blue-500'
-                          : 'bg-gray-500/10 text-gray-500'
-                      }`}>
-                        {tx.status}
-                      </span>
-                    </td>
-                    <td className="p-4 text-muted-foreground">
-                      {format(new Date(tx.created_at), 'dd.MM.yyyy HH:mm')}
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center justify-end gap-2">
+                      <div>
+                        <div className="font-medium">{recording.filename}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {recording.frequency} MHz • {format(new Date(recording.created_at), 'dd.MM.yyyy HH:mm')}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-sm text-muted-foreground">
+                        {formatFileSize(recording.size_bytes)}
+                      </div>
+                      <div className="flex gap-2">
                         <Button variant="outline" size="icon">
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -184,13 +360,13 @@ export default function SSTVPage() {
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                    </td>
-                  </tr>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );
