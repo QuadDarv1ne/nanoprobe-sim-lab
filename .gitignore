@@ -40,13 +40,25 @@ Thumbs.db
 logs/
 *.log
 
+# Отчёты (игнорируем содержимое, но не структуру)
+reports/errors/*.json
+reports/exports/**/*.json
+reports/analytics/**/*.json
+
+# Сохраняем структуру
+!reports/
+!reports/.gitkeep
+!reports/errors/.gitkeep
+!reports/exports/.gitkeep
+!reports/analytics/.gitkeep
+!reports/README.md
+
 # Данные
 data/*.db
 data/*.sqlite
 data/*.db-shm
 data/*.db-wal
 output/
-reports/
 
 # Env
 .env

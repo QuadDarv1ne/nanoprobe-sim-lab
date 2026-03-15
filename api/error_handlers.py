@@ -1,6 +1,11 @@
 """
 Централизованная обработка ошибок для FastAPI API
 Унифицированная обработка исключений с категоризацией по severity
+
+Сохранение отчётов об ошибках:
+- Папка: reports/errors/
+- Формат: error_report_YYYYMMDD_HHMMSS.json
+- Очистка: автоматически через 30 дней
 """
 
 from functools import wraps
@@ -13,8 +18,14 @@ from enum import Enum
 import logging
 import traceback
 import os
+import json
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+# Директория для отчётов об ошибках
+ERROR_REPORTS_DIR = Path("reports/errors")
+ERROR_REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 class ErrorSeverity(str, Enum):
@@ -296,6 +307,64 @@ def register_error_handlers(app):
     app.add_exception_handler(ExternalServiceError, api_error_handler_wrapper)
 
     logger.info("Error handlers registered")
+
+
+# ==================== Error Reporting ====================
+
+def save_error_report(error_type: str, message: str, traceback_str: str, context: Optional[Dict] = None):
+    """
+    Сохранение отчёта об ошибке в reports/errors/
+    
+    Args:
+        error_type: Тип ошибки
+        message: Сообщение
+        traceback_str: Трассировка
+        context: Дополнительный контекст
+    """
+    timestamp = datetime.now()
+    filename = f"error_report_{timestamp.strftime('%Y%m%d_%H%M%S')}.json"
+    filepath = ERROR_REPORTS_DIR / filename
+    
+    report = {
+        "timestamp": timestamp.isoformat(),
+        "error_type": error_type,
+        "message": message,
+        "traceback": traceback_str,
+        "context": context or {},
+        "resolved": False
+    }
+    
+    try:
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump(report, f, ensure_ascii=False, indent=2)
+        logger.debug(f"Error report saved: {filepath}")
+    except Exception as e:
+        logger.error(f"Failed to save error report: {e}")
+
+
+def cleanup_old_error_reports(days: int = 30):
+    """
+    Очистка старых отчётов об ошибках
+    
+    Args:
+        days: Удалять отчеты старше N дней
+    """
+    from datetime import timedelta
+    
+    cutoff = datetime.now() - timedelta(days=days)
+    deleted = 0
+    
+    for file in ERROR_REPORTS_DIR.glob("error_report_*.json"):
+        mtime = datetime.fromtimestamp(file.stat().st_mtime)
+        if mtime < cutoff:
+            file.unlink()
+            deleted += 1
+            logger.debug(f"Deleted old error report: {file}")
+    
+    if deleted > 0:
+        logger.info(f"Cleaned up {deleted} old error reports")
+    
+    return deleted
 
 
 def handle_errors(func):
