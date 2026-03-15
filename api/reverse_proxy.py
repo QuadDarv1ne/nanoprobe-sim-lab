@@ -3,11 +3,13 @@ Reverse proxy для интеграции Flask и FastAPI
 Позволяет Flask приложению проксировать запросы к FastAPI
 """
 
+import logging
 import os
 import requests
 from flask import Blueprint, request, jsonify, session
 import jwt
 
+logger = logging.getLogger(__name__)
 
 # Blueprint для reverse proxy
 api_proxy = Blueprint('api_proxy', __name__, url_prefix='/api/v1')
@@ -393,4 +395,4 @@ def register_proxy(app):
         app: Flask приложение
     """
     app.register_blueprint(api_proxy)
-    print(f"[OK] Reverse proxy зарегистрирован: {FASTAPI_URL}")
+    logger.info(f"Reverse proxy registered: {FASTAPI_URL}")
