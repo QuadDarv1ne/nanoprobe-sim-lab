@@ -10,10 +10,11 @@ import os
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from api.error_handlers import NotFoundError
 from utils.circuit_breaker import circuit_breaker
+from utils.redis_cache import cache as redis_cache
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +71,13 @@ async def get_nasa_apod(date: Optional[str] = None):
     Returns:
         Данные APOD
     """
+    # Проверяем кэш
+    cache_key = f"nasa:apod:{date or 'today'}"
+    cached_data = redis_cache.get(cache_key)
+    if cached_data:
+        cached_data["cached"] = True
+        return cached_data
+
     api_key = os.getenv("NASA_API_KEY", "DEMO_KEY")
     url = "https://api.nasa.gov/planetary/apod"
     params = {"api_key": api_key}
@@ -79,8 +87,24 @@ async def get_nasa_apod(date: Optional[str] = None):
 
     response = http_session.get(url, params=params, timeout=10)
     response.raise_for_status()
-
-    return response.json()
+    
+    data = response.json()
+    
+    # Кэшируем на 1 час для исторических дат, на 5 минут для сегодняшней
+    now = datetime.now().date()
+    if date:
+        try:
+            request_date = datetime.strptime(date, "%Y-%m-%d").date()
+            expire = 3600 if request_date < now else 300
+        except ValueError:
+            expire = 300
+    else:
+        expire = 300  # Сегодня - 5 минут
+    
+    redis_cache.set(cache_key, data, expire)
+    data["cached"] = False
+    
+    return data
 
 
 @router.get(
@@ -108,6 +132,13 @@ async def search_zenodo(
     Returns:
         Результаты поиска
     """
+    # Проверяем кэш
+    cache_key = f"zenodo:search:{query}:{size}"
+    cached_data = redis_cache.get(cache_key)
+    if cached_data:
+        cached_data["cached"] = True
+        return cached_data
+
     url = "https://zenodo.org/api/records"
     params = {
         "q": query,
@@ -118,8 +149,14 @@ async def search_zenodo(
 
     response = http_session.get(url, params=params, timeout=10)
     response.raise_for_status()
-
-    return response.json()
+    
+    data = response.json()
+    
+    # Кэшируем на 10 минут
+    redis_cache.set(cache_key, data, expire=600)
+    data["cached"] = False
+    
+    return data
 
 
 @router.get(
@@ -147,6 +184,13 @@ async def search_figshare(
     Returns:
         Результаты поиска
     """
+    # Проверяем кэш
+    cache_key = f"figshare:search:{query}:{limit}"
+    cached_data = redis_cache.get(cache_key)
+    if cached_data:
+        cached_data["cached"] = True
+        return cached_data
+
     url = "https://api.figshare.com/v2/articles"
     params = {
         "search": query,
@@ -155,8 +199,14 @@ async def search_figshare(
 
     response = http_session.get(url, params=params, timeout=10)
     response.raise_for_status()
-
-    return response.json()
+    
+    data = response.json()
+    
+    # Кэшируем на 10 минут
+    redis_cache.set(cache_key, data, expire=600)
+    data["cached"] = False
+    
+    return data
 
 
 @router.get(
