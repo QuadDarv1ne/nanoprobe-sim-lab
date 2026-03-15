@@ -25,7 +25,7 @@ from utils.redis_cache import RedisCache
 
 # Импорты роутов
 from api.routes import scans, simulations, analysis, comparison, reports, auth, admin, dashboard
-from api.routes import graphql, ml_analysis, external_services
+from api.routes import graphql, ml_analysis, external_services, nasa, database
 
 logger = logging.getLogger(__name__)
 
@@ -328,6 +328,14 @@ app.include_router(ml_analysis.router, prefix="/api/v1", tags=["AI/ML"])
 
 # External Services (with Circuit Breaker)
 app.include_router(external_services.router, prefix="/api/v1", tags=["External Services"])
+
+# NASA API Integration
+app.include_router(nasa.router, prefix="/api/v1", tags=["NASA API"])
+logger.info("NASA API routes registered")
+
+# Database Query Analyzer
+app.include_router(database.router, prefix="/api/v1", tags=["Database"])
+logger.info("Database routes registered")
 
 # SSTV Ground Station API (ISS schedule, satellite tracking, SSTV decoding)
 try:

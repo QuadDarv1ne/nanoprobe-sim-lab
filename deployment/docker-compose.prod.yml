@@ -1,0 +1,311 @@
+# Docker Compose для Production
+# Nanoprobe Sim Lab - Production Stack
+# 
+# Services:
+# - Nginx (reverse proxy + SSL)
+# - FastAPI (Gunicorn workers)
+# - Flask (legacy frontend)
+# - Next.js (modern frontend)
+# - Redis (caching)
+# - PostgreSQL (database)
+# - Worker (background tasks)
+
+version: '3.8'
+
+services:
+  # ==========================================
+  # Nginx Reverse Proxy
+  # ==========================================
+  nginx:
+    image: nginx:alpine
+    container_name: nanoprobe-nginx
+    restart: unless-stopped
+    
+    ports:
+      - "80:80"
+      - "443:443"
+    
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    
+    depends_on:
+      - fastapi
+      - flask
+      - nextjs
+    
+    networks:
+      - nanoprobe-network
+    
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ==========================================
+  # FastAPI Backend
+  # ==========================================
+  fastapi:
+    build:
+      context: ..
+      dockerfile: deployment/docker/Dockerfile.fastapi
+    container_name: nanoprobe-fastapi
+    restart: unless-stopped
+    
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - JWT_SECRET=${JWT_SECRET}
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - NASA_API_KEY=${NASA_API_KEY}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000,http://localhost:5000}
+    
+    volumes:
+      - nanoprobe-data:/app/data
+      - nanoprobe-logs:/app/logs
+      - nanoprobe-output:/app/output
+      - nanoprobe-reports:/app/reports
+    
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    
+    networks:
+      - nanoprobe-network
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # ==========================================
+  # Flask Frontend (Legacy)
+  # ==========================================
+  flask:
+    build:
+      context: ..
+      dockerfile: deployment/docker/Dockerfile.flask
+    container_name: nanoprobe-flask
+    restart: unless-stopped
+    
+    environment:
+      - FLASK_ENV=production
+      - FLASK_APP=src/web/web_dashboard.py
+      - API_URL=http://fastapi:8000
+    
+    volumes:
+      - nanoprobe-data:/app/data
+      - nanoprobe-output:/app/output
+    
+    networks:
+      - nanoprobe-network
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ==========================================
+  # Next.js Frontend (Modern)
+  # ==========================================
+  nextjs:
+    build:
+      context: ../frontend
+      dockerfile: ../deployment/docker/Dockerfile.nextjs
+    container_name: nanoprobe-nextjs
+    restart: unless-stopped
+    
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=/api
+      - NEXT_PUBLIC_WS_URL=ws://localhost/ws
+    
+    depends_on:
+      - fastapi
+    
+    networks:
+      - nanoprobe-network
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ==========================================
+  # Background Worker
+  # ==========================================
+  worker:
+    build:
+      context: ..
+      dockerfile: deployment/docker/Dockerfile.fastapi
+    container_name: nanoprobe-worker
+    restart: unless-stopped
+    
+    command: python -m api.worker
+    
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    
+    volumes:
+      - nanoprobe-data:/app/data
+      - nanoprobe-logs:/app/logs
+    
+    depends_on:
+      - postgres
+      - redis
+    
+    networks:
+      - nanoprobe-network
+
+  # ==========================================
+  # PostgreSQL Database
+  # ==========================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: nanoprobe-postgres
+    restart: unless-stopped
+    
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    
+    networks:
+      - nanoprobe-network
+    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+
+  # ==========================================
+  # Redis Cache
+  # ==========================================
+  redis:
+    image: redis:7-alpine
+    container_name: nanoprobe-redis
+    restart: unless-stopped
+    
+    command: redis-server --appendonly yes --maxmemory 1gb --maxmemory-policy allkeys-lru
+    
+    volumes:
+      - redis-data:/data
+    
+    networks:
+      - nanoprobe-network
+    
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ==========================================
+  # Prometheus (Monitoring)
+  # ==========================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: nanoprobe-prometheus
+    restart: unless-stopped
+    
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+    
+    ports:
+      - "9090:9090"
+    
+    depends_on:
+      - fastapi
+    
+    networks:
+      - nanoprobe-network
+
+  # ==========================================
+  # Grafana (Visualization)
+  # ==========================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: nanoprobe-grafana
+    restart: unless-stopped
+    
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    
+    ports:
+      - "3001:3000"
+    
+    depends_on:
+      - prometheus
+    
+    networks:
+      - nanoprobe-network
+
+# ==========================================
+# Networks
+# ==========================================
+networks:
+  nanoprobe-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+# ==========================================
+# Volumes
+# ==========================================
+volumes:
+  nanoprobe-data:
+  nanoprobe-logs:
+  nanoprobe-output:
+  nanoprobe-reports:
+  postgres-data:
+  redis-data:
+  prometheus-data:
+  grafana-data:
