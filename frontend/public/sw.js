@@ -285,11 +285,11 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('message', (event) => {
   console.log('[SW] Message received:', event.data);
-  
+
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
-  
+
   if (event.data && event.data.type === 'CLEAR_CACHE') {
     event.waitUntil(
       caches.keys().then(cacheNames => {
@@ -301,6 +301,38 @@ self.addEventListener('message', (event) => {
       })
     );
   }
+
+  // Обработка запроса на последнюю синхронизацию
+  if (event.data && event.data.type === 'GET_LAST_SYNC') {
+    const lastSync = localStorage.getItem('lastSync') || null;
+    event.ports[0].postMessage({ lastSync });
+  }
+
+  // Обновление последней синхронизации
+  if (event.data && event.data.type === 'SET_LAST_SYNC') {
+    localStorage.setItem('lastSync', new Date().toISOString());
+  }
 });
+
+// Отслеживание последней синхронизации при успешных запросах
+async function trackSync(request, response) {
+  try {
+    if (response.ok && request.method === 'GET') {
+      const now = new Date().toISOString();
+      localStorage.setItem('lastSync', now);
+      
+      // Уведомляем клиенты о синхронизации
+      const clients = await self.clients.matchAll();
+      clients.forEach(client => {
+        client.postMessage({
+          type: 'SYNC_UPDATE',
+          timestamp: now
+        });
+      });
+    }
+  } catch (error) {
+    console.log('[SW] Sync tracking error:', error);
+  }
+}
 
 console.log('[SW] Service Worker loaded');
