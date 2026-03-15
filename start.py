@@ -119,11 +119,11 @@ def start_backend():
 
 def start_flask_frontend():
     """Start Flask frontend"""
-    print("Starting Flask Frontend...")
+    print("Starting Flask Frontend (Unified)...")
     print(f"   Port: http://localhost:{FLASK_PORT}")
     print()
 
-    flask_script = PROJECT_ROOT / "src" / "web" / "web_dashboard.py"
+    flask_script = PROJECT_ROOT / "src" / "web" / "web_dashboard_unified.py"
     if not flask_script.exists():
         print(f"[ERROR] {flask_script} not found!")
         return None

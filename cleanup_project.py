@@ -217,7 +217,7 @@ class ProjectCleaner:
             "requirements.txt",
             "src/cli/main.py",
             "src/cli/project_manager.py",
-            "src/web/web_dashboard.py"
+            "src/web/web_dashboard_unified.py"
         ]
 
         missing_files = []

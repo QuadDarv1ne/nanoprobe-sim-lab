@@ -73,7 +73,7 @@ class ProjectValidator:
             "requirements.txt",
             "src/cli/main.py",
             "src/cli/project_manager.py",
-            "src/web/web_dashboard.py"
+            "src/web/web_dashboard_unified.py"
         ]
 
         missing_dirs = []
@@ -287,7 +287,7 @@ class ProjectValidator:
             ("start.py", "Главный запуск"),
             ("src/cli/main.py", "Консольный интерфейс"),
             ("src/cli/project_manager.py", "Менеджер проекта"),
-            ("src/web/web_dashboard.py", "Веб-панель"),
+            ("src/web/web_dashboard_unified.py", "Веб-панель"),
             ("utils/cache_manager.py", "Менеджер кэша"),
             ("utils/config_manager.py", "Менеджер конфигов")
         ]

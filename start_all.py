@@ -47,7 +47,7 @@ if sys.platform == "win32":
 # Пути
 PROJECT_ROOT = Path(__file__).parent
 BACKEND_SCRIPT = PROJECT_ROOT / "run_api.py"
-FRONTEND_SCRIPT = PROJECT_ROOT / "src" / "web" / "web_dashboard.py"
+FRONTEND_SCRIPT = PROJECT_ROOT / "src" / "web" / "web_dashboard_unified.py"
 SYNC_MANAGER_SCRIPT = PROJECT_ROOT / "api" / "sync_manager.py"
 LOG_DIR = PROJECT_ROOT / "logs"
 PYTHON_EXECUTABLE = sys.executable
