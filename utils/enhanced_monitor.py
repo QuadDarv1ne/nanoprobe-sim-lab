@@ -271,17 +271,41 @@ class EnhancedSystemMonitor:
         history_list = list(self.metrics_history)
 
         def avg(key):
-            """TODO: Add description"""
+            """
+            Вычисляет среднее значение метрики.
+
+            Args:
+                key: Ключ метрики
+
+            Returns:
+                Среднее значение или 0
+            """
             values = [m[key] for m in history_list if key in m]
             return sum(values) / len(values) if values else 0
 
         def max_val(key):
-            """TODO: Add description"""
+            """
+            Вычисляет максимальное значение метрики.
+
+            Args:
+                key: Ключ метрики
+
+            Returns:
+                Максимальное значение или 0
+            """
             values = [m[key] for m in history_list if key in m]
             return max(values) if values else 0
 
         def min_val(key):
-            """TODO: Add description"""
+            """
+            Вычисляет минимальное значение метрики.
+
+            Args:
+                key: Ключ метрики
+
+            Returns:
+                Минимальное значение или 0
+            """
             values = [m[key] for m in history_list if key in m]
             return min(values) if values else 0
 
