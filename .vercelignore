@@ -1,0 +1,10 @@
+# Vercel ignore
+node_modules
+.git
+*.log
+.DS_Store
+data/*
+logs/*
+output/*
+reports/*
+!frontend/**
