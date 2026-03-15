@@ -3,12 +3,15 @@ Prometheus метрики для Nanoprobe FastAPI приложения
 Мониторинг производительности, запросов, бизнес-метрик
 """
 
+import logging
 import time
 import os
 from functools import wraps
 from typing import List, Dict
 
 from fastapi.responses import PlainTextResponse
+
+logger = logging.getLogger(__name__)
 
 try:
     from prometheus_client import (
@@ -386,7 +389,7 @@ def setup_prometheus(port: int = 9090):
     Запуск сервера метрик на отдельном порту
     """
     if not PROMETHEUS_AVAILABLE:
-        print("[WARN] Prometheus client not installed")
+        logger.warning("Prometheus client not installed")
         return False
 
     try:
@@ -397,10 +400,10 @@ def setup_prometheus(port: int = 9090):
 
         # Запуск сервера метрик
         start_http_server(port)
-        print(f"[OK] Prometheus metrics server started on port {port}")
+        logger.info(f"Prometheus metrics server started on port {port}")
         return True
     except Exception as e:
-        print(f"[ERROR] Failed to start Prometheus metrics server: {e}")
+        logger.error(f"Failed to start Prometheus metrics server: {e}")
         return False
 
 
