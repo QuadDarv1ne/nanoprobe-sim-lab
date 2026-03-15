@@ -88,6 +88,16 @@ LOGGING_CONFIG = {
             'encoding': 'utf-8',
             'level': 'INFO',
         },
+        # Audit log handler - отдельный файл для security событий
+        'file_audit': {
+            'formatter': 'json',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': str(LOG_DIR / 'audit_security.log'),
+            'maxBytes': 50 * 1024 * 1024,  # 50 MB
+            'backupCount': 30,  # Храним 30 файлов для аудита
+            'encoding': 'utf-8',
+            'level': 'INFO',
+        },
     },
 
     'loggers': {
@@ -112,6 +122,13 @@ LOGGING_CONFIG = {
         'nanoprobe': {
             'handlers': ['console', 'file_info', 'file_debug', 'file_errors', 'file_json'],
             'level': 'DEBUG',
+            'propagate': False,
+        },
+
+        # Audit logger - security события
+        'audit.security': {
+            'handlers': ['file_audit'],
+            'level': 'INFO',
             'propagate': False,
         },
 

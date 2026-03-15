@@ -2,6 +2,7 @@
 API роуты для аутентификации
 JWT токен, логин, регистрация с refresh token rotation
 Redis integration для персистентного хранения токенов
+Argon2 password hashing + Audit logging
 """
 
 from fastapi import APIRouter, Depends, Request
@@ -12,6 +13,7 @@ import jwt
 import os
 import secrets
 import logging
+from enum import Enum
 
 from passlib.context import CryptContext
 
@@ -28,6 +30,9 @@ from api.rate_limiter import auth_limit
 
 logger = logging.getLogger(__name__)
 
+# Audit logger для security событий
+audit_logger = logging.getLogger("audit.security")
+
 router = APIRouter()
 security = HTTPBearer()
 
@@ -36,13 +41,24 @@ JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_MINUTES = 60
 JWT_REFRESH_EXPIRATION_DAYS = 7
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Argon2 + bcrypt fallback для совместимости
+# Argon2 - победитель Password Hashing Competition, более безопасный чем bcrypt
+pwd_context = CryptContext(
+    schemes=["argon2", "bcrypt"],
+    default="argon2",
+    deprecated="auto",
+    # Argon2 параметры (рекомендованные OWASP)
+    argon2__memory_cost=65536,  # 64 MB
+    argon2__time_cost=3,        # 3 итерации
+    argon2__parallelism=4,      # 4 параллельных потока
+    argon2__type="id",          # Argon2id (гибрид Data-dependent + Data-independent)
+)
 
 USERS_DB = {
     "admin": {
         "id": 1,
         "username": "admin",
-        "password_hash": pwd_context.hash("Admin123!"),
+        "password_hash": pwd_context.hash("Admin123!"),  # Перехешируется при первом входе на Argon2
         "role": "admin",
         "created_at": "2026-03-11T00:00:00",
         "last_login": None,
@@ -56,6 +72,49 @@ USERS_DB = {
         "last_login": None,
     },
 }
+
+
+class AuditEventType(str, Enum):
+    """Типы audit событий"""
+    LOGIN_SUCCESS = "login.success"
+    LOGIN_FAILURE = "login.failure"
+    LOGOUT = "logout"
+    TOKEN_REFRESH = "token.refresh"
+    TOKEN_REVOKED = "token.revoked"
+    PASSWORD_CHANGED = "password.changed"
+    _2FA_ENABLED = "2fa.enabled"
+    _2FA_DISABLED = "2fa.disabled"
+    _2FA_VERIFICATION_FAILED = "2fa.verification_failed"
+
+
+def log_audit_event(event_type: AuditEventType, username: str, request: Request, **extra):
+    """
+    Логирование audit события безопасности
+
+    Формат:
+    {
+        "timestamp": "2026-03-15T10:30:00Z",
+        "event_type": "login.success",
+        "username": "admin",
+        "ip": "192.168.1.1",
+        "user_agent": "Mozilla/5.0...",
+        "extra": {...}
+    }
+    """
+    audit_event = {
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "event_type": event_type.value,
+        "username": username,
+        "ip": request.client.host if request else "unknown",
+        "user_agent": request.headers.get("user-agent", "unknown") if request else "unknown",
+        **extra
+    }
+
+    # Логирование в JSON формате для удобного парсинга
+    import json
+    audit_logger.info(json.dumps(audit_event, ensure_ascii=False))
+
+    return audit_event
 
 
 def validate_password_strength(password: str) -> tuple[bool, str]:
@@ -191,14 +250,26 @@ def revoke_refresh_token(jti: str):
 @rate_limit(max_requests=5, window_seconds=60)
 @auth_limit(max_requests=10, window=60)
 async def login(request: Request, login_data: LoginRequest):
-    """Вход в систему"""
+    """Вход в систему с audit logging"""
     user = USERS_DB.get(login_data.username)
 
     if not user or not verify_password(login_data.password, user["password_hash"]):
+        # Audit: Failed login attempt
+        log_audit_event(
+            AuditEventType.LOGIN_FAILURE,
+            username=login_data.username,
+            request=request,
+            reason="invalid_credentials"
+        )
         raise AuthenticationError("Неверное имя пользователя или пароль")
 
     # Обновление last_login
     user["last_login"] = datetime.now().isoformat()
+
+    # Auto-migration: если хеш bcrypt, перехешируем на Argon2 при входе
+    if not user["password_hash"].startswith("$argon2"):
+        logger.info(f"Migrating user {login_data.username} from bcrypt to Argon2")
+        user["password_hash"] = hash_password(login_data.password)
 
     access_token = create_access_token(
         data={"sub": user["username"], "user_id": user["id"]}
@@ -206,6 +277,20 @@ async def login(request: Request, login_data: LoginRequest):
     refresh_token = create_refresh_token(
         data={"sub": user["username"], "user_id": user["id"]}
     )
+
+    # Audit: Successful login
+    log_audit_event(
+        AuditEventType.LOGIN_SUCCESS,
+        username=user["username"],
+        request=request,
+        extra={
+            "user_id": user["id"],
+            "role": user["role"],
+            "auth_method": "password",
+        }
+    )
+
+    logger.info(f"User {user['username']} logged in successfully")
 
     return LoginResponse(
         access_token=access_token,
@@ -227,17 +312,19 @@ async def login(request: Request, login_data: LoginRequest):
     description="Обновление access токена с помощью refresh токена (rotation)",
 )
 async def refresh_access_token(request: RefreshTokenRequest):
-    """Обновление токена с refresh token rotation"""
+    """Обновление токена с refresh token rotation и audit logging"""
     try:
         payload = jwt.decode(request.refresh_token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
 
         # Проверка типа токена
         if payload.get("type") != "refresh":
+            logger.warning(f"Token refresh attempt with wrong type: {payload.get('type')}")
             raise AuthenticationError("Неверный тип токена")
 
         # Проверка jti (rotation check) через Redis
         jti = payload.get("jti")
         if not _is_token_valid(jti):
+            logger.warning(f"Token refresh attempt with revoked token, jti: {jti}")
             raise AuthenticationError("Refresh токен был отозван")
 
         username: str = payload.get("sub")
@@ -251,12 +338,28 @@ async def refresh_access_token(request: RefreshTokenRequest):
         # Ревокация старого токена (rotation)
         revoke_refresh_token(jti)
 
+        # Audit: Token revoked
+        log_audit_event(
+            AuditEventType.TOKEN_REVOKED,
+            username=username,
+            request=request,
+            extra={"jti": jti, "reason": "rotation"}
+        )
+
         # Создание новой пары токенов
         new_access_token = create_access_token(
             data={"sub": user["username"], "user_id": user["id"]}
         )
         new_refresh_token = create_refresh_token(
             data={"sub": user["username"], "user_id": user["id"]}
+        )
+
+        # Audit: Token refreshed
+        log_audit_event(
+            AuditEventType.TOKEN_REFRESH,
+            username=username,
+            request=request,
+            extra={"jti_old": jti}
         )
 
         logger.info(f"Token refreshed for user: {username}")
@@ -268,7 +371,8 @@ async def refresh_access_token(request: RefreshTokenRequest):
             expires_in=JWT_EXPIRATION_MINUTES * 60,
         )
 
-    except jwt.PyJWTError:
+    except jwt.PyJWTError as e:
+        logger.warning(f"Token refresh failed: {e}")
         raise AuthenticationError("Неверный refresh токен")
 
 
@@ -301,17 +405,31 @@ async def setup_2fa(current_user: dict = Depends(get_current_user)):
 )
 async def verify_2fa_setup(
     otp_code: str,
+    request: Request,
     current_user: dict = Depends(get_current_user)
 ):
-    """Верификация 2FA"""
+    """Верификация 2FA с audit logging"""
     from utils.two_factor_auth import get_2fa_manager
 
     username = current_user["username"]
     two_factor = get_2fa_manager()
 
     if two_factor.verify_2fa_setup(username, otp_code):
+        # Audit: 2FA enabled
+        log_audit_event(
+            AuditEventType._2FA_ENABLED,
+            username=username,
+            request=request
+        )
         return {"success": True, "message": "2FA успешно включена"}
 
+    # Audit: 2FA verification failed
+    log_audit_event(
+        AuditEventType._2FA_VERIFICATION_FAILED,
+        username=username,
+        request=request,
+        extra={"stage": "setup"}
+    )
     raise ValidationError("Неверный OTP код")
 
 
@@ -322,15 +440,22 @@ async def verify_2fa_setup(
 )
 async def verify_2fa_login(
     otp_code: str,
+    request: Request,
     username: str,
     password: str
 ):
-    """2FA при входе"""
+    """2FA при входе с audit logging"""
     from utils.two_factor_auth import get_2fa_manager
 
     # Сначала проверяем логин/пароль
     user = USERS_DB.get(username)
     if not user or not verify_password(password, user["password_hash"]):
+        log_audit_event(
+            AuditEventType.LOGIN_FAILURE,
+            username=username,
+            request=request,
+            reason="invalid_credentials_2fa"
+        )
         raise AuthenticationError("Неверное имя пользователя или пароль")
 
     # Проверяем 2FA если включена
@@ -341,6 +466,12 @@ async def verify_2fa_login(
         if not two_factor.verify_2fa(username, otp_code):
             # Пробуем резервный код
             if not two_factor.verify_backup_code(username, otp_code):
+                log_audit_event(
+                    AuditEventType._2FA_VERIFICATION_FAILED,
+                    username=username,
+                    request=request,
+                    extra={"stage": "login"}
+                )
                 raise AuthenticationError("Неверный 2FA код")
 
     # Генерация токенов
@@ -349,6 +480,18 @@ async def verify_2fa_login(
     )
     refresh_token = create_refresh_token(
         data={"sub": user["username"], "user_id": user["id"]}
+    )
+
+    # Audit: Successful login with 2FA
+    log_audit_event(
+        AuditEventType.LOGIN_SUCCESS,
+        username=username,
+        request=request,
+        extra={
+            "user_id": user["id"],
+            "role": user["role"],
+            "auth_method": "password+2fa",
+        }
     )
 
     return LoginResponse(
@@ -390,17 +533,31 @@ async def get_2fa_status(current_user: dict = Depends(get_current_user)):
 )
 async def disable_2fa(
     otp_code: str,
+    request: Request,
     current_user: dict = Depends(get_current_user)
 ):
-    """Отключение 2FA"""
+    """Отключение 2FA с audit logging"""
     from utils.two_factor_auth import get_2fa_manager
 
     username = current_user["username"]
     two_factor = get_2fa_manager()
 
     if two_factor.disable_2fa(username, otp_code):
+        # Audit: 2FA disabled
+        log_audit_event(
+            AuditEventType._2FA_DISABLED,
+            username=username,
+            request=request
+        )
         return {"success": True, "message": "2FA отключена"}
 
+    # Audit: 2FA disable failed
+    log_audit_event(
+        AuditEventType._2FA_VERIFICATION_FAILED,
+        username=username,
+        request=request,
+        extra={"stage": "disable"}
+    )
     raise ValidationError("Неверный OTP код")
 
 
@@ -450,16 +607,35 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
     summary="Выход из системы",
     description="Выход из системы с ревокацией refresh токена",
 )
-async def logout(refresh_token: Optional[str] = None):
-    """Выход из системы с ревокацией refresh токена"""
+async def logout(request: Request, refresh_token: Optional[str] = None):
+    """Выход из системы с ревокацией refresh токена и audit logging"""
+    username = "unknown"
+
     if refresh_token:
         try:
             payload = jwt.decode(refresh_token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
             jti = payload.get("jti")
+            username = payload.get("sub", "unknown")
+
             if jti:
                 revoke_refresh_token(jti)
+
+                # Audit: Token revoked on logout
+                log_audit_event(
+                    AuditEventType.TOKEN_REVOKED,
+                    username=username,
+                    request=request,
+                    extra={"jti": jti, "reason": "logout"}
+                )
         except jwt.PyJWTError:
             pass
+
+    # Audit: Logout
+    log_audit_event(
+        AuditEventType.LOGOUT,
+        username=username,
+        request=request
+    )
 
     return {"message": "Успешный выход. Удалите токены на клиенте."}
 

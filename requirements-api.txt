@@ -9,8 +9,11 @@ python-multipart>=0.0.6
 # Аутентификация
 PyJWT>=2.8.0
 python-jose[cryptography]>=3.3.0
-passlib[bcrypt]>=1.7.4
-bcrypt==4.0.1  # Compatible version with passlib
+# Argon2 - победитель Password Hashing Competition (рекомендован OWASP)
+# passlib включает argon2 через argon2-cffi
+passlib[argon2,bcrypt]>=1.7.4
+argon2-cffi>=23.1.0
+bcrypt==4.0.1  # Compatible version with passlib (fallback)
 
 # Валидация
 pydantic>=2.5.0
