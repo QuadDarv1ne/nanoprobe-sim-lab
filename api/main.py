@@ -20,8 +20,8 @@ from fastapi.middleware.gzip import GZipMiddleware
 from api.error_handlers import register_error_handlers, ValidationError
 
 # Импорт существующих утилит
-from utils.database import DatabaseManager
-from utils.redis_cache import RedisCache
+from utils.database.database import DatabaseManager
+from utils.caching.redis_cache import RedisCache
 
 # Импорты роутов
 from api.routes import scans, simulations, analysis, comparison, reports, auth, admin, dashboard
