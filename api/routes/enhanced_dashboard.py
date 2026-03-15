@@ -11,7 +11,7 @@ import asyncio
 import json
 
 from utils.database import DatabaseManager
-from utils.redis_cache import cache
+from utils.redis_cache import cache, cached
 
 router = APIRouter()
 
@@ -25,7 +25,7 @@ CACHE_TTL = 1  # секунда для real-time метрик
 
 
 @router.get("/stats/detailed")
-@cache.cached(timeout=5, key_prefix="dashboard:stats:detailed")
+@cached(prefix="dashboard", expire=5)
 async def get_detailed_stats():
     """
     Get detailed dashboard statistics (cached for 5 seconds)
@@ -196,7 +196,7 @@ async def get_realtime_metrics():
 
 
 @router.get("/activity/timeline")
-@cache.cached(timeout=60, key_prefix="dashboard:activity:timeline")
+@cached(prefix="dashboard:activity", expire=60)
 async def get_activity_timeline(days: int = Query(7, ge=1, le=30)):
     """
     Get activity timeline (cached for 60 seconds)
@@ -292,7 +292,7 @@ async def get_activity_timeline(days: int = Query(7, ge=1, le=30)):
 
 
 @router.get("/storage/detailed")
-@cache.cached(timeout=30, key_prefix="dashboard:storage:detailed")
+@cached(prefix="dashboard:storage", expire=30)
 async def get_detailed_storage():
     """
     Get detailed storage statistics (cached for 30 seconds)
@@ -394,7 +394,7 @@ async def get_alerts_config():
 
 
 @router.get("/alerts/check")
-@cache.cached(timeout=5, key_prefix="dashboard:alerts:check")
+@cached(prefix="dashboard:alerts", expire=5)
 async def check_alerts():
     """
     Check current system alerts (cached for 5 seconds)
