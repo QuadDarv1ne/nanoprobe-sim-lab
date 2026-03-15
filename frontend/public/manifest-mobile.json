@@ -1,0 +1,56 @@
+{
+  "name": "Nanoprobe Sim Lab Mobile",
+  "short_name": "Nanoprobe Mobile",
+  "description": "Мобильная версия SSTV Ground Station и СЗМ симулятора",
+  "start_url": "/mobile",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["science", "education", "utilities"],
+  "shortcuts": [
+    {
+      "name": "SSTV Monitor",
+      "short_name": "SSTV",
+      "description": "SSTV Ground Station мониторинг",
+      "url": "/mobile?sstv=true",
+      "icons": [{ "src": "/icons/sstv.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "System Stats",
+      "short_name": "Stats",
+      "description": "Системная статистика",
+      "url": "/mobile?stats=true",
+      "icons": [{ "src": "/icons/dashboard.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/mobile-dashboard.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "prefer_related_applications": false
+}
