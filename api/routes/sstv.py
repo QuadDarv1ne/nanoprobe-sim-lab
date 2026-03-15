@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Optional, Dict
 
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, WebSocket, WebSocketDisconnect, Query
 from fastapi.responses import FileResponse, JSONResponse
 
 logger = logging.getLogger(__name__)
@@ -104,20 +104,15 @@ def get_sstv_decoder() -> Optional[SSTVDecoder]:
 
 @router.get("/iss/schedule")
 async def get_iss_schedule(
-    hours_ahead: int = 24,
-    min_elevation: float = 10.0
+    hours_ahead: int = Query(default=24, ge=1, le=72, description="На сколько часов вперёд (1-72)"),
+    min_elevation: float = Query(default=10.0, ge=0, le=90, description="Минимальная высота над горизонтом (0-90°)")
 ):
     """
     Получает расписание пролётов МКС (ISS).
-    
-    - **hours_ahead**: На сколько часов вперёд (максимум 72)
-    - **min_elevation**: Минимальная высота над горизонтом (градусы)
-    
+
     Returns:
         Список пролётов с временем, высотой и частотой
     """
-    hours_ahead = min(hours_ahead, 72)  # Максимум 3 дня
-    
     tracker = get_satellite_tracker()
     if not tracker:
         raise HTTPException(status_code=503, detail="Satellite tracker not available")
@@ -171,10 +166,12 @@ async def get_iss_schedule(
 
 
 @router.get("/iss/next-pass")
-async def get_iss_next_pass():
+async def get_iss_next_pass(
+    min_elevation: float = Query(default=10.0, ge=0, le=90, description="Минимальная высота (0-90°)")
+):
     """
     Получает следующий пролёт МКС.
-    
+
     Returns:
         Информация о следующем пролёте
     """
@@ -283,10 +280,12 @@ async def get_iss_current_position():
 
 
 @router.get("/iss/visible")
-async def is_iss_visible(min_elevation: float = 10.0):
+async def is_iss_visible(
+    min_elevation: float = Query(default=10.0, ge=0, le=90, description="Минимальная высота для видимости (0-90°)")
+):
     """
     Проверяет видимость МКС сейчас.
-    
+
     Returns:
         Статус видимости и информация
     """
