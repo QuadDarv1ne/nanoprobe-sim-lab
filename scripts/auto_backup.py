@@ -16,7 +16,6 @@ from utils.config_manager import ConfigManager
 
 
 def main():
-    """TODO: Add description"""
     if len(sys.argv) < 2:
         strategy = "daily"
     else:

@@ -789,7 +789,6 @@ def main():
 
     def high_response_time_condition(metrics):
         # В реальной системе здесь будет проверка времени отклика
-        """TODO: Add description"""
         return False  # Заглушка
 
     healing_system.add_detection_rule(

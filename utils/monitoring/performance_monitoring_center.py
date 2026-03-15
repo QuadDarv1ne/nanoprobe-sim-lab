@@ -339,7 +339,6 @@ class PerformanceMonitoringCenter:
         self.monitoring_active = True
 
         def monitor():
-            """TODO: Add description"""
             while self.monitoring_active:
                 try:
                     self.collect_and_process_metrics()
