@@ -67,11 +67,12 @@ Security and testing guides.
 ### Category 30-39: Advanced
 Advanced topics for developers and administrators.
 
-### Category 40-49: Monitoring
+### Category 40-49: Monitoring & Mobile
 
 | Document | Description |
 |----------|-------------|
 | [Performance Monitoring](40-performance-monitoring.md) | Prometheus metrics, Grafana dashboards |
+| [Mobile Application](41-mobile-application.md) | Next.js PWA mobile dashboard |
 
 ---
 
