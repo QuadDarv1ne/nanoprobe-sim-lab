@@ -46,6 +46,10 @@ FLASK_SCRIPT = PROJECT_ROOT / "src" / "web" / "web_dashboard_unified.py"
 SYNC_SCRIPT = PROJECT_ROOT / "api" / "sync_manager.py"
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
 
+# Конфигурация синхронизации
+SYNC_ENABLED_BY_DEFAULT = True  # Автоматическая синхронизация по умолчанию
+SYNC_INTERVAL = 5  # секунд
+
 
 # ==================== Утилиты ====================
 
@@ -84,16 +88,17 @@ def print_versions():
     """Вывод доступных версий"""
     print("Доступные режимы запуска:")
     print()
-    print("  1. Flask + FastAPI (Unified)")
+    print("  1. Flask + FastAPI (Unified) + Auto Sync ✅")
     print("     - Backend:  http://localhost:8000")
     print("     - Frontend: http://localhost:5000")
     print("     - Swagger:  http://localhost:8000/docs")
-    print("     - Sync:     Включён (автоматическая синхронизация)")
+    print("     - Sync:     АВТОМАТИЧЕСКАЯ (каждые 5 сек)")
     print()
-    print("  2. Next.js + FastAPI")
+    print("  2. Next.js + FastAPI + Auto Sync ✅")
     print("     - Backend:  http://localhost:8000")
     print("     - Frontend: http://localhost:3000")
     print("     - Swagger:  http://localhost:8000/docs")
+    print("     - Sync:     Через API endpoints")
     print()
     print("  3. Backend API only")
     print("     - Backend:  http://localhost:8000")
@@ -102,8 +107,10 @@ def print_versions():
     print("  4. Full Stack (Flask + FastAPI + Sync Manager)")
     print("     - Backend:  http://localhost:8000")
     print("     - Frontend: http://localhost:5000")
-    print("     - Sync:     Расширенная синхронизация")
+    print("     - Sync:     Расширенная синхронизация (отдельный процесс)")
     print()
+    print("=" * 70)
+    print("  💡 Sync Manager запускается автоматически во всех режимах!")
     print("=" * 70)
     print()
 
@@ -223,9 +230,10 @@ def start_nextjs_frontend() -> Optional[subprocess.Popen]:
 
 
 def start_sync_manager() -> Optional[subprocess.Popen]:
-    """Запуск Sync Manager"""
+    """Запуск Sync Manager (автоматическая синхронизация)"""
     print("Запуск Sync Manager...")
-    print("   Синхронизация Backend ↔ Frontend")
+    print("   Автоматическая синхронизация Backend ↔ Frontend")
+    print("   Интервал: 5 секунд")
     print()
 
     if not SYNC_SCRIPT.exists():
@@ -234,10 +242,11 @@ def start_sync_manager() -> Optional[subprocess.Popen]:
 
     process = subprocess.Popen(
         [sys.executable, str(SYNC_SCRIPT)],
-        cwd=str(PROJECT_ROOT)
+        cwd=str(PROJECT_ROOT),
+        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == "win32" else 0
     )
 
-    time.sleep(2)
+    time.sleep(3)
     print("[OK] Sync Manager запущен!")
     print()
     return process
@@ -328,8 +337,13 @@ def main():
     if not backend_process:
         print("[ERROR] Не удалось запустить Backend. Завершение.")
         return
-    
+
     pm.add_process(backend_process)
+
+    # Запуск Sync Manager (автоматически для всех режимов кроме api-only)
+    if mode != "api-only" and SYNC_ENABLED_BY_DEFAULT:
+        sync_process = start_sync_manager()
+        pm.add_process(sync_process)
 
     # Запуск Frontend в зависимости от режима
     if mode == "flask":
@@ -351,10 +365,7 @@ def main():
     elif mode == "full":
         frontend_process = start_flask_frontend()
         pm.add_process(frontend_process)
-        
-        sync_process = start_sync_manager()
-        pm.add_process(sync_process)
-        
+        # Sync Manager уже запущен выше
         open_browser("full")
 
     # Вывод полезной информации
@@ -363,14 +374,22 @@ def main():
     print("=" * 70)
     print()
     print("Полезные ссылки:")
-    print(f"   - Backend API (Swagger): http://localhost:{BACKEND_PORT}/docs")
-    print(f"   - Backend Health:        http://localhost:{BACKEND_PORT}/health")
-    
+    print(f"   - Backend API (Swagger):   http://localhost:{BACKEND_PORT}/docs")
+    print(f"   - Backend Health:          http://localhost:{BACKEND_PORT}/health")
+    print(f"   - Sync Manager Status:     http://localhost:{BACKEND_PORT}/api/v1/sync/status")
+
     if mode in ["flask", "full"]:
-        print(f"   - Flask Frontend:        http://localhost:{FLASK_PORT}")
+        print(f"   - Flask Frontend:          http://localhost:{FLASK_PORT}")
     elif mode == "nextjs":
-        print(f"   - Next.js Frontend:      http://localhost:{NEXTJS_PORT}")
-    
+        print(f"   - Next.js Frontend:        http://localhost:{NEXTJS_PORT}")
+
+    print()
+    print("Синхронизация:")
+    if mode != "api-only":
+        print("   ✅ Sync Manager запущен (автоматическая синхронизация каждые 5 сек)")
+    else:
+        print("   ❌ Sync Manager отключен (режим api-only)")
+
     print()
     print("Нажмите Ctrl+C для остановки всех сервисов")
     print()

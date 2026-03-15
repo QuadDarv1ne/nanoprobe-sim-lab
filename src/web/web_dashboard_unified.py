@@ -352,6 +352,7 @@ class UnifiedWebDashboard:
                 'flask': 'ok',
                 'fastapi': 'unknown',
                 'database': 'unknown',
+                'sync_manager': 'unknown',
                 'timestamp': datetime.now().isoformat()
             }
 
@@ -369,10 +370,40 @@ class UnifiedWebDashboard:
             except:
                 health['database'] = 'error'
 
-            all_ok = all(v == 'ok' for k, v in health.items() if k != 'timestamp')
+            # Проверка Sync Manager
+            try:
+                response = requests.get(f"{self.fastapi_url}/api/v1/sync/status", timeout=3)
+                if response.status_code == 200:
+                    sync_data = response.json()
+                    health['sync_manager'] = 'ok' if sync_data.get('running') else 'standby'
+                    health['sync_last_update'] = sync_data.get('last_sync_time')
+            except:
+                health['sync_manager'] = 'not_available'
+
+            all_ok = all(v == 'ok' for k, v in health.items() if k not in ['timestamp', 'sync_last_update'])
             health['status'] = 'healthy' if all_ok else 'degraded'
 
             return jsonify(health)
+
+        # ==================== Sync Manager ====================
+
+        @self.app.route("/api/sync/status")
+        def api_sync_status():
+            """Статус Sync Manager"""
+            try:
+                response = requests.get(f"{self.fastapi_url}/api/v1/sync/status", timeout=5)
+                if response.status_code == 200:
+                    return jsonify(response.json())
+                else:
+                    return jsonify({
+                        'running': False,
+                        'message': 'Sync Manager недоступен'
+                    })
+            except Exception as e:
+                return jsonify({
+                    'running': False,
+                    'message': f'Ошибка: {str(e)}'
+                })
 
         # ==================== СЗМ операции ====================
 
