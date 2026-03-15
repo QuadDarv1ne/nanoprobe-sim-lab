@@ -7,9 +7,9 @@ from fastapi import HTTPException, status, Request, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Optional
 from functools import wraps
-from utils.database import DatabaseManager
-from utils.redis_cache import RedisCache
-from utils.batch_processor import BatchProcessor
+from utils.database.database import DatabaseManager
+from utils.caching.redis_cache import RedisCache
+from utils.batch.batch_processor import BatchProcessor
 from api.error_handlers import AuthorizationError, RateLimitError, DatabaseError
 import os
 import jwt
@@ -139,7 +139,7 @@ def rate_limit(max_requests: int = 10, window_seconds: int = 60):
         async def login(...):
             ...
     """
-    from utils.rate_limiter import RateLimiter
+    from utils.security.rate_limiter import RateLimiter
 
     def decorator(func):
         """Декоратор для ограничения частоты запросов"""

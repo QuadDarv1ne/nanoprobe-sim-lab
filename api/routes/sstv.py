@@ -23,7 +23,7 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 try:
-    from utils.redis_cache import RedisCache
+    from utils.caching.redis_cache import RedisCache
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False

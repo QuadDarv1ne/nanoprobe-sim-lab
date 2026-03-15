@@ -19,8 +19,8 @@ from datetime import datetime, timedelta
 import logging
 
 from utils.nasa_api_client import get_nasa_client, NASAAPIClient
-from utils.redis_cache import cache
-from api.rate_limiter import api_limit
+from utils.caching.redis_cache import cache
+from utils.security.rate_limiter import api_limit
 
 logger = logging.getLogger(__name__)
 

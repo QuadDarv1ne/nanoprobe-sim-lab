@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 
 from api.error_handlers import NotFoundError
 from utils.circuit_breaker import circuit_breaker
-from utils.redis_cache import cache as redis_cache
+from utils.caching.redis_cache import cache as redis_cache
 
 logger = logging.getLogger(__name__)
 

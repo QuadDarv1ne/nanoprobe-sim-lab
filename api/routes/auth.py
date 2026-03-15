@@ -647,7 +647,7 @@ async def logout(request: Request, refresh_token: Optional[str] = None):
 )
 async def get_rate_limit_status(request: Request):
     """Получение статуса rate limiting"""
-    from utils.rate_limiter import limiter
+    from utils.security.rate_limiter import limiter
 
     client_ip = request.client.host
     login_key = f"login:{client_ip}"

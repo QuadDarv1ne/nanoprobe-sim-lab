@@ -6,7 +6,7 @@ Schema и резолверы для GraphQL endpoint
 import strawberry
 from typing import List, Optional
 from datetime import datetime
-from utils.database import DatabaseManager
+from utils.database.database import DatabaseManager
 
 
 @strawberry.type

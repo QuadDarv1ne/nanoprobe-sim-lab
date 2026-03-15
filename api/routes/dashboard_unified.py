@@ -35,8 +35,8 @@ from api.schemas import (
 )
 from api.error_handlers import DatabaseError, ValidationError
 from utils.enhanced_monitor import get_monitor, format_uptime
-from utils.database import DatabaseManager
-from utils.redis_cache import cache, cached
+from utils.database.database import DatabaseManager
+from utils.caching.redis_cache import cache, cached
 
 router = APIRouter()
 
