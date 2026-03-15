@@ -115,7 +115,15 @@ class DataExporter:
     def _export_json(self, data: Union[Dict, List], filepath: Path, **kwargs):
         """Экспорт в JSON."""
         def convert_to_serializable(obj):
-            """TODO: Add description"""
+            """
+            Преобразует объекты в JSON-сериализуемый формат.
+
+            Args:
+                obj: Объект для преобразования
+
+            Returns:
+            Сериализуемое значение
+            """
             if isinstance(obj, np.ndarray):
                 return obj.tolist()
             elif isinstance(obj, (np.int64, np.int32)):
