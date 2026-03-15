@@ -14,12 +14,25 @@ class JsonFormatter(logging.Formatter):
     """Форматтер для JSON логов"""
 
     def __init__(self, name: str):
-        """TODO: Add description"""
+        """
+        Инициализация JSON форматтера.
+
+        Args:
+            name: Имя логгера
+        """
         super().__init__()
         self.name = name
 
     def format(self, record: logging.LogRecord) -> str:
-        """TODO: Add description"""
+        """
+        Форматирование записи лога в JSON.
+
+        Args:
+            record: Запись лога для форматирования
+
+        Returns:
+            JSON строка с данными лога
+        """
         log_data = {
             "timestamp": datetime.utcnow().isoformat(),
             "level": record.levelname,
