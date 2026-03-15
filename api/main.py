@@ -25,7 +25,7 @@ from utils.caching.redis_cache import RedisCache
 
 # Импорты роутов
 from api.routes import scans, simulations, analysis, comparison, reports, auth, admin, dashboard
-from api.routes import graphql, ml_analysis, external_services, nasa, database
+from api.routes import graphql, ml_analysis, external_services, nasa, database, monitoring
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +61,14 @@ async def lifespan(app: FastAPI):
     else:
         logger.warning("Redis cache unavailable (running without caching)")
 
+    # Запуск мониторинга производительности
+    try:
+        from utils.monitoring.performance_monitor import start_monitoring
+        metrics_port = int(os.getenv("METRICS_PORT", "9090"))
+        start_monitoring(metrics_port)
+    except Exception as e:
+        logger.warning(f"Performance monitoring startup error: {e}")
+
     yield
 
     # Очистка при остановке
@@ -88,6 +96,15 @@ async def lifespan(app: FastAPI):
         logger.info("HTTP session closed")
     except Exception as e:
         logger.warning(f"HTTP session cleanup error: {e}")
+
+    # Остановка мониторинга
+    try:
+        from utils.monitoring.performance_monitor import get_monitor
+        monitor = get_monitor()
+        monitor.stop()
+        logger.info("Performance monitor stopped")
+    except Exception as e:
+        logger.warning(f"Monitor cleanup error: {e}")
 
     try:
         from utils.circuit_breaker import close_all_circuit_breakers
@@ -178,6 +195,33 @@ except ImportError as e:
 
 # Регистрация централизованных обработчиков ошибок
 register_error_handlers(app)
+
+
+# Middleware для мониторинга производительности
+@app.middleware("http")
+async def track_requests(request, call_next):
+    """Middleware для сбора метрик производительности"""
+    import time
+    
+    start_time = time.time()
+    
+    response = await call_next(request)
+    
+    latency = time.time() - start_time
+    
+    # Запись метрик
+    try:
+        from utils.monitoring.performance_monitor import record_api_request
+        record_api_request(
+            method=request.method,
+            endpoint=request.url.path,
+            status=response.status_code,
+            latency=latency
+        )
+    except Exception as e:
+        logger.debug(f"Metrics recording error: {e}")
+    
+    return response
 
 
 # Health check
@@ -336,6 +380,10 @@ logger.info("NASA API routes registered")
 # Database Query Analyzer
 app.include_router(database.router, prefix="/api/v1", tags=["Database"])
 logger.info("Database routes registered")
+
+# Performance Monitoring
+app.include_router(monitoring.router, prefix="/api/v1", tags=["Monitoring"])
+logger.info("Monitoring routes registered")
 
 # SSTV Ground Station API (ISS schedule, satellite tracking, SSTV decoding)
 try:
