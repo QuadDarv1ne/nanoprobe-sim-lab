@@ -91,7 +91,7 @@ class TestDatabaseCache:
     @pytest.fixture
     def db(self):
         """Создание тестовой БД"""
-        from utils.database import DatabaseManager
+        from utils.database.database import DatabaseManager
         import tempfile
 
         with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
@@ -288,7 +288,7 @@ class TestDatabaseCacheIntegration:
     @pytest.fixture
     def db(self):
         """Создание тестовой БД"""
-        from utils.database import DatabaseManager
+        from utils.database.database import DatabaseManager
         import tempfile
 
         with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:

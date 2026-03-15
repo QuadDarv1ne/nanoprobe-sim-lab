@@ -8,7 +8,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from utils.redis_cache import RedisCache, cached_sync
+from utils.caching.redis_cache import RedisCache, cached_sync
 
 
 def test_redis_cache_singleton():

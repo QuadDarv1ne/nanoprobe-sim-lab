@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from utils.rate_limiter import RateLimiter, limiter
+from utils.security.rate_limiter import RateLimiter, limiter
 
 
 def test_rate_limiter_singleton():
