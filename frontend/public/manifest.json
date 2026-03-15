@@ -1,0 +1,64 @@
+{
+  "name": "Nanoprobe Sim Lab",
+  "short_name": "Nanoprobe Lab",
+  "description": "Лаборатория моделирования нанозонда - SSTV Ground Station, СЗМ симулятор, AI/ML анализ",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["science", "education", "productivity"],
+  "screenshots": [
+    {
+      "src": "/screenshots/dashboard.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Панель управления",
+      "url": "/",
+      "icons": [{ "src": "/icons/dashboard.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "SSTV Station",
+      "short_name": "SSTV",
+      "description": "SSTV Ground Station",
+      "url": "/sstv",
+      "icons": [{ "src": "/icons/sstv.png", "sizes": "192x192" }]
+    }
+  ],
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "files": [
+        {
+          "name": "images",
+          "accept": "image/*"
+        }
+      ]
+    }
+  }
+}
