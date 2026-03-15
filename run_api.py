@@ -1,7 +1,20 @@
 #!/usr/bin/env python
 """
 Скрипт запуска FastAPI API для Nanoprobe Sim Lab
+
+Требования:
+- Python 3.11, 3.12, 3.13, or 3.14
 """
+
+# Проверка версии Python (требуется 3.11 - 3.14)
+import sys
+MIN_PYTHON_VERSION = (3, 11)
+MAX_PYTHON_VERSION = (3, 14)
+if sys.version_info < MIN_PYTHON_VERSION or sys.version_info >= (MAX_PYTHON_VERSION[0], MAX_PYTHON_VERSION[1] + 1):
+    print(f"[ERROR] Требуется Python 3.11 - 3.14, текущая версия: {sys.version}")
+    print(f"Путь к Python: {sys.executable}")
+    print("Установите Python 3.11 - 3.14 с https://www.python.org/downloads/")
+    sys.exit(1)
 
 import uvicorn
 import argparse
