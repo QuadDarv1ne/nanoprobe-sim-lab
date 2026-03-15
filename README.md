@@ -527,15 +527,33 @@ python src/cli/project_manager.py # Менеджер проекта
 python src/web/web_dashboard.py   # Веб-панель
 ```
 
-#### Вариант 3: Скрипты запуска
+#### Вариант 4: SSTV Ground Station
 
 ```bash
-# Windows
-scripts/run_project.bat
+# Веб-интерфейс SSTV станции
+python src/web/web_dashboard.py
+# Откройте http://localhost:5000/sstv
 
-# Linux/Mac
-chmod +x scripts/run_project.sh
-scripts/run_project.sh
+# SSTV декодирование из аудиофайла
+python components/py-sstv-groundstation/src/main.py --decode audio.wav
+
+# Расписание пролётов МКС
+python components/py-sstv-groundstation/src/main.py --schedule --sat iss
+
+# Real-time приём с RTL-SDR (когда подключено)
+python components/py-sstv-groundstation/src/main.py --realtime-sstv -f iss --gain 35
+```
+
+#### Вариант 5: Универсальный лаунчер
+
+```bash
+python start.py              # Интерактивный режим
+python start.py flask        # Flask frontend (порт 5000)
+python start.py nextjs       # Next.js frontend (порт 3000)
+python start.py api-only     # Backend API только (порт 8000)
+
+# Или синхронизированный запуск Backend + Frontend
+python start_all.py          # Backend (8000) + Frontend (5000) + Sync Manager
 ```
 
 ### Команды менеджера проекта
@@ -787,6 +805,33 @@ query {
 | `/api/v1/ml/fine-tune` | POST | Дообучение модели |
 | `/api/v1/ml/save-model` | POST | Сохранение модели |
 | `/api/v1/ml/batch-analyze` | GET | Пакетный анализ |
+
+### SSTV Ground Station 🛰️
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/sstv/iss/schedule` | GET | Расписание пролётов МКС |
+| `/api/v1/sstv/iss/next-pass` | GET | Следующий пролёт ISS |
+| `/api/v1/sstv/iss/position` | GET | Текущая позиция МКС |
+| `/api/v1/sstv/iss/visible` | GET | Видимость МКС сейчас |
+| `/api/v1/sstv/sstv/decode` | POST | Декодирование SSTV |
+| `/api/v1/sstv/sstv/modes` | GET | Список SSTV режимов |
+| `/api/v1/sstv/ws/iss` | WebSocket | Real-time позиция ISS |
+| `/api/v1/sstv/health` | GET | Health check SSTV модуля |
+
+**Пример запроса расписания МКС:**
+```bash
+curl http://localhost:8000/api/v1/sstv/iss/schedule?hours_ahead=24
+```
+
+**Пример WebSocket подключения:**
+```javascript
+const ws = new WebSocket('ws://localhost:8000/api/v1/sstv/ws/iss');
+ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    console.log('ISS Position:', data.data);
+};
+```
 
 ## Вклад в проект
 
