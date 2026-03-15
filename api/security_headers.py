@@ -13,10 +13,14 @@ Security Headers Middleware для FastAPI
     app.add_middleware(SecurityHeadersMiddleware)
 """
 
+import logging
+
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -162,7 +166,7 @@ def setup_security_headers(app, production: bool = True):
             hsts_preload=True,
             csp_report_only=False,  # Строгий CSP
         )
-        print("[OK] Security headers enabled (production mode)")
+        logger.info("Security headers enabled (production mode)")
     else:
         # Development: более мягкие настройки
         app.add_middleware(
@@ -178,4 +182,4 @@ def setup_security_headers(app, production: bool = True):
                 "frame-ancestors 'self'"
             ),
         )
-        print("[OK] Security headers enabled (development mode)")
+        logger.info("Security headers enabled (development mode)")
