@@ -299,15 +299,14 @@ app.include_router(analysis.router, prefix="/api/v1/analysis", tags=["Анали
 app.include_router(comparison.router, prefix="/api/v1/comparison", tags=["Сравнение"])
 app.include_router(reports.router, prefix="/api/v1/reports", tags=["Отчёты"])
 app.include_router(admin.router, prefix="/api/v1", tags=["Администрирование"])
-app.include_router(dashboard.router, prefix="/api/v1/dashboard", tags=["Дашборд"])
 
-# Enhanced Dashboard API (новые расширенные эндпоинты)
+# Unified Dashboard API (объединённый модуль вместо dashboard.py + enhanced_dashboard.py)
 try:
-    from api.routes import enhanced_dashboard
-    app.include_router(enhanced_dashboard.router, prefix="/api/v1/dashboard", tags=["Дашборд Расширенный"])
-    logger.info("Enhanced dashboard routes registered")
+    from api.routes import dashboard_unified as dashboard
+    app.include_router(dashboard.router, prefix="/api/v1/dashboard", tags=["Дашборд"])
+    logger.info("Unified dashboard routes registered")
 except ImportError as e:
-    logger.warning(f"Enhanced dashboard routes disabled: {e}")
+    logger.warning(f"Unified dashboard routes disabled: {e}")
 
 try:
     from api.routes import alerting
