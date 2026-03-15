@@ -160,9 +160,10 @@ async def get_iss_schedule(
             "count": len(result),
             "data": result
         }
-        
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error getting schedule: {str(e)}")
+        logger.error(f"Error getting ISS schedule: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get ISS schedule")
 
 
 @router.get("/iss/next-pass")
@@ -214,15 +215,16 @@ async def get_iss_next_pass(
         # Кэшируем на 2 минуты
         if redis_cache and REDIS_AVAILABLE:
             redis_cache.set(cache_key, result, expire=120)
-        
+
         return {
             "status": "success",
             "cached": False,
             "data": result
         }
-        
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+        logger.error(f"Error getting ISS next pass: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get ISS next pass")
 
 
 @router.get("/iss/position")
@@ -274,9 +276,10 @@ async def get_iss_current_position():
             "cached": False,
             "data": result
         }
-        
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+        logger.error(f"Error getting ISS position: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get ISS position")
 
 
 @router.get("/iss/visible")
@@ -292,11 +295,11 @@ async def is_iss_visible(
     tracker = get_satellite_tracker()
     if not tracker:
         raise HTTPException(status_code=503, detail="Satellite tracker not available")
-    
+
     try:
         visible = tracker.is_satellite_visible('iss', min_elevation)
         position = tracker.get_current_position('iss')
-        
+
         return {
             "status": "success",
             "visible": visible,
@@ -304,9 +307,10 @@ async def is_iss_visible(
             "message": "ISS видна" if visible else "ISS не видна",
             "timestamp": datetime.now().isoformat()
         }
-        
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+        logger.error(f"Error checking ISS visibility: {e}")
+        raise HTTPException(status_code=500, detail="Failed to check ISS visibility")
 
 
 # ============================================================================
@@ -381,7 +385,8 @@ async def decode_sstv_audio(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Decoding error: {str(e)}")
+        logger.error(f"SSTV decoding error: {e}")
+        raise HTTPException(status_code=500, detail="SSTV decoding failed")
 
 
 @router.get("/sstv/download/{filename}")
@@ -476,9 +481,10 @@ async def get_all_satellites_schedule(hours_ahead: int = 24):
             "count": len(result),
             "data": result
         }
-        
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+        logger.error(f"Error getting satellite passes: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get satellite passes")
 
 
 # ============================================================================
