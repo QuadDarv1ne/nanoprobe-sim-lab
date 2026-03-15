@@ -8,10 +8,22 @@ Usage:
     python start.py flask        # Flask frontend (port 5000)
     python start.py nextjs       # Next.js frontend (port 3000)
     python start.py api-only     # Backend API only (port 8000)
+
+Requirements:
+    Python 3.11, 3.12, 3.13, or 3.14
 """
 
-import os
+# Проверка версии Python (требуется 3.11 - 3.14)
 import sys
+MIN_PYTHON_VERSION = (3, 11)
+MAX_PYTHON_VERSION = (3, 14)
+if sys.version_info < MIN_PYTHON_VERSION or sys.version_info >= (MAX_PYTHON_VERSION[0], MAX_PYTHON_VERSION[1] + 1):
+    print(f"[ERROR] Требуется Python 3.11 - 3.14, текущая версия: {sys.version}")
+    print(f"Путь к Python: {sys.executable}")
+    print("Установите Python 3.11 - 3.14 с https://www.python.org/downloads/")
+    sys.exit(1)
+
+import os
 import subprocess
 import time
 import webbrowser
