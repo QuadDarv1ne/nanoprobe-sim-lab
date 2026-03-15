@@ -228,7 +228,7 @@ def cached_sync(prefix: str = "api", expire: int = 300):
         @wraps(func)
         def wrapper(*args, **kwargs):
             """TODO: Add description"""
-            from utils.redis_cache import cache
+            from utils.caching.redis_cache import cache
 
             # Генерация ключа
             cache_key = f"{prefix}:{func.__name__}:"
