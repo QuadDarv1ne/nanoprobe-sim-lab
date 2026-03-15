@@ -19,7 +19,7 @@ from api.data_exchange import (
     ImageDataConverter,
     SSTVSignalConverter
 )
-from utils.database import DatabaseManager
+from utils.database.database import DatabaseManager
 
 
 class TestDataExchangeIntegration(unittest.TestCase):

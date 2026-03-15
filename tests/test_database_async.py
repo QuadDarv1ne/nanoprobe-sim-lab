@@ -11,7 +11,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from utils.database import DatabaseManager
+from utils.database.database import DatabaseManager
 
 
 async def test_async_get_connection():

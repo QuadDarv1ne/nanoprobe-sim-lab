@@ -171,7 +171,7 @@ class TestExternalServicesCaching:
     def test_redis_cache_import(self):
         """Тест импорта Redis cache."""
         try:
-            from utils.redis_cache import RedisCache
+            from utils.caching.redis_cache import RedisCache
             cache = RedisCache()
             assert cache is not None
         except ImportError:
@@ -179,7 +179,7 @@ class TestExternalServicesCaching:
 
     def test_cache_key_generation(self):
         """Тест генерации ключей кэша."""
-        from utils.redis_cache import RedisCache
+        from utils.caching.redis_cache import RedisCache
         
         cache = RedisCache()
         key = cache.generate_key("test", "arg1", "arg2")
