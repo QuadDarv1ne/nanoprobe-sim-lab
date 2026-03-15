@@ -330,6 +330,14 @@ app.include_router(ml_analysis.router, prefix="/api/v1", tags=["AI/ML"])
 # External Services (with Circuit Breaker)
 app.include_router(external_services.router, prefix="/api/v1", tags=["External Services"])
 
+# SSTV Ground Station API (ISS schedule, satellite tracking, SSTV decoding)
+try:
+    from api.routes import sstv
+    app.include_router(sstv.router, prefix="/api/v1/sstv", tags=["SSTV Ground Station"])
+    print("[OK] SSTV Ground Station routes registered")
+except ImportError as e:
+    print(f"[WARN] SSTV Ground Station routes disabled: {e}")
+
 
 # Metrics endpoint для Prometheus
 @app.get("/metrics", tags=["Monitoring"])

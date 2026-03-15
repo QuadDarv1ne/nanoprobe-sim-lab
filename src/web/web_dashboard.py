@@ -125,6 +125,11 @@ class WebDashboard:
             """Главная страница веб-панели"""
             return render_template("dashboard.html")
 
+        @self.app.route("/sstv")
+        def sstv_station():
+            """Страница SSTV Ground Station"""
+            return render_template("sstv_station.html")
+
         @self.app.route("/api/system_info")
         def api_system_info():
             """API для получения информации о системе"""
