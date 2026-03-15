@@ -7,12 +7,12 @@ import asyncio
 import logging
 import os
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import List, Optional, Dict
+from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, WebSocket, WebSocketDisconnect, Query
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi import APIRouter, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect, Query
+from fastapi.responses import FileResponse
 
 logger = logging.getLogger(__name__)
 
