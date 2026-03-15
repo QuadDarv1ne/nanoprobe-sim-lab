@@ -1,60 +1,88 @@
-# Git
+# Docker
 .git
-.gitignore
+.dockerignore
+Dockerfile*
+docker-compose*.yml
+deployment/
 
 # Python
-__pycache__
+__pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-venv/
 env/
+venv/
 .venv/
-ENV/
 *.egg-info/
-dist/
-build/
+.eggs/
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+.mypy_cache/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# Данные и логи
-data/*.db
-data/*.sqlite
-logs/*.log
-output/*
-!output/.gitkeep
-reports/*
-!reports/.gitkeep
-
-# Временные файлы
-*.tmp
-.cache/
-temp/
-
-# Тесты
-tests/
-.pytest_cache/
-.coverage
-htmlcov/
-
-# Документация
-docs/_build/
-
-# Конфигурации
-.env
-.env.local
-*.ini
-
-# Docker
-deployment/Dockerfile
-deployment/docker-compose.yml
-!deployment/monitoring/
+*~
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Data (keep structure, ignore content)
+data/*.db
+data/*.sqlite
+data/*.json
+!data/.gitkeep
+
+# Output
+output/*.json
+output/*.png
+output/*.jpg
+!output/.gitkeep
+
+# Reports
+reports/*.pdf
+reports/*.html
+!reports/.gitkeep
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Testing
+tests/.pytest_cache/
+tests/coverage/
+
+# Documentation
+docs/*.html
+!docs/*.md
+
+# Scripts
+cleanup_project.py
+improve_project.py
+validate_project.py
+move_utils.py
+clean_docstrings.py
+
+# Temporary
+*.tmp
+*.bak

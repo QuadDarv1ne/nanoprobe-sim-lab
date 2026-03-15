@@ -1,0 +1,19 @@
+[phases.setup]
+nixPkgs = ["python311", "nodejs_20", "redis"]
+
+[phases.install]
+cmds = [
+  "pip install -r requirements.txt",
+  "pip install -r requirements-api.txt",
+  "cd frontend && npm install"
+]
+
+[phases.build]
+cmds = [
+  "cd frontend && npm run build"
+]
+
+[phases.start]
+cmds = [
+  "python main.py api --port $PORT"
+]

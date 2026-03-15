@@ -1,0 +1,42 @@
+# Deploy to Render
+services:
+  # Web Service
+  - type: web
+    name: nanoprobe-sim-lab
+    env: python
+    region: frankfurt
+    plan: starter
+    branch: main
+    buildCommand: |
+      pip install -r requirements.txt
+      pip install -r requirements-api.txt
+      cd frontend && npm install && npm run build
+    startCommand: python main.py api --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: NODE_VERSION
+        value: 20.0.0
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nanoprobe-db
+          property: connectionString
+      - key: REDIS_URL
+        fromDatabase:
+          name: nanoprobe-redis
+          property: connectionString
+
+  # PostgreSQL Database
+  - type: pserv
+    name: nanoprobe-db
+    plan: starter
+    region: frankfurt
+    databaseName: nanoprobe
+
+  # Redis
+  - type: redis
+    name: nanoprobe-redis
+    plan: starter
+    region: frankfurt
