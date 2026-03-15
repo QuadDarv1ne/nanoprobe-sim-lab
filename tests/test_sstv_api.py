@@ -19,6 +19,7 @@ class TestSatelliteTracker:
 
     def test_tracker_initialization(self):
         """Тест инициализации трекера."""
+        sys.path.insert(0, str(PROJECT_ROOT / "components" / "py-sstv-groundstation" / "src"))
         from satellite_tracker import SatelliteTracker
         
         tracker = SatelliteTracker()
@@ -30,6 +31,7 @@ class TestSatelliteTracker:
 
     def test_get_pass_predictions(self):
         """Тест предсказания пролётов."""
+        sys.path.insert(0, str(PROJECT_ROOT / "components" / "py-sstv-groundstation" / "src"))
         from satellite_tracker import SatelliteTracker
         
         tracker = SatelliteTracker()
@@ -45,6 +47,7 @@ class TestSatelliteTracker:
 
     def test_get_next_pass(self):
         """Тест получения следующего пролёта."""
+        sys.path.insert(0, str(PROJECT_ROOT / "components" / "py-sstv-groundstation" / "src"))
         from satellite_tracker import SatelliteTracker
         
         tracker = SatelliteTracker()
@@ -57,6 +60,7 @@ class TestSatelliteTracker:
 
     def test_get_current_position(self):
         """Тест текущей позиции спутника."""
+        sys.path.insert(0, str(PROJECT_ROOT / "components" / "py-sstv-groundstation" / "src"))
         from satellite_tracker import SatelliteTracker
         
         tracker = SatelliteTracker()
@@ -70,6 +74,7 @@ class TestSatelliteTracker:
 
     def test_get_sstv_schedule(self):
         """Тест расписания SSTV."""
+        sys.path.insert(0, str(PROJECT_ROOT / "components" / "py-sstv-groundstation" / "src"))
         from satellite_tracker import SatelliteTracker
         
         tracker = SatelliteTracker()
@@ -87,6 +92,7 @@ class TestSSTVDecoder:
 
     def test_decoder_initialization(self):
         """Тест инициализации декодера."""
+        sys.path.insert(0, str(PROJECT_ROOT / "components" / "py-sstv-groundstation" / "src"))
         from sstv_decoder import SSTVDecoder
         
         decoder = SSTVDecoder()
@@ -97,6 +103,7 @@ class TestSSTVDecoder:
 
     def test_supported_modes(self):
         """Тест поддерживаемых режимов."""
+        sys.path.insert(0, str(PROJECT_ROOT / "components" / "py-sstv-groundstation" / "src"))
         from sstv_decoder import SSTVDecoder
         
         decoder = SSTVDecoder()
@@ -112,6 +119,7 @@ class TestSSTVDecoder:
 
     def test_metadata_structure(self):
         """Тест структуры метаданных."""
+        sys.path.insert(0, str(PROJECT_ROOT / "components" / "py-sstv-groundstation" / "src"))
         from sstv_decoder import SSTVDecoder
         
         decoder = SSTVDecoder()
@@ -185,6 +193,7 @@ class TestIntegration:
 
     def test_sstv_tracker_integration(self):
         """Тест интеграции трекера и декодера."""
+        sys.path.insert(0, str(PROJECT_ROOT / "components" / "py-sstv-groundstation" / "src"))
         from satellite_tracker import SatelliteTracker
         from sstv_decoder import SSTVDecoder
         
