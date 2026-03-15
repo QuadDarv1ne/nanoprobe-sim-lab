@@ -1,14 +1,10 @@
 ## Qwen Added Memories
 
-### 2026-03-12: Улучшения проекта (ВЫПОЛНЕНО)
-- ✅ Веб-интерфейс: современный UI/UX с тёмной/светлой темой, анимации, Chart.js 4.x
-- ✅ API эндпоинты: +7 новых (health/detailed, metrics/realtime, export, dashboard/actions)
-- ✅ Утилиты: enhanced_monitor.py с алертами и статистикой
-- ✅ Тесты: 21/21 passed (100% success rate)
-- ✅ Документация: IMPROVEMENTS.md, test_improvements.py
-
-- Проект nanoprobe-sim-lab: приоритетные улучшения - 1) База данных SQLite для результатов сканирований, 2) Docker контейнеризация, 3) PDF отчёты для научных публикаций, 4) Сравнение изображений поверхностей, 5) AI/ML анализ дефектов, 6) Пакетная обработка, 7) Real-time визуализация СЗМ, 8) GitHub Actions CI/CD
-- Проект nanoprobe-sim-lab: 8 приоритетных улучшений - 1) SQLite БД для сканирований (ВЫПОЛНЕНО), 2) Docker контейнеризация (ВЫПОЛНЕНО), 3) PDF отчёты, 4) Сравнение изображений поверхностей (ВЫПОЛНЕНО), 5) AI/ML анализ дефектов (ВЫПОЛНЕНО), 6) Пакетная обработка, 7) Real-time СЗМ визуализация, 8) GitHub Actions CI/CD
+### 2026-03-15: Обновление документации (ВЫПОЛНЕНО)
+- ✅ todo.md: Добавлены разделы "Синхронизация Backend ↔ Frontend" и "UI/UX Улучшения Дашборда"
+- ✅ todo.md: Обновлено количество тестов (140+), CI/CD workflows (11)
+- ✅ todo.md: Актуализирована дата (2026-03-15)
+- ✅ QWEN.md: Синхронизирован с todo.md
 
 ---
 
@@ -17,10 +13,10 @@
 **Статус:** ✅ Полностью реализовано
 
 #### Созданные файлы:
-- ✅ `api/sync_manager.py` - Централизованный менеджер синхронизации (~300 строк)
+- ✅ `api/sync_manager.py` - Централизованный менеджер синхронизации (~315 строк)
 - ✅ `docs/SYNC.md` - Документация по синхронизации (~400 строк)
 - ✅ `docs/STARTUP.md` - Руководство по запуску (~350 строк)
-- ✅ `test_sync.py` - Автотест синхронизации (10 тестов)
+- ✅ `tests/test_sync_manager.py` - Автотест синхронизации (10 тестов)
 - ✅ `SYNCHRONIZATION_REPORT.md` - Итоговый отчёт
 
 #### Улучшенные файлы:
@@ -78,11 +74,13 @@ Backend (FastAPI:8000) ←→ Sync Manager ←→ Frontend (Flask:5000)
 
 ### 2026-03-14: TODO.md - Актуальный статус
 
-**Completed (2026-03-14):**
+**Completed (2026-03-15):**
 - ✅ Redis Full Integration - кэширование API (stats: 5с, metrics: 1с)
 - ✅ Database Indexes - 10 индексов для ускорения запросов
 - ✅ Rate Limiting - SlowAPI middleware (100 запросов/мин default)
 - ✅ Test Coverage - +15 тестов (Redis Cache, Sync Manager)
+- ✅ Синхронизация Backend ↔ Frontend - ВЫПОЛНЕНО
+- ✅ UI/UX Улучшения Дашборда - ВЫПОЛНЕНО
 
 **TODO.md Low Priority (обновлено):**
 - [ ] Mobile Application (React Native/Flutter)
@@ -92,17 +90,17 @@ Backend (FastAPI:8000) ←→ Sync Manager ←→ Frontend (Flask:5000)
 - [x] Database indexes - ВЫПОЛНЕНО
 - [ ] Performance monitoring dashboard
 - [x] Rate limiting - ВЫПОЛНЕНО
-- [ ] CORS configuration for production
-- [ ] Security headers, audits
+- [x] CORS configuration for production - ВЫПОЛНЕНО
+- [x] Security headers - ВЫПОЛНЕНО
 - [ ] Increase test coverage to 80%+ (частично выполнено)
-- [ ] Integration tests API + DB
-- [ ] Load testing, Security testing
+- [x] Integration tests API + DB - ВЫПОЛНЕНО
+- [x] Load testing - ВЫПОЛНЕНО
+- [x] Security testing - ВЫПОЛНЕНО
 
 **Следующие приоритеты (когда готово):**
-1. Integration tests API + DB
-2. CORS production configuration
-3. Security headers
-4. Load testing
+1. Dashboard Endpoints Consolidation (~4 часа)
+2. Database Performance (~3 часа)
+3. Test Coverage 80%+ (~6 часов)
 
 ---
 
@@ -122,14 +120,14 @@ Backend (FastAPI:8000) ←→ Sync Manager ←→ Frontend (Flask:5000)
 **Текущий статус:**
 - ✅ Все критические улучшения выполнены
 - ✅ Синхронизация Backend ↔ Frontend реализована
+- ✅ UI/UX дашборда улучшен
 - ✅ Проект готов к production
 - ⏳ Ожидается RTL-SDR V4 для тестирования SSTV
 
 **Следующие приоритеты (когда готово):**
-1. Завершение интеграции sync_manager в web_dashboard.py (1-2 часа)
-2. Redis Full Integration - полное кэширование (4 часа)
-3. Test Coverage 80%+ (6 часов)
-4. Rate Limiting на всех endpoints (3 часа)
+1. Dashboard Endpoints Consolidation (~4 часа)
+2. Database Performance (~3 часа)
+3. Test Coverage 80%+ (~6 часов)
 
 **Когда придёт RTL-SDR V4:**
 1. Подключить устройство
