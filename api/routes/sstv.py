@@ -4,6 +4,7 @@ API для управления SSTV станцией и расписанием 
 """
 
 import asyncio
+import logging
 import os
 import sys
 from datetime import datetime, timedelta
@@ -12,6 +13,8 @@ from typing import List, Optional, Dict
 
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse
+
+logger = logging.getLogger(__name__)
 
 # Добавляем корень проекта в path
 PROJECT_ROOT = Path(__file__).parent.parent.parent
@@ -57,8 +60,10 @@ def get_redis_cache() -> Optional[RedisCache]:
             _redis_cache = RedisCache(host=redis_host, port=redis_port)
             # Проверка подключения
             if not _redis_cache.is_available():
+                logger.warning("Redis cache unavailable")
                 _redis_cache = None
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Redis cache initialization error: {e}")
             _redis_cache = None
     return _redis_cache
 
@@ -75,7 +80,8 @@ def get_satellite_tracker() -> Optional[tracker_module.SatelliteTracker]:
                 ground_station_lat=lat,
                 ground_station_lon=lon
             )
-        except Exception:
+        except Exception as e:
+            logger.warning(f"SatelliteTracker initialization error: {e}")
             _tracker = tracker_module.SatelliteTracker()
     return _tracker
 
@@ -84,7 +90,11 @@ def get_sstv_decoder() -> Optional[SSTVDecoder]:
     """Получает SSTVDecoder instance."""
     global _sstv_decoder
     if _sstv_decoder is None and SSTVDecoder is not None:
-        _sstv_decoder = SSTVDecoder(mode='auto')
+        try:
+            _sstv_decoder = SSTVDecoder(mode='auto')
+        except Exception as e:
+            logger.warning(f"SSTVDecoder initialization error: {e}")
+            _sstv_decoder = None
     return _sstv_decoder
 
 
