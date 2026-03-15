@@ -268,7 +268,7 @@ def cmd_migrate(args):
     """Миграция базы данных"""
     print_header("Миграция базы данных")
 
-    from utils.database import DatabaseManager
+    from utils.database.database import DatabaseManager
 
     db = DatabaseManager("data/nanoprobe.db")
 

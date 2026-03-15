@@ -34,7 +34,7 @@ from utils.config_manager import ConfigManager
 from utils.cache_manager import CacheManager
 from utils.data_manager import DataManager
 from utils.data_exporter import DataExporter
-from utils.database import DatabaseManager, get_database
+from utils.database.database import DatabaseManager, get_database
 from utils.surface_comparator import compare_surfaces as compare_surfaces_util
 from utils.defect_analyzer import analyze_defects as analyze_defects_util
 
@@ -1002,7 +1002,7 @@ class IntegratedWebDashboard:
         def api_batch_jobs():
             """API для получения заданий пакетной обработки"""
             try:
-                from utils.batch_processor import BatchProcessor
+                from utils.batch.batch_processor import BatchProcessor
                 processor = BatchProcessor()
                 status_filter = request.args.get('status', None)
                 jobs = processor.get_all_jobs(status=status_filter)
@@ -1015,7 +1015,7 @@ class IntegratedWebDashboard:
         def api_batch_statistics():
             """API для получения статистики пакетной обработки"""
             try:
-                from utils.batch_processor import BatchProcessor
+                from utils.batch.batch_processor import BatchProcessor
                 processor = BatchProcessor()
                 stats = processor.get_statistics()
                 return jsonify(stats)

@@ -9,7 +9,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from utils.batch_processor import BatchProcessor, BatchJob
+from utils.batch.batch_processor import BatchProcessor, BatchJob
 
 
 class TestBatchJob(unittest.TestCase):
