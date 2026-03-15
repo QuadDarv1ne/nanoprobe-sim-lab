@@ -305,9 +305,9 @@ app.include_router(dashboard.router, prefix="/api/v1/dashboard", tags=["Дашб
 try:
     from api.routes import enhanced_dashboard
     app.include_router(enhanced_dashboard.router, prefix="/api/v1/dashboard", tags=["Дашборд Расширенный"])
-    print("[OK] Enhanced dashboard routes registered")
+    logger.info("Enhanced dashboard routes registered")
 except ImportError as e:
-    print(f"[WARN] Enhanced dashboard routes disabled: {e}")
+    logger.warning(f"Enhanced dashboard routes disabled: {e}")
 
 try:
     from api.routes import alerting
@@ -334,9 +334,9 @@ app.include_router(external_services.router, prefix="/api/v1", tags=["External S
 try:
     from api.routes import sstv
     app.include_router(sstv.router, prefix="/api/v1/sstv", tags=["SSTV Ground Station"])
-    print("[OK] SSTV Ground Station routes registered")
+    logger.info("SSTV Ground Station routes registered")
 except ImportError as e:
-    print(f"[WARN] SSTV Ground Station routes disabled: {e}")
+    logger.warning(f"SSTV Ground Station routes disabled: {e}")
 
 
 # Metrics endpoint для Prometheus
