@@ -43,13 +43,13 @@ async def lifespan(app: FastAPI):
     from api.database_init import ensure_database
 
     if ensure_database("data/nanoprobe.db"):
-        print("[OK] Database migrations applied")
+        logger.info("Database migrations applied")
     else:
-        print("[ERROR] Database initialization failed")
+        logger.error("Database initialization failed")
 
     # Инициализация БД менеджера
     db_manager = DatabaseManager("data/nanoprobe.db")
-    print("[OK] Database initialized")
+    logger.info("Database initialized")
 
     # Инициализация Redis кэша
     redis_host = os.getenv("REDIS_HOST", "localhost")
@@ -57,44 +57,44 @@ async def lifespan(app: FastAPI):
     redis_cache = RedisCache(host=redis_host, port=redis_port)
 
     if redis_cache.is_available():
-        print(f"[OK] Redis cache connected: {redis_host}:{redis_port}")
+        logger.info(f"Redis cache connected: {redis_host}:{redis_port}")
     else:
-        print("[WARN] Redis cache unavailable (running without caching)")
+        logger.warning("Redis cache unavailable (running without caching)")
 
     yield
 
     # Очистка при остановке
-    print("[INFO] Application stopped")
+    logger.info("Application stopped")
 
     # Закрытие соединений
     try:
         if redis_cache:
             redis_cache.close()
-            print("[OK] Redis cache closed")
+            logger.info("Redis cache closed")
     except Exception as e:
-        print(f"[WARN] Redis cache cleanup error: {e}")
+        logger.warning(f"Redis cache cleanup error: {e}")
 
     try:
         if db_manager:
             db_manager.close_pool()
             DatabaseManager.close_all_pools()
-            print("[OK] Database connections closed")
+            logger.info("Database connections closed")
     except Exception as e:
-        print(f"[WARN] Database cleanup error: {e}")
+        logger.warning(f"Database cleanup error: {e}")
 
     try:
         from api.routes.external_services import close_http_session
         close_http_session()
-        print("[OK] HTTP session closed")
+        logger.info("HTTP session closed")
     except Exception as e:
-        print(f"[WARN] HTTP session cleanup error: {e}")
+        logger.warning(f"HTTP session cleanup error: {e}")
 
     try:
         from utils.circuit_breaker import close_all_circuit_breakers
         close_all_circuit_breakers()
-        print("[OK] Circuit breakers closed")
+        logger.info("Circuit breakers closed")
     except Exception as e:
-        print(f"[WARN] Circuit breakers cleanup error: {e}")
+        logger.warning(f"Circuit breakers cleanup error: {e}")
 
 
 # Создание FastAPI приложения
@@ -164,9 +164,9 @@ except ImportError:
 try:
     from api.rate_limiter import setup_rate_limiter
     setup_rate_limiter(app)
-    print("[OK] Rate limiting enabled")
+    logger.info("Rate limiting enabled")
 except ImportError as e:
-    print(f"[WARN] Rate limiting disabled: {e}")
+    logger.warning(f"Rate limiting disabled: {e}")
 
 # Security Headers для защиты от XSS, Clickjacking, MIME sniffing
 try:
@@ -174,7 +174,7 @@ try:
     is_production = os.getenv("ENVIRONMENT", "development") == "production"
     setup_security_headers(app, production=is_production)
 except ImportError as e:
-    print(f"[WARN] Security headers disabled: {e}")
+    logger.warning(f"Security headers disabled: {e}")
 
 # Регистрация централизованных обработчиков ошибок
 register_error_handlers(app)

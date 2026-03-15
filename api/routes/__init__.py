@@ -1,6 +1,6 @@
 # API Routes for Nanoprobe Sim Lab
 
-from api.routes import auth, scans, simulations, analysis, comparison, reports, admin, dashboard
+from api.routes import auth, scans, simulations, analysis, comparison, reports, admin, dashboard, sstv
 
 __all__ = [
     "auth",
@@ -11,4 +11,5 @@ __all__ = [
     "reports",
     "admin",
     "dashboard",
+    "sstv",
 ]
