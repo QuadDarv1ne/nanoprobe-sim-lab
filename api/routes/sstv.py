@@ -17,6 +17,7 @@ from fastapi import APIRouter, BackgroundTasks, WebSocket, WebSocketDisconnect, 
 from fastapi.responses import FileResponse
 
 from api.error_handlers import ServiceUnavailableError, NotFoundError, ValidationError
+from api.state import get_redis, get_app_state, set_app_state
 
 logger = logging.getLogger(__name__)
 
@@ -56,14 +57,11 @@ _recording_metadata: Dict[str, Any] = {}
 
 def get_redis_cache() -> Optional[RedisCache]:
     """Получает Redis cache instance из api.state."""
-    from api.state import get_redis
     return get_redis()
 
 
 def get_satellite_tracker() -> Optional[tracker_module.SatelliteTracker]:
     """Получает SatelliteTracker instance."""
-    from api.state import get_app_state, set_app_state
-    
     tracker = get_app_state("satellite_tracker")
     if tracker is not None:
         return tracker
@@ -87,8 +85,6 @@ def get_satellite_tracker() -> Optional[tracker_module.SatelliteTracker]:
 
 def get_sstv_decoder() -> Optional[SSTVDecoder]:
     """Получает SSTVDecoder instance."""
-    from api.state import get_app_state, set_app_state
-    
     decoder = get_app_state("sstv_decoder")
     if decoder is not None:
         return decoder
@@ -598,8 +594,6 @@ async def start_sstv_recording(
     Returns:
         Статус записи
     """
-    from api.state import get_app_state, set_app_state
-
     recording_process = get_app_state("recording_process")
     recording_start_time = get_app_state("recording_start_time")
 
@@ -704,8 +698,6 @@ async def stop_recording_after(duration: int):
 @router.post("/record/stop")
 async def stop_sstv_recording():
     """Остановка записи SSTV."""
-    from api.state import get_app_state, set_app_state
-
     recording_process = get_app_state("recording_process")
     recording_metadata = get_app_state("recording_metadata", {})
 
@@ -764,8 +756,6 @@ async def stop_sstv_recording():
 @router.get("/record/status")
 async def get_recording_status():
     """Получить статуса записи."""
-    from api.state import get_app_state
-
     recording_process = get_app_state("recording_process")
     recording_metadata = get_app_state("recording_metadata", {})
     recording_start_time = get_app_state("recording_start_time")
