@@ -48,10 +48,6 @@ except ImportError:
 
 router = APIRouter()
 
-# Глобальные объекты (ленивая инициализация)
-_sstv_decoder: Optional[SSTVDecoder] = None
-_tracker: Optional[tracker_module.SatelliteTracker] = None
-
 # Управление записью RTL-SDR
 _recording_process: Optional[subprocess.Popen] = None
 _recording_start_time: Optional[datetime] = None
@@ -66,32 +62,45 @@ def get_redis_cache() -> Optional[RedisCache]:
 
 def get_satellite_tracker() -> Optional[tracker_module.SatelliteTracker]:
     """Получает SatelliteTracker instance."""
-    global _tracker
-    if _tracker is None and tracker_module is not None:
+    from api.state import get_app_state, set_app_state
+    
+    tracker = get_app_state("satellite_tracker")
+    if tracker is not None:
+        return tracker
+    
+    if tracker_module is not None:
         try:
             # Координаты по умолчанию (Москва)
             lat = float(os.getenv("GROUND_STATION_LAT", "55.75"))
             lon = float(os.getenv("GROUND_STATION_LON", "37.61"))
-            _tracker = tracker_module.SatelliteTracker(
+            tracker = tracker_module.SatelliteTracker(
                 ground_station_lat=lat,
                 ground_station_lon=lon
             )
+            set_app_state("satellite_tracker", tracker)
         except Exception as e:
             logger.warning(f"SatelliteTracker initialization error: {e}")
-            _tracker = tracker_module.SatelliteTracker()
-    return _tracker
+            tracker = tracker_module.SatelliteTracker()
+            set_app_state("satellite_tracker", tracker)
+    return tracker
 
 
 def get_sstv_decoder() -> Optional[SSTVDecoder]:
     """Получает SSTVDecoder instance."""
-    global _sstv_decoder
-    if _sstv_decoder is None and SSTVDecoder is not None:
+    from api.state import get_app_state, set_app_state
+    
+    decoder = get_app_state("sstv_decoder")
+    if decoder is not None:
+        return decoder
+    
+    if SSTVDecoder is not None:
         try:
-            _sstv_decoder = SSTVDecoder(mode='auto')
+            decoder = SSTVDecoder(mode='auto')
+            set_app_state("sstv_decoder", decoder)
         except Exception as e:
             logger.warning(f"SSTVDecoder initialization error: {e}")
-            _sstv_decoder = None
-    return _sstv_decoder
+            decoder = None
+    return decoder
 
 
 # ============================================================================
