@@ -82,14 +82,15 @@ async def get_scan(
     db: DatabaseManager = Depends(get_db),
 ):
     """Получить сканирование по ID"""
-    from api.main import redis_cache
+    from api.state import get_redis
     from api.metrics import BusinessMetrics
 
+    redis = get_redis()
     cache_key = f"scan:{scan_id}"
 
     # Проверка кэша
-    if redis_cache and redis_cache.is_available():
-        cached = redis_cache.get(cache_key)
+    if redis and redis.is_available():
+        cached = redis.get(cache_key)
         if cached:
             BusinessMetrics.inc_cache_hit("scan_detail")
             return ScanResponse(**cached)
@@ -103,8 +104,8 @@ async def get_scan(
     result = ScanResponse.model_validate(scan)
 
     # Сохранение в кэш
-    if redis_cache and redis_cache.is_available():
-        redis_cache.set(cache_key, result.model_dump(), expire=600)
+    if redis and redis.is_available():
+        redis.set(cache_key, result.model_dump(), expire=600)
 
     return result
 
@@ -125,7 +126,7 @@ async def create_scan(
     db: DatabaseManager = Depends(get_db),
 ):
     """Создать новое сканирование"""
-    from api.main import redis_cache
+    from api.state import get_redis
     from api.metrics import BusinessMetrics
 
     db.add_scan_result(
@@ -145,8 +146,9 @@ async def create_scan(
     BusinessMetrics.inc_scan_created(scan.scan_type.value)
 
     # Инвалидация кэша
-    if redis_cache and redis_cache.is_available():
-        redis_cache.clear_pattern("scans:*")
+    redis = get_redis()
+    if redis and redis.is_available():
+        redis.clear_pattern("scans:*")
 
     return ScanResponse.model_validate(scans[0])
 
@@ -166,7 +168,7 @@ async def delete_scan(
     db: DatabaseManager = Depends(get_db),
 ):
     """Удалить сканирование"""
-    from api.main import redis_cache
+    from api.state import get_redis
 
     success = db.delete_scan(scan_id)
 
@@ -174,8 +176,9 @@ async def delete_scan(
         raise NotFoundError(f"Сканирование с ID {scan_id} не найдено", resource_type="scan")
 
     # Инвалидация кэша
-    if redis_cache and redis_cache.is_available():
-        redis_cache.clear_pattern("scans:*")
+    redis = get_redis()
+    if redis and redis.is_available():
+        redis.clear_pattern("scans:*")
 
     return None
 

@@ -22,6 +22,7 @@ from api.error_handlers import register_error_handlers, ValidationError
 # Импорт существующих утилит
 from utils.database.database import DatabaseManager
 from utils.caching.redis_cache import RedisCache
+from api.state import set_db_manager, set_redis
 
 # Импорты роутов
 from api.routes import scans, simulations, analysis, comparison, reports, auth, admin, dashboard_unified
@@ -29,16 +30,10 @@ from api.routes import graphql, ml_analysis, external_services, nasa, database, 
 
 logger = logging.getLogger(__name__)
 
-# Глобальные переменные
-db_manager: Optional[DatabaseManager] = None
-redis_cache: Optional[RedisCache] = None
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Управление жизненным циклом приложения"""
-    global db_manager, redis_cache
-
     # Применение миграций БД
     from api.database_init import ensure_database
 
@@ -48,15 +43,17 @@ async def lifespan(app: FastAPI):
         logger.error("Database initialization failed")
 
     # Инициализация БД менеджера
-    db_manager = DatabaseManager("data/nanoprobe.db")
+    db = DatabaseManager("data/nanoprobe.db")
+    set_db_manager(db)
     logger.info("Database initialized")
 
     # Инициализация Redis кэша
     redis_host = os.getenv("REDIS_HOST", "localhost")
     redis_port = int(os.getenv("REDIS_PORT", "6379"))
-    redis_cache = RedisCache(host=redis_host, port=redis_port)
+    redis = RedisCache(host=redis_host, port=redis_port)
+    set_redis(redis)
 
-    if redis_cache.is_available():
+    if redis.is_available():
         logger.info(f"Redis cache connected: {redis_host}:{redis_port}")
     else:
         logger.warning("Redis cache unavailable (running without caching)")
@@ -76,15 +73,15 @@ async def lifespan(app: FastAPI):
 
     # Закрытие соединений
     try:
-        if redis_cache:
-            redis_cache.close()
+        if redis:
+            redis.close()
             logger.info("Redis cache closed")
     except Exception as e:
         logger.warning(f"Redis cache cleanup error: {e}")
 
     try:
-        if db_manager:
-            db_manager.close_pool()
+        if db:
+            db.close_pool()
             DatabaseManager.close_all_pools()
             logger.info("Database connections closed")
     except Exception as e:
@@ -551,8 +548,9 @@ async def push_realtime_updates():
 
 
 def get_db() -> DatabaseManager:
-    """Зависимость для получения менеджера БД"""
-    return db_manager
+    """Зависимость для получения менеджера БД (устарело, используйте api.dependencies.get_db)"""
+    from api.state import get_db_manager
+    return get_db_manager()
 
 
 def create_app() -> FastAPI:

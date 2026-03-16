@@ -246,12 +246,13 @@ async def get_database_stats(current_user: dict = Depends(get_current_user)):
     if current_user.get("role") != "admin":
         raise AuthorizationError("Требуется роль администратора")
 
-    from api.main import db_manager
+    from api.state import get_db_manager
 
-    stats = db_manager.get_statistics()
+    db = get_db_manager()
+    stats = db.get_statistics()
 
     # Размер файла БД
-    db_path = Path(db_manager.db_path)
+    db_path = Path(db.db_path)
     db_size = db_path.stat().st_size if db_path.exists() else 0
 
     return {
@@ -271,10 +272,11 @@ async def vacuum_database(current_user: dict = Depends(get_current_user)):
     if current_user.get("role") != "admin":
         raise AuthorizationError("Требуется роль администратора")
 
-    from api.main import db_manager
+    from api.state import get_db_manager
 
+    db = get_db_manager()
     try:
-        with db_manager.get_connection() as conn:
+        with db.get_connection() as conn:
             conn.execute("VACUUM")
             conn.execute("ANALYZE")
 
@@ -296,10 +298,11 @@ async def get_database_tables(current_user: dict = Depends(get_current_user)):
     if current_user.get("role") != "admin":
         raise AuthorizationError("Требуется роль администратора")
 
-    from api.main import db_manager
+    from api.state import get_db_manager
 
+    db = get_db_manager()
     tables = []
-    with db_manager.get_connection() as conn:
+    with db.get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
         tables = [row[0] for row in cursor.fetchall()]
