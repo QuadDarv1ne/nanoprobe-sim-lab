@@ -33,7 +33,7 @@ from api.schemas import (
     RealtimeMetrics,
     ErrorResponse,
 )
-from api.error_handlers import DatabaseError, ValidationError
+from api.error_handlers import DatabaseError, ValidationError, ServiceUnavailableError
 from utils.enhanced_monitor import get_monitor, format_uptime
 from utils.database.database import DatabaseManager
 from utils.caching.redis_cache import cache, cached
@@ -480,7 +480,7 @@ async def get_realtime_metrics(
 async def get_realtime_metrics_detailed():
     """
     Get real-time system metrics with detailed information
-    
+
     Возвращает детальную информацию о системе:
     - CPU по ядрам
     - Memory детально
@@ -488,13 +488,16 @@ async def get_realtime_metrics_detailed():
     - Network I/O
     - Python процессы
     """
-    global _metrics_cache, _cache_timestamp
+    from api.state import get_app_state, set_app_state
 
     # Проверка кэша
-    if _metrics_cache and _cache_timestamp:
-        age = (datetime.now() - _cache_timestamp).total_seconds()
+    metrics_cache = get_app_state("metrics_cache")
+    cache_timestamp = get_app_state("metrics_cache_time")
+
+    if metrics_cache and cache_timestamp:
+        age = (datetime.now() - cache_timestamp).total_seconds()
         if age < METRICS_CACHE_TTL:
-            return _metrics_cache
+            return metrics_cache
 
     try:
         # CPU по ядрам
@@ -551,13 +554,13 @@ async def get_realtime_metrics_detailed():
         }
 
         # Кэширование
-        _metrics_cache = metrics
-        _cache_timestamp = datetime.now()
+        set_app_state("metrics_cache", metrics)
+        set_app_state("metrics_cache_time", datetime.now())
 
         return metrics
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get real-time metrics: {str(e)}")
+        raise ServiceUnavailableError(f"Не удалось получить метрики: {str(e)}")
 
 
 # ==================== Activity Timeline ====================
