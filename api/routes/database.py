@@ -8,7 +8,7 @@ Endpoints для анализа SQL запросов:
 - Slow query log
 """
 
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, Query, Depends
 from typing import Optional, List
 from pydantic import BaseModel, Field
 import logging
@@ -20,6 +20,7 @@ from utils.database.query_analyzer import (
     QueryPlan,
 )
 from api.dependencies import get_current_user
+from api.error_handlers import ValidationError, NotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +94,7 @@ async def analyze_sql_query(
         )
     except Exception as e:
         logger.error(f"Query analysis error: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise ValidationError(f"Ошибка анализа запроса: {str(e)}")
 
 
 @router.get(
@@ -121,7 +122,7 @@ async def analyze_sql_query_get(
             "recommendations": plan.recommendations,
         }
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise ValidationError(f"Ошибка анализа запроса: {str(e)}")
 
 
 @router.get(
@@ -147,7 +148,7 @@ async def get_index_suggestions(
             suggestions=suggestions,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise ValidationError(f"Ошибка генерации индексов: {str(e)}")
 
 
 @router.get(
@@ -167,10 +168,10 @@ async def get_table_stats(
         analyzer = QueryAnalyzer(db_path)
         stats = analyzer.get_table_stats(table_name)
         analyzer.close()
-        
+
         if not stats:
-            raise HTTPException(status_code=404, detail="Table not found")
-        
+            raise NotFoundError(f"Таблица '{table_name}' не найдена")
+
         return TableStatsResponse(
             table_name=table_name,
             row_count=stats.get("row_count", 0),
@@ -180,7 +181,7 @@ async def get_table_stats(
             columns=stats.get("columns", []),
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise ValidationError(f"Ошибка получения статистики: {str(e)}")
 
 
 @router.get(
@@ -200,7 +201,7 @@ async def get_slow_queries(
         analyzer = QueryAnalyzer(db_path)
         slow_queries = analyzer.get_slow_queries(threshold_ms, limit)
         analyzer.close()
-        
+
         return {"slow_queries": slow_queries}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise ValidationError(f"Ошибка получения медленных запросов: {str(e)}")
