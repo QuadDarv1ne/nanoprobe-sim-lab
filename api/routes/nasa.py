@@ -13,7 +13,7 @@ NASA API Routes
 Получить ключ: https://api.nasa.gov/
 """
 
-from fastapi import APIRouter, Query, HTTPException, Depends
+from fastapi import APIRouter, Query, Depends
 from typing import Optional, List
 from datetime import datetime, timedelta, timezone
 import logging
@@ -22,6 +22,7 @@ from utils.nasa_api_client import get_nasa_client, NASAAPIClient
 from utils.caching.redis_cache import cache
 from utils.security.rate_limiter import api_limit
 from api.schemas import APODResponse, MarsPhotosResponse, NEOsResponse
+from api.error_handlers import ExternalServiceError
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +68,7 @@ async def get_apod(
         return result
     except Exception as e:
         logger.error(f"APOD fetch error: {e}")
-        raise HTTPException(status_code=503, detail=f"NASA API error: {str(e)}")
+        raise ExternalServiceError("NASA", f"Ошибка получения APOD: {str(e)}")
 
 
 @router.get(
@@ -94,7 +95,7 @@ async def get_apod_range(
         cache.set(cache_key, result, expire=7200)  # 2 часа
         return result
     except Exception as e:
-        raise HTTPException(status_code=503, detail=str(e))
+        raise ExternalServiceError("NASA", str(e))
 
 
 # ==========================================
@@ -136,7 +137,7 @@ async def get_mars_photos(
         cache.set(cache_key, result, expire=3600)
         return result
     except Exception as e:
-        raise HTTPException(status_code=503, detail=str(e))
+        raise ExternalServiceError("NASA", str(e))
 
 
 @router.get(
@@ -160,7 +161,7 @@ async def get_mars_rovers():
         cache.set(cache_key, result, expire=86400)  # 24 часа
         return result
     except Exception as e:
-        raise HTTPException(status_code=503, detail=str(e))
+        raise ExternalServiceError("NASA", str(e))
 
 
 # ==========================================
@@ -204,7 +205,7 @@ async def get_asteroids(
         cache.set(cache_key, result, expire=3600)
         return result
     except Exception as e:
-        raise HTTPException(status_code=503, detail=str(e))
+        raise ExternalServiceError("NASA", str(e))
 
 
 @router.get(
@@ -228,7 +229,7 @@ async def get_asteroid(asteroid_id: int):
         cache.set(cache_key, result, expire=86400)  # 24 часа
         return result
     except Exception as e:
-        raise HTTPException(status_code=503, detail=str(e))
+        raise ExternalServiceError("NASA", str(e))
 
 
 # ==========================================
@@ -267,7 +268,7 @@ async def get_earth_imagery(
         cache.set(cache_key, result, expire=3600)
         return result
     except Exception as e:
-        raise HTTPException(status_code=503, detail=str(e))
+        raise ExternalServiceError("NASA", str(e))
 
 
 # ==========================================
@@ -309,7 +310,7 @@ async def search_images(
         cache.set(cache_key, result, expire=3600)
         return result
     except Exception as e:
-        raise HTTPException(status_code=503, detail=str(e))
+        raise ExternalServiceError("NASA", str(e))
 
 
 # ==========================================
@@ -345,7 +346,7 @@ async def get_natural_events(
         cache.set(cache_key, result, expire=1800)  # 30 минут
         return result
     except Exception as e:
-        raise HTTPException(status_code=503, detail=str(e))
+        raise ExternalServiceError("NASA", str(e))
 
 
 @router.get(
@@ -369,7 +370,7 @@ async def get_event(event_id: str):
         cache.set(cache_key, result, expire=3600)
         return result
     except Exception as e:
-        raise HTTPException(status_code=503, detail=str(e))
+        raise ExternalServiceError("NASA", str(e))
 
 
 # ==========================================

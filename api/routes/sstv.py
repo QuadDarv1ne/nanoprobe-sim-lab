@@ -13,10 +13,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional, Dict, Any
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect, Query
+from fastapi import APIRouter, BackgroundTasks, WebSocket, WebSocketDisconnect, Query
 from fastapi.responses import FileResponse
 
-from api.error_handlers import ServiceUnavailableError
+from api.error_handlers import ServiceUnavailableError, NotFoundError, ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -111,7 +111,7 @@ async def get_iss_schedule(
     """
     tracker = get_satellite_tracker()
     if not tracker:
-        raise HTTPException(status_code=503, detail="Satellite tracker not available")
+        raise ServiceUnavailableError("Satellite tracker недоступен")
     
     # Проверяем кэш
     cache_key = f"iss_schedule:{hours_ahead}:{min_elevation}"
@@ -174,7 +174,7 @@ async def get_iss_next_pass(
     """
     tracker = get_satellite_tracker()
     if not tracker:
-        raise HTTPException(status_code=503, detail="Satellite tracker not available")
+        raise ServiceUnavailableError("Satellite tracker недоступен")
     
     # Проверяем кэш
     cache_key = "iss_next_pass"
@@ -233,7 +233,7 @@ async def get_iss_current_position():
     """
     tracker = get_satellite_tracker()
     if not tracker:
-        raise HTTPException(status_code=503, detail="Satellite tracker not available")
+        raise ServiceUnavailableError("Satellite tracker недоступен")
     
     # Проверяем кэш (позиция обновляется каждые 30 секунд)
     cache_key = "iss_position"
@@ -252,7 +252,7 @@ async def get_iss_current_position():
         position = tracker.get_current_position('iss')
 
         if not position:
-            raise HTTPException(status_code=404, detail="ISS position not available")
+            raise NotFoundError("Позиция МКС недоступна")
 
         result = {
             "latitude": position['latitude'],
@@ -290,7 +290,7 @@ async def is_iss_visible(
     """
     tracker = get_satellite_tracker()
     if not tracker:
-        raise HTTPException(status_code=503, detail="Satellite tracker not available")
+        raise ServiceUnavailableError("Satellite tracker недоступен")
 
     try:
         visible = tracker.is_satellite_visible('iss', min_elevation)
@@ -329,11 +329,11 @@ async def decode_sstv_audio(
         Информация о декодированном изображении
     """
     if not SSTV_AVAILABLE:
-        raise HTTPException(status_code=503, detail="SSTV decoder not available")
+        raise ServiceUnavailableError("SSTV декодер недоступен")
     
     decoder = get_sstv_decoder()
     if not decoder:
-        raise HTTPException(status_code=503, detail="SSTV decoder initialization failed")
+        raise ServiceUnavailableError("SSTV декодер не инициализирован")
     
     try:
         # Если путь не указан, используем тестовый
@@ -342,21 +342,18 @@ async def decode_sstv_audio(
             if test_audio.exists():
                 audio_path = str(test_audio)
             else:
-                raise HTTPException(
-                    status_code=400,
-                    detail="No audio file provided and no test file found"
-                )
-        
+                raise ValidationError("Аудиофайл не предоставлен и тестовый файл не найден")
+
         # Проверяем существование файла
         if not Path(audio_path).exists():
-            raise HTTPException(status_code=404, detail=f"Audio file not found: {audio_path}")
-        
+            raise NotFoundError(f"Аудиофайл не найден: {audio_path}")
+
         # Декодируем
         decoder.mode = mode
         image = decoder.decode_from_audio(audio_path)
-        
+
         if not image:
-            raise HTTPException(status_code=400, detail="Failed to decode SSTV")
+            raise ValidationError("Не удалось декодировать SSTV")
         
         # Сохраняем результат
         output_dir = Path("output/sstv")
@@ -391,7 +388,7 @@ async def download_sstv_image(filename: str):
     file_path = Path("output/sstv") / filename
     
     if not file_path.exists():
-        raise HTTPException(status_code=404, detail="Image not found")
+        raise NotFoundError(f"Изображение не найдено: {filename}")
     
     return FileResponse(
         str(file_path),
@@ -433,7 +430,7 @@ async def get_all_satellites():
     """Получает список всех отслеживаемых спутников."""
     tracker = get_satellite_tracker()
     if not tracker:
-        raise HTTPException(status_code=503, detail="Satellite tracker not available")
+        raise ServiceUnavailableError("Satellite tracker недоступен")
     
     satellites = tracker.get_all_satellites()
     
@@ -454,7 +451,7 @@ async def get_all_satellites_schedule(hours_ahead: int = 24):
     """
     tracker = get_satellite_tracker()
     if not tracker:
-        raise HTTPException(status_code=503, detail="Satellite tracker not available")
+        raise ServiceUnavailableError("Satellite tracker недоступен")
     
     hours_ahead = min(hours_ahead, 72)
     
