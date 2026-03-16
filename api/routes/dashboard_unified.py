@@ -34,6 +34,7 @@ from api.schemas import (
     ErrorResponse,
 )
 from api.error_handlers import DatabaseError, ValidationError, ServiceUnavailableError
+from api.state import get_app_state, set_app_state
 from utils.enhanced_monitor import get_monitor, format_uptime
 from utils.database.database import DatabaseManager
 from utils.caching.redis_cache import cache, cached
@@ -71,8 +72,6 @@ def get_project_root() -> Path:
 
 def get_cached_stats() -> Optional[Dict]:
     """Получить кэшированную статистику если не истёк TTL"""
-    from api.state import get_app_state
-    
     cached = get_app_state("stats_cache")
     cache_time = get_app_state("stats_cache_time")
     
@@ -87,8 +86,6 @@ def get_cached_stats() -> Optional[Dict]:
 
 def cache_stats(stats: Dict):
     """Закэшировать статистику"""
-    from api.state import set_app_state
-    
     set_app_state("stats_cache", stats)
     set_app_state("stats_cache_time", datetime.now())
 
@@ -488,8 +485,6 @@ async def get_realtime_metrics_detailed():
     - Network I/O
     - Python процессы
     """
-    from api.state import get_app_state, set_app_state
-
     # Проверка кэша
     metrics_cache = get_app_state("metrics_cache")
     cache_timestamp = get_app_state("metrics_cache_time")
