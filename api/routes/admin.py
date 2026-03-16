@@ -12,6 +12,7 @@ from pathlib import Path
 from api.dependencies import get_current_user, require_admin
 from api.dependencies import get_redis_cache
 from api.error_handlers import AuthorizationError, NotFoundError, ValidationError
+from api.state import get_db_manager
 
 
 router = APIRouter(prefix="/admin", tags=["Администрирование"])
@@ -246,8 +247,6 @@ async def get_database_stats(current_user: dict = Depends(get_current_user)):
     if current_user.get("role") != "admin":
         raise AuthorizationError("Требуется роль администратора")
 
-    from api.state import get_db_manager
-
     db = get_db_manager()
     stats = db.get_statistics()
 
@@ -272,8 +271,6 @@ async def vacuum_database(current_user: dict = Depends(get_current_user)):
     if current_user.get("role") != "admin":
         raise AuthorizationError("Требуется роль администратора")
 
-    from api.state import get_db_manager
-
     db = get_db_manager()
     try:
         with db.get_connection() as conn:
@@ -297,8 +294,6 @@ async def get_database_tables(current_user: dict = Depends(get_current_user)):
     """Список таблиц"""
     if current_user.get("role") != "admin":
         raise AuthorizationError("Требуется роль администратора")
-
-    from api.state import get_db_manager
 
     db = get_db_manager()
     tables = []

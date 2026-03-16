@@ -14,6 +14,7 @@ from api.schemas import (
 )
 from api.dependencies import get_db, get_redis_cache
 from api.error_handlers import NotFoundError, DatabaseError
+from api.state import get_redis
 from utils.caching.redis_cache import RedisCache
 from utils.database.database import DatabaseManager
 
@@ -82,7 +83,6 @@ async def get_scan(
     db: DatabaseManager = Depends(get_db),
 ):
     """Получить сканирование по ID"""
-    from api.state import get_redis
     from api.metrics import BusinessMetrics
 
     redis = get_redis()
@@ -126,7 +126,6 @@ async def create_scan(
     db: DatabaseManager = Depends(get_db),
 ):
     """Создать новое сканирование"""
-    from api.state import get_redis
     from api.metrics import BusinessMetrics
 
     db.add_scan_result(
@@ -168,8 +167,6 @@ async def delete_scan(
     db: DatabaseManager = Depends(get_db),
 ):
     """Удалить сканирование"""
-    from api.state import get_redis
-
     success = db.delete_scan(scan_id)
 
     if not success:

@@ -13,6 +13,7 @@ from api.schemas import (
 )
 from api.dependencies import get_db, get_redis_cache
 from api.error_handlers import NotFoundError
+from api.state import get_redis
 from utils.database.database import DatabaseManager
 from utils.caching.redis_cache import RedisCache
 
@@ -67,8 +68,6 @@ async def get_simulation(
     db: DatabaseManager = Depends(get_db),
 ):
     """Получить симуляцию по ID"""
-    from api.state import get_redis
-
     redis = get_redis()
     cache_key = f"simulation:{simulation_id}"
 
@@ -102,8 +101,6 @@ async def create_simulation(
     db: DatabaseManager = Depends(get_db),
 ):
     """Создать новую симуляцию"""
-    from api.state import get_redis
-
     sim_id = f"sim_{uuid.uuid4().hex[:8]}"
 
     db.add_simulation(
@@ -135,8 +132,6 @@ async def update_simulation(
     db: DatabaseManager = Depends(get_db),
 ):
     """Обновить статус симуляции"""
-    from api.state import get_redis
-
     db.update_simulation(
         simulation_id=simulation_id,
         status=status,
