@@ -503,7 +503,7 @@ class SDRInterface:
         self.recorded_samples = []
 
         def record_thread():
-            """TODO: Add description"""
+            """Поток записи: читает сэмплы буферами и вызывает callback для realtime обработки."""
             start_time = time.time()
             num_buffers = int(duration_seconds * self.sample_rate / 1024)
 
@@ -568,7 +568,7 @@ class SDRInterface:
 
         # Callback для обработки сэмплов
         def sample_callback(samples):
-            """TODO: Add description"""
+            """Передаёт сэмплы в SSTV декодер для realtime обработки."""
             decoder.decode_realtime_push(samples)
 
         # Запускаем запись с real-time обработкой
@@ -718,7 +718,7 @@ class SDRInterface:
         self.is_scanning = True
 
         def scan_thread():
-            """TODO: Add description"""
+            """Поток сканирования: последовательно проходит по диапазону частот с заданным шагом."""
             freq_min, freq_max = freq_range
             current_freq = freq_min
 

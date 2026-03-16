@@ -24,7 +24,7 @@ from utils.database.database import DatabaseManager
 from utils.caching.redis_cache import RedisCache
 
 # Импорты роутов
-from api.routes import scans, simulations, analysis, comparison, reports, auth, admin, dashboard
+from api.routes import scans, simulations, analysis, comparison, reports, auth, admin, dashboard_unified
 from api.routes import graphql, ml_analysis, external_services, nasa, database, monitoring
 
 logger = logging.getLogger(__name__)

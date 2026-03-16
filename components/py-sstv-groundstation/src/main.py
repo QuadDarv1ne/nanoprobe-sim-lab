@@ -250,7 +250,7 @@ def mode_waterfall(args):
 
         # Callback для обработки сэмплов
         def sample_callback(samples):
-            """TODO: Add description"""
+            """Добавляет сэмплы в waterfall recorder для визуализации спектрограммы."""
             rgb_row = waterfall.push_samples(samples)
             if rgb_row is not None and recorder:
                 recorder.add_frame(rgb_row)
@@ -415,7 +415,7 @@ def mode_auto_record(args):
 
     # Callback для уведомлений
     def recording_callback(event_type: str, data: dict):
-        """TODO: Add description"""
+        """Обработка событий автоматического рекордера: информирование о статусе записи."""
         timestamp = datetime.now().strftime('%H:%M:%S')
 
         if event_type == 'schedule_loaded':
