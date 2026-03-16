@@ -10,7 +10,7 @@ import tempfile
 import shutil
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from utils.logger import NanoprobeLogger, LoggerSetup
 import logging
@@ -113,9 +113,9 @@ def test_context_logging():
     try:
         # Создаем фиктивный config_manager
         class FakeConfig:
-            """TODO: Add description"""
+            """Фиктивный конфигурационный менеджер для тестирования"""
             def get(self, key, default):
-                """TODO: Add description"""
+                """Получение параметра конфигурации по ключу"""
                 if key == "paths.log_dir":
                     return str(tmpdir)
                 if key == "logging.level":
@@ -166,9 +166,9 @@ def test_error_logging_with_exception():
 
     with tempfile.TemporaryDirectory() as tmpdir:
         class FakeConfig:
-            """TODO: Add description"""
+            """Фиктивный конфигурационный менеджер для тестирования"""
             def get(self, key, default):
-                """TODO: Add description"""
+                """Получение параметра конфигурации по ключу"""
                 if key == "paths.log_dir":
                     return tmpdir
                 if key == "logging.level":
@@ -204,9 +204,9 @@ def test_multiple_loggers():
 
     with tempfile.TemporaryDirectory() as tmpdir:
         class FakeConfig:
-            """TODO: Add description"""
+            """Фиктивный конфигурационный менеджер для тестирования"""
             def get(self, key, default):
-                """TODO: Add description"""
+                """Получение параметра конфигурации по ключу"""
                 if key == "paths.log_dir":
                     return tmpdir
                 if key == "logging.level":
@@ -247,9 +247,9 @@ def test_log_api_event():
 
     with tempfile.TemporaryDirectory() as tmpdir:
         class FakeConfig:
-            """TODO: Add description"""
+            """Фиктивный конфигурационный менеджер для тестирования"""
             def get(self, key, default):
-                """TODO: Add description"""
+                """Получение параметра конфигурации по ключу"""
                 if key == "paths.log_dir":
                     return tmpdir
                 if key == "logging.level":

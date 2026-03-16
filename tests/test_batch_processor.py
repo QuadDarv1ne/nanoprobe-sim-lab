@@ -9,7 +9,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from utils.batch.batch_processor import BatchProcessor, BatchJob
+from utils.batch_processor import BatchProcessor, BatchJob
 
 
 class TestBatchJob(unittest.TestCase):
@@ -64,7 +64,7 @@ class TestBatchJob(unittest.TestCase):
         callback_called = []
 
         def callback(job_id, progress):
-            """TODO: Add description"""
+            """Callback для отслеживания прогресса выполнения задачи"""
             callback_called.append((job_id, progress))
 
         self.job.set_progress_callback(callback)
@@ -126,7 +126,7 @@ class TestBatchProcessor(unittest.TestCase):
     def test_run_job_with_errors(self):
         """Тест выполнения с ошибками"""
         def faulty_processor(x):
-            """TODO: Add description"""
+            """Процессор с эмуляцией ошибки на третьем элементе"""
             if x == 3:
                 raise ValueError("Test error")
             return x * 2
@@ -190,9 +190,9 @@ class TestBatchProcessor(unittest.TestCase):
         execution_order = []
 
         def make_processor(value):
-            """TODO: Add description"""
+            """Фабрика процессоров для тестирования порядка выполнения"""
             def processor(x):
-                """TODO: Add description"""
+                """Процессор который запоминает порядок выполнения"""
                 execution_order.append(value)
                 return x * 2
             return processor
@@ -271,7 +271,7 @@ class TestBatchProcessorIntegration(unittest.TestCase):
         items = [{"id": i, "data": f"item_{i}"} for i in range(10)]
 
         def process_item(item):
-            """TODO: Add description"""
+            """Обработчик одного элемента с имитацией задержки"""
             time.sleep(0.01)  # Имитация работы
             return {"id": item["id"], "processed": True, "result": item["data"] + "_done"}
 
@@ -300,11 +300,11 @@ class TestBatchProcessorIntegration(unittest.TestCase):
         results = {'order': []}
 
         def make_processor(name):
-            """TODO: Add description"""
+            """Фабрика процессоров для отслеживания порядка выполнения"""
             def processor(x):
-                """TODO: Add description"""
+                """Процессор который записывает имя в порядок выполнения"""
                 results['order'].append(name)
-                return x
+                return x * 2
             return processor
 
         # Создание 5 заданий с разными приоритетами

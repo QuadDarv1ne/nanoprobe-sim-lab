@@ -6,7 +6,7 @@
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from utils.caching.redis_cache import RedisCache, cached_sync
 
@@ -46,7 +46,7 @@ def test_cache_decorator_sync():
 
     @cached_sync(prefix="test", expire=60)
     def expensive_function(x, y):
-        """TODO: Add description"""
+        """Тестовая функция с имитацией дорогой операции"""
         call_count["value"] += 1
         return x + y
 

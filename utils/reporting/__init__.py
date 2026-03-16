@@ -10,11 +10,11 @@ Reporting Utilities for Nanoprobe Sim Lab
 """
 
 from utils.reporting.report_generator import ReportGenerator
-from utils.reporting.pdf_report_generator import PDFReportGenerator
+from utils.reporting.pdf_report_generator import ScientificPDFReport
 from utils.reporting.documentation_generator import DocumentationGenerator
 
 __all__ = [
     'ReportGenerator',
-    'PDFReportGenerator',
+    'ScientificPDFReport',
     'DocumentationGenerator',
 ]

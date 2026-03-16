@@ -4,11 +4,11 @@ import unittest
 import sys
 import os
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../utils'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 import pandas as pd
 import numpy as np
-from data_validator import DataValidator, ValidationLevel, ValidationResult
+from utils.data.data_validator import DataValidator, ValidationLevel, ValidationResult
 
 
 class TestDataValidator(unittest.TestCase):
@@ -129,7 +129,7 @@ class TestDataValidator(unittest.TestCase):
     def test_add_validation_rule(self):
         """Тестирует добавление правила валидации"""
         def custom_validator(value):
-            """TODO: Add description"""
+            """Валидатор проверяющий что значение положительное"""
             return value > 0
 
         self.validator.add_validation_rule(

@@ -9,11 +9,11 @@ Monitoring Utilities
 """
 
 from .system_monitor import SystemMonitor
-from .enhanced_monitor import EnhancedMonitor
+from .enhanced_monitor import EnhancedSystemMonitor
 from .system_health_monitor import SystemHealthMonitor
 
 __all__ = [
     'SystemMonitor',
-    'EnhancedMonitor',
+    'EnhancedSystemMonitor',
     'SystemHealthMonitor',
 ]
