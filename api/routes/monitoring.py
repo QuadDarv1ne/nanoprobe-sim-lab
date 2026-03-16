@@ -10,8 +10,7 @@ Endpoints для мониторинга производительности:
 from fastapi import APIRouter, Response
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 import psutil
-from datetime import datetime
-import logging
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +70,7 @@ async def get_detailed_health():
     
     return {
         "status": "healthy",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "system": {
             "cpu": {
                 "percent": cpu_percent,
@@ -101,7 +100,7 @@ async def get_detailed_health():
             "memory_percent": process.memory_percent(),
             "num_threads": process.num_threads(),
             "status": process.status(),
-            "uptime_seconds": datetime.utcnow().timestamp() - process.create_time(),
+            "uptime_seconds": datetime.now(timezone.utc).timestamp() - process.create_time(),
         },
     }
 
@@ -114,18 +113,18 @@ async def get_detailed_health():
 async def get_monitoring_stats():
     """
     Статистика мониторинга.
-    
+
     Включает:
     - Uptime
     - Request counts
     - Error rates
     """
     import time
-    
+
     # Получаем uptime
-    boot_time = datetime.fromtimestamp(psutil.boot_time())
-    uptime = datetime.utcnow() - boot_time
-    
+    boot_time = datetime.fromtimestamp(psutil.boot_time(), tz=timezone.utc)
+    uptime = datetime.now(timezone.utc) - boot_time
+
     return {
         "uptime": {
             "seconds": uptime.total_seconds(),

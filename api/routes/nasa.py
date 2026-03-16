@@ -15,7 +15,7 @@ NASA API Routes
 
 from fastapi import APIRouter, Query, HTTPException, Depends
 from typing import Optional, List
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import logging
 
 from utils.nasa_api_client import get_nasa_client, NASAAPIClient
@@ -394,17 +394,17 @@ async def health_check():
         result = {
             "status": "healthy" if is_healthy else "unhealthy",
             "api": "NASA API",
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
-        
+
         if is_healthy:
             cache.set(cache_key, result, expire=300)  # 5 минут
-        
+
         return result
     except Exception as e:
         return {
             "status": "error",
             "api": "NASA API",
             "error": str(e),
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }

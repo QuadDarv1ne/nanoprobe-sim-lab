@@ -7,7 +7,7 @@ Argon2 password hashing + Audit logging
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.security import HTTPBearer
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Set, Optional
 import jwt
 import os
@@ -102,7 +102,7 @@ def log_audit_event(event_type: AuditEventType, username: str, request: Request,
     }
     """
     audit_event = {
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "event_type": event_type.value,
         "username": username,
         "ip": request.client.host if request else "unknown",
@@ -149,9 +149,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     to_encode = data.copy()
 
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=JWT_EXPIRATION_MINUTES)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRATION_MINUTES)
 
     to_encode.update({"exp": expire, "type": "access"})
     encoded_jwt = jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
@@ -220,7 +220,7 @@ def _revoke_refresh_token(jti: str):
 def create_refresh_token(data: dict) -> str:
     """Создание refresh токена с уникальным jti"""
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(days=JWT_REFRESH_EXPIRATION_DAYS)
+    expire = datetime.now(timezone.utc) + timedelta(days=JWT_REFRESH_EXPIRATION_DAYS)
     jti = secrets.token_urlsafe(16)  # Unique token ID
     to_encode.update({"exp": expire, "type": "refresh", "jti": jti})
     encoded_jwt = jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
