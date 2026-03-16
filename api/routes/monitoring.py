@@ -10,6 +10,7 @@ Endpoints для мониторинга производительности:
 from fastapi import APIRouter, Response
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 import psutil
+import logging
 from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)

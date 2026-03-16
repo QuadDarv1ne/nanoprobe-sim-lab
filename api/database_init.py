@@ -74,7 +74,7 @@ def init_database(db_path: str = "data/nanoprobe.db") -> bool:
     """
     try:
         # DatabaseManager автоматически создаёт схему в конструкторе
-        from utils.database.database import DatabaseManager
+        from utils.database import DatabaseManager
 
         db = DatabaseManager(db_path)
 

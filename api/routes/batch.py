@@ -8,7 +8,7 @@ from typing import List, Optional, Dict, Any
 from api.schemas import ErrorResponse
 from api.dependencies import get_batch_processor
 from api.error_handlers import NotFoundError, ValidationError
-from utils.batch.batch_processor import BatchProcessor
+from utils.batch_processor import BatchProcessor
 
 
 router = APIRouter()

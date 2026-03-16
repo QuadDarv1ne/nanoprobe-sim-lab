@@ -14,8 +14,8 @@ from api.schemas import (
 )
 from api.dependencies import get_db
 from api.error_handlers import NotFoundError, ValidationError
-from utils.database.database import DatabaseManager
-from utils.defect_analyzer import DefectAnalysisPipeline
+from utils.database import DatabaseManager
+from utils.ai.defect_analyzer import DefectAnalysisPipeline
 
 
 router = APIRouter()

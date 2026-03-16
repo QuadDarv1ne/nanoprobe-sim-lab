@@ -18,9 +18,9 @@ from typing import Optional, List
 from datetime import datetime, timedelta, timezone
 import logging
 
-from utils.nasa_api_client import get_nasa_client, NASAAPIClient
+from utils.api.nasa_api_client import get_nasa_client, NASAAPIClient
 from utils.caching.redis_cache import cache
-from utils.security.rate_limiter import api_limit
+from utils.security.rate_limiter import rate_limit
 from api.schemas import APODResponse, MarsPhotosResponse, NEOsResponse
 from api.error_handlers import ExternalServiceError
 
@@ -39,7 +39,7 @@ router = APIRouter(prefix="/nasa", tags=["NASA API"])
     description="Astronomy Picture of the Day - ежедневное изображение космоса",
     response_model=APODResponse,
 )
-@api_limit(max_requests=30, window=60)
+@rate_limit(max_requests=30, window_seconds=60)
 async def get_apod(
     date: Optional[str] = Query(None, description="Дата в формате YYYY-MM-DD"),
     count: Optional[int] = Query(None, ge=1, le=100, description="Количество случайных изображений"),
@@ -76,7 +76,7 @@ async def get_apod(
     summary="NASA APOD Диапазон",
     description="Получение APOD за диапазон дат",
 )
-@api_limit(max_requests=20, window=60)
+@rate_limit(max_requests=20, window_seconds=60)
 async def get_apod_range(
     start_date: str = Query(..., description="Начальная дата YYYY-MM-DD"),
     end_date: str = Query(..., description="Конечная дата YYYY-MM-DD"),
@@ -107,7 +107,7 @@ async def get_apod_range(
     summary="Mars Rover Photos",
     description="Фотографии с марсоходов NASA (Curiosity, Opportunity, Spirit, Perseverance)",
 )
-@api_limit(max_requests=20, window=60)
+@rate_limit(max_requests=20, window_seconds=60)
 async def get_mars_photos(
     sol: Optional[int] = Query(None, ge=0, description="Марсианский день миссии"),
     earth_date: Optional[str] = Query(None, description="Земная дата YYYY-MM-DD"),
@@ -145,7 +145,7 @@ async def get_mars_photos(
     summary="Mars Rover Manifest",
     description="Информация о всех марсоходах NASA",
 )
-@api_limit(max_requests=30, window=60)
+@rate_limit(max_requests=30, window_seconds=60)
 async def get_mars_rovers():
     """Получение информации о марсоходах"""
     client = get_nasa_client()
@@ -173,7 +173,7 @@ async def get_mars_rovers():
     summary="Near Earth Objects",
     description="Данные о околоземных объектах (астероидах) за период",
 )
-@api_limit(max_requests=20, window=60)
+@rate_limit(max_requests=20, window_seconds=60)
 async def get_asteroids(
     start_date: Optional[str] = Query(None, description="Начальная дата YYYY-MM-DD"),
     end_date: Optional[str] = Query(None, description="Конечная дата YYYY-MM-DD"),
@@ -213,7 +213,7 @@ async def get_asteroids(
     summary="Asteroid by ID",
     description="Детальная информация об астероиде по ID",
 )
-@api_limit(max_requests=30, window=60)
+@rate_limit(max_requests=30, window_seconds=60)
 async def get_asteroid(asteroid_id: int):
     """Получение данных об астероиде по ID"""
     client = get_nasa_client()
@@ -241,7 +241,7 @@ async def get_asteroid(asteroid_id: int):
     summary="Earth Imagery (EPIC)",
     description="Изображения Земли со спутника DSCOVR EPIC",
 )
-@api_limit(max_requests=20, window=60)
+@rate_limit(max_requests=20, window_seconds=60)
 async def get_earth_imagery(
     date: Optional[str] = Query(None, description="Дата YYYY-MM-DD"),
     lat: Optional[float] = Query(None, ge=-90, le=90, description="Широта"),
@@ -280,7 +280,7 @@ async def get_earth_imagery(
     summary="NASA Image Library Search",
     description="Поиск в библиотеке изображений NASA (100,000+ изображений)",
 )
-@api_limit(max_requests=30, window=60)
+@rate_limit(max_requests=30, window_seconds=60)
 async def search_images(
     query: str = Query(..., description="Поисковый запрос"),
     media_type: Optional[str] = Query(None, description="Тип: image, video, audio"),
@@ -322,7 +322,7 @@ async def search_images(
     summary="EONET Natural Events",
     description="Природные события: пожары, ураганы, извержения, etc.",
 )
-@api_limit(max_requests=30, window=60)
+@rate_limit(max_requests=30, window_seconds=60)
 async def get_natural_events(
     status: Optional[str] = Query(None, description="Статус: open, closed"),
     days: Optional[int] = Query(None, ge=1, le=365, description="Количество дней"),
@@ -354,7 +354,7 @@ async def get_natural_events(
     summary="EONET Event by ID",
     description="Детальная информация о природном событии",
 )
-@api_limit(max_requests=30, window=60)
+@rate_limit(max_requests=30, window_seconds=60)
 async def get_event(event_id: str):
     """Получение данных о событии по ID"""
     client = get_nasa_client()

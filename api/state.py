@@ -4,7 +4,7 @@
 """
 
 from typing import Optional, Any, Dict
-from utils.database.database import DatabaseManager
+from utils.database import DatabaseManager
 from utils.caching.redis_cache import RedisCache
 
 # Глобальные состояния
