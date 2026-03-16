@@ -147,6 +147,19 @@ class ExternalServiceError(APIError):
         )
 
 
+class ServiceUnavailableError(APIError):
+    """Сервис недоступен"""
+
+    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        super().__init__(
+            message=message,
+            status_code=503,
+            severity=ErrorSeverity.ERROR,
+            error_code="ERR_SERVICE_UNAVAILABLE",
+            details=details
+        )
+
+
 def create_error_response(
     error: Exception,
     status_code: int,

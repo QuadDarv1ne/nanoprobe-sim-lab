@@ -16,6 +16,8 @@ from typing import Optional, Dict, Any
 from fastapi import APIRouter, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect, Query
 from fastapi.responses import FileResponse
 
+from api.error_handlers import ServiceUnavailableError
+
 logger = logging.getLogger(__name__)
 
 # Добавляем корень проекта в path
@@ -170,7 +172,7 @@ async def get_iss_schedule(
 
     except Exception as e:
         logger.error(f"Error getting ISS schedule: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get ISS schedule")
+        raise ServiceUnavailableError("Не удалось получить расписание МКС")
 
 
 @router.get("/iss/next-pass")
@@ -231,7 +233,7 @@ async def get_iss_next_pass(
 
     except Exception as e:
         logger.error(f"Error getting ISS next pass: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get ISS next pass")
+        raise ServiceUnavailableError("Не удалось получить данные о пролёте МКС")
 
 
 @router.get("/iss/position")
@@ -286,7 +288,7 @@ async def get_iss_current_position():
 
     except Exception as e:
         logger.error(f"Error getting ISS position: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get ISS position")
+        raise ServiceUnavailableError("Не удалось получить позицию МКС")
 
 
 @router.get("/iss/visible")
@@ -317,7 +319,7 @@ async def is_iss_visible(
 
     except Exception as e:
         logger.error(f"Error checking ISS visibility: {e}")
-        raise HTTPException(status_code=500, detail="Failed to check ISS visibility")
+        raise ServiceUnavailableError("Не удалось проверить видимость МКС")
 
 
 # ============================================================================
@@ -393,7 +395,7 @@ async def decode_sstv_audio(
         raise
     except Exception as e:
         logger.error(f"SSTV decoding error: {e}")
-        raise HTTPException(status_code=500, detail="SSTV decoding failed")
+        raise ServiceUnavailableError("Ошибка декодирования SSTV")
 
 
 @router.get("/sstv/download/{filename}")
@@ -491,7 +493,7 @@ async def get_all_satellites_schedule(hours_ahead: int = 24):
 
     except Exception as e:
         logger.error(f"Error getting satellite passes: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get satellite passes")
+        raise ServiceUnavailableError("Не удалось получить расписание спутников")
 
 
 # ============================================================================
@@ -689,7 +691,7 @@ async def start_sstv_recording(
         
     except Exception as e:
         logger.error(f"Recording start error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to start recording: {str(e)}")
+        raise ServiceUnavailableError(f"Не удалось начать запись: {str(e)}")
 
 
 async def stop_recording_after(duration: int):
@@ -749,8 +751,8 @@ async def stop_sstv_recording():
             _recording_process.kill()
         _recording_process = None
         _recording_metadata = {}
-        
-        raise HTTPException(status_code=500, detail=f"Failed to stop recording: {str(e)}")
+
+        raise ServiceUnavailableError(f"Не удалось остановить запись: {str(e)}")
 
 
 @router.get("/record/status")
