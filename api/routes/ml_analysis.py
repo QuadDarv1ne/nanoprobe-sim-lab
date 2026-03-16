@@ -2,7 +2,7 @@
 AI/ML Analysis routes с pre-trained моделями
 """
 
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form
 from pathlib import Path
 import logging
 

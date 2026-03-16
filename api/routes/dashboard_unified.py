@@ -16,7 +16,7 @@ Unified Dashboard API for Nanoprobe Sim Lab
 - FastAPI, Redis (опционально)
 """
 
-from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect, HTTPException, status
+from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect, status
 from fastapi.responses import JSONResponse
 from fastapi import Header
 from datetime import datetime, timedelta

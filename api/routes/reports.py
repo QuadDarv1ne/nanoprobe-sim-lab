@@ -2,7 +2,7 @@
 API роуты для генерации PDF отчётов
 """
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from fastapi.responses import FileResponse
 from datetime import datetime
 import uuid
