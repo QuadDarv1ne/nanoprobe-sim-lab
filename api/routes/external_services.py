@@ -13,6 +13,7 @@ from urllib3.util.retry import Retry
 from datetime import datetime, timedelta
 
 from api.error_handlers import NotFoundError
+from api.state import get_app_state, set_app_state
 from utils.circuit_breaker import circuit_breaker
 from utils.caching.redis_cache import cache as redis_cache
 
@@ -21,33 +22,23 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/external", tags=["External Services"])
 
 
-# HTTP сессия с connection pooling и retry
-def create_session() -> requests.Session:
-    """Создание HTTP сессии с retry и connection pooling"""
-    session = requests.Session()
-
-    # Retry стратегия
-    retry = Retry(
-        total=3,
-        backoff_factor=0.3,
-        status_forcelist=[429, 500, 502, 503, 504],
-        allowed_methods=["GET"]
-    )
-    adapter = HTTPAdapter(max_retries=retry, pool_connections=10, pool_maxsize=20)
-    session.mount("https://", adapter)
-    session.mount("http://", adapter)
-
+def get_http_session() -> requests.Session:
+    """Получить или создать HTTP сессию"""
+    session = get_app_state("http_session")
+    if session is not None:
+        return session
+    
+    session = create_session()
+    set_app_state("http_session", session)
     return session
-
-
-http_session = create_session()
 
 
 def close_http_session():
     """Закрытие HTTP сессии и освобождение ресурсов"""
-    global http_session
-    if http_session:
-        http_session.close()
+    session = get_app_state("http_session")
+    if session:
+        session.close()
+        set_app_state("http_session", None)
 
 
 @router.get(
@@ -85,7 +76,7 @@ async def get_nasa_apod(date: Optional[str] = None):
     if date:
         params["date"] = date
 
-    response = http_session.get(url, params=params, timeout=10)
+    response = get_http_session().get(url, params=params, timeout=10)
     response.raise_for_status()
     
     data = response.json()
@@ -147,7 +138,7 @@ async def search_zenodo(
         "order": "desc"
     }
 
-    response = http_session.get(url, params=params, timeout=10)
+    response = get_http_session().get(url, params=params, timeout=10)
     response.raise_for_status()
     
     data = response.json()
@@ -197,7 +188,7 @@ async def search_figshare(
         "limit": limit
     }
 
-    response = http_session.get(url, params=params, timeout=10)
+    response = get_http_session().get(url, params=params, timeout=10)
     response.raise_for_status()
     
     data = response.json()
