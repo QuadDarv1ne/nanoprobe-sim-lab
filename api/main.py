@@ -413,7 +413,6 @@ async def metrics():
 async def graphql_endpoint(request: Request):
     """GraphQL endpoint для запросов"""
     from api.graphql_schema import schema
-    import json  # noqa: F401
 
     body = await request.json()
     query = body.get("query")
@@ -533,8 +532,6 @@ async def websocket_endpoint(websocket: WebSocket):
 # Фоновая задача для push-уведомлений подписчикам
 async def push_realtime_updates():
     """Периодическая отправка обновлений подписчикам"""
-    import psutil  # noqa: F401
-
     while True:
         try:
             await asyncio.sleep(5)  # Каждые 5 секунд
