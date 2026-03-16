@@ -49,7 +49,6 @@ except ImportError:
 router = APIRouter()
 
 # Глобальные объекты (ленивая инициализация)
-_redis_cache: Optional[RedisCache] = None
 _sstv_decoder: Optional[SSTVDecoder] = None
 _tracker: Optional[tracker_module.SatelliteTracker] = None
 
