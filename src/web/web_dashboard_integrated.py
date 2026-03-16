@@ -52,7 +52,7 @@ def login_required(f):
     """Декоратор для защиты маршрутов аутентификацией"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        """TODO: Add description"""
+        """Проверяет наличие активной сессии пользователя."""
         if not session.get('logged_in'):
             return jsonify({'error': 'Требуется аутентификация'}), 401
         return f(*args, **kwargs)
