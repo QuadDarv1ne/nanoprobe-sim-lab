@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 
 from api.error_handlers import NotFoundError
 from api.state import get_app_state, set_app_state
-from utils.circuit_breaker import circuit_breaker
+from utils.caching.circuit_breaker import circuit_breaker
 from utils.caching.redis_cache import cache as redis_cache
 
 logger = logging.getLogger(__name__)
@@ -207,7 +207,7 @@ async def search_figshare(
 )
 async def get_circuit_breakers_status():
     """Статус всех circuit breakers для внешних сервисов"""
-    from utils.circuit_breaker import get_all_circuit_breakers_stats
+    from utils.caching.circuit_breaker import get_all_circuit_breakers_stats
     return {
         "circuit_breakers": get_all_circuit_breakers_stats()
     }
@@ -220,7 +220,7 @@ async def get_circuit_breakers_status():
 )
 async def reset_circuit_breakers():
     """Сброс всех circuit breakers"""
-    from utils.circuit_breaker import reset_all_circuit_breakers
+    from utils.caching.circuit_breaker import reset_all_circuit_breakers
     reset_all_circuit_breakers()
     return {"success": True, "message": "All circuit breakers reset"}
 
@@ -232,7 +232,7 @@ async def reset_circuit_breakers():
 )
 async def get_circuit_breaker_status(name: str):
     """Статус конкретного circuit breaker"""
-    from utils.circuit_breaker import get_circuit_breaker
+    from utils.caching.circuit_breaker import get_circuit_breaker
 
     try:
         breaker = get_circuit_breaker(name)
@@ -248,7 +248,7 @@ async def get_circuit_breaker_status(name: str):
 )
 async def reset_circuit_breaker(name: str):
     """Сброс конкретного circuit breaker"""
-    from utils.circuit_breaker import get_circuit_breaker
+    from utils.caching.circuit_breaker import get_circuit_breaker
 
     try:
         breaker = get_circuit_breaker(name)

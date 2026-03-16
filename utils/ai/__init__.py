@@ -16,10 +16,11 @@ AI/ML Utilities for Nanoprobe Sim Lab
 
 from utils.ai.defect_analyzer import analyze_defects
 from utils.ai.pretrained_defect_analyzer import PretrainedDefectAnalyzer
-from utils.ai.machine_learning import MLModel
+from utils.ai.machine_learning import SurfacePredictionModel, ImageAnalysisPredictor
 
 __all__ = [
     'analyze_defects',
     'PretrainedDefectAnalyzer',
-    'MLModel',
+    'SurfacePredictionModel',
+    'ImageAnalysisPredictor',
 ]

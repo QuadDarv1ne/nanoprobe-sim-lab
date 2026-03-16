@@ -7,9 +7,9 @@ from fastapi import HTTPException, status, Request, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Optional
 from functools import wraps
-from utils.database.database import DatabaseManager
+from utils.database import DatabaseManager
 from utils.caching.redis_cache import RedisCache
-from utils.batch.batch_processor import BatchProcessor
+from utils.batch_processor import BatchProcessor
 from api.error_handlers import AuthorizationError, RateLimitError, DatabaseError
 import os
 import jwt

@@ -35,8 +35,8 @@ from api.schemas import (
 )
 from api.error_handlers import DatabaseError, ValidationError, ServiceUnavailableError
 from api.state import get_app_state, set_app_state
-from utils.enhanced_monitor import get_monitor, format_uptime
-from utils.database.database import DatabaseManager
+from utils.monitoring.enhanced_monitor import get_monitor, format_uptime
+from utils.database import DatabaseManager
 from utils.caching.redis_cache import cache, cached
 
 router = APIRouter()

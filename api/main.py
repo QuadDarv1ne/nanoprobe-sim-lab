@@ -20,13 +20,13 @@ from fastapi.middleware.gzip import GZipMiddleware
 from api.error_handlers import register_error_handlers, ValidationError
 
 # Импорт существующих утилит
-from utils.database.database import DatabaseManager
+from utils.database import DatabaseManager
 from utils.caching.redis_cache import RedisCache
 from api.state import init_app_state
 
 # Импорты роутов
 from api.routes import scans, simulations, analysis, comparison, reports, auth, admin, dashboard_unified
-from api.routes import graphql, ml_analysis, external_services, nasa, database, monitoring
+from api.routes import graphql, ml_analysis, external_services, nasa, monitoring
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +96,7 @@ async def lifespan(app: FastAPI):
         logger.warning(f"Monitor cleanup error: {e}")
 
     try:
-        from utils.circuit_breaker import close_all_circuit_breakers
+        from utils.caching.circuit_breaker import close_all_circuit_breakers
         close_all_circuit_breakers()
         logger.info("Circuit breakers closed")
     except Exception as e:
@@ -366,9 +366,6 @@ app.include_router(external_services.router, prefix="/api/v1", tags=["External S
 app.include_router(nasa.router, prefix="/api/v1", tags=["NASA API"])
 logger.info("NASA API routes registered")
 
-# Database Query Analyzer
-app.include_router(database.router, prefix="/api/v1", tags=["Database"])
-logger.info("Database routes registered")
 
 # Performance Monitoring
 app.include_router(monitoring.router, prefix="/api/v1", tags=["Monitoring"])
@@ -387,7 +384,7 @@ except ImportError as e:
 @app.get("/metrics", tags=["Monitoring"])
 async def metrics():
     """Prometheus метрики"""
-    from utils.enhanced_monitor import get_monitor
+    from utils.monitoring.enhanced_monitor import get_monitor
 
     # Получаем метрики из enhanced monitor
     monitor = get_monitor()
