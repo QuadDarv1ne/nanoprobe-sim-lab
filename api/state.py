@@ -3,13 +3,14 @@
 Хранит ссылки на общие ресурсы (БД, Redis, etc.)
 """
 
-from typing import Optional
+from typing import Optional, Any, Dict
 from utils.database.database import DatabaseManager
 from utils.caching.redis_cache import RedisCache
 
 # Глобальные состояния
 db_manager: Optional[DatabaseManager] = None
 redis_cache: Optional[RedisCache] = None
+app_state: Dict[str, Any] = {}
 
 
 def get_db_manager() -> DatabaseManager:
@@ -41,3 +42,18 @@ def set_redis(cache: RedisCache) -> None:
     """Установить Redis кэш"""
     global redis_cache
     redis_cache = cache
+
+
+def get_app_state(key: str, default: Any = None) -> Any:
+    """Получить значение из состояния приложения"""
+    return app_state.get(key, default)
+
+
+def set_app_state(key: str, value: Any) -> None:
+    """Установить значение в состоянии приложения"""
+    app_state[key] = value
+
+
+def clear_app_state() -> None:
+    """Очистить состояние приложения"""
+    app_state.clear()

@@ -43,13 +43,9 @@ router = APIRouter()
 # ==================== Конфигурация ====================
 
 # Кэш для статистики (5 секунд)
-_stats_cache = {}
-_stats_cache_time = None
 STATS_CACHE_TTL = 5  # секунд
 
 # Кэш для метрик (1 секунда для real-time)
-_metrics_cache: Optional[Dict[str, Any]] = None
-_cache_timestamp: Optional[datetime] = None
 METRICS_CACHE_TTL = 1  # секунда
 
 # WebSocket подключения
@@ -75,20 +71,26 @@ def get_project_root() -> Path:
 
 def get_cached_stats() -> Optional[Dict]:
     """Получить кэшированную статистику если не истёк TTL"""
-    global _stats_cache, _stats_cache_time
-    if _stats_cache_time is None:
+    from api.state import get_app_state
+    
+    cached = get_app_state("stats_cache")
+    cache_time = get_app_state("stats_cache_time")
+    
+    if cache_time is None or cached is None:
         return None
-    age = (datetime.now() - _stats_cache_time).total_seconds()
+    
+    age = (datetime.now() - cache_time).total_seconds()
     if age < STATS_CACHE_TTL:
-        return _stats_cache
+        return cached
     return None
 
 
 def cache_stats(stats: Dict):
     """Закэшировать статистику"""
-    global _stats_cache, _stats_cache_time
-    _stats_cache = stats
-    _stats_cache_time = datetime.now()
+    from api.state import set_app_state
+    
+    set_app_state("stats_cache", stats)
+    set_app_state("stats_cache_time", datetime.now())
 
 
 def get_storage_stats() -> Dict[str, float]:
