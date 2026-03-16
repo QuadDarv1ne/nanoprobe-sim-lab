@@ -57,3 +57,9 @@ def set_app_state(key: str, value: Any) -> None:
 def clear_app_state() -> None:
     """Очистить состояние приложения"""
     app_state.clear()
+
+
+def init_app_state(db: DatabaseManager, redis: RedisCache) -> None:
+    """Инициализировать состояние приложения"""
+    set_db_manager(db)
+    set_redis(redis)
