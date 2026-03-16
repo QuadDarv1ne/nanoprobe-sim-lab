@@ -589,21 +589,24 @@ async def start_sstv_recording(
 ):
     """
     Запуск записи с RTL-SDR для приёма SSTV.
-    
+
     - **frequency**: Частота в MHz (по умолчанию 145.800 для МКС)
     - **sample_rate**: Частота дискретизации (по умолчанию 2048000)
     - **gain**: Усиление RTL-SDR (0-496)
     - **duration**: Длительность записи в секундах
-    
+
     Returns:
         Статус записи
     """
-    global _recording_process, _recording_start_time, _recording_metadata
-    
-    if _recording_process is not None:
+    from api.state import get_app_state, set_app_state
+
+    recording_process = get_app_state("recording_process")
+    recording_start_time = get_app_state("recording_start_time")
+
+    if recording_process is not None:
         return {
             "status": "already_recording",
-            "started_at": _recording_start_time.isoformat() if _recording_start_time else None,
+            "started_at": recording_start_time.isoformat() if recording_start_time else None,
             "message": "Запись уже идёт"
         }
     
@@ -633,8 +636,8 @@ async def start_sstv_recording(
     except FileNotFoundError:
         # rtl_fm не найден - симулируем для тестирования
         logger.warning("rtl_fm not found - simulation mode")
-        _recording_start_time = datetime.now()
-        _recording_metadata = {
+        recording_start_time = datetime.now()
+        recording_metadata = {
             "frequency": frequency,
             "sample_rate": sample_rate,
             "gain": gain,
@@ -642,46 +645,51 @@ async def start_sstv_recording(
             "output_file": str(output_file),
             "simulated": True
         }
-        
+        set_app_state("recording_start_time", recording_start_time)
+        set_app_state("recording_metadata", recording_metadata)
+
         return {
             "status": "recording_simulated",
             "frequency_mhz": frequency,
             "sample_rate": sample_rate,
             "output_file": str(output_file),
-            "started_at": _recording_start_time.isoformat(),
+            "started_at": recording_start_time.isoformat(),
             "message": "RTL-SDR не найден. Запись симулируется для тестирования."
         }
-    
+
     try:
-        _recording_process = subprocess.Popen(
+        recording_process = subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )
-        _recording_start_time = datetime.now()
-        _recording_metadata = {
+        recording_start_time = datetime.now()
+        recording_metadata = {
             "frequency": frequency,
             "sample_rate": sample_rate,
             "gain": gain,
             "duration": duration,
             "output_file": str(output_file),
-            "pid": _recording_process.pid
+            "pid": recording_process.pid
         }
-        
+        set_app_state("recording_process", recording_process)
+        set_app_state("recording_start_time", recording_start_time)
+        set_app_state("recording_metadata", recording_metadata)
+
         # Планируем остановку через duration секунд
         asyncio.create_task(stop_recording_after(duration))
-        
+
         return {
             "status": "recording_started",
             "frequency_mhz": frequency,
             "sample_rate": sample_rate,
             "gain": gain,
             "output_file": str(output_file),
-            "started_at": _recording_start_time.isoformat(),
-            "pid": _recording_process.pid,
+            "started_at": recording_start_time.isoformat(),
+            "pid": recording_process.pid,
             "message": f"Запись началась. Остановка через {duration} секунд."
         }
-        
+
     except Exception as e:
         logger.error(f"Recording start error: {e}")
         raise ServiceUnavailableError(f"Не удалось начать запись: {str(e)}")
@@ -696,72 +704,81 @@ async def stop_recording_after(duration: int):
 @router.post("/record/stop")
 async def stop_sstv_recording():
     """Остановка записи SSTV."""
-    global _recording_process, _recording_start_time, _recording_metadata
-    
-    if _recording_process is None and not _recording_metadata.get("simulated"):
+    from api.state import get_app_state, set_app_state
+
+    recording_process = get_app_state("recording_process")
+    recording_metadata = get_app_state("recording_metadata", {})
+
+    if recording_process is None and not recording_metadata.get("simulated"):
         return {
             "status": "not_recording",
             "message": "Запись не идёт"
         }
-    
+
     # Если симуляция
-    if _recording_metadata.get("simulated"):
-        duration = (datetime.now() - _recording_start_time).total_seconds() if _recording_start_time else 0
-        _recording_process = None
-        metadata = _recording_metadata.copy()
-        _recording_metadata = {}
-        
+    if recording_metadata.get("simulated"):
+        recording_start_time = get_app_state("recording_start_time")
+        duration = (datetime.now() - recording_start_time).total_seconds() if recording_start_time else 0
+        set_app_state("recording_process", None)
+        metadata = recording_metadata.copy()
+        set_app_state("recording_metadata", {})
+
         return {
             "status": "recording_stopped_simulated",
             "duration_seconds": round(duration, 2),
             "output_file": metadata.get("output_file"),
             "message": "Симуляция записи остановлена"
         }
-    
+
     # Останавливаем процесс
     try:
-        _recording_process.send_signal(signal.SIGINT)
-        _recording_process.wait(timeout=5)
-        
-        duration = (datetime.now() - _recording_start_time).total_seconds() if _recording_start_time else 0
-        output_file = _recording_metadata.get("output_file")
-        
-        _recording_process = None
-        metadata = _recording_metadata.copy()
-        _recording_metadata = {}
-        
+        recording_process.send_signal(signal.SIGINT)
+        recording_process.wait(timeout=5)
+
+        recording_start_time = get_app_state("recording_start_time")
+        duration = (datetime.now() - recording_start_time).total_seconds() if recording_start_time else 0
+        output_file = recording_metadata.get("output_file")
+
+        set_app_state("recording_process", None)
+        metadata = recording_metadata.copy()
+        set_app_state("recording_metadata", {})
+
         return {
             "status": "recording_stopped",
             "duration_seconds": round(duration, 2),
             "output_file": output_file,
             "message": "Запись остановлена"
         }
-        
+
     except Exception as e:
         logger.error(f"Recording stop error: {e}")
         # Принудительная остановка
-        if _recording_process:
-            _recording_process.kill()
-        _recording_process = None
-        _recording_metadata = {}
+        if recording_process:
+            recording_process.kill()
+        set_app_state("recording_process", None)
+        set_app_state("recording_metadata", {})
 
         raise ServiceUnavailableError(f"Не удалось остановить запись: {str(e)}")
 
 
 @router.get("/record/status")
 async def get_recording_status():
-    """Получить статус записи."""
-    global _recording_process, _recording_start_time, _recording_metadata
-    
-    if _recording_process is not None or _recording_metadata.get("simulated"):
-        duration = (datetime.now() - _recording_start_time).total_seconds() if _recording_start_time else 0
-        
+    """Получить статуса записи."""
+    from api.state import get_app_state
+
+    recording_process = get_app_state("recording_process")
+    recording_metadata = get_app_state("recording_metadata", {})
+    recording_start_time = get_app_state("recording_start_time")
+
+    if recording_process is not None or recording_metadata.get("simulated"):
+        duration = (datetime.now() - recording_start_time).total_seconds() if recording_start_time else 0
+
         return {
             "status": "recording",
             "recording": True,
-            "started_at": _recording_start_time.isoformat() if _recording_start_time else None,
+            "started_at": recording_start_time.isoformat() if recording_start_time else None,
             "duration_seconds": round(duration, 2),
-            "metadata": _recording_metadata
+            "metadata": recording_metadata
         }
     else:
         return {
