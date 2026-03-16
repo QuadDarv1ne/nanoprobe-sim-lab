@@ -22,7 +22,7 @@ from api.error_handlers import register_error_handlers, ValidationError
 # Импорт существующих утилит
 from utils.database.database import DatabaseManager
 from utils.caching.redis_cache import RedisCache
-from api.state import set_db_manager, set_redis
+from api.state import init_app_state
 
 # Импорты роутов
 from api.routes import scans, simulations, analysis, comparison, reports, auth, admin, dashboard_unified
@@ -42,21 +42,13 @@ async def lifespan(app: FastAPI):
     else:
         logger.error("Database initialization failed")
 
-    # Инициализация БД менеджера
+    # Инициализация БД менеджера и Redis
     db = DatabaseManager("data/nanoprobe.db")
-    set_db_manager(db)
-    logger.info("Database initialized")
-
-    # Инициализация Redis кэша
     redis_host = os.getenv("REDIS_HOST", "localhost")
     redis_port = int(os.getenv("REDIS_PORT", "6379"))
     redis = RedisCache(host=redis_host, port=redis_port)
-    set_redis(redis)
-
-    if redis.is_available():
-        logger.info(f"Redis cache connected: {redis_host}:{redis_port}")
-    else:
-        logger.warning("Redis cache unavailable (running without caching)")
+    init_app_state(db, redis)
+    logger.info("Database and Redis initialized")
 
     # Запуск мониторинга производительности
     try:
