@@ -60,21 +60,9 @@ _recording_metadata: Dict[str, Any] = {}
 
 
 def get_redis_cache() -> Optional[RedisCache]:
-    """Получает Redis cache instance (singleton)."""
-    global _redis_cache
-    if _redis_cache is None and REDIS_AVAILABLE:
-        try:
-            redis_host = os.getenv("REDIS_HOST", "localhost")
-            redis_port = int(os.getenv("REDIS_PORT", "6379"))
-            _redis_cache = RedisCache(host=redis_host, port=redis_port)
-            # Проверка подключения
-            if not _redis_cache.is_available():
-                logger.warning("Redis cache unavailable")
-                _redis_cache = None
-        except Exception as e:
-            logger.warning(f"Redis cache initialization error: {e}")
-            _redis_cache = None
-    return _redis_cache
+    """Получает Redis cache instance из api.state."""
+    from api.state import get_redis
+    return get_redis()
 
 
 def get_satellite_tracker() -> Optional[tracker_module.SatelliteTracker]:
