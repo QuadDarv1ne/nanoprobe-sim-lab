@@ -67,7 +67,7 @@ def test_schemas_validation():
 def test_database_cache():
     """Тесты кэширования DatabaseManager"""
     print("\n=== Тесты кэша БД ===")
-    from utils.database.database import DatabaseManager
+    from utils.database import DatabaseManager
     import tempfile
 
     # Создаём временную БД

@@ -20,7 +20,7 @@ os.environ["DATABASE_PATH"] = TEST_DB
 
 from fastapi.testclient import TestClient
 from api.main import app, db_manager
-from utils.database.database import DatabaseManager
+from utils.database import DatabaseManager
 
 
 def setup_module():
