@@ -79,24 +79,26 @@ def require_admin(current_user: dict) -> dict:
 
 def get_db() -> DatabaseManager:
     """Зависимость для получения менеджера БД"""
-    from api.main import db_manager
-    if db_manager is None:
-        raise DatabaseError("База данных недоступна")
-    return db_manager
+    from api.state import get_db_manager
+    try:
+        return get_db_manager()
+    except RuntimeError as e:
+        raise DatabaseError(str(e))
 
 
 def get_redis_cache() -> Optional[RedisCache]:
     """Зависимость для получения Redis кэша"""
-    from api.main import redis_cache
-    return redis_cache
+    from api.state import get_redis
+    return get_redis()
 
 
 def get_redis_cache_required() -> RedisCache:
     """Зависимость для получения Redis кэша (обязательный)"""
-    from api.main import redis_cache
-    if redis_cache is None or not redis_cache.is_available():
-        raise DatabaseError("Redis кэш недоступен")
-    return redis_cache
+    from api.state import get_redis_required
+    try:
+        return get_redis_required()
+    except RuntimeError as e:
+        raise DatabaseError(str(e))
 
 
 def get_batch_processor() -> BatchProcessor:
