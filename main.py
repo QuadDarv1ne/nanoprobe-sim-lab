@@ -150,7 +150,7 @@ def start_backend(reload: bool = False) -> Optional[subprocess.Popen]:
 
     # Проверка uvicorn
     try:
-        import uvicorn  # noqa: F401
+        import uvicorn
     except ImportError:
         print("[ERROR] uvicorn не установлен! Выполните: pip install uvicorn")
         return None
@@ -182,7 +182,7 @@ def start_flask_frontend() -> Optional[subprocess.Popen]:
 
     # Проверка Flask
     try:
-        import flask  # noqa: F401
+        import flask
     except ImportError:
         print("[ERROR] Flask не установлен! Выполните: pip install flask flask-socketio")
         return None
