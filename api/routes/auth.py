@@ -383,7 +383,7 @@ async def refresh_access_token(request: RefreshTokenRequest):
 )
 async def setup_2fa(current_user: dict = Depends(get_current_user)):
     """Настройка 2FA"""
-    from utils.two_factor_auth import get_2fa_manager
+    from utils.security.two_factor_auth import get_2fa_manager
 
     username = current_user["username"]
     user_email = f"{username}@nanoprobe.local"
@@ -409,7 +409,7 @@ async def verify_2fa_setup(
     current_user: dict = Depends(get_current_user)
 ):
     """Верификация 2FA с audit logging"""
-    from utils.two_factor_auth import get_2fa_manager
+    from utils.security.two_factor_auth import get_2fa_manager
 
     username = current_user["username"]
     two_factor = get_2fa_manager()
@@ -445,7 +445,7 @@ async def verify_2fa_login(
     password: str
 ):
     """2FA при входе с audit logging"""
-    from utils.two_factor_auth import get_2fa_manager
+    from utils.security.two_factor_auth import get_2fa_manager
 
     # Сначала проверяем логин/пароль
     user = USERS_DB.get(username)
@@ -515,7 +515,7 @@ async def verify_2fa_login(
 )
 async def get_2fa_status(current_user: dict = Depends(get_current_user)):
     """Статус 2FA"""
-    from utils.two_factor_auth import get_2fa_manager
+    from utils.security.two_factor_auth import get_2fa_manager
 
     username = current_user["username"]
     two_factor = get_2fa_manager()
@@ -537,7 +537,7 @@ async def disable_2fa(
     current_user: dict = Depends(get_current_user)
 ):
     """Отключение 2FA с audit logging"""
-    from utils.two_factor_auth import get_2fa_manager
+    from utils.security.two_factor_auth import get_2fa_manager
 
     username = current_user["username"]
     two_factor = get_2fa_manager()
@@ -568,7 +568,7 @@ async def disable_2fa(
 )
 async def generate_backup_codes(current_user: dict = Depends(get_current_user)):
     """Генерация резервных кодов"""
-    from utils.two_factor_auth import get_2fa_manager
+    from utils.security.two_factor_auth import get_2fa_manager
 
     username = current_user["username"]
     two_factor = get_2fa_manager()
@@ -588,7 +588,7 @@ async def generate_backup_codes(current_user: dict = Depends(get_current_user)):
 )
 async def get_current_user_info(current_user: dict = Depends(get_current_user)):
     """Получение информации о текущем пользователе"""
-    from utils.two_factor_auth import get_2fa_manager
+    from utils.security.two_factor_auth import get_2fa_manager
 
     username = current_user["username"]
     two_factor = get_2fa_manager()

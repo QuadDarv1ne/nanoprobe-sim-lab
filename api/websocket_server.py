@@ -7,7 +7,7 @@ import threading
 import time
 import psutil
 
-from utils.config_manager import ConfigManager
+from utils.config.config_manager import ConfigManager
 from utils.logger import setup_project_logging
 
 
