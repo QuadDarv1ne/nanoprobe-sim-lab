@@ -10,7 +10,7 @@ import os
 os.makedirs("data", exist_ok=True)
 
 # Инициализируем БД ДО импорта app
-from utils.database.database import DatabaseManager
+from utils.database import DatabaseManager
 import api.main
 api.main.db_manager = DatabaseManager("data/nanoprobe.db")
 

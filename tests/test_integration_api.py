@@ -169,7 +169,7 @@ def test_database_connection():
     print_header("Тест 6: Подключение к базе данных")
 
     try:
-        from utils.database.database import DatabaseManager
+        from utils.database import DatabaseManager
 
         db = DatabaseManager("data/nanoprobe.db")
         stats = db.get_statistics()
