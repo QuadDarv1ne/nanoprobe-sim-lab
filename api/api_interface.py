@@ -11,8 +11,8 @@ from typing import Dict, Any, Tuple
 import threading
 import time
 
-from utils.config_manager import ConfigManager
-from utils.data_manager import DataManager
+from utils.config.config_manager import ConfigManager
+from utils.data.data_manager import DataManager
 from utils.logger import NanoprobeLogger, setup_project_logging
 from cpp_spm_hardware_sim.src.spm_simulator import SurfaceModel, SPMController
 from py_surface_image_analyzer.src.image_processor import ImageProcessor

@@ -35,7 +35,7 @@ async def analyze_with_pretrained(
     - contamination (загрязнения)
     - roughness (шероховатость)
     """
-    from utils.pretrained_defect_analyzer import get_analyzer
+    from utils.ai.pretrained_defect_analyzer import get_analyzer
 
     # Сохранение временного файла
     temp_path = Path("data/temp") / image.filename
@@ -73,7 +73,7 @@ async def analyze_with_pretrained(
 )
 async def get_available_models():
     """Информация о доступных моделях"""
-    from utils.pretrained_defect_analyzer import PretrainedDefectAnalyzer
+    from utils.ai.pretrained_defect_analyzer import PretrainedDefectAnalyzer
 
     models_info = {}
     for model_type in PretrainedDefectAnalyzer.MODEL_TYPES:
@@ -108,7 +108,7 @@ async def fine_tune_model(
         class_2/
             image3.jpg
     """
-    from utils.pretrained_defect_analyzer import get_analyzer
+    from utils.ai.pretrained_defect_analyzer import get_analyzer
 
     train_path = Path("data/ml_train")
 
@@ -143,7 +143,7 @@ async def save_model(
     model_type: str = Form(default="resnet50"),
 ):
     """Сохранение модели"""
-    from utils.pretrained_defect_analyzer import get_analyzer
+    from utils.ai.pretrained_defect_analyzer import get_analyzer
 
     analyzer = get_analyzer(model_type=model_type)
 
@@ -173,7 +173,7 @@ async def batch_analyze(
 ):
     """Пакетный анализ изображений"""
     import json
-    from utils.pretrained_defect_analyzer import get_analyzer
+    from utils.ai.pretrained_defect_analyzer import get_analyzer
 
     try:
         paths = json.loads(image_paths)

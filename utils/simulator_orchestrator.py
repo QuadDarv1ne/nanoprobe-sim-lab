@@ -7,9 +7,9 @@ import numpy as np
 import queue
 from datetime import datetime
 
-from utils.config_manager import ConfigManager
+from utils.config.config_manager import ConfigManager
 from utils.logger import setup_project_logging
-from utils.data_manager import DataManager
+from utils.data.data_manager import DataManager
 from utils.visualizer import ProjectVisualizer
 from cpp_spm_hardware_sim.src.spm_simulator import SurfaceModel, SPMController
 from py_surface_image_analyzer.src.image_processor import (
