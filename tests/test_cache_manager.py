@@ -5,9 +5,9 @@ import tempfile
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent / 'utils'))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from cache_manager import CacheManager, CacheInfo
+from utils.caching.cache_manager import CacheManager, CacheInfo
 
 
 class TestCacheManager(unittest.TestCase):
