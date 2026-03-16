@@ -6,7 +6,7 @@ Production логирование для Nanoprobe Simulation Lab
 import logging
 import sys
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from logging.handlers import (
     RotatingFileHandler,
     TimedRotatingFileHandler
@@ -23,7 +23,7 @@ class JSONFormatter(logging.Formatter):
 
     def format(self, record):
         log_data = {
-            'timestamp': datetime.utcnow().isoformat(),
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'level': record.levelname,
             'logger': record.name,
             'message': record.getMessage(),

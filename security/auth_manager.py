@@ -4,7 +4,7 @@ import hashlib
 import secrets
 import jwt
 import bcrypt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, Optional, List
 import sqlite3
 from functools import wraps
@@ -258,8 +258,8 @@ class AuthManager:
         """
         payload = {
             'user_id': user_id,
-            'exp': datetime.utcnow() + timedelta(seconds=expires_in),
-            'iat': datetime.utcnow()
+            'exp': datetime.now(timezone.utc) + timedelta(seconds=expires_in),
+            'iat': datetime.now(timezone.utc)
         }
 
         token = jwt.encode(payload, self.secret_key, algorithm='HS256')
@@ -279,7 +279,7 @@ class AuthManager:
             token: Токен
             expires_in: Время жизни в секундах
         """
-        expires_at = datetime.utcnow() + timedelta(seconds=expires_in)
+        expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
 
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
