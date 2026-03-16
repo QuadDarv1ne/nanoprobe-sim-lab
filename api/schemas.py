@@ -399,3 +399,54 @@ class ExportResponse(BaseModel):
     file_size_bytes: Optional[int]
     created_at: str
     expires_at: str
+
+
+# ==================== NASA API ====================
+
+class APODResponse(BaseModel):
+    """NASA APOD ответ"""
+    date: str
+    explanation: str
+    title: str
+    url: Optional[str] = None
+    hdurl: Optional[str] = None
+    media_type: Optional[str] = None
+    service_version: Optional[str] = None
+    copyright: Optional[str] = None
+
+
+class MarsPhoto(BaseModel):
+    """Фото с марсохода"""
+    id: int
+    sol: int
+    camera: Dict[str, Any]
+    img_src: str
+    earth_date: str
+
+
+class MarsPhotosResponse(BaseModel):
+    """Ответ фото с Марса"""
+    photos: List[MarsPhoto]
+    total: int
+
+
+class NEOCloseApproach(BaseModel):
+    """Сближение с Землёй"""
+    orbiting_body: str
+    miss_distance: Dict[str, Any]
+    relative_velocity: Dict[str, Any]
+
+
+class NearEarthObject(BaseModel):
+    """Околоземный объект"""
+    id: str
+    name: str
+    diameter: Dict[str, Any]
+    is_potentially_hazardous_asteroid: bool
+    close_approach_data: List[NEOCloseApproach]
+
+
+class NEOsResponse(BaseModel):
+    """Ответ NEO"""
+    near_earth_objects: List[NearEarthObject]
+    total: int

@@ -21,6 +21,7 @@ import logging
 from utils.nasa_api_client import get_nasa_client, NASAAPIClient
 from utils.caching.redis_cache import cache
 from utils.security.rate_limiter import api_limit
+from api.schemas import APODResponse, MarsPhotosResponse, NEOsResponse
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ router = APIRouter(prefix="/nasa", tags=["NASA API"])
     "/apod",
     summary="NASA APOD",
     description="Astronomy Picture of the Day - ежедневное изображение космоса",
-    response_model=dict,
+    response_model=APODResponse,
 )
 @api_limit(max_requests=30, window=60)
 async def get_apod(
