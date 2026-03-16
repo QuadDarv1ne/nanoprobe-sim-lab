@@ -305,7 +305,7 @@ async def get_detailed_stats():
             }
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get detailed stats: {str(e)}")
+        raise ServiceUnavailableError(f"Не удалось получить детальную статистику: {str(e)}")
     finally:
         if db_manager:
             db_manager.close_pool()
@@ -660,7 +660,7 @@ async def get_activity_timeline(days: int = Query(7, ge=1, le=30)):
             ]
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get activity timeline: {str(e)}")
+        raise ServiceUnavailableError(f"Не удалось получить активность: {str(e)}")
     finally:
         if db_manager:
             db_manager.close_pool()
@@ -728,7 +728,7 @@ async def get_detailed_storage():
             }
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get storage stats: {str(e)}")
+        raise ServiceUnavailableError(f"Не удалось получить статистику хранилища: {str(e)}")
 
 
 @router.get(
@@ -876,7 +876,7 @@ async def check_alerts():
             "status": "critical" if any(a["level"] == "critical" for a in alerts) else "ok"
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to check alerts: {str(e)}")
+        raise ServiceUnavailableError(f"Не удалось проверить алерты: {str(e)}")
 
 
 # ==================== Metrics History ====================
