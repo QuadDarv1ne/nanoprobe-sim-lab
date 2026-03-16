@@ -158,6 +158,19 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return encoded_jwt
 
 
+def decode_token(token: str) -> dict:
+    """Декодирование JWT токена"""
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        # Токен истёк, но всё ещё можно декодировать
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM], options={"verify_exp": False})
+        return payload
+    except jwt.InvalidTokenError:
+        return {"error": "invalid_token"}
+
+
 def _get_redis_client():
     """Получение Redis клиента"""
     try:

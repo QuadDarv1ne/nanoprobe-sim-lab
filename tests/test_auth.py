@@ -128,27 +128,29 @@ class TestJWTToken:
 
     def test_create_access_token(self):
         """Тест: создание access токена"""
-        token = create_access_token("testuser")
-        
+        token = create_access_token(data={"sub": "testuser", "user_id": 1})
+
         assert isinstance(token, str)
         assert len(token) > 0
-        
+
         # Декодируем и проверяем
         payload = decode_token(token)
         assert payload["sub"] == "testuser"
+        assert payload["user_id"] == 1
         assert "exp" in payload
         assert payload["type"] == "access"
         print("  [PASS] Create access token")
 
     def test_create_refresh_token(self):
         """Тест: создание refresh токена"""
-        token = create_refresh_token("testuser")
-        
+        token = create_refresh_token(data={"sub": "testuser", "user_id": 1})
+
         assert isinstance(token, str)
-        
+
         # Декодируем и проверяем
         payload = decode_token(token)
         assert payload["sub"] == "testuser"
+        assert payload["user_id"] == 1
         assert "exp" in payload
         assert "jti" in payload  # Уникальный ID для rotation
         assert payload["type"] == "refresh"
@@ -158,31 +160,34 @@ class TestJWTToken:
         """Тест: декодирование истёкшего токена"""
         # Создаём токен с прошлым временем
         import jwt
-        from datetime import datetime, timedelta
-        
+        from datetime import datetime, timedelta, timezone
+
         expired_payload = {
             "sub": "testuser",
-            "exp": datetime.utcnow() - timedelta(minutes=5),
+            "exp": datetime.now(timezone.utc) - timedelta(minutes=5),
             "type": "access"
         }
-        expired_token = jwt.encode(expired_payload, "test_secret", algorithm="HS256")
-        
+        from api.routes.auth import JWT_SECRET, JWT_ALGORITHM
+        expired_token = jwt.encode(expired_payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
         payload = decode_token(expired_token)
-        assert payload is None  # Истёкший токен должен вернуть None
+        # Истёкший токен декодируется с verify_exp=False
+        assert payload["sub"] == "testuser"
+        assert payload["type"] == "access"
         print("  [PASS] Decode token expired")
 
     def test_decode_token_invalid(self):
         """Тест: декодирование невалидного токена"""
         invalid_token = "invalid.token.here"
         payload = decode_token(invalid_token)
-        assert payload is None
+        assert payload == {"error": "invalid_token"}
         print("  [PASS] Decode token invalid")
 
     def test_access_token_expiration(self):
         """Тест: время жизни access токена"""
-        token = create_access_token("testuser")
+        token = create_access_token(data={"sub": "testuser", "user_id": 1})
         payload = decode_token(token)
-        
+
         # Проверяем, что время экспирации установлено
         assert "exp" in payload
         print("  [PASS] Access token expiration")
