@@ -5,13 +5,17 @@ Endpoints для мониторинга производительности:
 - /metrics - Prometheus metrics
 - /health/detailed - Детальная информация о здоровье
 - /monitoring/stats - Статистика мониторинга
+- /db/profile - Профилирование SQL запросов
 """
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Response, Query, HTTPException
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 import psutil
 import logging
 from datetime import datetime, timezone
+import sqlite3
+from pathlib import Path
+from typing import Optional, Dict, Any, List
 
 logger = logging.getLogger(__name__)
 
@@ -143,3 +147,181 @@ async def get_monitoring_stats():
             "partitions": len(psutil.disk_partitions()),
         },
     }
+
+
+@router.get(
+    "/db/profile",
+    summary="Database Query Profiling",
+    description="Профилирование SQL запросов для оптимизации производительности",
+)
+async def profile_database_query(
+    query: str = Query(..., description="SQL запрос для профилирования"),
+    params: Optional[str] = Query(None, description="JSON параметры запроса"),
+    analyze: bool = Query(False, description="Использовать EXPLAIN ANALYZE"),
+) -> Dict[str, Any]:
+    """
+    Профилирование SQL запросов.
+
+    Примеры использования:
+
+    1. Базовое профилирование:
+       `/monitoring/db/profile?query=SELECT * FROM scans LIMIT 10`
+
+    2. С EXPLAIN ANALYZE:
+       `/monitoring/db/profile?query=SELECT * FROM scans WHERE user_id = 1&analyze=true`
+
+    3. С параметрами:
+       `/monitoring/db/profile?query=SELECT * FROM scans WHERE status = ?&params=["completed"]`
+
+    Возвращает:
+    - query_plan - план выполнения запроса
+    - execution_time - время выполнения (для EXPLAIN ANALYZE)
+    - index_usage - информация об использовании индексов
+    - recommendations - рекомендации по оптимизации
+    """
+    import json
+    import time
+
+    db_path = PROJECT_ROOT / "data" / "nanoprobe.db"
+
+    if not db_path.exists():
+        raise HTTPException(status_code=404, detail="Database not found")
+
+    try:
+        conn = sqlite3.connect(str(db_path))
+        cursor = conn.cursor()
+
+        # Профилирование запроса
+        profile_result: Dict[str, Any] = {
+            "query": query,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "analyze": analyze,
+        }
+
+        # Получаем план выполнения
+        if analyze:
+            cursor.execute(f"EXPLAIN QUERY PLAN {query}")
+        else:
+            cursor.execute(f"EXPLAIN QUERY PLAN {query}")
+
+        query_plan = cursor.fetchall()
+        profile_result["query_plan"] = [
+            {"id": row[0], "parent": row[1], "notused": row[2], "detail": row[3]}
+            for row in query_plan
+        ]
+
+        # Анализируем использование индексов
+        index_usage = []
+        for row in query_plan:
+            detail = row[3] if len(row) > 3 else ""
+            if "USING INDEX" in detail or "USING COVERING INDEX" in detail:
+                index_usage.append({"index": detail, "type": "optimal"})
+            elif "SCAN" in detail and "USING" not in detail:
+                index_usage.append({"table": detail, "type": "full_scan", "warning": "No index used"})
+
+        profile_result["index_usage"] = index_usage
+
+        # Рекомендации по оптимизации
+        recommendations = []
+        has_full_scan = any(item.get("type") == "full_scan" for item in index_usage)
+        if has_full_scan:
+            recommendations.append({
+                "type": "warning",
+                "message": "Full table scan detected. Consider adding an index.",
+                "suggestion": "CREATE INDEX idx_table_column ON table_name(column_name);"
+            })
+
+        if analyze:
+            # Выполняем запрос для измерения времени
+            start_time = time.perf_counter()
+            if params:
+                cursor.execute(query, json.loads(params))
+            else:
+                cursor.execute(query)
+            cursor.fetchall()
+            end_time = time.perf_counter()
+
+            profile_result["execution_time_ms"] = (end_time - start_time) * 1000
+
+            if profile_result["execution_time_ms"] > 100:
+                recommendations.append({
+                    "type": "warning",
+                    "message": f"Slow query detected: {profile_result['execution_time_ms']:.2f}ms",
+                    "suggestion": "Consider optimizing the query or adding indexes."
+                })
+
+        profile_result["recommendations"] = recommendations
+        profile_result["status"] = "success"
+
+        conn.close()
+
+        return profile_result
+
+    except sqlite3.Error as e:
+        logger.error(f"Database profiling error: {e}")
+        raise HTTPException(status_code=400, detail=f"Database error: {str(e)}")
+    except Exception as e:
+        logger.error(f"Profiling error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get(
+    "/db/indexes",
+    summary="Database Indexes List",
+    description="Получить список всех индексов базы данных",
+)
+async def get_database_indexes() -> Dict[str, Any]:
+    """
+    Получить список всех индексов базы данных.
+
+    Возвращает:
+    - indexes - список индексов
+    - table_stats - статистика по таблицам
+    - recommendations - рекомендации по индексам
+    """
+    db_path = PROJECT_ROOT / "data" / "nanoprobe.db"
+
+    if not db_path.exists():
+        raise HTTPException(status_code=404, detail="Database not found")
+
+    try:
+        conn = sqlite3.connect(str(db_path))
+        cursor = conn.cursor()
+
+        # Получаем все индексы
+        cursor.execute("SELECT name, tbl_name, sql FROM sqlite_master WHERE type='index' AND sql IS NOT NULL")
+        indexes = [
+            {"name": row[0], "table": row[1], "sql": row[2]}
+            for row in cursor.fetchall()
+        ]
+
+        # Получаем статистику по таблицам
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = [row[0] for row in cursor.fetchall()]
+
+        table_stats = {}
+        for table in tables:
+            try:
+                cursor.execute(f"SELECT COUNT(*) FROM {table}")
+                count = cursor.fetchone()[0]
+                table_stats[table] = {"rows": count}
+            except sqlite3.Error:
+                pass
+
+        conn.close()
+
+        return {
+            "indexes": indexes,
+            "table_stats": table_stats,
+            "total_indexes": len(indexes),
+            "total_tables": len(tables),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting indexes: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Project root for database path
+PROJECT_ROOT = Path(__file__).parent.parent.parent
