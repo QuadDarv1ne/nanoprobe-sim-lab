@@ -29,11 +29,6 @@ class TestSSTVDecoder(unittest.TestCase):
         result = self.decoder.decode_from_audio("/nonexistent/file.wav")
         self.assertIsNone(result)
 
-    def test_decode_from_audio_nonexistent_file(self):
-        """Тестирует декодирование несуществующего файла"""
-        result = self.decoder.decode_from_audio("/nonexistent/file.wav")
-        self.assertIsNone(result)
-
     def test_decode_from_audio_invalid_format(self):
         """Тестирует декодирование файла с неподдерживаемым форматом"""
         with tempfile.NamedTemporaryFile(suffix='.txt', delete=False) as tmp:
@@ -153,7 +148,7 @@ def run_tests():
     result = runner.run(suite)
 
     print("=" * 60)
-    print(f"РЕЗУЛЬТАТЫ ТЕСТИРОВАНИЯ:")
+    print("РЕЗУЛЬТАТЫ ТЕСТИРОВАНИЯ:")
     print(f"  Пройдено: {result.testsRun - len(result.failures) - len(result.errors)}")
     print(f"  Ошибки: {len(result.errors)}")
     print(f"  Провалы: {len(result.failures)}")
