@@ -5,12 +5,15 @@ import shutil
 import gc
 import tempfile
 import json
+import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Union, Any
 from datetime import datetime, timedelta
 from dataclasses import dataclass
 
 import psutil
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -99,11 +102,13 @@ class CacheManager:
                             config[key] = value
                     return config
             except Exception:
+                logger.warning("Failed to load cache config, using defaults")
                 return default_config
         else:
             # Создаем дефолтный файл конфигурации
             with open(self.config_file, "w", encoding="utf-8") as f:
                 json.dump(default_config, f, indent=2, ensure_ascii=False)
+            logger.info(f"Created default cache config: {self.config_file}")
             return default_config
 
     def _get_cache_directories(self) -> List[Path]:
@@ -283,7 +288,7 @@ class CacheManager:
                         except (OSError, PermissionError):
                             pass
         except Exception as e:
-            print(f"Ошибка при очистке Python кэша: {e}")
+            logger.error(f"Error cleaning Python cache: {e}")
 
     def auto_cleanup(self) -> Dict[str, Union[int, List[str]]]:
         """
