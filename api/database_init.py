@@ -114,12 +114,13 @@ def ensure_database(db_path: str = "data/nanoprobe.db") -> bool:
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
 
     db_path = "data/nanoprobe.db"
     success = ensure_database(db_path)
 
     if success:
-        print("✅ Database ready at " + db_path)
+        logger.info("Database ready at " + db_path)
     else:
-        print("❌ Database initialization failed")
+        logger.error("Database initialization failed")
         exit(1)
