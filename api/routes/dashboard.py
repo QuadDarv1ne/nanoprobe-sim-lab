@@ -670,26 +670,32 @@ async def get_activity_timeline(
 
 # ==================== Storage Statistics ====================
 
-@router.get("/storage/detailed")
+@router.get(
+    "/storage",
+    summary="Статистика хранилища",
+    description="Получить детальную статистику хранилища по директориям",
+    response_model=Dict[str, Any],
+)
 @cached(prefix="dashboard:storage", expire=30)
-async def get_detailed_storage():
+async def get_storage_stats_endpoint(
+    db: DatabaseManager = Depends(get_db),
+):
     """
-    Get detailed storage statistics (cached for 30 seconds)
-    
-    Возвращает детальную статистику хранилища:
-    - data/ директория
+    Получить детальную статистику хранилища:
+    - data/ директория (файлы, размер, крупнейшие файлы)
     - output/ директория
     - logs/ директория
     - Информация о диске
+    - Размер БД
     """
-    root = Path(__file__).parent.parent.parent
+    root = get_project_root()
     data_dir = root / "data"
     output_dir = root / "output"
     logs_dir = root / "logs"
 
     def get_dir_stats(directory: Path) -> Dict:
         if not directory.exists():
-            return {"files": 0, "size_mb": 0, "largest_file": None}
+            return {"files": 0, "size_mb": 0, "largest_files": []}
 
         files = []
         total_size = 0
@@ -701,7 +707,7 @@ async def get_detailed_storage():
                     total_size += size
                     files.append({
                         "path": str(item.relative_to(root)),
-                        "size_mb": round(size / (1024**2), 2),
+                        "size_mb": round(size / (1024**2), 4),
                         "modified": datetime.fromtimestamp(item.stat().st_mtime).isoformat()
                     })
                 except (OSError, IOError):
@@ -717,11 +723,19 @@ async def get_detailed_storage():
 
     try:
         disk = psutil.disk_usage('/')
+        
+        # Размер БД
+        db_path = Path("data/nanoprobe.db")
+        db_size_mb = round(db_path.stat().st_size / (1024**2), 2) if db_path.exists() else 0
 
         return {
             "data": get_dir_stats(data_dir),
             "output": get_dir_stats(output_dir),
             "logs": get_dir_stats(logs_dir),
+            "database": {
+                "size_mb": db_size_mb,
+                "path": str(db_path)
+            },
             "disk": {
                 "total_gb": round(disk.total / (1024**3), 2),
                 "used_gb": round(disk.used / (1024**3), 2),
@@ -730,33 +744,8 @@ async def get_detailed_storage():
             }
         }
     except Exception as e:
-        logger.error(f"Error getting detailed storage stats: {e}")
-        raise ServiceUnavailableError(f"Не удалось получить статистику хранилища: {str(e)}")
-
-
-@router.get(
-    "/storage",
-    summary="Статистика хранилища",
-    description="Получить детальную статистику хранилища",
-)
-async def get_storage_stats_endpoint():
-    """Получить статистику хранилища"""
-    try:
-        storage = get_storage_stats()
-        disk = psutil.disk_usage('/')
-
-        return {
-            "project_storage": storage,
-            "disk_info": {
-                "total_gb": round(disk.total / (1024 ** 3), 2),
-                "used_gb": round(disk.used / (1024 ** 3), 2),
-                "free_gb": round(disk.free / (1024 ** 3), 2),
-                "percent": disk.percent
-            }
-        }
-    except Exception as e:
         logger.error(f"Error getting storage stats: {e}")
-        raise DatabaseError(f"Ошибка получения статистики хранилища: {str(e)}")
+        raise ServiceUnavailableError(f"Не удалось получить статистику хранилища: {str(e)}")
 
 
 # ==================== WebSocket ====================
