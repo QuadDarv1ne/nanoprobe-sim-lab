@@ -15,7 +15,7 @@ try:
 except ImportError:
     PIL_AVAILABLE = False
 
-from utils.defect_analyzer import AdvancedDefectAnalyzer, DefectDetector
+from utils.ai.defect_analyzer import AdvancedDefectAnalyzer, DefectDetector
 
 
 class TestDefectDetector(unittest.TestCase):

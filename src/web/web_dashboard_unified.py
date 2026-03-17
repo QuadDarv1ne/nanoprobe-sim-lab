@@ -59,13 +59,13 @@ project_root = Path(__file__).parent.parent.parent
 
 # Импорт утилит
 from utils.logger import NanoprobeLogger
-from utils.error_handler import ErrorHandler
+from utils.core.error_handler import ErrorHandler
 from utils.performance_monitor import PerformanceMonitor
 from utils.system_monitor import SystemMonitor
-from utils.config_manager import ConfigManager
-from utils.cache_manager import CacheManager
-from utils.data_manager import DataManager
-from utils.data_exporter import DataExporter
+from utils.config.config_manager import ConfigManager
+from utils.caching.cache_manager import CacheManager
+from utils.data.data_manager import DataManager
+from utils.data.data_exporter import DataExporter
 from utils.database import DatabaseManager
 from utils.surface_comparator import compare_surfaces as compare_surfaces_util
 from utils.ai.defect_analyzer import analyze_defects as analyze_defects_util

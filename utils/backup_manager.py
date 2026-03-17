@@ -10,7 +10,7 @@ from typing import Dict, List, Optional, Tuple
 import tempfile
 from cryptography.fernet import Fernet
 from utils.logger import setup_project_logging
-from utils.config_manager import ConfigManager
+from utils.config.config_manager import ConfigManager
 
 
 class BackupManager:

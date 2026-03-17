@@ -11,7 +11,7 @@ from pathlib import Path
 # Добавляем путь к модулям
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from utils.data_manager import DataManager
+from utils.data.data_manager import DataManager
 
 
 class TestDataManager(unittest.TestCase):

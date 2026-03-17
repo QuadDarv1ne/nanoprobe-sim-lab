@@ -13,7 +13,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from utils.two_factor_auth import TwoFactorAuth
+from utils.security.two_factor_auth import TwoFactorAuth
 import pyotp
 
 
