@@ -31,6 +31,62 @@
 - [x] Refactored to custom exceptions
 - [x] Removed unused imports
 - [x] HTTP session with connection pooling
+- [x] **Fixed utils imports after refactoring** (20 files updated)
+  - Перемещены модули в подпапки (utils/config/, utils/data/, utils/security/, utils/core/, utils/ai/, utils/reporting/)
+  - Обновлены импорты в тестах (11 файлов)
+  - Обновлены импорты в web dashboard (3 файла)
+  - Добавлены re-exports в utils/__init__.py
+
+---
+
+## 🔧 Latest Improvements (2026-03-17)
+
+### Imports Refactoring (ВЫПОЛНЕНО)
+**Статус:** ✅ Реализовано
+
+- [x] Исправлены все импорты utils после рефакторинга структуры
+- [x] Обновлены импорты в 20 файлах проекта
+- [x] Добавлены re-exports в utils/__init__.py для обратной совместимости
+- [x] Ветки dev и main синхронизированы
+
+**Изменения:**
+| Категория | Файлов | Изменений |
+|-----------|--------|-----------|
+| Tests | 11 | Исправлены импорты |
+| Web Dashboard | 3 | Исправлены импорты |
+| CLI | 1 | Исправлены импорты |
+| Utils | 2 | Исправлены импорты + re-exports |
+| Scripts | 1 | Исправлены импорты |
+| API Tests | 1 | Исправлены импорты |
+| **Всего** | **20** | **~72 строки** |
+
+**Структура модулей utils:**
+```
+utils/
+├── __init__.py (re-exports)
+├── config/
+│   ├── config_manager.py
+│   ├── config_optimizer.py
+│   └── config_validator.py
+├── data/
+│   ├── data_exporter.py
+│   ├── data_integrity.py
+│   ├── data_manager.py
+│   └── data_validator.py
+├── security/
+│   ├── rate_limiter.py
+│   └── two_factor_auth.py
+├── core/
+│   ├── error_handler.py
+│   └── cli_utils.py
+├── ai/
+│   ├── defect_analyzer.py
+│   ├── machine_learning.py
+│   └── model_trainer.py
+└── reporting/
+    ├── pdf_report_generator.py
+    └── report_generator.py
+```
 
 ---
 
