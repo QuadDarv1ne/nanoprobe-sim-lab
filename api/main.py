@@ -5,7 +5,6 @@ FastAPI REST API для Nanoprobe Simulation Lab
 
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import Optional
 
 import asyncio
 import json
@@ -25,7 +24,7 @@ from utils.caching.redis_cache import RedisCache
 from api.state import init_app_state
 
 # Импорты роутов
-from api.routes import scans, simulations, analysis, comparison, reports, auth, admin, dashboard
+from api.routes import scans, simulations, analysis, comparison, reports, auth, admin
 from api.routes import graphql, ml_analysis, external_services, nasa, monitoring
 
 logger = logging.getLogger(__name__)
