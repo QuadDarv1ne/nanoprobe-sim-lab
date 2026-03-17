@@ -25,7 +25,7 @@ from utils.caching.redis_cache import RedisCache
 from api.state import init_app_state
 
 # Импорты роутов
-from api.routes import scans, simulations, analysis, comparison, reports, auth, admin, dashboard_unified
+from api.routes import scans, simulations, analysis, comparison, reports, auth, admin, dashboard
 from api.routes import graphql, ml_analysis, external_services, nasa, monitoring
 
 logger = logging.getLogger(__name__)
@@ -333,13 +333,13 @@ app.include_router(comparison.router, prefix="/api/v1/comparison", tags=["Сра
 app.include_router(reports.router, prefix="/api/v1/reports", tags=["Отчёты"])
 app.include_router(admin.router, prefix="/api/v1", tags=["Администрирование"])
 
-# Unified Dashboard API (объединённый модуль вместо dashboard.py + enhanced_dashboard.py)
+# Dashboard API
 try:
-    from api.routes import dashboard_unified as dashboard
+    from api.routes import dashboard
     app.include_router(dashboard.router, prefix="/api/v1/dashboard", tags=["Дашборд"])
-    logger.info("Unified dashboard routes registered")
+    logger.info("Dashboard routes registered")
 except ImportError as e:
-    logger.warning(f"Unified dashboard routes disabled: {e}")
+    logger.warning(f"Dashboard routes disabled: {e}")
 
 try:
     from api.routes import alerting
