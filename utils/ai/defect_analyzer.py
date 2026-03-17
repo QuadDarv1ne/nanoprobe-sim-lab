@@ -7,7 +7,7 @@ import numpy as np
 import logging
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Any, Tuple, Optional
+from typing import Dict, List, Any, Tuple
 import json
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
@@ -30,7 +30,6 @@ from sklearn.cluster import KMeans, DBSCAN
 from sklearn.ensemble import IsolationForest, RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 from scipy import ndimage
-from scipy.stats import zscore
 
 
 class DefectDetector:
@@ -855,7 +854,7 @@ if __name__ == "__main__":
         # Анализ
         result = analyze_defects(test_path)
 
-        print(f"\nРезультаты анализа:")
+        print("\nРезультаты анализа:")
         print(f"  Найдено дефектов: {result['defects_count']}")
         print(f"  Резюме: {result['summary']}")
 
