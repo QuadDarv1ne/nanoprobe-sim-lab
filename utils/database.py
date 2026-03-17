@@ -5,6 +5,7 @@
 
 import sqlite3
 import json
+import logging
 from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any, Tuple, Callable
@@ -14,6 +15,8 @@ import threading
 import asyncio
 from functools import wraps, lru_cache
 import hashlib
+
+logger = logging.getLogger(__name__)
 
 
 class ConnectionPool:
@@ -55,6 +58,7 @@ class ConnectionPool:
         try:
             self._pool.put_nowait(conn)
         except Exception:
+            logger.debug("Connection close on return error")
             conn.close()
 
     def _create_connection(self) -> sqlite3.Connection:
@@ -201,6 +205,7 @@ class DatabaseManager:
             yield conn
             conn.commit()
         except Exception as e:
+            logger.error(f"Database transaction error: {e}")
             conn.rollback()
             raise e
         finally:
@@ -215,6 +220,7 @@ class DatabaseManager:
             yield conn
             await loop.run_in_executor(None, conn.commit)
         except Exception as e:
+            logger.error(f"Database async transaction error: {e}")
             await loop.run_in_executor(None, conn.rollback)
             raise e
         finally:
