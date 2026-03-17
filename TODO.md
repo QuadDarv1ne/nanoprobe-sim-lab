@@ -1,6 +1,6 @@
 # Nanoprobe Sim Lab - TODO & Progress
 
-**Last Updated:** 2026-03-15
+**Last Updated:** 2026-03-17
 **Current Version:** 1.0.0
 
 ---
@@ -31,6 +31,32 @@
 - [x] Refactored to custom exceptions
 - [x] Removed unused imports
 - [x] HTTP session with connection pooling
+
+---
+
+## 🔧 Latest Improvements (2026-03-17)
+
+### Code Quality Improvements
+**Статус:** ✅ Реализовано
+
+- [x] Устранено дублирование dashboard API endpoints
+- [x] Удалён `/storage/detailed` (объединён с `/storage`)
+- [x] Добавлен размер БД в storage статистику
+- [x] Исправлено логирование: `pass` → `logger.warning()` в except
+- [x] Оптимизация SQL запросов: `SELECT *` → конкретные колонки
+  - `get_scans_list`: 15 колонок вместо *
+  - `get_simulations_list`: 9 колонок вместо *
+  - `get_images_list`: 9 колонок вместо *
+- [x] Корректная очистка `subprocess.Popen` ресурсов (sstv.py)
+- [x] Обработка `subprocess.TimeoutExpired` при остановке записи
+- [x] Освобождение stdout/stderr после остановки процесса
+
+**Изменения:**
+| Файл | Изменение |
+|------|-----------|
+| `api/routes/dashboard.py` | -35 строк, устранено дублирование |
+| `api/routes/sstv.py` | +25 строк, корректная очистка ресурсов |
+| `utils/database.py` | +16 строк, оптимизация SQL |
 
 ---
 
@@ -268,7 +294,7 @@ None currently - project is stable and ready for rest.
 | Custom Exceptions | 8 |
 | GraphQL Types | 6 |
 | ML Models | 3 |
-| Recent Commits | 14+ |
+| Recent Commits | 18+ |
 
 ---
 
@@ -312,9 +338,9 @@ None currently - project is stable and ready for rest.
 
 - Project is production-ready
 - All critical improvements completed (2026-03-15)
-- Latest: Синхронизация Backend↔Frontend, UI/UX Улучшения Дашборда
+- Latest (2026-03-17): Code Quality Improvements (SQL optimization, subprocess cleanup, logging)
 - dev and main branches are synchronized
-- Recent commits: 14+ (Security, Testing, Documentation, Sync)
+- Recent commits: 18+ (Security, Testing, Documentation, Sync, Code Quality)
 - **140+ тестов** (Security, Load, Integration, Unit, Sync)
 
 ---
