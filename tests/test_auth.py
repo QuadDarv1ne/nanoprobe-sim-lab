@@ -6,8 +6,6 @@ Unit тесты для Authentication модуля
 """
 
 import sys
-import os
-import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
