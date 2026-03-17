@@ -4,12 +4,15 @@
 """
 
 import numpy as np
+import logging
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Any, Tuple, Optional
 import json
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+
+logger = logging.getLogger(__name__)
 
 try:
     from PIL import Image
@@ -517,6 +520,7 @@ class DefectAnalysisPipeline:
                 result = self.analyze_image(path, model_name, save_results)
                 results.append(result)
             except Exception as e:
+                logger.error(f"Error analyzing image {path}: {e}")
                 results.append({
                     'image_path': path,
                     'error': str(e),
@@ -596,7 +600,7 @@ class DefectAnalysisPipeline:
                 result = self.analyze_image(str(img_path), model_name)
                 results.append(result)
             except Exception as e:
-                print(f"Ошибка анализа {img_path}: {e}")
+                logger.error(f"Error analyzing folder image {img_path}: {e}")
                 results.append({'error': str(e), 'image_path': str(img_path)})
 
         return results
