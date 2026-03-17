@@ -10,7 +10,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from api.security_headers import SecurityHeadersMiddleware, setup_security_headers
+from api.security_headers import setup_security_headers
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -205,6 +205,6 @@ if __name__ == "__main__":
     if failed > 0:
         print(f"  ❌ {failed} тестов провалено")
     else:
-        print(f"  ✅ Все тесты пройдены!")
+        print("  ✅ Все тесты пройдены!")
     
     sys.exit(0 if failed == 0 else 1)
