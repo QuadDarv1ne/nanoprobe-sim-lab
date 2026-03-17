@@ -5,7 +5,7 @@ Rate Limiter для Nanoprobe Sim Lab API
 
 import time
 from collections import defaultdict
-from typing import Dict, Tuple, Optional, List
+from typing import Dict, Optional, List
 from functools import wraps
 from fastapi import Request
 import threading

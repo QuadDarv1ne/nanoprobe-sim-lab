@@ -5,7 +5,6 @@ TOTP (Time-based One-Time Password) интеграция с Google Authenticator
 
 import pyotp
 import qrcode
-import base64
 import secrets
 from typing import Dict, Optional, Tuple
 from pathlib import Path
