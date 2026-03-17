@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends
 from pathlib import Path
 from datetime import datetime
 import uuid
+import logging
 
 from api.schemas import (
     DefectAnalysisRequest,
@@ -17,6 +18,7 @@ from api.error_handlers import NotFoundError, ValidationError
 from utils.database import DatabaseManager
 from utils.ai.defect_analyzer import DefectAnalysisPipeline
 
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -91,6 +93,7 @@ async def analyze_image_defects(
     except (ValidationError, NotFoundError):
         raise
     except Exception as e:
+        logger.error(f"Error analyzing image defects: {e}")
         raise ValidationError(f"Ошибка анализа дефектов: {str(e)}")
 
 
@@ -107,6 +110,7 @@ async def get_defect_history(
     try:
         if hasattr(db, 'get_defect_analyses'):
             analyses = db.get_defect_analyses(limit=limit)
+            logger.debug(f"Retrieved {len(analyses)} defect analyses")
             return {
                 "items": analyses,
                 "total": len(analyses),
@@ -115,6 +119,7 @@ async def get_defect_history(
         else:
             return {"items": [], "total": 0, "limit": limit, "message": "Метод не реализован"}
     except Exception as e:
+        logger.error(f"Error getting defect analysis history: {e}")
         raise ValidationError(f"Ошибка получения истории: {str(e)}")
 
 
@@ -134,6 +139,7 @@ async def get_defect_analysis(
             analysis = next((a for a in analyses if a.get('analysis_id') == analysis_id), None)
 
             if not analysis:
+                logger.warning(f"Defect analysis not found: {analysis_id}")
                 raise NotFoundError(f"Анализ с ID {analysis_id} не найден")
 
             return analysis
@@ -142,4 +148,5 @@ async def get_defect_analysis(
     except (ValidationError, NotFoundError):
         raise
     except Exception as e:
+        logger.error(f"Error getting defect analysis by ID: {e}")
         raise ValidationError(f"Ошибка получения анализа: {str(e)}")
