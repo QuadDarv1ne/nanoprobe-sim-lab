@@ -6,8 +6,7 @@
 import pytest
 import sys
 from pathlib import Path
-from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import patch
 
 # Добавляем путь к проекту
 PROJECT_ROOT = Path(__file__).parent.parent
