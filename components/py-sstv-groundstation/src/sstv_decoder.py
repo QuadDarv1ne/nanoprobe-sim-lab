@@ -387,7 +387,6 @@ def detect_sstv_signal(
     """
     try:
         import wave
-        import numpy as np
 
         with wave.open(audio_file, "r") as wav:
             n_frames = wav.getnframes()
