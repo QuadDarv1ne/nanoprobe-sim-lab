@@ -3,13 +3,13 @@
 """
 
 import pytest
-import asyncio
 from datetime import datetime
 
 from src.cli.dashboard.widgets.base import Widget, WidgetPriority, WidgetMode, WidgetData
 from src.cli.dashboard.widgets.system_monitor import SystemMonitorWidget
 from src.cli.dashboard.widgets.component_status import ComponentStatusWidget
 from src.cli.dashboard.widgets.log_viewer import LogViewerWidget
+from src.cli.dashboard.widgets.metrics import MetricsWidget
 from src.cli.dashboard.core import UnifiedDashboard, DashboardTheme
 
 
