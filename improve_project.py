@@ -7,7 +7,6 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 import re
-from typing import Dict, List, Any
 
 # Добавляем путь к проекту
 project_root = Path(__file__).parent
@@ -161,8 +160,6 @@ class ProjectImprover:
             try:
                 with open(py_file, 'r', encoding='utf-8') as f:
                     content = f.read()
-
-                original_content = content
 
                 # Упорядочивание импортов (упрощенная версия)
                 # Находим все импорты в начале файла

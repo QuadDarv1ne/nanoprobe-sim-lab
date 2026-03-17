@@ -2,7 +2,6 @@
 
 import os
 import re
-import sys
 from pathlib import Path
 from datetime import datetime
 # External formatting tools are optional, we'll use built-in methods
@@ -162,24 +161,15 @@ class CodeFormatter:
             # Проверяем, есть ли декларация кодировки в начале файла
             lines = content.split('\n')
             has_encoding = False
-            encoding_line_idx = -1
 
             for i, line in enumerate(lines[:3]):  # Проверяем первые 3 строки
                 if '# -*- coding:' in line or '# coding:' in line or '#coding:' in line:
 #!/usr/bin/env python3
                     has_encoding = True
-                    encoding_line_idx = i
                     break
 
             # Если декларация кодировки отсутствует, добавляем её
             if not has_encoding:
-                # Добавляем после shebang строки (если есть) или в начало
-                insert_idx = 0
-                for i, line in enumerate(lines):
-                    if line.startswith('#!'):
-                        insert_idx = i + 1
-                        break
-
                 content = '\n'.join(lines)
 
             # Также проверяем наличие shebang в исполняемых файлах
@@ -218,7 +208,6 @@ class CodeFormatter:
             with open(file_path, 'r', encoding='utf-8') as f:
                 lines = f.readlines()
 
-            original_lines = lines[:]
             modified = False
 
             i = 0
