@@ -12,10 +12,13 @@ from fastapi import APIRouter, Response, Query, HTTPException
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 import psutil
 import logging
+import time
+import json
+import re
 from datetime import datetime, timezone
 import sqlite3
 from pathlib import Path
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 
 logger = logging.getLogger(__name__)
 
@@ -124,8 +127,6 @@ async def get_monitoring_stats():
     - Request counts
     - Error rates
     """
-    import time
-
     # Получаем uptime
     boot_time = datetime.fromtimestamp(psutil.boot_time(), tz=timezone.utc)
     uptime = datetime.now(timezone.utc) - boot_time
@@ -179,10 +180,6 @@ async def profile_database_query(
     - index_usage - информация об использовании индексов
     - recommendations - рекомендации по оптимизации
     """
-    import json
-    import time
-    import re
-
     db_path = PROJECT_ROOT / "data" / "nanoprobe.db"
 
     if not db_path.exists():
