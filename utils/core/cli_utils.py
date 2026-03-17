@@ -2,8 +2,7 @@
 
 import sys
 import time
-from typing import Optional, Iterable, Any
-from datetime import datetime
+import threading
 
 
 class Colors:

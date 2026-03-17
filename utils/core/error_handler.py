@@ -9,17 +9,15 @@
 import logging
 import traceback
 import json
-import sys
-import os
 from pathlib import Path
 from datetime import datetime, timedelta
-from typing import Dict, Any, Optional, Callable, List, Tuple
+from typing import Dict, Any, Optional, Callable, List
 from functools import wraps
 import threading
 import queue
 import time
 from enum import Enum
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 
 
 class ErrorSeverity(Enum):
@@ -294,19 +292,6 @@ class ErrorHandler:
                 raise
 
         return wrapper
-
-    def get_recent_errors(self, count: int = 10) -> list:
-        """
-        Возвращает последние ошибки
-
-        Args:
-            count: Количество ошибок для возврата
-
-        Returns:
-            Список последних ошибок
-        """
-        with self.lock:
-            return self.error_history[-count:]
 
     def get_errors_by_severity(self, severity: ErrorSeverity) -> list:
         """
