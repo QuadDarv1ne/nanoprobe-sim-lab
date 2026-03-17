@@ -655,7 +655,8 @@ async def start_sstv_recording(
         recording_process = subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+            stderr=subprocess.PIPE,
+            stdin=subprocess.PIPE
         )
         recording_start_time = datetime.now()
         recording_metadata = {
@@ -686,6 +687,12 @@ async def start_sstv_recording(
 
     except Exception as e:
         logger.error(f"Recording start error: {e}")
+        if recording_process:
+            try:
+                recording_process.kill()
+                recording_process.wait(timeout=2)
+            except Exception:
+                pass
         raise ServiceUnavailableError(f"Не удалось начать запись: {str(e)}")
 
 
@@ -725,7 +732,18 @@ async def stop_sstv_recording():
     # Останавливаем процесс
     try:
         recording_process.send_signal(signal.SIGINT)
-        recording_process.wait(timeout=5)
+        try:
+            recording_process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            logger.warning("Process did not terminate gracefully, killing")
+            recording_process.kill()
+            recording_process.wait(timeout=2)
+
+        # Освобождаем ресурсы
+        if recording_process.stdout:
+            recording_process.stdout.close()
+        if recording_process.stderr:
+            recording_process.stderr.close()
 
         recording_start_time = get_app_state("recording_start_time")
         duration = (datetime.now() - recording_start_time).total_seconds() if recording_start_time else 0
@@ -746,7 +764,11 @@ async def stop_sstv_recording():
         logger.error(f"Recording stop error: {e}")
         # Принудительная остановка
         if recording_process:
-            recording_process.kill()
+            try:
+                recording_process.kill()
+                recording_process.wait(timeout=2)
+            except Exception:
+                pass
         set_app_state("recording_process", None)
         set_app_state("recording_metadata", {})
 
