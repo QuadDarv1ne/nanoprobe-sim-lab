@@ -177,8 +177,8 @@ async def get_dashboard_stats(
             db_path = Path("data/nanoprobe.db")
             if db_path.exists():
                 db_size_mb = round(db_path.stat().st_size / (1024 * 1024), 2)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to get DB size: {e}")
 
         result = DashboardStats(
             total_scans=db_stats.get('total_scans', 0),
