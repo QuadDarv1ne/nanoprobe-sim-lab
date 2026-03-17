@@ -4,6 +4,7 @@
 
 import numpy as np
 import pandas as pd
+import logging
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
@@ -13,6 +14,8 @@ from sklearn.metrics import mean_squared_error, r2_score
 import matplotlib.pyplot as plt
 from typing import Dict, Tuple, Optional, Any
 import json
+
+logger = logging.getLogger(__name__)
 
 
 class SurfaceAnalytics:
@@ -462,7 +465,7 @@ class ProjectAnalytics:
                 )
                 report["analyses_performed"].append("surface")
             except Exception as e:
-                print(f"Ошибка анализа поверхности: {e}")
+                logger.error(f"Surface analysis error: {e}")
 
         if image_data is not None:
             try:
@@ -470,7 +473,7 @@ class ProjectAnalytics:
                 report["image_analysis"].update(self.image_analytics.detect_patterns(image_data))
                 report["analyses_performed"].append("image")
             except Exception as e:
-                print(f"Ошибка анализа изображения: {e}")
+                logger.error(f"Image analysis error: {e}")
 
         if signal_data is not None:
             try:
@@ -479,7 +482,7 @@ class ProjectAnalytics:
                 )
                 report["analyses_performed"].append("sstv")
             except Exception as e:
-                print(f"Ошибка анализа SSTV сигнала: {e}")
+                logger.error(f"SSTV signal analysis error: {e}")
 
         return report
 
