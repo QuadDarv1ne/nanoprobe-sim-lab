@@ -30,9 +30,8 @@ import os
 import time
 import threading
 import webbrowser
-import subprocess
 from datetime import datetime
-from typing import Dict, Any, List, Optional
+from typing import List
 from pathlib import Path
 
 # UTF-8 для Windows
