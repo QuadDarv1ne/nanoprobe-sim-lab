@@ -6,6 +6,7 @@
 import json
 import time
 import asyncio
+import logging
 import threading
 from pathlib import Path
 from datetime import datetime
@@ -15,6 +16,8 @@ from queue import Queue, Empty
 import traceback
 from dataclasses import dataclass, field
 from enum import Enum
+
+logger = logging.getLogger(__name__)
 
 try:
     from PIL import Image
@@ -262,6 +265,7 @@ class BatchProcessor:
                     result['error'] = 'Decoding failed'
 
             except Exception as e:
+                logger.error(f"SSTV decode error for {path}: {e}")
                 result['status'] = 'failed'
                 result['error'] = str(e)
 
@@ -319,6 +323,7 @@ class BatchProcessor:
                 result['passes'] = passes
 
             except Exception as e:
+                logger.error(f"Satellite passes calculation error for {sat_name}: {e}")
                 result['status'] = 'failed'
                 result['error'] = str(e)
 
@@ -394,6 +399,7 @@ class BatchProcessor:
                     result['status'] = 'error'
 
             except Exception as e:
+                logger.error(f"Image {operation} error for {path}: {e}")
                 result['error'] = str(e)
                 result['status'] = 'error'
 
@@ -455,6 +461,7 @@ class BatchProcessor:
                     }
 
             except Exception as e:
+                logger.error(f"Surface {analysis_type} error: {e}")
                 result['error'] = str(e)
                 result['status'] = 'error'
 
@@ -533,6 +540,7 @@ class BatchProcessor:
             self._save_job_results(job)
 
         except Exception as e:
+            logger.error(f"Batch job {job_id} failed: {e}")
             job.status = 'failed'
             job.completed_at = datetime.now()
             job.errors.append(str(e))
@@ -556,6 +564,7 @@ class BatchProcessor:
                 results.append(result)
                 job.processed_items += 1
             except Exception as e:
+                logger.debug(f"Sequential processing error: {e}")
                 job.failed_items += 1
                 results.append({'error': str(e), 'item': str(item)})
 
@@ -574,6 +583,7 @@ class BatchProcessor:
                     results.append(result)
                     job.processed_items += 1
                 except Exception as e:
+                    logger.debug(f"Parallel processing error: {e}")
                     job.failed_items += 1
                     results.append({'error': str(e)})
 
