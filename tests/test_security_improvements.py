@@ -6,7 +6,6 @@
 """
 
 import pytest
-import os
 from datetime import datetime
 from pathlib import Path
 
@@ -137,7 +136,6 @@ class TestAuditLogging:
     def test_audit_log_file_created(self):
         """Проверка создания audit log файла"""
         log_dir = Path("logs/api")
-        log_file = log_dir / "audit_security.log"
 
         # Лог файл должен существовать после первого логирования
         # (в реальном приложении)
