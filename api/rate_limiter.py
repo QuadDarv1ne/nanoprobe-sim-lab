@@ -233,7 +233,7 @@ def get_limit_from_exception(exc: RateLimitExceeded) -> str:
             parts = detail.split("per")
             if len(parts) > 1:
                 return parts[1].strip()
-    except:
+    except Exception:
         pass
     return "100/minute"
 

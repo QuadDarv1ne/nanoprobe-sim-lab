@@ -326,7 +326,7 @@ class UnifiedWebDashboard:
                     )
                     if response.status_code == 200:
                         return jsonify(response.json())
-                except:
+                except Exception:
                     pass
 
                 # Локальное получение статистики
@@ -360,14 +360,14 @@ class UnifiedWebDashboard:
             try:
                 response = requests.get(f"{self.fastapi_url}/health", timeout=3)
                 health['fastapi'] = 'ok' if response.status_code == 200 else 'error'
-            except:
+            except Exception:
                 health['fastapi'] = 'error'
 
             # Проверка БД
             try:
                 if self.database:
                     health['database'] = 'ok'
-            except:
+            except Exception:
                 health['database'] = 'error'
 
             # Проверка Sync Manager
@@ -377,7 +377,7 @@ class UnifiedWebDashboard:
                     sync_data = response.json()
                     health['sync_manager'] = 'ok' if sync_data.get('running') else 'standby'
                     health['sync_last_update'] = sync_data.get('last_sync_time')
-            except:
+            except Exception:
                 health['sync_manager'] = 'not_available'
 
             all_ok = all(v == 'ok' for k, v in health.items() if k not in ['timestamp', 'sync_last_update'])
