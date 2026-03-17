@@ -11,7 +11,7 @@ from datetime import datetime
 # Добавляем путь к модулям
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from utils.error_handler import (
+from utils.core.error_handler import (
     ErrorHandler, ErrorSeverity, ErrorInfo,
     RecoveryManager, SafeExecutor
 )

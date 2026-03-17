@@ -9,7 +9,7 @@ from datetime import datetime
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from utils.error_handler import ErrorInfo, ErrorSeverity
+from utils.core.error_handler import ErrorInfo, ErrorSeverity
 
 
 def test_error_info_serialization():

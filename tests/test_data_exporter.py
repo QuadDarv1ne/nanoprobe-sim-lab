@@ -6,9 +6,9 @@ import sys
 import os
 import tempfile
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../utils'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from data_exporter import DataExporter
+from utils.data.data_exporter import DataExporter
 
 
 class TestDataExporter(unittest.TestCase):

@@ -14,7 +14,7 @@ class TestDataExporter(unittest.TestCase):
 
     def test_export_csv(self):
         """Тестирует экспорт в CSV."""
-        from utils.data_exporter import DataExporter
+        from utils.data.data_exporter import DataExporter
 
         with tempfile.TemporaryDirectory() as tmpdir:
             exporter = DataExporter(tmpdir)
@@ -26,7 +26,7 @@ class TestDataExporter(unittest.TestCase):
 
     def test_export_json(self):
         """Тестирует экспорт в JSON."""
-        from utils.data_exporter import DataExporter
+        from utils.data.data_exporter import DataExporter
 
         with tempfile.TemporaryDirectory() as tmpdir:
             exporter = DataExporter(tmpdir)
@@ -38,7 +38,7 @@ class TestDataExporter(unittest.TestCase):
 
     def test_export_npy(self):
         """Тестирует экспорт в NumPy формат."""
-        from utils.data_exporter import DataExporter
+        from utils.data.data_exporter import DataExporter
 
         with tempfile.TemporaryDirectory() as tmpdir:
             exporter = DataExporter(tmpdir)
@@ -50,7 +50,7 @@ class TestDataExporter(unittest.TestCase):
 
     def test_export_surface_data(self):
         """Тестирует экспорт данных поверхности."""
-        from utils.data_exporter import DataExporter
+        from utils.data.data_exporter import DataExporter
 
         with tempfile.TemporaryDirectory() as tmpdir:
             exporter = DataExporter(tmpdir)
@@ -61,7 +61,7 @@ class TestDataExporter(unittest.TestCase):
 
     def test_import_json(self):
         """Тестирует импорт из JSON."""
-        from utils.data_exporter import DataExporter, DataImporter
+        from utils.data.data_exporter import DataExporter, DataImporter
 
         with tempfile.TemporaryDirectory() as tmpdir:
             exporter = DataExporter(tmpdir)

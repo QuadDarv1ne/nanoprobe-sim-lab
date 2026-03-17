@@ -10,9 +10,9 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
 
-from utils.config_manager import ConfigManager
+from utils.config.config_manager import ConfigManager
 from utils.logger import NanoprobeLogger, setup_project_logging
-from utils.data_manager import DataManager
+from utils.data.data_manager import DataManager
 from utils.visualizer import ProjectVisualizer
 from utils.simulator_orchestrator import SimulationOrchestrator
 

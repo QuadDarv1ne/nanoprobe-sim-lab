@@ -212,7 +212,7 @@ def test_utils_integration():
 
     # PDF Report Generator
     try:
-        from utils.pdf_report_generator import ScientificPDFReport
+        from utils.reporting.pdf_report_generator import ScientificPDFReport
         print_result("ScientificPDFReport", True, "Импорт успешен")
         results.append(True)
     except Exception as e:

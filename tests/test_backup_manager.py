@@ -6,9 +6,9 @@ import os
 import tempfile
 import shutil
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../utils'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from backup_manager import BackupManager
+from utils.backup_manager import BackupManager
 
 
 class TestBackupManager(unittest.TestCase):

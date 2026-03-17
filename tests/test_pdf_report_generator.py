@@ -8,7 +8,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from utils.pdf_report_generator import ScientificPDFReport, generate_pdf_report
+from utils.reporting.pdf_report_generator import ScientificPDFReport, generate_pdf_report
 
 
 class TestPDFReportGenerator(unittest.TestCase):
