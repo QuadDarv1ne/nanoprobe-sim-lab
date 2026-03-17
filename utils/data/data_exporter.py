@@ -1,7 +1,6 @@
 """Модуль экспорта данных для проекта Nanoprobe Simulation Lab."""
 
 import json
-import csv
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Union
 from datetime import datetime
