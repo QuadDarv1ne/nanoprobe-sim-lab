@@ -7,12 +7,15 @@ from fastapi import HTTPException, status, Request, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Optional
 from functools import wraps
+import logging
 from utils.database import DatabaseManager
 from utils.caching.redis_cache import RedisCache
 from utils.batch_processor import BatchProcessor
 from api.error_handlers import AuthorizationError, RateLimitError, DatabaseError
 import os
 import jwt
+
+logger = logging.getLogger(__name__)
 
 security = HTTPBearer()
 JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key-change-in-production")
@@ -83,6 +86,7 @@ def get_db() -> DatabaseManager:
     try:
         return get_db_manager()
     except RuntimeError as e:
+        logger.error(f"Database manager not initialized: {e}")
         raise DatabaseError(str(e))
 
 
@@ -98,6 +102,7 @@ def get_redis_cache_required() -> RedisCache:
     try:
         return get_redis_required()
     except RuntimeError as e:
+        logger.error(f"Redis cache not available: {e}")
         raise DatabaseError(str(e))
 
 
