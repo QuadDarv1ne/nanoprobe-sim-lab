@@ -5,12 +5,10 @@ External Services API routes с Circuit Breaker
 
 from fastapi import APIRouter, Query
 from typing import Optional
+from datetime import datetime
 import logging
 import os
 import requests
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
-from datetime import datetime, timedelta
 
 from api.error_handlers import NotFoundError
 from api.state import get_app_state, set_app_state
@@ -27,8 +25,8 @@ def get_http_session() -> requests.Session:
     session = get_app_state("http_session")
     if session is not None:
         return session
-    
-    session = create_session()
+
+    session = requests.Session()
     set_app_state("http_session", session)
     return session
 
@@ -274,7 +272,7 @@ async def check_external_services_health():
 
     for name, service in services.items():
         try:
-            response = http_session.head(service["url"], timeout=5)
+            response = get_http_session().head(service["url"], timeout=5)
             if response.status_code < 400:
                 service["status"] = "healthy"
             else:
