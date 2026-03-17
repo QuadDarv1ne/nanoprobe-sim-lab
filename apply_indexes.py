@@ -255,18 +255,18 @@ def main():
         # Получение существующих индексов
         existing = get_existing_indexes(conn)
         logger.info(f"\nExisting indexes: {len(existing)}")
-        
+
         # Получение размеров таблиц
         table_sizes = get_table_sizes(conn)
-        logger.info(f"\nTable sizes:")
+        logger.info("\nTable sizes:")
         for table, count in table_sizes.items():
             logger.info(f"  {table}: {count} rows")
-        
+
         # Создание индексов
         created = 0
         skipped = 0
-        
-        logger.info(f"\nCreating indexes...")
+
+        logger.info("\nCreating indexes...")
         for index_def in COMPOSITE_INDEXES:
             name = index_def["name"]
             
@@ -279,7 +279,7 @@ def main():
                 created += 1
         
         logger.info(f"\n{'=' * 60}")
-        logger.info(f"Summary")
+        logger.info("Summary")
         logger.info(f"{'=' * 60}")
         logger.info(f"  Created: {created}")
         logger.info(f"  Skipped: {skipped}")
