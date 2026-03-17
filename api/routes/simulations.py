@@ -113,6 +113,7 @@ async def create_simulation(
     redis = get_redis()
     if redis and redis.is_available():
         redis.clear_pattern("simulations:*")
+        redis.clear_pattern("dashboard:*")  # Инвалидация dashboard кэша
 
     simulations = db.get_simulations(limit=1)
     if not simulations:
@@ -141,6 +142,7 @@ async def update_simulation(
     redis = get_redis()
     if redis and redis.is_available():
         redis.clear_pattern("simulations:*")
+        redis.clear_pattern("dashboard:*")  # Инвалидация dashboard кэша
         redis.delete(f"simulation:{simulation_id}")
 
     simulations = db.get_simulations(limit=100)

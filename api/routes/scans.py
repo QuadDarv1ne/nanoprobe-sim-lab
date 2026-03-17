@@ -148,6 +148,7 @@ async def create_scan(
     redis = get_redis()
     if redis and redis.is_available():
         redis.clear_pattern("scans:*")
+        redis.clear_pattern("dashboard:*")  # Инвалидация dashboard кэша
 
     return ScanResponse.model_validate(scans[0])
 
@@ -176,6 +177,7 @@ async def delete_scan(
     redis = get_redis()
     if redis and redis.is_available():
         redis.clear_pattern("scans:*")
+        redis.clear_pattern("dashboard:*")  # Инвалидация dashboard кэша
 
     return None
 
