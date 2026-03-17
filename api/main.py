@@ -384,7 +384,7 @@ except ImportError as e:
 @app.get("/metrics", tags=["Monitoring"])
 async def metrics():
     """Prometheus метрики"""
-    from utils.monitoring.enhanced_monitor import get_monitor
+    from utils.monitoring.monitoring import get_monitor
 
     # Получаем метрики из enhanced monitor
     monitor = get_monitor()
