@@ -26,17 +26,31 @@ import os
 
 # ==================== Limiter Configuration ====================
 
-# Лимитер с использованием Redis (если доступен) или in-memory
-redis_url = os.getenv("REDIS_URL", "memory://")
-limiter = Limiter(
-    key_func=get_remote_address,
-    default_limits=[
-        "100/minute",  # Default limit для всех endpoints
-        "20/second",   # Burst protection
-    ],
-    storage_uri=redis_url if redis_url != "memory://" else "memory://",
-    strategy="fixed-window"  # Fixed window для простоты
-)
+# Лимитер с использованием in-memory (Redis опционален)
+redis_disabled = os.getenv("REDIS_DISABLED", "0") == "1"
+if redis_disabled:
+    # In-memory limiter без Redis
+    limiter = Limiter(
+        key_func=get_remote_address,
+        default_limits=[
+            "100/minute",  # Default limit для всех endpoints
+            "20/second",   # Burst protection
+        ],
+        storage_uri="memory://",
+        strategy="fixed-window"
+    )
+else:
+    # Redis limiter для production
+    redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
+    limiter = Limiter(
+        key_func=get_remote_address,
+        default_limits=[
+            "100/minute",
+            "20/second",
+        ],
+        storage_uri=redis_url,
+        strategy="fixed-window"
+    )
 
 
 # ==================== Setup ====================
@@ -44,7 +58,7 @@ limiter = Limiter(
 def setup_rate_limiter(app):
     """
     Настройка rate limiter для FastAPI приложения
-    
+
     Добавляет:
     - Middleware для автоматического rate limiting
     - Exception handler
@@ -53,6 +67,13 @@ def setup_rate_limiter(app):
     Args:
         app: FastAPI приложение
     """
+    # Отключаем middleware если Redis отключён (избегаем ошибок ConnectionError)
+    redis_disabled = os.getenv("REDIS_DISABLED", "0") == "1"
+    if redis_disabled:
+        # В режиме без Redis просто добавляем exception handler
+        app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+        return
+    
     app.state.limiter = limiter
     app.add_middleware(SlowAPIMiddleware)
     app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)

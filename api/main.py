@@ -44,11 +44,26 @@ async def lifespan(app: FastAPI):
 
     # Инициализация БД менеджера и Redis
     db = DatabaseManager("data/nanoprobe.db")
-    redis_host = os.getenv("REDIS_HOST", "localhost")
-    redis_port = int(os.getenv("REDIS_PORT", "6379"))
-    redis = RedisCache(host=redis_host, port=redis_port)
+    
+    # Redis опционален (можно отключить через REDIS_DISABLED=1)
+    redis_disabled = os.getenv("REDIS_DISABLED", "0") == "1"
+    if redis_disabled:
+        redis = None
+        logger.warning("Redis disabled - running without cache")
+    else:
+        redis_host = os.getenv("REDIS_HOST", "localhost")
+        redis_port = int(os.getenv("REDIS_PORT", "6379"))
+        try:
+            redis = RedisCache(host=redis_host, port=redis_port)
+            if not redis.is_available():
+                logger.warning("Redis not available - running without cache")
+                redis = None
+        except Exception as e:
+            logger.warning(f"Redis connection failed: {e} - running without cache")
+            redis = None
+    
     init_app_state(db, redis)
-    logger.info("Database and Redis initialized")
+    logger.info("Database initialized" + (" (without Redis)" if redis is None else " and Redis initialized"))
 
     # Запуск мониторинга производительности
     try:
@@ -168,9 +183,14 @@ except ImportError:
 
 # Rate Limiting для защиты от DDoS/bruteforce
 try:
-    from api.rate_limiter import setup_rate_limiter
-    setup_rate_limiter(app)
-    logger.info("Rate limiting enabled")
+    # Отключаем rate limiting если Redis отключён (избегаем ошибок)
+    redis_disabled = os.getenv("REDIS_DISABLED", "0") == "1"
+    if not redis_disabled:
+        from api.rate_limiter import setup_rate_limiter
+        setup_rate_limiter(app)
+        logger.info("Rate limiting enabled")
+    else:
+        logger.warning("Rate limiting disabled (REDIS_DISABLED=1)")
 except ImportError as e:
     logger.warning(f"Rate limiting disabled: {e}")
 

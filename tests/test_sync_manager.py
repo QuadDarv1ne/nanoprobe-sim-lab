@@ -5,6 +5,7 @@
 
 import sys
 from pathlib import Path
+import pytest
 
 # Добавляем корень проекта в path
 project_root = Path(__file__).parent.parent
@@ -104,6 +105,7 @@ def test_sync_manager_stop():
     print("[PASS] Остановка")
 
 
+@pytest.mark.asyncio
 async def test_sync_manager_async_methods():
     """Тест async методов (требует запущенных сервисов)"""
     print("Тест async методов (skip без сервисов)...")
