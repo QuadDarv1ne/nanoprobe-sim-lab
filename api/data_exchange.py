@@ -1,10 +1,13 @@
 """Модуль форматов обмена данными для проекта Лаборатория моделирования нанозонда."""
 
 import numpy as np
+import logging
 from typing import Dict, Any, List, Tuple
 from datetime import datetime
 import base64
 from abc import ABC, abstractmethod
+
+logger = logging.getLogger(__name__)
 
 
 class DataFormatSpec:
@@ -583,41 +586,41 @@ class DataExchangeManager:
 
 def main():
     """Главная функция для демонстрации возможностей модуля обмена данными"""
-    print("=== МОДУЛЬ ОБМЕНА ДАННЫМИ ПРОЕКТА ===")
+    logger.info("=== МОДУЛЬ ОБМЕНА ДАННЫМИ ПРОЕКТА ===")
 
     # Создаем менеджер обмена данными
     data_manager = DataExchangeManager()
 
-    print("Поддерживаемые форматы:")
+    logger.info("Поддерживаемые форматы:")
     for fmt in data_manager.get_supported_formats():
-        print(f"  - {fmt}")
+        logger.info(f"  - {fmt}")
 
     # Создаем тестовые данные
     test_surface = np.random.rand(10, 10)
 
     # Конвертируем в стандартный формат
     surface_standard = SurfaceDataConverter.numpy_to_standard(test_surface)
-    print("✓ Поверхность сконвертирована в стандартный формат")
+    logger.info("✓ Поверхность сконвертирована в стандартный формат")
 
     # Проверяем формат
     is_valid = DataFormatSpec.validate_format(surface_standard, DataFormatSpec.FORMAT_SURFACE_DATA)
-    print(f"✓ Формат действителен: {is_valid}")
+    logger.info(f"✓ Формат действителен: {is_valid}")
 
     # Конвертируем обратно
     surface_back = SurfaceDataConverter.standard_to_numpy(surface_standard)
-    print("✓ Поверхность восстановлена из стандартного формата")
+    logger.info("✓ Поверхность восстановлена из стандартного формата")
 
     # Проверяем, что данные совпадают
     arrays_equal = np.array_equal(test_surface, surface_back)
-    print(f"✓ Данные совпадают после конвертации: {arrays_equal}")
+    logger.info(f"✓ Данные совпадают после конвертации: {arrays_equal}")
 
     # Тестируем кодирование в base64
     encoded = SurfaceDataConverter.encode_base64(test_surface)
     decoded = SurfaceDataConverter.decode_base64(encoded, test_surface.shape)
     base64_equal = np.array_equal(test_surface, decoded)
-    print(f"✓ Данные совпадают после base64 кодирования/декодирования: {base64_equal}")
+    logger.info(f"✓ Данные совпадают после base64 кодирования/декодирования: {base64_equal}")
 
-    print("Модуль обмена данными успешно протестирован")
+    logger.info("Модуль обмена данными успешно протестирован")
 
 
 if __name__ == "__main__":
