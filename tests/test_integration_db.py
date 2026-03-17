@@ -9,7 +9,6 @@ import sys
 import os
 import tempfile
 from pathlib import Path
-from datetime import datetime
 
 # Добавляем путь к проекту
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -20,7 +19,6 @@ os.environ["DATABASE_PATH"] = TEST_DB
 
 from fastapi.testclient import TestClient
 from api.main import app, db_manager
-from utils.database import DatabaseManager
 
 
 def setup_module():
@@ -203,25 +201,25 @@ def test_dashboard_stats():
     
     assert isinstance(data, dict), "Ответ не словарь"
     assert "total_scans" in data or "total_simulations" in data, "Ответ не содержит статистику"
-    
-    print(f"[PASS] Статистика получена")
+
+    print("[PASS] Статистика получена")
 
 
 def test_health_check():
     """Тест 10: Health check API"""
     print("\n[TEST] Health check API...")
-    
+
     client = TestClient(app)
-    
+
     response = client.get("/health")
-    
+
     assert response.status_code == 200, f"Ошибка: {response.status_code}"
     data = response.json()
-    
+
     assert data["status"] == "healthy", "API не healthy"
     assert "timestamp" in data, "Ответ не содержит timestamp"
-    
-    print(f"[PASS] API healthy")
+
+    print("[PASS] API healthy")
 
 
 def test_auth_login():
@@ -244,9 +242,9 @@ def test_auth_login():
     if response.status_code == 200:
         data = response.json()
         assert "access_token" in data, "Ответ не содержит access_token"
-        print(f"[PASS] Login успешен")
+        print("[PASS] Login успешен")
     else:
-        print(f"[INFO] Пользователь admin не найден (это нормально для тестовой БД)")
+        print("[INFO] Пользователь admin не найден (это нормально для тестовой БД)")
 
 
 def test_db_transaction_rollback():
@@ -296,7 +294,6 @@ def test_db_indexes():
     
     # Проверяем, что индексы созданы
     from alembic.config import Config
-    from alembic import command
     from alembic.script import ScriptDirectory
     
     alembic_cfg = Config("alembic.ini")
@@ -305,7 +302,7 @@ def test_db_indexes():
     # Проверяем наличие миграций
     migrations = list(script.walk_revisions())
     assert len(migrations) > 0, "Миграции не найдены"
-    
+
     print(f"[PASS] Найдено {len(migrations)} миграций")
 
 
