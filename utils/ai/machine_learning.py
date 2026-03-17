@@ -1,6 +1,7 @@
 """Модуль машинного обучения для проекта Лаборатория моделирования нанозонда."""
 
 import numpy as np
+import logging
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.metrics import mean_squared_error, r2_score, accuracy_score, classification_report
@@ -8,6 +9,8 @@ from sklearn.preprocessing import StandardScaler, LabelEncoder
 import joblib
 from typing import Dict, Any
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 class SurfacePredictionModel:
@@ -520,7 +523,7 @@ class ProjectMLPipeline:
                         surf_data["features"], surf_data["targets"]
                     )
                 except Exception as e:
-                    print(f"Ошибка обучения модели поверхности: {e}")
+                    logger.error(f"Surface regression model training error: {e}")
 
         # Обучение модели анализа изображений (если предоставлены данные)
         if "image" in training_data:
@@ -531,7 +534,7 @@ class ProjectMLPipeline:
                         img_data["features"], img_data["targets"]
                     )
                 except Exception as e:
-                    print(f"Ошибка обучения модели изображений: {e}")
+                    logger.error(f"Image prediction model training error: {e}")
 
         # Обучение модели SSTV (если предоставлены данные)
         if "sstv" in training_data:
@@ -542,7 +545,7 @@ class ProjectMLPipeline:
                         sstv_data["features"], sstv_data["targets"]
                     )
                 except Exception as e:
-                    print(f"Ошибка обучения модели SSTV: {e}")
+                    logger.error(f"SSTV prediction model training error: {e}")
 
         return results
 
@@ -565,7 +568,7 @@ class ProjectMLPipeline:
                 pred = self.surface_predictor.predict(surface_data, "regression")
                 predictions["surface_prediction"] = pred.tolist()
             except Exception as e:
-                print(f"Ошибка предсказания поверхности: {e}")
+                logger.error(f"Surface prediction error: {e}")
 
         # Предсказание качества изображения
         if "image" in input_data:
@@ -574,7 +577,7 @@ class ProjectMLPipeline:
                 pred = self.image_predictor.predict_quality_score(image_data)
                 predictions["image_quality_prediction"] = float(pred)
             except Exception as e:
-                print(f"Ошибка предсказания качества изображения: {e}")
+                logger.error(f"Image quality prediction error: {e}")
 
         # Предсказание качества SSTV
         if "sstv_signal" in input_data:
@@ -583,7 +586,7 @@ class ProjectMLPipeline:
                 pred = self.sstv_predictor.predict_decoding_quality(signal_data)
                 predictions["sstv_quality_prediction"] = float(pred)
             except Exception as e:
-                print(f"Ошибка предсказания качества SSTV: {e}")
+                logger.error(f"SSTV quality prediction error: {e}")
 
         return predictions
 
@@ -601,7 +604,7 @@ class ProjectMLPipeline:
         joblib.dump(self.image_predictor, dir_path / "image_model.pkl")
         joblib.dump(self.sstv_predictor, dir_path / "sstv_model.pkl")
 
-        print(f"Все модели сохранены в директорию: {directory}")
+        logger.info(f"All models saved to directory: {directory}")
 
     def load_all_models(self, directory: str):
         """
