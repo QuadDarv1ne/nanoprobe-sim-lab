@@ -729,7 +729,7 @@ class IntegratedWebDashboard:
                     self._active_processes = {}
 
                 if component not in self._active_processes:
-                    return jsonify({"success": False, "error": f"Не запущен"}), 404
+                    return jsonify({"success": False, "error": "Не запущен"}), 404
 
                 process = self._active_processes[component]
                 if process.poll() is None:

@@ -29,7 +29,6 @@ from pathlib import Path
 
 # Установка UTF-8 кодировки для Windows
 if sys.platform == "win32":
-    import os
     os.system("chcp 65001 >nul")
     try:
         sys.stdout.reconfigure(encoding='utf-8')
@@ -1431,7 +1430,7 @@ class WebDashboard:
 
             return {
                 "status": "success",
-                "message": f"Сканирование добавлено",
+                "message": "Сканирование добавлено",
                 "scan_id": scan_id
             }
         except Exception as e:
