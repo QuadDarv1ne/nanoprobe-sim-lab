@@ -23,7 +23,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.performance_profiler import PerformanceProfiler
 from utils.resource_optimizer import ResourceManager
-from utils.advanced_logger_analyzer import AdvancedLoggerAnalyzer
+from utils.logger_analyzer import AdvancedLoggerAnalyzer
 from utils.memory_tracker import MemoryTracker
 from utils.performance_benchmark import PerformanceBenchmarkSuite
 from utils.optimization_orchestrator import OptimizationOrchestrator
