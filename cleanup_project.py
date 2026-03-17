@@ -1,13 +1,10 @@
 """Скрипт очистки и организации проекта Nanoprobe Simulation Lab."""
 
-import os
 import shutil
 import json
 from datetime import datetime
 from pathlib import Path
-import re
-import tempfile
-from typing import Dict, List, Tuple
+from typing import Dict
 
 
 class ProjectCleaner:
