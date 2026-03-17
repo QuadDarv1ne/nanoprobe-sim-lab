@@ -524,7 +524,12 @@ class DatabaseManager:
         with self.get_connection() as conn:
             cursor = conn.cursor()
 
-            query = "SELECT * FROM scan_results"
+            query = """
+                SELECT id, scan_type, surface_type, scan_area_x, scan_area_y, resolution_x, 
+                       resolution_y, scan_speed, timestamp, image_data, metadata, 
+                       processing_results, status, error_message, duration_seconds
+                FROM scan_results
+            """
             params = []
 
             if scan_type:
@@ -935,7 +940,11 @@ class DatabaseManager:
         with self.get_connection() as conn:
             cursor = conn.cursor()
 
-            query = "SELECT * FROM simulations"
+            query = """
+                SELECT id, simulation_type, parameters, results, status, 
+                       created_at, updated_at, duration_seconds, error_message
+                FROM simulations
+            """
             params = []
 
             if status:
@@ -1012,7 +1021,11 @@ class DatabaseManager:
         with self.get_connection() as conn:
             cursor = conn.cursor()
 
-            query = "SELECT * FROM images"
+            query = """
+                SELECT id, image_path, image_type, source, width, height, 
+                       channels, metadata, created_at
+                FROM images
+            """
             params = []
             conditions = []
 
