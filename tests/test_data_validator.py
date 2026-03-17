@@ -153,7 +153,7 @@ def run_tests():
     result = runner.run(suite)
 
     print("=" * 60)
-    print(f"РЕЗУЛЬТАТЫ ТЕСТИРОВАНИЯ:")
+    print("РЕЗУЛЬТАТЫ ТЕСТИРОВАНИЯ:")
     print(f"  Пройдено: {result.testsRun - len(result.failures) - len(result.errors)}")
     print(f"  Ошибки: {len(result.errors)}")
     print(f"  Провалы: {len(result.failures)}")
