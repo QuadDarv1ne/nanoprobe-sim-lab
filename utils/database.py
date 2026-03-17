@@ -13,7 +13,7 @@ from contextlib import contextmanager, asynccontextmanager
 from queue import Queue
 import threading
 import asyncio
-from functools import wraps, lru_cache
+from functools import wraps
 import hashlib
 
 logger = logging.getLogger(__name__)
@@ -1836,8 +1836,6 @@ class DatabaseManager:
         Returns:
             Количество удалённых записей
         """
-        from datetime import timedelta
-
         cutoff_date = (datetime.now() - timedelta(days=days)).isoformat()
 
         with self.get_connection() as conn:
