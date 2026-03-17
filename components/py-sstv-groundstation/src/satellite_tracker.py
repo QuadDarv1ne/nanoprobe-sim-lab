@@ -3,9 +3,8 @@
 TLE данные, предсказание пролётов, автозапись.
 """
 
-import numpy as np
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 from pathlib import Path
 import json
 
@@ -167,23 +166,18 @@ class SatelliteTracker:
             print(f"Спутник '{satellite_name}' не найден")
             return []
 
-        satellite = self.satellites[satellite_name]
         passes = []
 
         # Упрощённое предсказание (для реального нужна библиотека sgp4)
         # ISS: ~15.5 орбит в день, период ~92 минуты
         if 'iss' in satellite_name.lower():
             period_minutes = 92
-            passes_per_day = 15.5
         elif 'noaa' in satellite_name.lower():
             period_minutes = 102
-            passes_per_day = 14.1
         elif 'meteor' in satellite_name.lower():
             period_minutes = 104
-            passes_per_day = 13.8
         else:
             period_minutes = 95
-            passes_per_day = 15.1
 
         now = datetime.now()
         end_time = now + timedelta(hours=hours_ahead)
@@ -232,8 +226,6 @@ class SatelliteTracker:
             return None
 
         # Упрощённая позиция (для реальной нужен SGP4)
-        satellite = self.satellites[satellite_name]
-
         # ISS орбита: ~400-420 км
         if 'iss' in satellite_name.lower():
             altitude_km = 420
