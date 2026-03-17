@@ -235,28 +235,6 @@ class ConfigManager:
         self.save_config()
         print(f"Создан стандартный файл конфигурации: {self.config_file}")
 
-    def get(self, key_path: str, default: Any = None) -> Any:
-        """
-        Получает значение конфигурации по пути ключа
-
-        Args:
-            key_path: Путь к ключу в формате 'section.subsection.key'
-            default: Значение по умолчанию, если ключ не найден
-
-        Returns:
-            Значение конфигурации или значение по умолчанию
-        """
-        keys = key_path.split(".")
-        value = self.config
-
-        for key in keys:
-            if isinstance(value, dict) and key in value:
-                value = value[key]
-            else:
-                return default
-
-        return value
-
     def update_component_config(self, component_name: str, new_config: Dict[str, Any]) -> bool:
         """
         Обновляет конфигурацию компонента

@@ -5,12 +5,9 @@ Redis кэш для Nanoprobe Sim Lab
 
 import json
 import hashlib
-import asyncio
 from typing import Any, Optional, Callable
 from functools import wraps
-from datetime import timedelta
 import redis
-from pathlib import Path
 
 
 class RedisCache:
