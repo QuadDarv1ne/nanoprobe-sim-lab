@@ -13,17 +13,12 @@ Features:
 
 import psutil
 import time
-from datetime import datetime
-from typing import Dict, Optional
+from typing import Optional
 from prometheus_client import (
     Counter,
     Gauge,
     Histogram,
-    Summary,
     generate_latest,
-    CONTENT_TYPE_LATEST,
-    CollectorRegistry,
-    multiprocess,
     start_http_server,
 )
 import logging

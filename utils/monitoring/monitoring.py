@@ -6,9 +6,7 @@ Enhanced System Monitor for Nanoprobe Sim Lab
 import psutil
 import time
 import threading
-import json
-from datetime import datetime, timedelta
-from pathlib import Path
+from datetime import datetime
 from typing import Dict, List, Any, Optional, Callable
 from collections import deque
 from dataclasses import dataclass, asdict
@@ -403,7 +401,6 @@ class EnhancedSystemMonitor:
             String with metrics in Prometheus format
         """
         metrics = self.get_current_metrics()
-        stats = self.get_statistics()
 
         lines = [
             "# HELP nanoprobe_cpu_percent Current CPU usage percentage",
