@@ -24,7 +24,6 @@ from typing import Dict, List, Optional, Any
 import psutil
 import os
 import asyncio
-import json
 import logging
 from pathlib import Path
 
@@ -165,7 +164,6 @@ async def get_dashboard_stats(
             return DashboardStats(**cached)
 
     try:
-        monitor = get_monitor()
         storage = get_storage_stats()
 
         # Интеграция с БД для реальных данных
