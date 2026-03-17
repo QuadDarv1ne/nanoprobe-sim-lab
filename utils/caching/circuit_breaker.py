@@ -3,12 +3,11 @@ Circuit Breaker pattern для Nanoprobe Sim Lab
 Защита от каскадных сбоев при работе с внешними сервисами
 """
 
-import time
 import logging
 from functools import wraps
 from typing import Callable, Any, Optional
 from enum import Enum
-from datetime import datetime, timedelta
+from datetime import datetime
 import threading
 
 logger = logging.getLogger(__name__)
@@ -133,7 +132,7 @@ class CircuitBreaker:
             result = func(*args, **kwargs)
             self._on_success()
             return result
-        except Exception as e:
+        except Exception:
             self._on_failure()
             raise
 
