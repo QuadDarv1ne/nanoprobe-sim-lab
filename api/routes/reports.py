@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import FileResponse
 from datetime import datetime
 import uuid
+import logging
 from pathlib import Path
 
 from api.schemas import (
@@ -18,6 +19,7 @@ from api.error_handlers import ValidationError, DatabaseError, NotFoundError
 from utils.database import DatabaseManager
 from utils.reporting.pdf_report_generator import ScientificPDFReport
 
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -116,6 +118,7 @@ async def generate_pdf_report(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Error generating PDF report: {e}")
         raise DatabaseError(f"Ошибка генерации отчёта: {str(e)}")
 
 
@@ -133,6 +136,7 @@ async def get_reports(
         # Получение списка из БД (если метод реализован)
         if hasattr(db, 'get_pdf_reports'):
             reports = db.get_pdf_reports(limit=limit)
+            logger.debug(f"Retrieved {len(reports)} PDF reports")
             return {
                 "items": reports,
                 "total": len(reports),
@@ -141,6 +145,7 @@ async def get_reports(
         else:
             return {"items": [], "total": 0, "limit": limit}
     except Exception as e:
+        logger.error(f"Error getting PDF reports: {e}")
         raise DatabaseError(f"Ошибка получения отчётов: {str(e)}")
 
 
@@ -166,8 +171,10 @@ async def download_report(
                 break
 
         if not report_file:
+            logger.warning(f"PDF report not found: {report_id}")
             raise NotFoundError(f"Отчёт с ID {report_id} не найден", resource_type="pdf_report")
 
+        logger.info(f"Downloading PDF report: {report_file.name}")
         return FileResponse(
             path=str(report_file),
             filename=report_file.name,
@@ -177,4 +184,5 @@ async def download_report(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Error downloading PDF report: {e}")
         raise DatabaseError(f"Ошибка скачивания отчёта: {str(e)}")

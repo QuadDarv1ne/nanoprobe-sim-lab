@@ -4,8 +4,11 @@ GraphQL API routes для Nanoprobe Sim Lab
 
 from fastapi import APIRouter
 from typing import Optional, Dict, Any
+import logging
 
 from api.error_handlers import DatabaseError
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/graphql", tags=["GraphQL"])
 
@@ -67,12 +70,14 @@ async def graphql_query(
         )
 
         if result.errors:
+            logger.warning(f"GraphQL query executed with errors: {[str(e) for e in result.errors]}")
             return {
                 "data": result.data,
                 "errors": [str(e) for e in result.errors],
                 "success": False
             }
 
+        logger.debug(f"GraphQL query executed successfully: {operation_name or 'anonymous'}")
         return {
             "data": result.data,
             "errors": None,
@@ -80,6 +85,7 @@ async def graphql_query(
         }
 
     except Exception as e:
+        logger.error(f"GraphQL execution error: {e}")
         raise DatabaseError(f"GraphQL execution error: {str(e)}")
 
 
