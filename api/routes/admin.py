@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends
 from datetime import datetime
 import psutil
 import os
+import logging
 from pathlib import Path
 
 from api.dependencies import get_current_user, require_admin
@@ -14,6 +15,7 @@ from api.dependencies import get_redis_cache
 from api.error_handlers import AuthorizationError, NotFoundError, ValidationError
 from api.state import get_db_manager
 
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/admin", tags=["Администрирование"])
 
@@ -190,12 +192,14 @@ async def view_log(
             all_lines = f.readlines()
             last_lines = all_lines[-lines:] if len(all_lines) > lines else all_lines
 
+        logger.debug(f"Read {len(last_lines)} lines from log file: {filename}")
         return {
             "filename": filename,
             "lines": len(all_lines),
             "content": "".join(last_lines),
         }
     except Exception as e:
+        logger.error(f"Error reading log file {filename}: {e}")
         raise ValidationError(f"Ошибка чтения лога: {str(e)}")
 
 
@@ -277,11 +281,13 @@ async def vacuum_database(current_user: dict = Depends(get_current_user)):
             conn.execute("VACUUM")
             conn.execute("ANALYZE")
 
+        logger.info("Database VACUUM and ANALYZE completed")
         return {
             "message": "База данных оптимизирована",
             "timestamp": datetime.now().isoformat(),
         }
     except Exception as e:
+        logger.error(f"Error optimizing database: {e}")
         raise ValidationError(f"Ошибка оптимизации: {str(e)}")
 
 
