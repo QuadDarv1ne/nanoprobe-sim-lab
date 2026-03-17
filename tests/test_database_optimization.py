@@ -66,34 +66,34 @@ def test_count_operations():
 def test_query_performance():
     """Тест производительности запросов"""
     print("Тест производительности запросов...")
-    
+
     db = DatabaseManager(db_path="data/nanoprobe.db")
-    
+
     # Запрос с индексом по created_at
     start = time.time()
-    result = db.execute_query("""
-        SELECT * FROM scan_results 
+    db.execute_query("""
+        SELECT * FROM scan_results
         WHERE created_at >= datetime('now', '-1 day')
         ORDER BY created_at DESC
         LIMIT 100
     """)
     elapsed = time.time() - start
-    
+
     print(f"   Запрос с индексом: {elapsed*1000:.2f} мс")
     assert elapsed < 1.0, f"Запрос должен выполниться быстрее 1с (взяло {elapsed:.2f}с)"
-    
+
     # Запрос с индексом по status
     start = time.time()
-    result = db.execute_query("""
-        SELECT * FROM simulations 
+    db.execute_query("""
+        SELECT * FROM simulations
         WHERE status = 'running'
         ORDER BY created_at DESC
     """)
     elapsed = time.time() - start
-    
+
     print(f"   Запрос по status: {elapsed*1000:.2f} мс")
     assert elapsed < 1.0, f"Запрос должен выполниться быстрее 1с (взяло {elapsed:.2f}с)"
-    
+
     db.close_pool()
     print("[PASS] Производительность запросов")
 
@@ -101,13 +101,13 @@ def test_query_performance():
 def test_composite_index():
     """Тест композитных индексов"""
     print("Тест композитных индексов...")
-    
+
     db = DatabaseManager(db_path="data/nanoprobe.db")
-    
+
     # Запрос с использованием композитного индекса (surface_type + created_at)
     start = time.time()
-    result = db.execute_query("""
-        SELECT * FROM scan_results 
+    db.execute_query("""
+        SELECT * FROM scan_results
         WHERE surface_type = 'silicon'
         ORDER BY created_at DESC
         LIMIT 50
@@ -124,17 +124,17 @@ def test_composite_index():
 def test_foreign_key_index():
     """Тест индексов foreign key"""
     print("Тест индексов foreign key...")
-    
+
     db = DatabaseManager(db_path="data/nanoprobe.db")
-    
+
     # Простой запрос для проверки что БД работает
     start = time.time()
-    result = db.execute_query("SELECT 1 as test")
+    db.connection.execute("SELECT 1 as test")
     elapsed = time.time() - start
-    
+
     print(f"   Запрос к БД: {elapsed*1000:.2f} мс")
-    assert elapsed < 1.0, f"Запрос должен выполниться быстрее 1с"
-    
+    assert elapsed < 1.0, "Запрос должен выполниться быстрее 1с"
+
     db.close_pool()
     print("[PASS] Запросы к БД")
 
