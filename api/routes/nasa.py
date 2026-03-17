@@ -13,15 +13,15 @@ NASA API Routes
 Получить ключ: https://api.nasa.gov/
 """
 
-from fastapi import APIRouter, Query, Depends
-from typing import Optional, List
+from fastapi import APIRouter, Query
+from typing import Optional
 from datetime import datetime, timedelta, timezone
 import logging
 
-from utils.api.nasa_api_client import get_nasa_client, NASAAPIClient
+from utils.api.nasa_api_client import get_nasa_client
 from utils.caching.redis_cache import cache
 from utils.security.rate_limiter import rate_limit
-from api.schemas import APODResponse, MarsPhotosResponse, NEOsResponse
+from api.schemas import APODResponse
 from api.error_handlers import ExternalServiceError
 
 logger = logging.getLogger(__name__)
