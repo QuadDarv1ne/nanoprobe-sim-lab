@@ -16,7 +16,7 @@ Unified Dashboard API for Nanoprobe Sim Lab
 - FastAPI, Redis (опционально)
 """
 
-from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect, status
+from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect, status, Depends
 from fastapi.responses import JSONResponse
 from fastapi import Header
 from datetime import datetime, timedelta
@@ -25,6 +25,7 @@ import psutil
 import os
 import asyncio
 import json
+import logging
 from pathlib import Path
 
 from api.schemas import (
@@ -35,9 +36,12 @@ from api.schemas import (
 )
 from api.error_handlers import DatabaseError, ValidationError, ServiceUnavailableError
 from api.state import get_app_state, set_app_state
+from api.dependencies import get_db
 from utils.monitoring.enhanced_monitor import get_monitor, format_uptime
 from utils.database import DatabaseManager
 from utils.caching.redis_cache import cache, cached
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -133,7 +137,8 @@ def get_storage_stats() -> Dict[str, float]:
     },
 )
 async def get_dashboard_stats(
-    cache_control: Optional[str] = Header(None, alias="Cache-Control")
+    cache_control: Optional[str] = Header(None, alias="Cache-Control"),
+    db: DatabaseManager = Depends(get_db),
 ):
     """
     Возвращает сводную статистику для дашборда:
@@ -167,7 +172,6 @@ async def get_dashboard_stats(
         db_stats = {}
         db_size_mb = 0.0
         try:
-            db = DatabaseManager(db_path="data/nanoprobe.db")
             db_stats = db.get_statistics()
             # Размер БД
             db_path = Path("data/nanoprobe.db")
@@ -201,8 +205,10 @@ async def get_dashboard_stats(
         if cache.is_available():
             cache.set(f"{CACHE_PREFIX['stats']}:all", result.model_dump(), expire=5)
 
+        logger.debug(f"Dashboard stats retrieved: {result.total_scans} scans, {result.total_simulations} simulations")
         return result
     except Exception as e:
+        logger.error(f"Error getting dashboard stats: {e}")
         raise DatabaseError(f"Ошибка получения статистики: {str(e)}")
 
 
@@ -210,10 +216,12 @@ async def get_dashboard_stats(
 
 @router.get("/stats/detailed")
 @cached(prefix="dashboard", expire=5)
-async def get_detailed_stats():
+async def get_detailed_stats(
+    db: DatabaseManager = Depends(get_db),
+):
     """
     Get detailed dashboard statistics (cached for 5 seconds)
-    
+
     Возвращает детальную статистику включая:
     - Базовую статистику по всем таблицам
     - Детализацию по типам сканирований
@@ -221,29 +229,26 @@ async def get_detailed_stats():
     - Последние активности
     - Использование ресурсов системы
     """
-    db_manager = None
     try:
-        db_manager = DatabaseManager("data/nanoprobe.db")
-
         # Базовая статистика
-        scans_count = db_manager.count_scans()
-        simulations_count = db_manager.count_simulations()
-        analysis_count = db_manager.count_analysis_results()
-        comparisons_count = db_manager.count_comparisons()
-        reports_count = db_manager.count_reports()
+        scans_count = db.count_scans()
+        simulations_count = db.count_simulations()
+        analysis_count = db.count_analysis_results()
+        comparisons_count = db.count_comparisons()
+        reports_count = db.count_reports()
 
         # Детальная статистика по сканированиям
-        scans_by_type = db_manager.execute_query(
+        scans_by_type = db.execute_query(
             "SELECT scan_type, COUNT(*) as count FROM scan_results GROUP BY scan_type"
         )
 
         # Последние активности
-        recent_scans = db_manager.execute_query(
+        recent_scans = db.execute_query(
             "SELECT id, scan_type, surface_type, created_at FROM scan_results ORDER BY created_at DESC LIMIT 5"
         )
 
         # Статистика по симуляциям
-        sim_stats = db_manager.execute_query(
+        sim_stats = db.execute_query(
             "SELECT simulation_type, COUNT(*) as count, "
             "AVG(duration_seconds) as avg_duration FROM simulations "
             "GROUP BY simulation_type"
@@ -302,10 +307,8 @@ async def get_detailed_stats():
             }
         }
     except Exception as e:
+        logger.error(f"Error getting detailed stats: {e}")
         raise ServiceUnavailableError(f"Не удалось получить детальную статистику: {str(e)}")
-    finally:
-        if db_manager:
-            db_manager.close_pool()
 
 
 # ==================== Health Checks ====================
@@ -408,6 +411,7 @@ async def get_detailed_health():
             }
         )
     except Exception as e:
+        logger.error(f"Error getting detailed health: {e}")
         raise DatabaseError(f"Ошибка проверки здоровья: {str(e)}")
 
 
@@ -468,8 +472,10 @@ async def get_realtime_metrics(
         if cache.is_available():
             cache.set(cache_key, response_data, expire=1)
 
+        logger.debug(f"Realtime metrics retrieved (history={include_history})")
         return response_data
     except Exception as e:
+        logger.error(f"Error getting realtime metrics: {e}")
         raise DatabaseError(f"Ошибка получения метрик: {str(e)}")
 
 
@@ -552,9 +558,11 @@ async def get_realtime_metrics_detailed():
         set_app_state("metrics_cache", metrics)
         set_app_state("metrics_cache_time", datetime.now())
 
+        logger.debug(f"Realtime detailed metrics retrieved: CPU {metrics['cpu']['total']}%")
         return metrics
 
     except Exception as e:
+        logger.error(f"Error getting realtime detailed metrics: {e}")
         raise ServiceUnavailableError(f"Не удалось получить метрики: {str(e)}")
 
 
@@ -562,23 +570,24 @@ async def get_realtime_metrics_detailed():
 
 @router.get("/activity/timeline")
 @cached(prefix="dashboard:activity", expire=60)
-async def get_activity_timeline(days: int = Query(7, ge=1, le=30)):
+async def get_activity_timeline(
+    days: int = Query(7, ge=1, le=30),
+    db: DatabaseManager = Depends(get_db),
+):
     """
     Get activity timeline (cached for 60 seconds)
-    
+
     Возвращает активность по дням:
     - Сканирования
     - Симуляции
     - Анализы
     """
-    db_manager = None
     try:
-        db_manager = DatabaseManager("data/nanoprobe.db")
         end_date = datetime.now()
         start_date = end_date - timedelta(days=days)
 
         # Активность сканирований по дням
-        scans_timeline = db_manager.execute_query(
+        scans_timeline = db.execute_query(
             """
             SELECT DATE(created_at) as date, COUNT(*) as count
             FROM scan_results
@@ -590,7 +599,7 @@ async def get_activity_timeline(days: int = Query(7, ge=1, le=30)):
         )
 
         # Активность симуляций по дням
-        sims_timeline = db_manager.execute_query(
+        sims_timeline = db.execute_query(
             """
             SELECT DATE(created_at) as date, COUNT(*) as count
             FROM simulations
@@ -602,7 +611,7 @@ async def get_activity_timeline(days: int = Query(7, ge=1, le=30)):
         )
 
         # Активность анализа по дням
-        analysis_timeline = db_manager.execute_query(
+        analysis_timeline = db.execute_query(
             """
             SELECT DATE(created_at) as date, COUNT(*) as count
             FROM defect_analysis
@@ -655,10 +664,8 @@ async def get_activity_timeline(days: int = Query(7, ge=1, le=30)):
             ]
         }
     except Exception as e:
+        logger.error(f"Error getting activity timeline: {e}")
         raise ServiceUnavailableError(f"Не удалось получить активность: {str(e)}")
-    finally:
-        if db_manager:
-            db_manager.close_pool()
 
 
 # ==================== Storage Statistics ====================
@@ -723,6 +730,7 @@ async def get_detailed_storage():
             }
         }
     except Exception as e:
+        logger.error(f"Error getting detailed storage stats: {e}")
         raise ServiceUnavailableError(f"Не удалось получить статистику хранилища: {str(e)}")
 
 
@@ -747,6 +755,7 @@ async def get_storage_stats_endpoint():
             }
         }
     except Exception as e:
+        logger.error(f"Error getting storage stats: {e}")
         raise DatabaseError(f"Ошибка получения статистики хранилища: {str(e)}")
 
 
@@ -871,6 +880,7 @@ async def check_alerts():
             "status": "critical" if any(a["level"] == "critical" for a in alerts) else "ok"
         }
     except Exception as e:
+        logger.error(f"Error checking alerts: {e}")
         raise ServiceUnavailableError(f"Не удалось проверить алерты: {str(e)}")
 
 
@@ -912,6 +922,7 @@ async def get_metrics_history(
 
         return {"history": history}
     except Exception as e:
+        logger.error(f"Error getting metrics history: {e}")
         raise DatabaseError(f"Ошибка получения истории: {str(e)}")
 
 
@@ -932,6 +943,7 @@ async def get_alerts(
         alerts = monitor.get_alerts(limit=limit, level=level)
         return {"alerts": alerts, "total": len(alerts)}
     except Exception as e:
+        logger.error(f"Error getting alerts: {e}")
         raise DatabaseError(f"Ошибка получения алертов: {str(e)}")
 
 
@@ -950,6 +962,7 @@ async def get_top_processes(
         processes = monitor.get_process_list(limit=limit, sort_by=sort_by)
         return {"processes": processes, "total": len(processes)}
     except Exception as e:
+        logger.error(f"Error getting processes: {e}")
         raise DatabaseError(f"Ошибка получения процессов: {str(e)}")
 
 
@@ -1002,6 +1015,7 @@ async def clean_cache_action():
             cleaned_size = report.get("cleaned_size_mb", 0.0)
             cleaned_files = report.get("cleaned_files", 0)
 
+        logger.info(f"Cache cleaned: {cleaned_files} files, {cleaned_size} MB")
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content={
@@ -1012,6 +1026,7 @@ async def clean_cache_action():
             }
         )
     except Exception as e:
+        logger.error(f"Error cleaning cache: {e}")
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={
