@@ -12,10 +12,13 @@ from fastapi import APIRouter, Response, Query, HTTPException
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 import psutil
 import logging
+import time
+import json
+import re
 from datetime import datetime, timezone
 import sqlite3
 from pathlib import Path
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 
 logger = logging.getLogger(__name__)
 
@@ -124,8 +127,6 @@ async def get_monitoring_stats():
     - Request counts
     - Error rates
     """
-    import time
-
     # Получаем uptime
     boot_time = datetime.fromtimestamp(psutil.boot_time(), tz=timezone.utc)
     uptime = datetime.now(timezone.utc) - boot_time
@@ -179,13 +180,26 @@ async def profile_database_query(
     - index_usage - информация об использовании индексов
     - recommendations - рекомендации по оптимизации
     """
-    import json
-    import time
-
     db_path = PROJECT_ROOT / "data" / "nanoprobe.db"
 
     if not db_path.exists():
         raise HTTPException(status_code=404, detail="Database not found")
+
+    # Защита от SQL injection - разрешаем только SELECT
+    if not re.match(r'^\s*SELECT\s+', query, re.IGNORECASE):
+        raise HTTPException(
+            status_code=400,
+            detail="Only SELECT queries are allowed for profiling"
+        )
+
+    # Блокируем опасные операции
+    dangerous_patterns = ['DROP', 'DELETE', 'INSERT', 'UPDATE', 'ALTER', 'CREATE', 'ATTACH', 'DETACH']
+    for pattern in dangerous_patterns:
+        if re.search(rf'\b{pattern}\b', query, re.IGNORECASE):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Query contains forbidden operation: {pattern}"
+            )
 
     try:
         conn = sqlite3.connect(str(db_path))
@@ -199,10 +213,7 @@ async def profile_database_query(
         }
 
         # Получаем план выполнения
-        if analyze:
-            cursor.execute(f"EXPLAIN QUERY PLAN {query}")
-        else:
-            cursor.execute(f"EXPLAIN QUERY PLAN {query}")
+        cursor.execute(f"EXPLAIN QUERY PLAN {query}")
 
         query_plan = cursor.fetchall()
         profile_result["query_plan"] = [
@@ -260,6 +271,8 @@ async def profile_database_query(
     except sqlite3.Error as e:
         logger.error(f"Database profiling error: {e}")
         raise HTTPException(status_code=400, detail=f"Database error: {str(e)}")
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid JSON params: {str(e)}")
     except Exception as e:
         logger.error(f"Profiling error: {e}")
         raise HTTPException(status_code=400, detail=str(e))
