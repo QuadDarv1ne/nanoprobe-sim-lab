@@ -15,6 +15,7 @@ import {
 } from "chart.js";
 import { Activity } from "lucide-react";
 import { API_BASE } from "@/lib/config";
+import { toast } from "@/components/ui/toaster";
 
 ChartJS.register(
   CategoryScale,
@@ -39,6 +40,9 @@ export function ActivityChart() {
         setTimelineData(data.timeline || []);
       } catch (error) {
         console.error('Failed to fetch activity data:', error);
+        toast.error('Ошибка загрузки данных активности', {
+          description: 'Не удалось получить данные графика'
+        });
       } finally {
         setIsLoading(false);
       }

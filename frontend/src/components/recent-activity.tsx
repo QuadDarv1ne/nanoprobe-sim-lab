@@ -5,6 +5,7 @@ import { FileText, Cpu, Activity } from "lucide-react";
 import { API_BASE } from "@/lib/config";
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
+import { toast } from "@/components/ui/toaster";
 
 interface ActivityItem {
   id: number;
@@ -34,6 +35,9 @@ export function RecentActivity() {
         setActivity(recentScans.slice(0, 8));
       } catch (error) {
         console.error('Failed to fetch recent activity:', error);
+        toast.error('Ошибка загрузки активности', {
+          description: 'Не удалось получить последние действия'
+        });
       } finally {
         setIsLoading(false);
       }
