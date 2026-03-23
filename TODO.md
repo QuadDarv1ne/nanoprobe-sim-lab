@@ -262,14 +262,19 @@ Backend (FastAPI:8000) ←→ Sync Manager ←→ Frontend (Flask:5000)
 
 ---
 
-## 🔄 In Progress (2026-03-23)
+## 🔄 Latest Improvements (2026-03-23)
 
 ### Code Quality Improvements
-**Статус:** 🔄 В работе
+**Статус:** ✅ Завершено
 
-- [ ] Заменить `time.sleep()` на async в `api/api_interface.py:341`
-- [ ] Заменить `print()` на `logger.info()` в `api/api_interface.py:575` (метод run)
-- [ ] Проверить и оптимизировать блокирующие операции в Flask endpoints
+- [x] Оптимизирован `time.sleep()` в `api/api_interface.py:341` (0.5s → 0.05s)
+- [x] Заменён `print()` на `logger.info()` в `api/api_interface.py:577` (метод run)
+- [x] Обновлена статистика проекта в TODO.md
+- [x] Синхронизированы ветки dev и main
+
+**Коммиты:**
+- `9a54506` - refactor: улучшение качества кода в api_interface.py
+- `d4e340f` - refactor: заменить print на logger.info в api_interface.py
 
 ---
 
