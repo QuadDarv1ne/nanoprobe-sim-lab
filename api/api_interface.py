@@ -574,7 +574,7 @@ class NanoprobeAPI:
             port: Порт для прослушивания
             debug: Режим отладки
         """
-        print(f"Запуск API сервера на {host}:{port}")
+        self.logger.info(f"Запуск API сервера на {host}:{port}")
         self.app.run(host=host, port=port, debug=debug, threaded=True)
 
 
