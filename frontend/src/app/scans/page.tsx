@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { API_BASE } from "@/lib/config";
 import { format } from "date-fns";
+import { toast } from "@/components/ui/toaster";
 
 interface Scan {
   id: number;
@@ -27,6 +28,9 @@ export default function ScansPage() {
         setScans(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Failed to fetch scans:', error);
+        toast.error('Ошибка загрузки сканирований', {
+          description: 'Не удалось получить список сканирований'
+        });
       } finally {
         setIsLoading(false);
       }

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { API_BASE } from "@/lib/config";
 import { format } from "date-fns";
+import { toast } from "@/components/ui/toaster";
 
 interface Analysis {
   id: number;
@@ -30,6 +31,9 @@ export default function AnalysisPage() {
         }
       } catch (error) {
         console.error('Failed to fetch analyses:', error);
+        toast.error('Ошибка загрузки анализов', {
+          description: 'Не удалось получить список AI/ML анализов'
+        });
       } finally {
         setIsLoading(false);
       }

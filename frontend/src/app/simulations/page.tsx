@@ -5,6 +5,7 @@ import { Cpu, Play, Square, Trash2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { API_BASE } from "@/lib/config";
+import { toast } from "@/components/ui/toaster";
 
 interface Simulation {
   id: number;
@@ -26,6 +27,9 @@ export default function SimulationsPage() {
         setSimulations(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Failed to fetch simulations:', error);
+        toast.error('Ошибка загрузки симуляций', {
+          description: 'Не удалось получить список симуляций'
+        });
       } finally {
         setIsLoading(false);
       }
