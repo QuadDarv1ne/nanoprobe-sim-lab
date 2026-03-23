@@ -267,6 +267,41 @@ Backend (FastAPI:8000) ←→ Sync Manager ←→ Frontend (Flask:5000)
 
 ## 🔄 Latest Improvements (2026-03-23)
 
+### Frontend Modernization (ВЫПОЛНЕНО)
+**Статус:** ✅ Завершено
+
+**UX Improvements:**
+- [x] Заменены все `alert()` на современные toast уведомления (Sonner)
+- [x] Добавлена функциональность всех кнопок действий (просмотр, загрузка, удаление)
+- [x] Реализованы обработчики для страниц: scans, simulations, analysis, comparison, reports
+- [x] Добавлены специфичные действия: остановка симуляций, печать отчётов, экспорт данных
+- [x] Настройки с сохранением в localStorage (тема, уведомления, автосинхронизация)
+- [x] Проверка API/БД статуса с toast уведомлениями
+
+**Dynamic UI Components:**
+- [x] Header: динамический счётчик уведомлений на основе alerts
+- [x] Sidebar: проверка статуса API каждые 30 секунд с индикацией (online/offline/checking)
+- [x] Quick Actions: навигация и функциональные действия (экспорт, перезапуск)
+- [x] Mobile Page: рабочие кнопки навигации и обновления данных
+
+**Изменения:**
+| Категория | Файлов | Коммитов |
+|-----------|--------|----------|
+| Pages | 8 | 5 |
+| Components | 5 | 3 |
+| Всего | 13 | 10 |
+
+**Коммиты:**
+- `d6a21a0` - refactor: заменить alert() на toast уведомления в SSTV странице
+- `a0a814e` - refactor: добавить toast уведомления для ошибок в компонентах
+- `4173c7c` - refactor: добавить toast уведомления в страницы scans, simulations, analysis
+- `472e359` - refactor: добавить toast уведомления в страницы comparison и reports
+- `2dd76cc` - feat: добавить функциональность кнопок действий на страницах
+- `3b7f05a` - feat: добавить функциональность настроек
+- `9d34ab1` - refactor: улучшить функциональность быстрых действий
+- `d72e2cf` - feat: улучшить header и sidebar компоненты
+- `10a1c88` - feat: добавить функциональность кнопок на мобильной странице
+
 ### SSTV Ground Station Code Quality (ВЫПОЛНЕНО)
 **Статус:** ✅ Завершено
 
@@ -339,10 +374,13 @@ Backend (FastAPI:8000) ←→ Sync Manager ←→ Frontend (Flask:5000)
 - [ ] Scan results viewer
 
 ### Frontend Modernization
-- [ ] Migrate from Flask templates to React/Vue
-- [ ] TypeScript for type safety
-- [ ] PWA for offline access
-- [ ] WCAG 2.1 accessibility
+- [x] Next.js 14 + TypeScript frontend (порт 3000) - ВЫПОЛНЕНО
+- [x] Modern UI components with toast notifications - ВЫПОЛНЕНО
+- [x] Functional action buttons (view, download, delete) - ВЫПОЛНЕНО
+- [x] Dynamic status indicators (API health, notifications) - ВЫПОЛНЕНО
+- [x] Settings with localStorage persistence - ВЫПОЛНЕНО
+- [ ] PWA for offline access (частично - offline page готова)
+- [ ] WCAG 2.1 accessibility compliance
 
 ### Performance
 - [x] Redis for caching (stats, activity, storage) - ВЫПОЛНЕНО
