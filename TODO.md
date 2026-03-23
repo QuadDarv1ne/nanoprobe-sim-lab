@@ -394,7 +394,7 @@ Backend (FastAPI:8000) ←→ Sync Manager ←→ Frontend (Flask:5000)
 - [x] Dynamic status indicators (API health, notifications) - ВЫПОЛНЕНО
 - [x] Settings with localStorage persistence - ВЫПОЛНЕНО
 - [x] PWA icons and manifest.json (26 icons: main, maskable, badge, shortcuts) - ВЫПОЛНЕНО
-- [ ] PWA service worker for offline access
+- [x] PWA service worker for offline access (sw.js, pwa.ts, pwa-provider.tsx) - ВЫПОЛНЕНО
 - [ ] WCAG 2.1 accessibility compliance
 
 ### Performance
