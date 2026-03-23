@@ -52,24 +52,63 @@ const actions = [
 
 export function QuickActions() {
   const handleAction = async (actionId: string) => {
-    toast.info(`Выполнение: ${actionId}...`);
-    
+    switch (actionId) {
+      case 'run_spf_simulator':
+        window.location.href = '/simulations';
+        break;
+      case 'run_analyzer':
+        window.location.href = '/analysis';
+        break;
+      case 'run_sstv':
+        window.location.href = '/sstv';
+        break;
+      case 'generate_report':
+        window.location.href = '/reports';
+        break;
+      case 'export_data':
+        await handleExportData();
+        break;
+      case 'restart_all':
+        await handleRestartAll();
+        break;
+      default:
+        toast.error('Неизвестное действие');
+    }
+  };
+
+  const handleExportData = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/actions/quick`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: actionId }),
-      });
-      
-      const data = await res.json();
-      
-      if (data.success) {
-        toast.success(`Действие выполнено: ${actionId}`);
+      toast.info('Экспорт данных...');
+      const res = await fetch(`${API_BASE}/api/v1/export/all`);
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `nanoprobe_export_${Date.now()}.zip`;
+        a.click();
+        toast.success('Данные экспортированы');
       } else {
-        toast.error(`Ошибка: ${data.error || 'Неизвестная ошибка'}`);
+        toast.error('Ошибка экспорта');
       }
     } catch (error) {
-      toast.error('Ошибка соединения с сервером');
+      toast.error('Ошибка экспорта данных');
+    }
+  };
+
+  const handleRestartAll = async () => {
+    try {
+      toast.info('Перезапуск системы...');
+      const res = await fetch(`${API_BASE}/api/v1/system/restart`, {
+        method: 'POST',
+      });
+      if (res.ok) {
+        toast.success('Система перезапускается');
+      } else {
+        toast.error('Ошибка перезапуска');
+      }
+    } catch (error) {
+      toast.error('Ошибка перезапуска системы');
     }
   };
 
