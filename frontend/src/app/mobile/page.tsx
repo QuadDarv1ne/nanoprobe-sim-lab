@@ -368,19 +368,34 @@ export default function MobileDashboard() {
         <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700">
           <h2 className="text-white font-semibold mb-3">Quick Actions</h2>
           <div className="grid grid-cols-2 gap-2">
-            <button className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors">
+            <button
+              onClick={() => window.location.href = '/sstv'}
+              className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors"
+            >
               <Radio size={18} />
               <span>SSTV Record</span>
             </button>
-            <button className="flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-colors">
+            <button
+              onClick={() => {
+                fetchStats();
+                fetchSSTVStatus();
+              }}
+              className="flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-colors"
+            >
               <RefreshCw size={18} />
               <span>Refresh</span>
             </button>
-            <button className="flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl transition-colors">
+            <button
+              onClick={() => window.location.href = '/simulations'}
+              className="flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl transition-colors"
+            >
               <Activity size={18} />
               <span>Simulate</span>
             </button>
-            <button className="flex items-center justify-center gap-2 px-4 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-xl transition-colors">
+            <button
+              onClick={() => window.location.href = '/scans'}
+              className="flex items-center justify-center gap-2 px-4 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-xl transition-colors"
+            >
               <Database size={18} />
               <span>Scans</span>
             </button>
