@@ -27,7 +27,7 @@
 - [x] External services integration (NASA, Zenodo, Figshare)
 
 ### Code Quality
-- [x] Removed ~1660 lines of duplicate code
+- [x] Removed ~1764 lines of duplicate code (+104 from SSTV ground station)
 - [x] Refactored to custom exceptions
 - [x] Removed unused imports
 - [x] HTTP session with connection pooling
@@ -36,6 +36,9 @@
   - Обновлены импорты в тестах (11 файлов)
   - Обновлены импорты в web dashboard (3 файла)
   - Добавлены re-exports в utils/__init__.py
+- [x] **SSTV Ground Station refactoring** (2 files, -104 lines)
+  - Устранено дублирование методов и функций
+  - Исправлены импорты datetime
 
 ---
 
@@ -264,7 +267,20 @@ Backend (FastAPI:8000) ←→ Sync Manager ←→ Frontend (Flask:5000)
 
 ## 🔄 Latest Improvements (2026-03-23)
 
-### Code Quality Improvements
+### SSTV Ground Station Code Quality (ВЫПОЛНЕНО)
+**Статус:** ✅ Завершено
+
+- [x] Устранено дублирование методов в `sdr_interface.py` (-51 строка)
+  - Удалены дублирующиеся `get_signal_strength()` и `get_spectrum()`
+- [x] Устранено дублирование функций в `main.py` (-53 строки)
+  - Удалена дублирующаяся функция `main()` (функционал в `mode_check_device()`)
+- [x] Добавлены недостающие импорты `datetime` в `mode_waterfall()` и `mode_auto_record()`
+- [x] **RTL-SDR V4 готов к работе** - весь код подготовлен для устройства
+
+**Коммиты:**
+- `a24a0da` - refactor: устранить дублирование кода в SSTV ground station
+
+### API Code Quality Improvements (ВЫПОЛНЕНО)
 **Статус:** ✅ Завершено
 
 - [x] Оптимизирован `time.sleep()` в `api/api_interface.py:341` (0.5s → 0.05s)
@@ -280,12 +296,22 @@ Backend (FastAPI:8000) ←→ Sync Manager ←→ Frontend (Flask:5000)
 
 ## 📋 TODO - Low Priority (Future)
 
-### ISS/MKS Integration (Приоритет после получения RTL-SDR V4)
-- [ ] **RTL-SDR V4 Integration** - приём сигналов на 145.800 MHz
-  - [ ] Подключение RTL-SDR dongle
+### ISS/MKS Integration (Готово к RTL-SDR V4)
+- [x] **RTL-SDR V4 Software Ready** - весь код подготовлен ✅
+  - [x] SDR интерфейс с поддержкой RTL-SDR V4 (R828D, 2.4 MSPS)
+  - [x] Автоопределение типа устройства
+  - [x] SSTV декодер (7 модулей, 1095+ строк)
+  - [x] Satellite tracker (ISS, NOAA, Meteor-M2)
+  - [x] Waterfall display для спектрограммы
+  - [x] Auto-recorder для автоматической записи при пролёте
+  - [x] API endpoints (822 строки в sstv.py)
+  - [x] Документация (RTL_SDR_SETUP.md, 03-rtl-sdr-sstv-recording.md)
+- [ ] **RTL-SDR V4 Hardware Testing** (после получения устройства)
+  - [ ] Подключение RTL-SDR V4 dongle
+  - [ ] Проверка устройства: `python main.py --check`
   - [ ] Настройка антенны на 145.800 MHz
-  - [ ] Тестирование waterfall (145.800 MHz)
-  - [ ] SSTV декодирование с МКС
+  - [ ] Тестирование waterfall: `python main.py --waterfall -f iss --duration 60`
+  - [ ] SSTV декодирование с МКС: `python main.py --realtime-sstv -f iss --duration 120`
 - [ ] **SSTV Decoder Enhancement**
   - [ ] Интеграция pysstv для полноценного декодирования
   - [ ] Поддержка всех режимов (Martin, Scottie, PD, Robot)
