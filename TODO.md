@@ -267,6 +267,20 @@ Backend (FastAPI:8000) ←→ Sync Manager ←→ Frontend (Flask:5000)
 
 ## 🔄 Latest Improvements (2026-03-23)
 
+### PWA Icons Generation (ВЫПОЛНЕНО)
+**Статус:** ✅ Завершено
+
+- [x] Сгенерировано 26 PWA иконок (72x72 до 1024x1024)
+- [x] Основные иконки (9 размеров)
+- [x] Маскабируемые иконки (9 размеров)
+- [x] Badge иконки (4 размера)
+- [x] Shortcut иконки (Dashboard, SSTV, Analysis, Simulations)
+- [x] Обновлён manifest.json с полной конфигурацией
+- [x] Исправлены проблемы Unicode encoding для Windows cp1251
+
+**Коммит:**
+- `c762559` - feat: generate PWA icons and update manifest.json
+
 ### Frontend Modernization (ВЫПОЛНЕНО)
 **Статус:** ✅ Завершено
 
@@ -379,7 +393,8 @@ Backend (FastAPI:8000) ←→ Sync Manager ←→ Frontend (Flask:5000)
 - [x] Functional action buttons (view, download, delete) - ВЫПОЛНЕНО
 - [x] Dynamic status indicators (API health, notifications) - ВЫПОЛНЕНО
 - [x] Settings with localStorage persistence - ВЫПОЛНЕНО
-- [ ] PWA for offline access (частично - offline page готова)
+- [x] PWA icons and manifest.json (26 icons: main, maskable, badge, shortcuts) - ВЫПОЛНЕНО
+- [ ] PWA service worker for offline access
 - [ ] WCAG 2.1 accessibility compliance
 
 ### Performance
