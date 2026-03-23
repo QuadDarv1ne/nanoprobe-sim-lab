@@ -21,23 +21,47 @@ export default function ScansPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchScans = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/v1/scans`);
-        const data = await res.json();
-        setScans(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error('Failed to fetch scans:', error);
-        toast.error('Ошибка загрузки сканирований', {
-          description: 'Не удалось получить список сканирований'
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchScans();
   }, []);
+
+  const fetchScans = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/scans`);
+      const data = await res.json();
+      setScans(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Failed to fetch scans:', error);
+      toast.error('Ошибка загрузки сканирований', {
+        description: 'Не удалось получить список сканирований'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/scans/${id}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        toast.success('Сканирование удалено');
+        fetchScans();
+      } else {
+        toast.error('Ошибка удаления');
+      }
+    } catch (error) {
+      toast.error('Ошибка удаления сканирования');
+    }
+  };
+
+  const handleDownload = (scan: Scan) => {
+    if (scan.image_path) {
+      window.open(`${API_BASE}${scan.image_path}`, '_blank');
+    } else {
+      toast.error('Файл недоступен');
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -102,13 +126,13 @@ export default function ScansPage() {
                     </td>
                     <td className="p-4">
                       <div className="flex items-center justify-end gap-2">
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" onClick={() => window.location.href = `/scans/${scan.id}`}>
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" onClick={() => handleDownload(scan)}>
                           <Download className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" onClick={() => handleDelete(scan.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

@@ -20,23 +20,55 @@ export default function SimulationsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchSimulations = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/v1/simulations`);
-        const data = await res.json();
-        setSimulations(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error('Failed to fetch simulations:', error);
-        toast.error('Ошибка загрузки симуляций', {
-          description: 'Не удалось получить список симуляций'
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchSimulations();
   }, []);
+
+  const fetchSimulations = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/simulations`);
+      const data = await res.json();
+      setSimulations(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Failed to fetch simulations:', error);
+      toast.error('Ошибка загрузки симуляций', {
+        description: 'Не удалось получить список симуляций'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/simulations/${id}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        toast.success('Симуляция удалена');
+        fetchSimulations();
+      } else {
+        toast.error('Ошибка удаления');
+      }
+    } catch (error) {
+      toast.error('Ошибка удаления симуляции');
+    }
+  };
+
+  const handleStop = async (id: number) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/simulations/${id}/stop`, {
+        method: 'POST',
+      });
+      if (res.ok) {
+        toast.success('Симуляция остановлена');
+        fetchSimulations();
+      } else {
+        toast.error('Ошибка остановки');
+      }
+    } catch (error) {
+      toast.error('Ошибка остановки симуляции');
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -113,13 +145,13 @@ export default function SimulationsPage() {
                     </td>
                     <td className="p-4">
                       <div className="flex items-center justify-end gap-2">
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" onClick={() => window.location.href = `/simulations/${sim.id}`}>
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" onClick={() => handleStop(sim.id)} disabled={sim.status !== 'running'}>
                           <Square className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" onClick={() => handleDelete(sim.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

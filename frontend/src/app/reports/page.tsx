@@ -21,25 +21,81 @@ export default function ReportsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchReports = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/v1/reports`);
-        if (res.ok) {
-          const data = await res.json();
-          setReports(Array.isArray(data) ? data : []);
-        }
-      } catch (error) {
-        console.error('Failed to fetch reports:', error);
-        toast.error('Ошибка загрузки отчётов', {
-          description: 'Не удалось получить список отчётов'
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchReports();
   }, []);
+
+  const fetchReports = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/reports`);
+      if (res.ok) {
+        const data = await res.json();
+        setReports(Array.isArray(data) ? data : []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch reports:', error);
+      toast.error('Ошибка загрузки отчётов', {
+        description: 'Не удалось получить список отчётов'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/reports/${id}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        toast.success('Отчёт удалён');
+        fetchReports();
+      } else {
+        toast.error('Ошибка удаления');
+      }
+    } catch (error) {
+      toast.error('Ошибка удаления отчёта');
+    }
+  };
+
+  const handleDownload = async (id: number) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/reports/${id}/download`);
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `report_${id}.pdf`;
+        a.click();
+        toast.success('Отчёт загружен');
+      } else {
+        toast.error('Ошибка загрузки');
+      }
+    } catch (error) {
+      toast.error('Ошибка загрузки отчёта');
+    }
+  };
+
+  const handlePrint = async (id: number) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/reports/${id}/download`);
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = url;
+        document.body.appendChild(iframe);
+        iframe.onload = () => {
+          iframe.contentWindow?.print();
+        };
+      } else {
+        toast.error('Ошибка печати');
+      }
+    } catch (error) {
+      toast.error('Ошибка печати отчёта');
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -158,16 +214,16 @@ export default function ReportsPage() {
                     </td>
                     <td className="p-4">
                       <div className="flex items-center justify-end gap-2">
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" onClick={() => window.location.href = `/reports/${report.id}`}>
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" onClick={() => handleDownload(report.id)} disabled={report.status !== 'ready'}>
                           <Download className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" onClick={() => handlePrint(report.id)} disabled={report.status !== 'ready'}>
                           <Printer className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" onClick={() => handleDelete(report.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

@@ -22,25 +22,60 @@ export default function AnalysisPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchAnalyses = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/v1/analysis`);
-        if (res.ok) {
-          const data = await res.json();
-          setAnalyses(Array.isArray(data) ? data : []);
-        }
-      } catch (error) {
-        console.error('Failed to fetch analyses:', error);
-        toast.error('Ошибка загрузки анализов', {
-          description: 'Не удалось получить список AI/ML анализов'
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchAnalyses();
   }, []);
+
+  const fetchAnalyses = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/analysis`);
+      if (res.ok) {
+        const data = await res.json();
+        setAnalyses(Array.isArray(data) ? data : []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch analyses:', error);
+      toast.error('Ошибка загрузки анализов', {
+        description: 'Не удалось получить список AI/ML анализов'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/analysis/${id}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        toast.success('Анализ удалён');
+        fetchAnalyses();
+      } else {
+        toast.error('Ошибка удаления');
+      }
+    } catch (error) {
+      toast.error('Ошибка удаления анализа');
+    }
+  };
+
+  const handleDownload = async (id: number) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/analysis/${id}/export`);
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `analysis_${id}.json`;
+        a.click();
+        toast.success('Анализ загружен');
+      } else {
+        toast.error('Ошибка загрузки');
+      }
+    } catch (error) {
+      toast.error('Ошибка загрузки анализа');
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -167,13 +202,13 @@ export default function AnalysisPage() {
                     </td>
                     <td className="p-4">
                       <div className="flex items-center justify-end gap-2">
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" onClick={() => window.location.href = `/analysis/${analysis.id}`}>
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" onClick={() => handleDownload(analysis.id)}>
                           <Download className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" onClick={() => handleDelete(analysis.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

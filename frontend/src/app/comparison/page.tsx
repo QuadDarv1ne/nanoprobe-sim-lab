@@ -22,25 +22,60 @@ export default function ComparisonPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchComparisons = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/v1/comparison`);
-        if (res.ok) {
-          const data = await res.json();
-          setComparisons(Array.isArray(data) ? data : []);
-        }
-      } catch (error) {
-        console.error('Failed to fetch comparisons:', error);
-        toast.error('Ошибка загрузки сравнений', {
-          description: 'Не удалось получить список сравнений поверхностей'
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchComparisons();
   }, []);
+
+  const fetchComparisons = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/comparison`);
+      if (res.ok) {
+        const data = await res.json();
+        setComparisons(Array.isArray(data) ? data : []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch comparisons:', error);
+      toast.error('Ошибка загрузки сравнений', {
+        description: 'Не удалось получить список сравнений поверхностей'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/comparison/${id}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        toast.success('Сравнение удалено');
+        fetchComparisons();
+      } else {
+        toast.error('Ошибка удаления');
+      }
+    } catch (error) {
+      toast.error('Ошибка удаления сравнения');
+    }
+  };
+
+  const handleDownload = async (id: number) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/comparison/${id}/export`);
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `comparison_${id}.json`;
+        a.click();
+        toast.success('Сравнение загружено');
+      } else {
+        toast.error('Ошибка загрузки');
+      }
+    } catch (error) {
+      toast.error('Ошибка загрузки сравнения');
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -160,13 +195,13 @@ export default function ComparisonPage() {
                     </td>
                     <td className="p-4">
                       <div className="flex items-center justify-end gap-2">
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" onClick={() => window.location.href = `/comparison/${comp.id}`}>
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" onClick={() => handleDownload(comp.id)}>
                           <Download className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" onClick={() => handleDelete(comp.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
