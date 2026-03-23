@@ -63,7 +63,7 @@ def create_icon(size, filename, variant="main"):
         try:
             font_size = int(inner_size * 0.6)
             font = ImageFont.truetype("arial.ttf", font_size)
-        except:
+        except Exception:
             font = ImageFont.load_default()
         
         # Рисуем букву "N" (Nanoprobe)
@@ -90,7 +90,7 @@ def create_icon(size, filename, variant="main"):
         try:
             font_size = int(safe_zone * 0.5)
             font = ImageFont.truetype("arial.ttf", font_size)
-        except:
+        except Exception:
             font = ImageFont.load_default()
         
         text = "🔬"  # Иконка микроскопа для Nanoprobe
@@ -115,7 +115,7 @@ def create_icon(size, filename, variant="main"):
         try:
             font_size = int(width * 0.5)
             font = ImageFont.truetype("arial.ttf", font_size)
-        except:
+        except Exception:
             font = ImageFont.load_default()
         
         text = "N"
