@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { API_BASE } from "@/lib/config";
 import { format } from "date-fns";
+import { toast } from "@/components/ui/toaster";
 
 interface Report {
   id: number;
@@ -29,6 +30,9 @@ export default function ReportsPage() {
         }
       } catch (error) {
         console.error('Failed to fetch reports:', error);
+        toast.error('Ошибка загрузки отчётов', {
+          description: 'Не удалось получить список отчётов'
+        });
       } finally {
         setIsLoading(false);
       }
