@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from "@/components/ui/toaster";
 
 interface SSTVRecording {
   filename: string;
@@ -110,13 +111,19 @@ export default function SSTVPage() {
       const data = await res.json();
       if (res.ok) {
         setIsRecording(true);
-        alert(`Запись началась: ${data.message}`);
+        toast.success('Запись началась', {
+          description: data.message
+        });
       } else {
-        alert(`Ошибка: ${data.detail || data.message}`);
+        toast.error('Ошибка запуска записи', {
+          description: data.detail || data.message
+        });
       }
     } catch (error) {
       console.error('Failed to start recording:', error);
-      alert('Ошибка запуска записи');
+      toast.error('Ошибка запуска записи', {
+        description: 'Не удалось подключиться к API'
+      });
     }
   };
 
@@ -128,14 +135,20 @@ export default function SSTVPage() {
       const data = await res.json();
       if (res.ok) {
         setIsRecording(false);
-        alert(`Запись остановлена: ${data.message}`);
+        toast.success('Запись остановлена', {
+          description: data.message
+        });
         fetchData();
       } else {
-        alert(`Ошибка: ${data.detail || data.message}`);
+        toast.error('Ошибка остановки записи', {
+          description: data.detail || data.message
+        });
       }
     } catch (error) {
       console.error('Failed to stop recording:', error);
-      alert('Ошибка остановки записи');
+      toast.error('Ошибка остановки записи', {
+        description: 'Не удалось подключиться к API'
+      });
     }
   };
 
