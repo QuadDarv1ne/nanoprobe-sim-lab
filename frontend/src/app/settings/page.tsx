@@ -5,12 +5,88 @@ import { Settings as SettingsIcon, Database, Server, Bell, Moon, Sun, Monitor, W
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { toast } from "@/components/ui/toaster";
+import { API_BASE } from "@/lib/config";
 
 export default function SettingsPage() {
   const [darkMode, setDarkMode] = useState(true);
   const [notifications, setNotifications] = useState(true);
   const [autoSync, setAutoSync] = useState(true);
+
+  useEffect(() => {
+    const savedDarkMode = localStorage.getItem('darkMode');
+    const savedNotifications = localStorage.getItem('notifications');
+    const savedAutoSync = localStorage.getItem('autoSync');
+
+    if (savedDarkMode !== null) setDarkMode(savedDarkMode === 'true');
+    if (savedNotifications !== null) setNotifications(savedNotifications === 'true');
+    if (savedAutoSync !== null) setAutoSync(savedAutoSync === 'true');
+  }, []);
+
+  const handleDarkModeChange = (checked: boolean) => {
+    setDarkMode(checked);
+    localStorage.setItem('darkMode', String(checked));
+    toast.success(checked ? 'Тёмная тема включена' : 'Светлая тема включена');
+  };
+
+  const handleNotificationsChange = (checked: boolean) => {
+    setNotifications(checked);
+    localStorage.setItem('notifications', String(checked));
+    toast.success(checked ? 'Уведомления включены' : 'Уведомления выключены');
+  };
+
+  const handleAutoSyncChange = (checked: boolean) => {
+    setAutoSync(checked);
+    localStorage.setItem('autoSync', String(checked));
+    toast.success(checked ? 'Автосинхронизация включена' : 'Автосинхронизация выключена');
+  };
+
+  const handleCheckDatabase = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/health/database`);
+      if (res.ok) {
+        toast.success('База данных работает корректно');
+      } else {
+        toast.error('Ошибка подключения к базе данных');
+      }
+    } catch (error) {
+      toast.error('Не удалось проверить базу данных');
+    }
+  };
+
+  const handleBackupDatabase = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/database/backup`, {
+        method: 'POST',
+      });
+      if (res.ok) {
+        toast.success('Бэкап базы данных создан');
+      } else {
+        toast.error('Ошибка создания бэкапа');
+      }
+    } catch (error) {
+      toast.error('Не удалось создать бэкап');
+    }
+  };
+
+  const handleCheckAPI = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/health`);
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(`API работает: ${data.status || 'OK'}`);
+      } else {
+        toast.error('API недоступен');
+      }
+    } catch (error) {
+      toast.error('Не удалось подключиться к API');
+    }
+  };
+
+  const handleOpenDocs = () => {
+    window.open(`${API_BASE}/docs`, '_blank');
+  };
 
   return (
     <DashboardLayout>
@@ -46,7 +122,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </div>
-              <Switch checked={darkMode} onCheckedChange={setDarkMode} />
+              <Switch checked={darkMode} onCheckedChange={handleDarkModeChange} />
             </div>
           </CardContent>
         </Card>
@@ -71,7 +147,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </div>
-              <Switch checked={notifications} onCheckedChange={setNotifications} />
+              <Switch checked={notifications} onCheckedChange={handleNotificationsChange} />
             </div>
           </CardContent>
         </Card>
@@ -94,8 +170,8 @@ export default function SettingsPage() {
                 </code>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline">Проверить подключение</Button>
-                <Button variant="outline">Сделать бэкап</Button>
+                <Button variant="outline" onClick={handleCheckDatabase}>Проверить подключение</Button>
+                <Button variant="outline" onClick={handleBackupDatabase}>Сделать бэкап</Button>
               </div>
             </div>
           </CardContent>
@@ -122,7 +198,7 @@ export default function SettingsPage() {
                     </div>
                   </div>
                 </div>
-                <Switch checked={autoSync} onCheckedChange={setAutoSync} />
+                <Switch checked={autoSync} onCheckedChange={handleAutoSyncChange} />
               </div>
               <div className="grid gap-2">
                 <div className="text-sm font-medium">API Endpoint</div>
@@ -131,8 +207,8 @@ export default function SettingsPage() {
                 </code>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline">Проверить API</Button>
-                <Button variant="outline">Документация</Button>
+                <Button variant="outline" onClick={handleCheckAPI}>Проверить API</Button>
+                <Button variant="outline" onClick={handleOpenDocs}>Документация</Button>
               </div>
             </div>
           </CardContent>
