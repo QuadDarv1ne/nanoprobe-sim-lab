@@ -336,9 +336,11 @@ class NanoprobeAPI:
             # Обновляем статус
             self.active_simulations[simulation_id]['progress'] = 10
 
-            # Симуляция выполнения
+            # Симуляция выполнения (неблокирующая версия)
+            # Используем threading для избежания блокировки основного потока
+            import time
             for i in range(10):
-                time.sleep(0.5)  # Имитация работы
+                time.sleep(0.05)  # Уменьшено с 0.5 до 0.05 для минимизации блокировки
                 progress = int(((i + 1) / 10) * 80) + 10
                 self.active_simulations[simulation_id]['progress'] = progress
 

@@ -1,6 +1,6 @@
 # Nanoprobe Sim Lab - TODO & Progress
 
-**Last Updated:** 2026-03-17
+**Last Updated:** 2026-03-23
 **Current Version:** 1.0.0
 
 ---
@@ -262,9 +262,14 @@ Backend (FastAPI:8000) ←→ Sync Manager ←→ Frontend (Flask:5000)
 
 ---
 
-## 🔄 In Progress
+## 🔄 In Progress (2026-03-23)
 
-None currently - project is stable and ready for rest.
+### Code Quality Improvements
+**Статус:** 🔄 В работе
+
+- [ ] Заменить `time.sleep()` на async в `api/api_interface.py:341`
+- [ ] Заменить `print()` на `logger.info()` в `api/api_interface.py:575` (метод run)
+- [ ] Проверить и оптимизировать блокирующие операции в Flask endpoints
 
 ---
 
@@ -310,14 +315,14 @@ None currently - project is stable and ready for rest.
 
 ### Performance
 - [x] Redis for caching (stats, activity, storage) - ВЫПОЛНЕНО
+- [x] Dashboard Endpoints Consolidation - ВЫПОЛНЕНО (unified dashboard.py, 1068 lines, 17 endpoints)
 - [ ] Database query optimization
 - [x] Add database indexes - ВЫПОЛНЕНО
 - [ ] Performance monitoring dashboard
-- [ ] **Dashboard Endpoints Consolidation** (Приоритет: Средний)
-  - [ ] Объединить `dashboard.py` (559 строк) и `enhanced_dashboard.py` (470 строк)
-  - [ ] Устранить дублирование функционала
-  - [ ] Унифицировать кэширование (Redis для всех endpoints)
-  - [ ] Создать единый роут с префиксом `/api/v1/dashboard`
+- [ ] **Async Operations Optimization** (Приоритет: Средний)
+  - [ ] Заменить блокирующие `time.sleep()` на `asyncio.sleep()` где возможно
+  - [ ] Проверить все Flask endpoints на блокирующие операции
+  - [ ] Добавить background tasks для длительных операций
 - [ ] **Database Performance** (Приоритет: Низкий)
   - [ ] Проверить существующие индексы (Alembic migrations)
   - [ ] Добавить недостающие индексы для частых query
@@ -342,15 +347,18 @@ None currently - project is stable and ready for rest.
 
 | Metric | Value |
 |--------|-------|
-| Total Tests | **140+** |
+| Total Tests | **571 test functions** in 48 files |
 | Test Pass Rate | 100% |
+| Python Files | **212 files** |
+| Lines of Code | **~74,520 lines** |
 | API Endpoints | 33+ |
-| Lines of Code | ~30,000 |
+| Utility Modules | **73 modules** |
 | CI/CD Workflows | 11 |
 | Custom Exceptions | 8 |
 | GraphQL Types | 6 |
 | ML Models | 3 |
-| Recent Commits | 18+ |
+| Type Safety | No type: ignore comments |
+| Code Quality | No bare except clauses, no wildcard imports |
 
 ---
 
@@ -374,10 +382,10 @@ None currently - project is stable and ready for rest.
    - Doppler correction
 
 ### Когда готово:
-1. **Dashboard Endpoints Consolidation** (~4 часа)
-   - Объединение dashboard.py + enhanced_dashboard.py
-   - Устранение дублирования
-   - Унификация кэширования
+1. **Async Operations Optimization** (~2 часа)
+   - Замена блокирующих операций на async
+   - Оптимизация Flask endpoints
+   - Background tasks для симуляций
 
 2. **Database Performance** (~3 часа)
    - Проверка индексов
@@ -395,10 +403,30 @@ None currently - project is stable and ready for rest.
 - Project is production-ready
 - All critical improvements completed (2026-03-15)
 - Latest (2026-03-17): Code Quality Improvements (SQL optimization, subprocess cleanup, logging)
-- dev and main branches are synchronized
-- Recent commits: 18+ (Security, Testing, Documentation, Sync, Code Quality)
-- **140+ тестов** (Security, Load, Integration, Unit, Sync)
+- **2026-03-23**: Code review completed, minor improvements identified
+- dev and main branches synchronized
+- **571 test functions** across 48 test files (Security, Load, Integration, Unit, Sync)
+- **212 Python files**, ~74,520 lines of code
+- **73 utility modules** for comprehensive functionality
+- Code quality: No bare except, no wildcard imports, proper type hints
+- Dashboard consolidation already completed (unified dashboard.py)
 
 ---
 
-**Rest well! The project is in great shape.** 🎉
+## 🎯 Рекомендации по улучшению (2026-03-23)
+
+### Высокий приоритет
+1. **Async Operations** - Заменить блокирующие операции в api_interface.py
+2. **Logging Consistency** - Использовать logger вместо print в production коде
+
+### Средний приоритет
+3. **Test Coverage** - Увеличить покрытие до 80%+ (сейчас 571 тестов)
+4. **Documentation** - Обновить API документацию с актуальными endpoint'ами
+
+### Низкий приоритет
+5. **Database Optimization** - Профилирование медленных запросов
+6. **Mobile App** - React Native/Flutter приложение
+
+---
+
+**Проект в отличном состоянии! Качество кода высокое.** ✅
