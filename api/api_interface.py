@@ -580,20 +580,20 @@ class NanoprobeAPI:
 
 def main():
     """Главная функция для запуска API сервера"""
-    print("=== API ИНТЕРФЕЙС ПРОЕКТА ===")
-
     # Создаем API интерфейс
-    NanoprobeAPI()
+    api = NanoprobeAPI()
+    logger = api.logger_manager.get_logger('api')
 
-    print("✓ API интерфейс инициализирован")
-    print("Доступные маршруты:")
-    print("  - /api/spm/create-surface - Создание поверхности")
-    print("  - /api/spm/scan-surface - Сканирование поверхности")
-    print("  - /api/image/process - Обработка изображений")
-    print("  - /api/sstv/decode - Декодирование SSTV")
-    print("  - /api/simulation/start - Запуск симуляции")
-    print("  - /api/system/info - Информация о системе")
-    print("  - /api/system/status - Статус системы")
+    logger.info("=== API ИНТЕРФЕЙС ПРОЕКТА ===")
+    logger.info("API интерфейс инициализирован")
+    logger.info("Доступные маршруты:")
+    logger.info("  - /api/spm/create-surface - Создание поверхности")
+    logger.info("  - /api/spm/scan-surface - Сканирование поверхности")
+    logger.info("  - /api/image/process - Обработка изображений")
+    logger.info("  - /api/sstv/decode - Декодирование SSTV")
+    logger.info("  - /api/simulation/start - Запуск симуляции")
+    logger.info("  - /api/system/info - Информация о системе")
+    logger.info("  - /api/system/status - Статус системы")
 
     # Для демонстрации запускаем сервер
     # api.run(debug=True)  # Закомментировано для безопасности
