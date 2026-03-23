@@ -128,15 +128,15 @@ def create_icon(size, filename, variant="main"):
     
     # Сохранение
     img.save(filename, 'PNG')
-    print(f"✓ Создано: {filename} ({width}x{height})")
+    print(f"[OK] Created: {filename} ({width}x{height})")
 
 
 def generate_all_icons():
     """Генерация всех иконок"""
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-    
-    print("Генерация иконок для PWA...")
-    print(f"Директория: {OUTPUT_DIR}")
+
+    print("Generating PWA icons...")
+    print(f"Output directory: {OUTPUT_DIR}")
     print()
     
     # Main icons
@@ -162,10 +162,10 @@ def generate_all_icons():
     for shortcut in ["dashboard", "sstv", "analysis", "simulations"]:
         filename = os.path.join(OUTPUT_DIR, f"{shortcut}.png")
         create_icon((192, 192), filename, "main")
-        print(f"✓ Создано: {filename}")
+        print(f"[OK] Created: {filename}")
     
-    print("\n✅ Готово!")
-    print(f"\nСоздано иконок: {len(SIZES) * 2 + len(BADGE_SIZES) + 4}")
+    print("\n[DONE] All icons generated!")
+    print(f"\nTotal icons created: {len(SIZES) * 2 + len(BADGE_SIZES) + 4}")
 
 
 def generate_manifest_icons():
@@ -244,8 +244,8 @@ def generate_manifest_icons():
     manifest_path = os.path.join("frontend/public/manifest.json")
     with open(manifest_path, 'w', encoding='utf-8') as f:
         json.dump(manifest, f, indent=2, ensure_ascii=False)
-    
-    print(f"✅ Обновлён manifest.json")
+
+    print(f"[OK] Updated manifest.json")
 
 
 if __name__ == "__main__":
