@@ -500,8 +500,8 @@ Backend (FastAPI:8000) ←→ Sync Manager ←→ Frontend (Flask:5000)
 ## 🎯 Рекомендации по улучшению (2026-03-23)
 
 ### Высокий приоритет
-1. **Async Operations** - Заменить блокирующие операции в api_interface.py
-2. **Logging Consistency** - Использовать logger вместо print в production коде
+1. **Async Operations** - Заменить блокирующие операции в api_interface.py (time.sleep в потоках приемлемо)
+2. ~~**Logging Consistency**~~ - ✅ ВЫПОЛНЕНО (заменены print на logger в production коде)
 
 ### Средний приоритет
 3. **Test Coverage** - Увеличить покрытие до 80%+ (сейчас 571 тестов)
@@ -510,6 +510,24 @@ Backend (FastAPI:8000) ←→ Sync Manager ←→ Frontend (Flask:5000)
 ### Низкий приоритет
 5. **Database Optimization** - Профилирование медленных запросов
 6. **Mobile App** - React Native/Flutter приложение
+
+---
+
+## 📊 Последние улучшения (2026-03-23)
+
+**Сессия улучшений:**
+- ✅ Сгенерировано 26 PWA иконок (main, maskable, badge, shortcuts)
+- ✅ Обновлён manifest.json с полной конфигурацией PWA
+- ✅ Исправлены проблемы Unicode encoding в generate_icons.py
+- ✅ Подтверждено наличие Service Worker (sw.js, 339 строк)
+- ✅ Заменены print() на logger.info() в api_interface.py
+- ✅ Все изменения синхронизированы в dev и main
+
+**Коммиты:**
+- `ac18a9f` - refactor: replace print() with logger.info() in api_interface.py
+- `c41eae3` - docs: mark PWA service worker as completed in TODO.md
+- `d92bf71` - docs: update TODO.md with PWA icons completion
+- `c762559` - feat: generate PWA icons and update manifest.json
 
 ---
 
