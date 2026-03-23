@@ -2,17 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  LayoutDashboard, 
-  Microscope, 
-  Activity, 
-  FileText, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Microscope,
+  Activity,
+  FileText,
+  Settings,
   Cpu,
   Zap,
   Database
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
+import { API_BASE } from "@/lib/config";
 
 const navigation = [
   { name: "Обзор", href: "/", icon: LayoutDashboard },
@@ -24,6 +26,46 @@ const navigation = [
   { name: "SSTV", href: "/sstv", icon: Zap },
   { name: "Настройки", href: "/settings", icon: Settings },
 ];
+
+function SystemStatus() {
+  const [isOnline, setIsOnline] = useState(true);
+  const [apiStatus, setApiStatus] = useState<'checking' | 'online' | 'offline'>('checking');
+
+  useEffect(() => {
+    const checkAPI = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/health`, {
+          method: 'GET',
+          signal: AbortSignal.timeout(3000)
+        });
+        setApiStatus(res.ok ? 'online' : 'offline');
+      } catch {
+        setApiStatus('offline');
+      }
+    };
+
+    checkAPI();
+    const interval = setInterval(checkAPI, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const statusColor = apiStatus === 'online' ? 'bg-green-500' : apiStatus === 'offline' ? 'bg-red-500' : 'bg-yellow-500';
+  const statusText = apiStatus === 'online' ? 'Система в норме' : apiStatus === 'offline' ? 'API недоступен' : 'Проверка...';
+
+  return (
+    <div className="p-4 border-t border-border">
+      <div className="bg-secondary rounded-lg p-3">
+        <div className="flex items-center gap-2 mb-2">
+          <div className={`w-2 h-2 rounded-full ${statusColor} ${apiStatus === 'online' ? 'animate-pulse' : ''}`} />
+          <span className="text-xs font-medium text-muted-foreground">{statusText}</span>
+        </div>
+        <div className="text-xs text-muted-foreground">
+          API: <span className="text-foreground">{API_BASE.replace('http://', '').replace('https://', '')}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -65,17 +107,7 @@ export function Sidebar() {
       </nav>
 
       {/* System Status */}
-      <div className="p-4 border-t border-border">
-        <div className="bg-secondary rounded-lg p-3">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-xs font-medium text-muted-foreground">Система в норме</span>
-          </div>
-          <div className="text-xs text-muted-foreground">
-            API: <span className="text-foreground">localhost:8000</span>
-          </div>
-        </div>
-      </div>
+      <SystemStatus />
     </div>
   );
 }

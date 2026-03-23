@@ -3,14 +3,19 @@
 import { Bell, RefreshCw, Moon, Sun, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/providers/theme-provider";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDashboardStore } from "@/stores/dashboard-store";
 import { cn } from "@/lib/utils";
 
 export function Header() {
   const { theme, toggleTheme } = useTheme();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const { fetchDashboardData } = useDashboardStore();
+  const [notificationCount, setNotificationCount] = useState(0);
+  const { fetchDashboardData, alerts } = useDashboardStore();
+
+  useEffect(() => {
+    setNotificationCount(alerts.length);
+  }, [alerts]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -39,9 +44,11 @@ export function Header() {
         {/* Notifications */}
         <Button variant="outline" size="icon" className="relative">
           <Bell className="h-4 w-4" />
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-xs flex items-center justify-center">
-            3
-          </span>
+          {notificationCount > 0 && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-xs flex items-center justify-center">
+              {notificationCount}
+            </span>
+          )}
         </Button>
 
         {/* Theme Toggle */}
