@@ -816,57 +816,6 @@ class SDRInterface:
             self.scanning_thread.join(timeout=5)
         return True
 
-    def get_signal_strength(self) -> float:
-        """
-        Получает текущую силу сигнала.
-
-        Returns:
-            float: Сила сигнала (dB)
-        """
-        if self.sdr is None:
-            return 0.0
-
-        samples = self.read_samples(1024)
-        if samples is None:
-            return 0.0
-
-        # Вычисляем среднюю мощность сигнала
-        power = np.mean(np.abs(samples) ** 2)
-        return 10 * np.log10(power + 1e-10)
-
-    def get_spectrum(self, num_bins: int = 256) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Получает спектр сигнала.
-
-        Args:
-            num_bins: Количество бинов спектра
-
-        Returns:
-            Tuple[np.ndarray, np.ndarray]: (частоты, амплитуды)
-        """
-        if self.sdr is None:
-            return np.array([]), np.array([])
-
-        samples = self.read_samples(1024)
-        if samples is None:
-            return np.array([]), np.array([])
-
-        # Вычисляем FFT
-        fft_data = np.fft.fft(samples)
-        fft_shifted = np.fft.fftshift(fft_data)
-        amplitudes = np.abs(fft_shifted)
-
-        # Вычисляем частоты
-        frequencies = np.fft.fftfreq(len(samples), 1/self.sample_rate)
-        frequencies = np.fft.fftshift(frequencies) + self.center_freq * 1e6
-
-        # Уменьшаем до num_bins
-        bin_size = len(frequencies) // num_bins
-        freq_binned = frequencies[::bin_size][:num_bins]
-        amp_binned = amplitudes[::bin_size][:num_bins]
-
-        return freq_binned, amp_binned
-
     def set_callback(self, callback: Callable) -> None:
         """
         Устанавливает callback для данных.

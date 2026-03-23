@@ -215,6 +215,7 @@ def mode_demo(args):
 def mode_waterfall(args):
     """Waterfall дисплей спектра."""
     from waterfall_display import WaterfallDisplay, WaterfallRecorder
+    from datetime import datetime
 
     print(f"\nWATERFALL ДИСПЛЕЙ")
     print(f"Частота: {args.frequency} МГц")
@@ -399,6 +400,7 @@ def mode_realtime_sstv(args):
 def mode_auto_record(args):
     """Автоматическая запись при пролёте спутника."""
     from auto_recorder import AutoRecordingScheduler
+    from datetime import datetime
 
     print(f"\nАВТОЗАПИСЬ СПУТНИКОВ")
     print(f"Наземная станция: {args.lat}°N, {args.lon}°E")
@@ -474,59 +476,6 @@ def mode_auto_record(args):
         print("\n\nОстановка по пользователю...")
         scheduler.stop_monitoring()
         print("Автозапись остановлена")
-
-
-def main():
-    """Основная функция SSTV станции."""
-    print("\nПРОВЕРКА RTL-SDR УСТРОЙСТВА")
-    print("-" * 40)
-
-    # Проверка импорта
-    print("1. Проверка rtlsdr...")
-    try:
-        from rtlsdr import RtlSdr
-        print("   ✓ rtlsdr установлен")
-    except ImportError:
-        print("   ✗ rtlsdr не найден")
-        print("   Установите: pip install rtlsdr pyrtlsdr")
-        return False
-
-    # Поиск устройств
-    print("\n2. Поиск устройств...")
-    try:
-        num_devices = RtlSdr.get_device_count()
-        print(f"   Найдено: {num_devices}")
-        if num_devices == 0:
-            print("   ⚠ Устройства не подключены")
-            return False
-    except Exception as e:
-        print(f"   ✗ Ошибка: {e}")
-        return False
-
-    # Информация об устройстве
-    print("\n3. Информация об устройстве:")
-    for i in range(num_devices):
-        try:
-            sdr = RtlSdr(device_index=i)
-            device_name = sdr.get_device_name() if hasattr(sdr, 'get_device_name') else 'Unknown'
-            serial = sdr.get_serial_number() if hasattr(sdr, 'get_serial_number') else 'Unknown'
-            manufacturer = sdr.get_manufacturer() if hasattr(sdr, 'get_manufacturer') else 'Unknown'
-
-            print(f"   Устройство #{i}:")
-            print(f"      Название: {device_name}")
-            print(f"      Серийный: {serial}")
-            print(f"      Производитель: {manufacturer}")
-
-            # Определение V4
-            if 'R828D' in device_name.upper() or 'V4' in device_name.upper():
-                print(f"      ✓ RTL-SDR V4 обнаружен")
-
-            sdr.close()
-        except Exception as e:
-            print(f"   Устройство #{i}: Ошибка - {e}")
-
-    print("\n✓ RTL-SDR готов к работе")
-    return True
 
 
 def mode_check_device(args):
