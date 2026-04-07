@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosRequestConfig } from 'axios';
 
 // Export API_BASE for use in other modules (single source of truth)
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -108,7 +108,7 @@ class APIClient {
   /**
    * GET request
    */
-  async get<T = any>(url: string, config?: any): Promise<T> {
+  async get<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.client.get<T>(url, config);
     return response.data;
   }
@@ -116,7 +116,7 @@ class APIClient {
   /**
    * POST request
    */
-  async post<T = any>(url: string, data?: any, config?: any): Promise<T> {
+  async post<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.client.post<T>(url, data, config);
     return response.data;
   }
@@ -124,7 +124,7 @@ class APIClient {
   /**
    * PUT request
    */
-  async put<T = any>(url: string, data?: any, config?: any): Promise<T> {
+  async put<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.client.put<T>(url, data, config);
     return response.data;
   }
@@ -132,7 +132,7 @@ class APIClient {
   /**
    * DELETE request
    */
-  async delete<T = any>(url: string, config?: any): Promise<T> {
+  async delete<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.client.delete<T>(url, config);
     return response.data;
   }
@@ -140,7 +140,7 @@ class APIClient {
   /**
    * PATCH request
    */
-  async patch<T = any>(url: string, data?: any, config?: any): Promise<T> {
+  async patch<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.client.patch<T>(url, data, config);
     return response.data;
   }

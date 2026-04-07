@@ -66,7 +66,10 @@ export default function ReportsPage() {
         const a = document.createElement('a');
         a.href = url;
         a.download = `report_${id}.pdf`;
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
         toast.success('Отчёт загружен');
       } else {
         toast.error('Ошибка загрузки');
@@ -88,6 +91,16 @@ export default function ReportsPage() {
         document.body.appendChild(iframe);
         iframe.onload = () => {
           iframe.contentWindow?.print();
+          // Cleanup iframe after print
+          setTimeout(() => {
+            document.body.removeChild(iframe);
+            window.URL.revokeObjectURL(url);
+          }, 1000);
+        };
+        iframe.onerror = () => {
+          document.body.removeChild(iframe);
+          window.URL.revokeObjectURL(url);
+          toast.error('Ошибка печати');
         };
       } else {
         toast.error('Ошибка печати');

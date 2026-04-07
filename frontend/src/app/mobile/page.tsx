@@ -14,7 +14,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   Wifi, 
   WifiOff, 
@@ -54,6 +54,8 @@ export default function MobileDashboard() {
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [isFetching, setIsFetching] = useState(false);
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Проверка online статуса
   useEffect(() => {
@@ -71,7 +73,7 @@ export default function MobileDashboard() {
     };
   }, []);
 
-  // Получение данных
+  // Получение данных с защитой от overlapping requests
   const fetchStats = async () => {
     try {
       const response = await fetch('/api/v1/monitoring/health/detailed');
@@ -111,20 +113,45 @@ export default function MobileDashboard() {
     }
   };
 
+  // Combined fetch with overlap protection
+  const fetchAllData = async () => {
+    if (isFetching) return; // Prevent overlapping
+    setIsFetching(true);
+    try {
+      await Promise.all([fetchStats(), fetchSSTVStatus()]);
+    } finally {
+      setIsFetching(false);
+    }
+  };
+
   // Автообновление
   useEffect(() => {
-    fetchStats();
-    fetchSSTVStatus();
+    fetchAllData();
 
-    const interval = setInterval(() => {
-      if (navigator.onLine) {
-        fetchStats();
-        fetchSSTVStatus();
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
       }
-    }, 5000); // Обновление каждые 5 секунд
-
-    return () => clearInterval(interval);
+    };
   }, []);
+
+  // Setup polling after initial fetch
+  useEffect(() => {
+    if (!loading && !pollIntervalRef.current) {
+      pollIntervalRef.current = setInterval(() => {
+        if (navigator.onLine) {
+          fetchAllData();
+        }
+      }, 5000);
+    }
+
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+    };
+  }, [loading]);
 
   // Форматирование времени
   const formatTime = (date: Date) => {

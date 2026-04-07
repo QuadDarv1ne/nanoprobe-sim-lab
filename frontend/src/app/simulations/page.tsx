@@ -26,13 +26,23 @@ export default function SimulationsPage() {
   const fetchSimulations = async () => {
     try {
       const res = await fetch(`${API_BASE}/api/v1/simulations`);
-      const data = await res.json();
-      setSimulations(Array.isArray(data) ? data : []);
+      if (res.ok) {
+        const data = await res.json();
+        setSimulations(Array.isArray(data) ? data : []);
+      } else {
+        const errorData = await res.json().catch(() => null);
+        toast.error('Ошибка загрузки симуляций', {
+          description: errorData?.detail || errorData?.message || `HTTP ${res.status}`
+        });
+        setSimulations([]);
+      }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Не удалось получить список симуляций';
       console.error('Failed to fetch simulations:', error);
       toast.error('Ошибка загрузки симуляций', {
-        description: 'Не удалось получить список симуляций'
+        description: errorMessage
       });
+      setSimulations([]);
     } finally {
       setIsLoading(false);
     }

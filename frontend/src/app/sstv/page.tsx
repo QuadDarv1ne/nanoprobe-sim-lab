@@ -3,13 +3,17 @@
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { Radio, Download, Trash2, Eye, Play, Square, Signal, Satellite, Clock, HardDrive } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { API_BASE } from "@/lib/config";
 import { format } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "@/components/ui/toaster";
+import { apiClient } from "@/lib/api-client";
+
+// SSTV ISS frequency - constant
+const SSTV_ISS_FREQUENCY_MHZ = 145.800;
 
 interface SSTVRecording {
   filename: string;
@@ -37,6 +41,19 @@ interface ISSPosition {
   timestamp: string;
 }
 
+interface RecordingsResponse {
+  recordings?: SSTVRecording[];
+}
+
+interface RecordingStatusResponse {
+  recording?: boolean;
+}
+
+interface ISSResponse {
+  status?: string;
+  data?: ISSPass | ISSPosition;
+}
+
 export default function SSTVPage() {
   const [recordings, setRecordings] = useState<SSTVRecording[]>([]);
   const [isRecording, setIsRecording] = useState(false);
@@ -44,48 +61,62 @@ export default function SSTVPage() {
   const [nextPass, setNextPass] = useState<ISSPass | null>(null);
   const [issPosition, setIssPosition] = useState<ISSPosition | null>(null);
   const [recordingDuration, setRecordingDuration] = useState(600);
+  const [isFetching, setIsFetching] = useState(false);
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 10000); // Обновление каждые 10 секунд
-    return () => clearInterval(interval);
+    
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+      }
+    };
   }, []);
 
+  // Setup polling after first fetch completes
+  useEffect(() => {
+    if (!isLoading && !pollIntervalRef.current) {
+      pollIntervalRef.current = setInterval(() => {
+        fetchData();
+      }, 10000);
+    }
+    
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+    };
+  }, [isLoading]);
+
   const fetchData = async () => {
+    // Prevent overlapping requests
+    if (isFetching) return;
+    
+    setIsFetching(true);
     try {
-      const [recordingsRes, statusRes, passRes, positionRes] = await Promise.all([
-        fetch(`${API_BASE}/api/v1/sstv/recordings`),
-        fetch(`${API_BASE}/api/v1/sstv/record/status`),
-        fetch(`${API_BASE}/api/v1/sstv/iss/next-pass`),
-        fetch(`${API_BASE}/api/v1/sstv/iss/position`)
+      const [recordingsData, statusData, passData, positionData] = await Promise.all([
+        apiClient.get<RecordingsResponse>('/api/v1/sstv/recordings').catch(() => ({ recordings: [] })),
+        apiClient.get<RecordingStatusResponse>('/api/v1/sstv/record/status').catch(() => ({ recording: false })),
+        apiClient.get<ISSResponse>('/api/v1/sstv/iss/next-pass').catch(() => ({})),
+        apiClient.get<ISSResponse>('/api/v1/sstv/iss/position').catch(() => ({})),
       ]);
 
-      if (recordingsRes.ok) {
-        const data = await recordingsRes.json();
-        setRecordings(data.recordings || []);
+      setRecordings(recordingsData.recordings || []);
+      setIsRecording(statusData.recording || false);
+      
+      if (passData.status === "success" && passData.data) {
+        setNextPass(passData.data as ISSPass);
       }
-
-      if (statusRes.ok) {
-        const data = await statusRes.json();
-        setIsRecording(data.recording || false);
-      }
-
-      if (passRes.ok) {
-        const data = await passRes.json();
-        if (data.status === "success") {
-          setNextPass(data.data);
-        }
-      }
-
-      if (positionRes.ok) {
-        const data = await positionRes.json();
-        if (data.status === "success") {
-          setIssPosition(data.data);
-        }
+      
+      if (positionData.status === "success" && positionData.data) {
+        setIssPosition(positionData.data as ISSPosition);
       }
     } catch (error) {
       console.error('Failed to fetch SSTV data:', error);
     } finally {
+      setIsFetching(false);
       setIsLoading(false);
     }
   };
@@ -100,54 +131,36 @@ export default function SSTVPage() {
 
   const startRecording = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/v1/sstv/record/start`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          frequency: 145.800,
-          duration: recordingDuration
-        })
+      const data = await apiClient.post('/api/v1/sstv/record/start', {
+        frequency: SSTV_ISS_FREQUENCY_MHZ,
+        duration: recordingDuration
       });
-      const data = await res.json();
-      if (res.ok) {
-        setIsRecording(true);
-        toast.success('Запись началась', {
-          description: data.message
-        });
-      } else {
-        toast.error('Ошибка запуска записи', {
-          description: data.detail || data.message
-        });
-      }
+      setIsRecording(true);
+      toast.success('Запись началась', {
+        description: data.message
+      });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Не удалось подключиться к API';
       console.error('Failed to start recording:', error);
       toast.error('Ошибка запуска записи', {
-        description: 'Не удалось подключиться к API'
+        description: errorMessage
       });
     }
   };
 
   const stopRecording = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/v1/sstv/record/stop`, {
-        method: 'POST'
+      const data = await apiClient.post('/api/v1/sstv/record/stop');
+      setIsRecording(false);
+      toast.success('Запись остановлена', {
+        description: data.message
       });
-      const data = await res.json();
-      if (res.ok) {
-        setIsRecording(false);
-        toast.success('Запись остановлена', {
-          description: data.message
-        });
-        fetchData();
-      } else {
-        toast.error('Ошибка остановки записи', {
-          description: data.detail || data.message
-        });
-      }
+      fetchData();
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Не удалось подключиться к API';
       console.error('Failed to stop recording:', error);
       toast.error('Ошибка остановки записи', {
-        description: 'Не удалось подключиться к API'
+        description: errorMessage
       });
     }
   };
@@ -217,7 +230,7 @@ export default function SSTVPage() {
                 {isRecording ? 'Идёт запись' : 'Ожидание'}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Частота: 145.800 MHz
+                Частота: {SSTV_ISS_FREQUENCY_MHZ} MHz
               </p>
             </CardContent>
           </Card>
@@ -342,9 +355,9 @@ export default function SSTVPage() {
               </div>
             ) : (
               <div className="space-y-2">
-                {recordings.map((recording, index) => (
+                {recordings.map((recording) => (
                   <div
-                    key={index}
+                    key={recording.filename}
                     className="flex items-center justify-between p-4 rounded-lg border border-border bg-secondary/30 hover:bg-secondary/50 transition-colors"
                   >
                     <div className="flex items-center gap-4">

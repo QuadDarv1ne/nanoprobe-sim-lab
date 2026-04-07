@@ -27,13 +27,23 @@ export default function ScansPage() {
   const fetchScans = async () => {
     try {
       const res = await fetch(`${API_BASE}/api/v1/scans`);
-      const data = await res.json();
-      setScans(Array.isArray(data) ? data : []);
+      if (res.ok) {
+        const data = await res.json();
+        setScans(Array.isArray(data) ? data : []);
+      } else {
+        const errorData = await res.json().catch(() => null);
+        toast.error('Ошибка загрузки сканирований', {
+          description: errorData?.detail || errorData?.message || `HTTP ${res.status}`
+        });
+        setScans([]);
+      }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Не удалось получить список сканирований';
       console.error('Failed to fetch scans:', error);
       toast.error('Ошибка загрузки сканирований', {
-        description: 'Не удалось получить список сканирований'
+        description: errorMessage
       });
+      setScans([]);
     } finally {
       setIsLoading(false);
     }

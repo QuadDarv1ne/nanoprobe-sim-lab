@@ -13,7 +13,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional, Dict, Any
 
-from fastapi import APIRouter, BackgroundTasks, WebSocket, WebSocketDisconnect, Query
+from fastapi import APIRouter, BackgroundTasks, WebSocket, WebSocketDisconnect, Query, HTTPException
 from fastapi.responses import FileResponse
 
 from api.error_handlers import ServiceUnavailableError, NotFoundError, ValidationError

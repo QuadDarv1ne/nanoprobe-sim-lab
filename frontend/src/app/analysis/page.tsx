@@ -67,7 +67,10 @@ export default function AnalysisPage() {
         const a = document.createElement('a');
         a.href = url;
         a.download = `analysis_${id}.json`;
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
         toast.success('Анализ загружен');
       } else {
         toast.error('Ошибка загрузки');

@@ -143,30 +143,43 @@ export function useServiceWorker(): UpdateResult {
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        // Service Worker обновился и активировался
+      const handleControllerChange = () => {
         setUpdateAvailable(false);
         setWaitingWorker(null);
-      });
+      };
+      
+      navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
+
+      let registrationRef: ServiceWorkerRegistration | null = null;
 
       navigator.serviceWorker.ready.then((registration) => {
+        registrationRef = registration;
+        
         if (registration.waiting) {
           setWaitingWorker(registration.waiting);
           setUpdateAvailable(true);
         }
 
-        registration.addEventListener('updatefound', () => {
+        const handleUpdateFound = () => {
           const installingWorker = registration.installing;
           if (!installingWorker) return;
 
-          installingWorker.addEventListener('statechange', () => {
+          const handleStateChange = () => {
             if (installingWorker.state === 'installed' && registration.waiting) {
               setWaitingWorker(registration.waiting);
               setUpdateAvailable(true);
             }
-          });
-        });
+          };
+          
+          installingWorker.addEventListener('statechange', handleStateChange);
+        };
+
+        registration.addEventListener('updatefound', handleUpdateFound);
       });
+
+      return () => {
+        navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
+      };
     }
   }, []);
 
@@ -229,15 +242,20 @@ export function usePushNotifications() {
       throw new Error('Service Worker not supported');
     }
 
-    const registration = await navigator.serviceWorker.ready;
+    try {
+      const registration = await navigator.serviceWorker.ready;
 
-    const pushSubscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
-    });
+      const pushSubscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+      });
 
-    setSubscription(pushSubscription);
-    return pushSubscription;
+      setSubscription(pushSubscription);
+      return pushSubscription;
+    } catch (error) {
+      console.error('Failed to subscribe to push notifications:', error);
+      throw error;
+    }
   }, []);
 
   const unsubscribeFromPush = useCallback(async () => {

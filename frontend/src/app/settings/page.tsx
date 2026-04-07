@@ -1,34 +1,27 @@
 "use client";
 
 import { DashboardLayout } from "@/components/dashboard-layout";
-import { Settings as SettingsIcon, Database, Server, Bell, Moon, Sun, Monitor, Wifi } from "lucide-react";
+import { Settings as SettingsIcon, Database, Server, Bell, Monitor, Wifi } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { useState, useEffect } from "react";
 import { toast } from "@/components/ui/toaster";
 import { API_BASE } from "@/lib/config";
+import { useTheme } from "@/providers/theme-provider";
 
 export default function SettingsPage() {
-  const [darkMode, setDarkMode] = useState(true);
+  const { theme, toggleTheme } = useTheme();
   const [notifications, setNotifications] = useState(true);
   const [autoSync, setAutoSync] = useState(true);
 
   useEffect(() => {
-    const savedDarkMode = localStorage.getItem('darkMode');
     const savedNotifications = localStorage.getItem('notifications');
     const savedAutoSync = localStorage.getItem('autoSync');
 
-    if (savedDarkMode !== null) setDarkMode(savedDarkMode === 'true');
     if (savedNotifications !== null) setNotifications(savedNotifications === 'true');
     if (savedAutoSync !== null) setAutoSync(savedAutoSync === 'true');
   }, []);
-
-  const handleDarkModeChange = (checked: boolean) => {
-    setDarkMode(checked);
-    localStorage.setItem('darkMode', String(checked));
-    toast.success(checked ? 'Тёмная тема включена' : 'Светлая тема включена');
-  };
 
   const handleNotificationsChange = (checked: boolean) => {
     setNotifications(checked);
@@ -110,7 +103,7 @@ export default function SettingsPage() {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                {darkMode ? (
+                {theme === "dark" ? (
                   <Moon className="h-5 w-5 text-muted-foreground" />
                 ) : (
                   <Sun className="h-5 w-5 text-muted-foreground" />
@@ -118,11 +111,11 @@ export default function SettingsPage() {
                 <div>
                   <div className="font-medium">Тёмная тема</div>
                   <div className="text-sm text-muted-foreground">
-                    {darkMode ? 'Включена' : 'Выключена'}
+                    {theme === "dark" ? 'Включена' : 'Выключена'}
                   </div>
                 </div>
               </div>
-              <Switch checked={darkMode} onCheckedChange={handleDarkModeChange} />
+              <Switch checked={theme === "dark"} onCheckedChange={toggleTheme} />
             </div>
           </CardContent>
         </Card>
