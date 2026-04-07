@@ -46,6 +46,17 @@
 - [x] **Blob URL Leak Comparison** - добавлен revokeObjectURL
 - [x] **API Client Migration** - CRUD страницы мигрированы на централизованный apiClient
 
+### Session 4: Critical Bugs & Runtime Fixes
+- [x] **Missing Moon/Sun Imports** - исправлен ReferenceError crash в settings page
+- [x] **Mobile Page Relative URLs** - исправлены relative URL на absolute с API_BASE (был 404)
+- [x] **WebSocket Timeout Dead Code** - добавлен asyncio.wait_for(30s) для реального timeout
+- [x] **SSTV Stop Recording Null Check** - добавлена проверка перед send_signal (AttributeError fix)
+- [x] **Simulator Thread Safety** - threading.Event() вместо boolean (правильное межпоточное signaling)
+- [x] **WebSocket Reconnection Race** - добавлен isReconnecting guard flag
+- [x] **SSTV Redundant Intervals** - объединены 2 useEffect в 1 (устранены create/destroy cycles)
+- [x] **Print Iframe Resource Leak** - добавлен timeout fallback cleanup с guard flag
+- [x] **Hardcoded API URL Display** - settings page теперь показывает реальный API_BASE
+
 ---
 
 ## 🚨 Code Review Issues Found (2026-04-07)
