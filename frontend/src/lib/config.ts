@@ -1,1 +1,4 @@
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// Re-export from api-client to have single source of truth
+export { API_BASE } from './api-client';
+
+// Additional configuration can be added here

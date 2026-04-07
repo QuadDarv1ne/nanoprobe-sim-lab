@@ -1,7 +1,31 @@
 # Nanoprobe Sim Lab - TODO & Progress
 
-**Last Updated:** 2026-03-23
+**Last Updated:** 2026-04-07
 **Current Version:** 1.0.0
+
+---
+
+## 🚨 Code Review Issues Found (2026-04-07)
+
+### Critical Frontend Issues
+- [ ] **Error Boundary missing** - layout.tsx не имеет React Error Boundary, приложение падает с белым экраном при любой ошибке
+- [ ] **WebSocket mutable state** - dashboard-store.ts использует модульные переменные для WebSocket (race conditions, утечки при HMR)
+- [ ] **No fetch timeouts** - все fetch запросы без AbortSignal/timeout, могут зависнуть навсегда
+- [ ] **Lost error details** -_generic error messages теряют HTTP статус и тело ответа_
+- [ ] **useEffect cleanup issues** - missing cleanup, re-running на каждый рендер из-за нестабильных зависимостей
+- [ ] **No centralized API client** - axios установлен но не используется, дублирование fetch логики
+
+### Medium Frontend Issues
+- [ ] **Duplicated API_BASE** - определяется в config.ts И в dashboard-store.ts
+- [ ] **Hardcoded rewrite target** - next.config.js имеет hardcoded localhost:8000 вместо env var
+- [ ] **TypeScript any usage** - 5+ мест с any вместоproper типов
+- [ ] **Minimal ESLint config** - нет react-hooks, typescript, a11y правил
+- [ ] **Accessibility gaps** - отсутствуют ARIA атрибуты, icon-only buttons без label
+- [ ] **X-Frame-Options conflict** - backend DENY vs frontend SAMEORIGIN
+
+### Backend Issues
+- [ ] **Sync Manager reconnection** - улучшить error handling и exponential backoff
+- [ ] **Database pool verification** - проверить отсутствие connection leaks
 
 ---
 

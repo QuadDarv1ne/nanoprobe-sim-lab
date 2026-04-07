@@ -113,7 +113,7 @@ Backend (FastAPI:8000) ←→ Sync Manager ←→ Frontend (Flask:5000)
 - AI/ML анализ дефектов
 
 **Оборудование:**
-- RTL-SDR V4 (ожидается)
+- ✅ RTL-SDR V4 (подключён 2026-04-07) - RTLSDRBlog V4, тюнер R828D
 - Python 3.13+
 - OS: Windows 11
 
@@ -122,7 +122,12 @@ Backend (FastAPI:8000) ←→ Sync Manager ←→ Frontend (Flask:5000)
 - ✅ Синхронизация Backend ↔ Frontend реализована
 - ✅ UI/UX дашборда улучшен
 - ✅ Проект готов к production
-- ⏳ Ожидается RTL-SDR V4 для тестирования SSTV
+- ✅ **RTL-SDR V4 подключён и работает!** (2026-04-07)
+  - Драйверы Zadig установлены (WinUSB)
+  - Нативные утилиты работают (rtl_test, rtl_fm, rtl_sdr)
+  - Python pyrtlsdr 0.2.93 установлен
+  - Частота 145.800 MHz настраивается
+  - Готов к приёму SSTV с МКС
 
 **Следующие приоритеты (когда готово):**
 1. Dashboard Endpoints Consolidation (~4 часа)
@@ -130,7 +135,7 @@ Backend (FastAPI:8000) ←→ Sync Manager ←→ Frontend (Flask:5000)
 3. Test Coverage 80%+ (~6 часов)
 
 **Когда придёт RTL-SDR V4:**
-1. Подключить устройство
-2. Запустить --check
-3. Протестировать waterfall (145.800 MHz)
-4. Протестировать SSTV декодирование с МКС
+1. ✅ Подключить устройство - ВЫПОЛНЕНО (2026-04-07)
+2. ✅ Запустить --check - rtl_test.exe работает
+3. ✅ Протестировать waterfall (145.800 MHz) - частота настраивается
+4. ⏳ Протестировать SSTV декодирование с МКС - готово к запуску

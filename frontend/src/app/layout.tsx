@@ -18,6 +18,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { PWAProvider } from "@/components/pwa-provider";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 const inter = Inter({ subsets: ["latin", "cyrillic"] });
 
@@ -50,12 +51,14 @@ export default function RootLayout({
   return (
     <html lang="ru" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider>
-          <PWAProvider>
-            {children}
-            <Toaster />
-          </PWAProvider>
-        </ThemeProvider>
+        <ErrorBoundary>
+          <ThemeProvider>
+            <PWAProvider>
+              {children}
+              <Toaster />
+            </PWAProvider>
+          </ThemeProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

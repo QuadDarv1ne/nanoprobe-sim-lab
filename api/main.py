@@ -33,6 +33,9 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Управление жизненным циклом приложения"""
+    db = None
+    redis = None
+    
     # Применение миграций БД
     from api.database_init import ensure_database
 
@@ -40,14 +43,19 @@ async def lifespan(app: FastAPI):
         logger.info("Database migrations applied")
     else:
         logger.error("Database initialization failed")
+        raise RuntimeError("Database initialization failed")
 
     # Инициализация БД менеджера и Redis
-    db = DatabaseManager("data/nanoprobe.db")
-    
+    try:
+        db = DatabaseManager("data/nanoprobe.db")
+        logger.info("Database initialized")
+    except Exception as e:
+        logger.error(f"Failed to initialize database: {e}", exc_info=True)
+        raise RuntimeError(f"Database initialization failed: {e}") from e
+
     # Redis опционален (можно отключить через REDIS_DISABLED=1)
     redis_disabled = os.getenv("REDIS_DISABLED", "0") == "1"
     if redis_disabled:
-        redis = None
         logger.warning("Redis disabled - running without cache")
     else:
         redis_host = os.getenv("REDIS_HOST", "localhost")
@@ -57,64 +65,71 @@ async def lifespan(app: FastAPI):
             if not redis.is_available():
                 logger.warning("Redis not available - running without cache")
                 redis = None
+            else:
+                logger.info("Redis cache initialized")
         except Exception as e:
             logger.warning(f"Redis connection failed: {e} - running without cache")
             redis = None
-    
+
     init_app_state(db, redis)
-    logger.info("Database initialized" + (" (without Redis)" if redis is None else " and Redis initialized"))
 
     # Запуск мониторинга производительности
     try:
         from utils.monitoring.performance_monitor import start_monitoring
         metrics_port = int(os.getenv("METRICS_PORT", "9090"))
         start_monitoring(metrics_port)
+        logger.info(f"Performance monitoring started on port {metrics_port}")
     except Exception as e:
         logger.warning(f"Performance monitoring startup error: {e}")
 
     yield
 
-    # Очистка при остановке
-    logger.info("Application stopped")
+    # Очистка при остановке (в обратном порядке инициализации)
+    logger.info("Application shutting down...")
 
-    # Закрытие соединений
-    try:
-        if redis:
-            redis.close()
-            logger.info("Redis cache closed")
-    except Exception as e:
-        logger.warning(f"Redis cache cleanup error: {e}")
-
-    try:
-        if db:
-            db.close_pool()
-            DatabaseManager.close_all_pools()
-            logger.info("Database connections closed")
-    except Exception as e:
-        logger.warning(f"Database cleanup error: {e}")
-
-    try:
-        from api.routes.external_services import close_http_session
-        close_http_session()
-        logger.info("HTTP session closed")
-    except Exception as e:
-        logger.warning(f"HTTP session cleanup error: {e}")
-
-    # Остановка мониторинга
+    # 1. Остановка мониторинга
     try:
         from utils.monitoring.performance_monitor import get_monitor
         monitor = get_monitor()
         monitor.stop()
         logger.info("Performance monitor stopped")
     except Exception as e:
-        logger.warning(f"Monitor cleanup error: {e}")
+        logger.debug(f"Monitor cleanup error: {e}")
 
+    # 2. Закрытие circuit breakers
     try:
         from utils.caching.circuit_breaker import close_all_circuit_breakers
         close_all_circuit_breakers()
         logger.info("Circuit breakers closed")
     except Exception as e:
-        logger.warning(f"Circuit breakers cleanup error: {e}")
+        logger.debug(f"Circuit breakers cleanup error: {e}")
+
+    # 3. Закрытие HTTP сессий
+    try:
+        from api.routes.external_services import close_http_session
+        close_http_session()
+        logger.info("HTTP session closed")
+    except Exception as e:
+        logger.debug(f"HTTP session cleanup error: {e}")
+
+    # 4. Закрытие Redis
+    try:
+        if redis:
+            redis.close()
+            logger.info("Redis cache closed")
+    except Exception as e:
+        logger.debug(f"Redis cleanup error: {e}")
+
+    # 5. Закрытие соединений БД (последним, т.к. может использоваться другими компонентами)
+    try:
+        if db:
+            db.close_pool()
+            DatabaseManager.close_all_pools()
+            logger.info("Database connections closed")
+    except Exception as e:
+        logger.debug(f"Database cleanup error: {e}")
+
+    logger.info("Application stopped gracefully")
 
 
 # Создание FastAPI приложения

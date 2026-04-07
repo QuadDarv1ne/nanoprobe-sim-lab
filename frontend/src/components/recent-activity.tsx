@@ -6,12 +6,25 @@ import { API_BASE } from "@/lib/config";
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
 import { toast } from "@/components/ui/toaster";
+import { apiClient } from "@/lib/api-client";
 
 interface ActivityItem {
   id: number;
   type: 'scan' | 'simulation' | 'analysis';
   title: string;
   timestamp: string;
+}
+
+interface ScanData {
+  id: number;
+  type?: string;
+  created_at: string;
+}
+
+interface DashboardData {
+  scans?: {
+    recent?: ScanData[];
+  };
 }
 
 export function RecentActivity() {
@@ -21,11 +34,10 @@ export function RecentActivity() {
   useEffect(() => {
     const fetchRecentActivity = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/v1/dashboard/stats/detailed`);
-        const data = await res.json();
-        
+        const data = await apiClient.get<DashboardData>('/api/v1/dashboard/stats/detailed');
+
         // Формирование списка активности из последних сканирований
-        const recentScans = (data.scans?.recent || []).map((scan: any) => ({
+        const recentScans = (data.scans?.recent || []).map((scan) => ({
           id: scan.id,
           type: 'scan' as const,
           title: `Сканирование ${scan.type || 'СЗМ'}`,
@@ -34,9 +46,10 @@ export function RecentActivity() {
 
         setActivity(recentScans.slice(0, 8));
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Не удалось получить последние действия';
         console.error('Failed to fetch recent activity:', error);
         toast.error('Ошибка загрузки активности', {
-          description: 'Не удалось получить последние действия'
+          description: errorMessage
         });
       } finally {
         setIsLoading(false);

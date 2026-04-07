@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { LucideIcon } from "lucide-react";
 import {
   LayoutDashboard,
   Microscope,
@@ -14,9 +15,15 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
-import { API_BASE } from "@/lib/config";
+import { apiClient } from "@/lib/api-client";
 
-const navigation = [
+interface NavItem {
+  name: string;
+  href: string;
+  icon: LucideIcon;
+}
+
+const navigation: NavItem[] = [
   { name: "Обзор", href: "/", icon: LayoutDashboard },
   { name: "Сканирования", href: "/scans", icon: Microscope },
   { name: "Симуляции", href: "/simulations", icon: Cpu },
@@ -34,13 +41,12 @@ function SystemStatus() {
   useEffect(() => {
     const checkAPI = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/v1/health`, {
-          method: 'GET',
-          signal: AbortSignal.timeout(3000)
-        });
-        setApiStatus(res.ok ? 'online' : 'offline');
+        await apiClient.get('/api/v1/health');
+        setApiStatus('online');
+        setIsOnline(true);
       } catch {
         setApiStatus('offline');
+        setIsOnline(false);
       }
     };
 
@@ -56,11 +62,8 @@ function SystemStatus() {
     <div className="p-4 border-t border-border">
       <div className="bg-secondary rounded-lg p-3">
         <div className="flex items-center gap-2 mb-2">
-          <div className={`w-2 h-2 rounded-full ${statusColor} ${apiStatus === 'online' ? 'animate-pulse' : ''}`} />
-          <span className="text-xs font-medium text-muted-foreground">{statusText}</span>
-        </div>
-        <div className="text-xs text-muted-foreground">
-          API: <span className="text-foreground">{API_BASE.replace('http://', '').replace('https://', '')}</span>
+          <div className={`w-2 h-2 rounded-full ${statusColor} ${apiStatus === 'online' ? 'animate-pulse' : ''}`} aria-hidden="true" />
+          <span className="text-xs font-medium text-muted-foreground" role="status" aria-live="polite">{statusText}</span>
         </div>
       </div>
     </div>
@@ -74,7 +77,7 @@ export function Sidebar() {
     <div className="w-64 bg-card border-r border-border flex flex-col">
       {/* Logo */}
       <div className="h-16 flex items-center px-6 border-b border-border">
-        <span className="text-2xl mr-3">🔬</span>
+        <span className="text-2xl mr-3" aria-hidden="true">🔬</span>
         <div>
           <h1 className="font-bold text-lg">Nanoprobe Lab</h1>
           <p className="text-xs text-muted-foreground">Sim Lab v2.0</p>
@@ -82,7 +85,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto" aria-label="Главная навигация">
         {navigation.map((item) => {
           const isActive = pathname === item.href;
           return (

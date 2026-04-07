@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { StatsGrid } from "@/components/stats-grid";
 import { SystemHealth } from "@/components/system-health";
@@ -13,27 +13,30 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle, AlertTriangle } from "lucide-react";
 
 export default function DashboardPage() {
-  const [isLoading, setIsLoading] = useState(true);
-  const { 
-    stats, 
-    systemHealth, 
-    alerts, 
-    fetchDashboardData, 
-    subscribeToRealtime 
+  const {
+    stats,
+    systemHealth,
+    alerts,
+    isLoading,
+    fetchDashboardData,
+    subscribeToRealtime,
+    unsubscribeFromRealtime,
   } = useDashboardStore();
 
   useEffect(() => {
     const init = async () => {
       await fetchDashboardData();
       subscribeToRealtime();
-      setIsLoading(false);
     };
     init();
 
+    // Cleanup: unsubscribe from WebSocket on unmount
     return () => {
-      useDashboardStore.getState().unsubscribeFromRealtime();
+      unsubscribeFromRealtime();
     };
-  }, [fetchDashboardData, subscribeToRealtime]);
+    // Stable references from Zustand store - safe to omit from deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <DashboardLayout>

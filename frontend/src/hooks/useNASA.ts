@@ -80,7 +80,9 @@ interface NaturalEvent {
 // Generic fetch hook
 // ==========================================
 
-function useNASAData<T>(endpoint: string, params?: Record<string, any>) {
+type NASAQueryParams = Record<string, string | number | boolean | undefined>;
+
+function useNASAData<T>(endpoint: string, params?: NASAQueryParams) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -90,12 +92,16 @@ function useNASAData<T>(endpoint: string, params?: Record<string, any>) {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await axios.get(`${API_BASE}${endpoint}`, { params });
       setData(response.data);
       setCached(response.data.cached || false);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Unknown error');
+    } catch (err: unknown) {
+      const errorMessage = 
+        axios.isAxiosError(err) 
+          ? (err.response?.data?.detail || err.message || 'NASA API error')
+          : (err instanceof Error ? err.message : 'Unknown error');
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -202,15 +208,28 @@ export function useNaturalEvents(params?: {
 // Earth Imagery Hook
 // ==========================================
 
+interface EarthImageryData {
+  date?: string;
+  identifier?: string;
+  caption?: string;
+  image?: string;
+  thumbnail?: string;
+  lat?: number;
+  lon?: number;
+  terrain?: string;
+  time?: string;
+  acquisition_terms?: string;
+}
+
 export function useEarthImagery(params?: {
   date?: string;
   lat?: number;
   lon?: number;
 }) {
-  const { data, loading, error, cached, refetch } = useNASAData<any>('/earth/imagery', params);
-  
+  const { data, loading, error, cached, refetch } = useNASAData<EarthImageryData | EarthImageryData[]>('/earth/imagery', params);
+
   return {
-    images: Array.isArray(data) ? data : [],
+    images: data ? (Array.isArray(data) ? data : [data]) : [],
     loading,
     error,
     cached,

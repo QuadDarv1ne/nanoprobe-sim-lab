@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Line } from "react-chartjs-2";
+import type { ChartOptions } from "chart.js";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -16,6 +17,7 @@ import {
 import { Activity } from "lucide-react";
 import { API_BASE } from "@/lib/config";
 import { toast } from "@/components/ui/toaster";
+import { apiClient } from "@/lib/api-client";
 
 ChartJS.register(
   CategoryScale,
@@ -28,20 +30,34 @@ ChartJS.register(
   Filler
 );
 
+interface TimelineDataItem {
+  date: string;
+  scans?: number;
+  simulations?: number;
+  analysis?: number;
+}
+
+interface TimelineResponse {
+  timeline?: TimelineDataItem[];
+}
+
 export function ActivityChart() {
-  const [timelineData, setTimelineData] = useState<any[]>([]);
+  const [timelineData, setTimelineData] = useState<TimelineDataItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchActivityData = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/v1/dashboard/activity/timeline?days=7`);
-        const data = await res.json();
+        const data = await apiClient.get<TimelineResponse>(
+          '/api/v1/dashboard/activity/timeline',
+          { params: { days: 7 } }
+        );
         setTimelineData(data.timeline || []);
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Не удалось получить данные графика';
         console.error('Failed to fetch activity data:', error);
         toast.error('Ошибка загрузки данных активности', {
-          description: 'Не удалось получить данные графика'
+          description: errorMessage
         });
       } finally {
         setIsLoading(false);
@@ -84,12 +100,12 @@ export function ActivityChart() {
     ],
   };
 
-  const options = {
+  const options: ChartOptions<'line'> = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'top' as const,
+        position: 'top',
         labels: {
           color: 'rgb(148, 163, 184)',
           usePointStyle: true,
@@ -99,7 +115,7 @@ export function ActivityChart() {
         display: true,
         text: 'Активность за 7 дней',
         color: 'rgb(241, 245, 249)',
-        font: { size: 14, weight: 'bold' as const },
+        font: { size: 14, weight: 'bold' },
       },
     },
     scales: {

@@ -32,20 +32,55 @@ interface DashboardState {
   isLoading: boolean;
   error: string | null;
   wsConnected: boolean;
+  // WebSocket state moved into store to avoid module-level mutable state
+  wsInstance: WebSocket | null;
+  wsReconnectAttempts: number;
 
   fetchDashboardData: () => Promise<void>;
   subscribeToRealtime: () => void;
   unsubscribeFromRealtime: () => void;
   checkAlerts: () => Promise<void>;
+  _reconnectWS: () => void;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-const WS_URL = API_BASE.replace('http', 'ws');
+export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+export const WS_BASE = API_BASE.replace('http', 'ws');
 
-let ws: WebSocket | null = null;
-let reconnectTimeout: NodeJS.Timeout | null = null;
-let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 5;
+const FETCH_TIMEOUT_MS = 10000;
+
+/**
+ * Helper to create fetch with timeout using AbortController
+ */
+async function fetchWithTimeout(url: string, timeoutMs: number = FETCH_TIMEOUT_MS): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    return response;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+/**
+ * Helper to handle API errors with detailed messages
+ */
+async function handleApiResponse(response: Response, context: string): Promise<any> {
+  if (!response.ok) {
+    let errorDetail = `${context}: HTTP ${response.status}`;
+    try {
+      const errorBody = await response.json();
+      errorDetail += ` - ${errorBody.message || errorBody.detail || JSON.stringify(errorBody)}`;
+    } catch {
+      // If error body can't be parsed, use status text
+      errorDetail += ` - ${response.statusText || 'Unknown error'}`;
+    }
+    throw new Error(errorDetail);
+  }
+  return await response.json();
+}
 
 export const useDashboardStore = create<DashboardState>()(
   subscribeWithSelector((set, get) => ({
@@ -55,23 +90,21 @@ export const useDashboardStore = create<DashboardState>()(
     isLoading: false,
     error: null,
     wsConnected: false,
+    wsInstance: null,
+    wsReconnectAttempts: 0,
 
     fetchDashboardData: async () => {
       set({ isLoading: true, error: null });
       try {
         const [statsRes, healthRes, alertsRes] = await Promise.all([
-          fetch(`${API_BASE}/api/v1/dashboard/stats/detailed`),
-          fetch(`${API_BASE}/health/detailed`),
-          fetch(`${API_BASE}/api/v1/dashboard/alerts/check`),
+          fetchWithTimeout(`${API_BASE}/api/v1/dashboard/stats/detailed`),
+          fetchWithTimeout(`${API_BASE}/health/detailed`),
+          fetchWithTimeout(`${API_BASE}/api/v1/dashboard/alerts/check`),
         ]);
 
-        if (!statsRes.ok || !healthRes.ok || !alertsRes.ok) {
-          throw new Error('Failed to fetch data from API');
-        }
-
-        const stats = await statsRes.json();
-        const health = await healthRes.json();
-        const alertsData = await alertsRes.json();
+        const stats = await handleApiResponse(statsRes, 'Dashboard stats');
+        const health = await handleApiResponse(healthRes, 'System health');
+        const alertsData = await handleApiResponse(alertsRes, 'Alerts check');
 
         set({
           stats: stats.summary || stats,
@@ -86,23 +119,27 @@ export const useDashboardStore = create<DashboardState>()(
           error: null,
         });
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to fetch dashboard data';
         set({
           isLoading: false,
-          error: error instanceof Error ? error.message : 'Failed to fetch data',
+          error: errorMessage,
         });
+        console.error('Dashboard fetch error:', error);
       }
     },
 
     subscribeToRealtime: () => {
-      if (ws || typeof WebSocket === 'undefined') return;
+      const { wsInstance, wsReconnectAttempts } = get();
+      
+      // Don't create duplicate connections
+      if (wsInstance || typeof WebSocket === 'undefined') return;
 
       try {
-        const wsUrl = `${WS_URL}/api/v1/dashboard/ws/metrics`;
-        ws = new WebSocket(wsUrl);
+        const wsUrl = `${WS_BASE}/api/v1/dashboard/ws/metrics`;
+        const ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
-          set({ wsConnected: true, error: null });
-          reconnectAttempts = 0;
+          set({ wsConnected: true, error: null, wsReconnectAttempts: 0 });
         };
 
         ws.onmessage = (event) => {
@@ -122,54 +159,73 @@ export const useDashboardStore = create<DashboardState>()(
         };
 
         ws.onclose = () => {
-          set({ wsConnected: false });
-          ws = null;
-          
-          // Reconnect with exponential backoff
-          if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-            reconnectAttempts++;
-            const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
-            reconnectTimeout = setTimeout(() => {
-              get().subscribeToRealtime();
-            }, delay);
-          } else {
-            set({ error: 'WebSocket reconnection failed after multiple attempts' });
-          }
+          set({ wsConnected: false, wsInstance: null });
+          // Trigger reconnection with backoff
+          get()._reconnectWS();
         };
 
         ws.onerror = () => {
-          set({ error: 'WebSocket connection error' });
+          // Error will be handled by onclose
           if (ws) {
             ws.close();
           }
         };
+
+        set({ wsInstance: ws });
       } catch (error) {
-        set({ 
-          error: error instanceof Error ? error.message : 'WebSocket not available', 
-          wsConnected: false 
+        set({
+          error: error instanceof Error ? error.message : 'WebSocket not available',
+          wsConnected: false,
+          wsInstance: null,
         });
       }
     },
 
+    _reconnectWS: () => {
+      const { wsInstance, wsReconnectAttempts } = get();
+      
+      // Don't reconnect if there's an active connection
+      if (wsInstance) return;
+
+      if (wsReconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+        set({ error: 'WebSocket reconnection failed after multiple attempts' });
+        return;
+      }
+
+      const newAttempts = wsReconnectAttempts + 1;
+      const delay = Math.min(1000 * Math.pow(2, newAttempts), 30000);
+      
+      set({ wsReconnectAttempts: newAttempts });
+      
+      setTimeout(() => {
+        const currentState = get();
+        if (!currentState.wsInstance) {
+          get().subscribeToRealtime();
+        }
+      }, delay);
+    },
+
     unsubscribeFromRealtime: () => {
-      if (reconnectTimeout) {
-        clearTimeout(reconnectTimeout);
-        reconnectTimeout = null;
+      const { wsInstance } = get();
+      
+      if (wsInstance) {
+        wsInstance.onclose = null; // Prevent reconnection
+        wsInstance.close();
       }
-      if (ws) {
-        ws.close();
-        ws = null;
-      }
-      reconnectAttempts = 0;
+      
+      set({ 
+        wsInstance: null, 
+        wsConnected: false, 
+        wsReconnectAttempts: 0 
+      });
     },
 
     checkAlerts: async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/v1/dashboard/alerts/check`);
-        if (!res.ok) {
-          throw new Error('Failed to check alerts');
-        }
-        const data = await res.json();
+        const data = await handleApiResponse(
+          await fetchWithTimeout(`${API_BASE}/api/v1/dashboard/alerts/check`),
+          'Alerts check'
+        );
         set({ alerts: data.alerts || [] });
       } catch (error) {
         console.error('Failed to check alerts:', error);

@@ -12,6 +12,13 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Configuration constants
+MAX_RECONNECT_ATTEMPTS = 5
+INITIAL_RECONNECT_DELAY = 1.0
+MAX_RECONNECT_DELAY = 30.0
+HEALTH_CHECK_TIMEOUT = 5
+SYNC_TIMEOUT = 10
+
 
 class BackendFrontendSync:
     """
@@ -53,32 +60,54 @@ class BackendFrontendSync:
 
     async def check_backend_health(self) -> bool:
         """Проверка доступности Backend"""
+        if not self.session:
+            logger.error("❌ Session not initialized")
+            return False
+            
         try:
-            assert self.session is not None
-            async with self.session.get(f"{self.backend_url}/health", timeout=aiohttp.ClientTimeout(total=5)) as resp:
+            async with self.session.get(
+                f"{self.backend_url}/health", 
+                timeout=aiohttp.ClientTimeout(total=HEALTH_CHECK_TIMEOUT)
+            ) as resp:
                 if resp.status == 200:
-                    logger.info("✅ Backend доступен")
                     return True
                 else:
                     logger.warning(f"⚠️ Backend вернул статус {resp.status}")
                     return False
+        except asyncio.TimeoutError:
+            logger.error(f"❌ Backend health check timeout after {HEALTH_CHECK_TIMEOUT}s")
+            return False
+        except aiohttp.ClientError as e:
+            logger.error(f"❌ Backend недоступен (client error): {e}")
+            return False
         except Exception as e:
-            logger.error(f"❌ Backend недоступен: {e}")
+            logger.error(f"❌ Backend недоступен (unknown error): {e}", exc_info=True)
             return False
 
     async def check_frontend_health(self) -> bool:
         """Проверка доступности Frontend"""
+        if not self.session:
+            logger.error("❌ Session not initialized")
+            return False
+            
         try:
-            assert self.session is not None
-            async with self.session.get(f"{self.frontend_url}/api/health", timeout=aiohttp.ClientTimeout(total=5)) as resp:
+            async with self.session.get(
+                f"{self.frontend_url}/api/health", 
+                timeout=aiohttp.ClientTimeout(total=HEALTH_CHECK_TIMEOUT)
+            ) as resp:
                 if resp.status == 200:
-                    logger.info("✅ Frontend доступен")
                     return True
                 else:
                     logger.warning(f"⚠️ Frontend вернул статус {resp.status}")
                     return False
+        except asyncio.TimeoutError:
+            logger.error(f"❌ Frontend health check timeout after {HEALTH_CHECK_TIMEOUT}s")
+            return False
+        except aiohttp.ClientError as e:
+            logger.error(f"❌ Frontend недоступен (client error): {e}")
+            return False
         except Exception as e:
-            logger.error(f"❌ Frontend недоступен: {e}")
+            logger.error(f"❌ Frontend недоступен (unknown error): {e}", exc_info=True)
             return False
 
     async def sync_dashboard_stats(self) -> Optional[Dict[str, Any]]:
@@ -87,11 +116,14 @@ class BackendFrontendSync:
 
         Получает данные из Backend и возвращает для передачи во Frontend
         """
+        if not self.session:
+            logger.error("❌ Session not initialized")
+            return None
+            
         try:
-            assert self.session is not None
             async with self.session.get(
                 f"{self.backend_url}/api/v1/dashboard/stats",
-                timeout=aiohttp.ClientTimeout(total=10)
+                timeout=aiohttp.ClientTimeout(total=SYNC_TIMEOUT)
             ) as resp:
                 if resp.status == 200:
                     stats = await resp.json()
@@ -99,10 +131,17 @@ class BackendFrontendSync:
                     logger.info(f"[SYNC] Статистика обновлена: {len(stats)} полей")
                     return stats
                 else:
-                    logger.warning(f"[SYNC] Ошибка получения статистики: {resp.status}")
+                    error_body = await resp.text()
+                    logger.warning(f"[SYNC] Ошибка получения статистики: {resp.status} - {error_body[:200]}")
                     return None
+        except asyncio.TimeoutError:
+            logger.error(f"[SYNC] Timeout получения статистики")
+            return None
+        except aiohttp.ClientError as e:
+            logger.error(f"[SYNC] Client error при получении статистики: {e}")
+            return None
         except Exception as e:
-            logger.error(f"[SYNC] Ошибка: {e}")
+            logger.error(f"[SYNC] Ошибка: {e}", exc_info=True)
             return None
 
     async def sync_realtime_metrics(self) -> Optional[Dict[str, Any]]:
@@ -159,12 +198,13 @@ class BackendFrontendSync:
 
     async def start_sync_loop(self, interval: float = 5.0):
         """
-        Запуск цикла синхронизации
+        Запуск цикла синхронизации с exponential backoff при ошибках
 
         Args:
-            interval: Интервал синхронизации в секундах
+            interval: Базовый интервал синхронизации в секундах
         """
         self._running = True
+        consecutive_failures = 0
         logger.info(f"[SYNC] Запуск цикла синхронизации (интервал={interval}с)")
 
         while self._running:
@@ -174,6 +214,8 @@ class BackendFrontendSync:
                 frontend_ok = await self.check_frontend_health()
 
                 if backend_ok and frontend_ok:
+                    consecutive_failures = 0  # Reset on success
+                    
                     # Синхронизация статистики
                     stats = await self.sync_dashboard_stats()
                     if stats:
@@ -185,15 +227,35 @@ class BackendFrontendSync:
                         await self.broadcast_to_frontend("metrics_update", metrics)
 
                     self._last_sync_time = datetime.now()
-
-                await asyncio.sleep(interval)
+                    await asyncio.sleep(interval)
+                else:
+                    # Health check failed - increase delay
+                    consecutive_failures += 1
+                    delay = min(
+                        interval * (2 ** min(consecutive_failures, 5)),  # Exponential backoff
+                        MAX_RECONNECT_DELAY
+                    )
+                    logger.warning(
+                        f"[SYNC] Health check failed (attempt {consecutive_failures}), "
+                        f"retrying in {delay:.1f}s"
+                    )
+                    await asyncio.sleep(delay)
 
             except asyncio.CancelledError:
-                logger.info("[SYNC] Цикл синхронизации остановлен")
+                logger.info("[SYNC] Цикл синхронизации отменён")
                 break
             except Exception as e:
-                logger.error(f"[SYNC] Ошибка в цикле: {e}")
-                await asyncio.sleep(interval)
+                consecutive_failures += 1
+                delay = min(
+                    interval * (2 ** min(consecutive_failures, 5)),
+                    MAX_RECONNECT_DELAY
+                )
+                logger.error(
+                    f"[SYNC] Ошибка в цикле синхронизации (attempt {consecutive_failures}): "
+                    f"{e}, retrying in {delay:.1f}s",
+                    exc_info=True
+                )
+                await asyncio.sleep(delay)
 
     def stop_sync_loop(self):
         """Остановка цикла синхронизации"""
