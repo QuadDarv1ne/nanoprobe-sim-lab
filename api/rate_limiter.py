@@ -40,17 +40,26 @@ if redis_disabled:
         strategy="fixed-window"
     )
 else:
-    # Redis limiter для production
+    # Redis limiter для production — fallback to memory on connection error
     redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
-    limiter = Limiter(
-        key_func=get_remote_address,
-        default_limits=[
-            "100/minute",
-            "20/second",
-        ],
-        storage_uri=redis_url,
-        strategy="fixed-window"
-    )
+    try:
+        limiter = Limiter(
+            key_func=get_remote_address,
+            default_limits=[
+                "100/minute",
+                "20/second",
+            ],
+            storage_uri=redis_url,
+            strategy="fixed-window"
+        )
+    except Exception:
+        # Fallback to memory if Redis unavailable
+        limiter = Limiter(
+            key_func=get_remote_address,
+            default_limits=["100/minute", "20/second"],
+            storage_uri="memory://",
+            strategy="fixed-window"
+        )
 
 
 # ==================== Setup ====================

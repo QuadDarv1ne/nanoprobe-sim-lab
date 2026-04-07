@@ -16,7 +16,7 @@ app_state: Dict[str, Any] = {}
 
 
 def get_system_disk_usage():
-    """
+    r"""
     Cross-platform disk usage.
     On Windows uses SYSTEMDRIVE env var (default C:\), on Unix uses '/'.
     Returns psutil.sdiskusage namedtuple.
