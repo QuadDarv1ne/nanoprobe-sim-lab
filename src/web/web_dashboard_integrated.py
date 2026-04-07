@@ -1047,11 +1047,16 @@ class IntegratedWebDashboard:
         def handle_request_metrics():
             """Запрос метрик системы в realtime"""
             try:
+                import os, platform
                 import psutil
+                def _get_du():
+                    if platform.system() == "Windows":
+                        return psutil.disk_usage(os.environ.get("SYSTEMDRIVE", "C:\\"))
+                    return psutil.disk_usage("/")
                 metrics = {
                     'cpu_percent': psutil.cpu_percent(interval=1),
                     'memory_percent': psutil.virtual_memory().percent,
-                    'disk_usage': psutil.disk_usage('/').percent,
+                    'disk_usage': _get_du().percent,
                     'timestamp': datetime.now().isoformat()
                 }
                 emit('metrics', metrics)

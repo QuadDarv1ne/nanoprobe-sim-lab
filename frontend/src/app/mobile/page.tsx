@@ -16,6 +16,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { API_BASE } from '@/lib/config';
+import { apiClient } from '@/lib/api-client';
 import { 
   Wifi, 
   WifiOff, 

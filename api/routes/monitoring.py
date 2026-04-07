@@ -20,6 +20,10 @@ import sqlite3
 from pathlib import Path
 
 from api.state import get_system_disk_usage
+
+# Project root for database path
+PROJECT_ROOT = Path(__file__).parent.parent.parent
+
 from typing import Optional, Dict, Any
 
 logger = logging.getLogger(__name__)

@@ -37,9 +37,15 @@ async def analyze_with_pretrained(
     """
     from utils.ai.pretrained_defect_analyzer import get_analyzer
 
-    # Сохранение временного файла
-    temp_path = Path("data/temp") / image.filename
-    temp_path.parent.mkdir(parents=True, exist_ok=True)
+    # Sanitize filename to prevent path traversal
+    safe_filename = Path(image.filename).name
+    if not safe_filename or safe_filename.startswith('.'):
+        raise ValidationError("Invalid filename")
+
+    # Save temporary file
+    temp_dir = Path("data/temp")
+    temp_dir.mkdir(parents=True, exist_ok=True)
+    temp_path = temp_dir / safe_filename
 
     try:
         with open(temp_path, "wb") as f:

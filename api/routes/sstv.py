@@ -77,7 +77,7 @@ def get_satellite_tracker() -> Optional[tracker_module.SatelliteTracker]:
             set_app_state("satellite_tracker", tracker)
         except Exception as e:
             logger.warning(f"SatelliteTracker initialization error: {e}")
-            tracker = tracker_module.SatelliteTracker()
+            tracker = None
             set_app_state("satellite_tracker", tracker)
     return tracker
 

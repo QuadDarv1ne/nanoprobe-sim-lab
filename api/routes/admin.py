@@ -57,7 +57,7 @@ async def get_system_info(current_user: dict = Depends(get_current_user)):
         "python_version": os.sys.version,
         "cpu_count": psutil.cpu_count(),
         "memory_total": psutil.virtual_memory().total,
-        "disk_total": psutil.disk_usage("/").total,
+        "disk_total": get_system_disk_usage().total,
         "boot_time": datetime.fromtimestamp(psutil.boot_time()).isoformat(),
     }
 
@@ -79,7 +79,7 @@ async def get_system_resources(current_user: dict = Depends(get_current_user)):
     memory = psutil.virtual_memory()
 
     # Диск
-    disk = psutil.disk_usage("/")
+    disk = get_system_disk_usage()
 
     # Сеть
     net_io = psutil.net_io_counters()

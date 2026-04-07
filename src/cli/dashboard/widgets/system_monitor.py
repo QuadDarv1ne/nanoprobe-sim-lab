@@ -4,10 +4,19 @@ System Monitor Widget
 Мониторинг системы: CPU, память, диск, сеть.
 """
 
+import os
+import platform
 import psutil
 from datetime import datetime
 from typing import Dict
 from .base import Widget, WidgetData, WidgetPriority
+
+
+def _get_disk_usage():
+    """Cross-platform disk usage"""
+    if platform.system() == "Windows":
+        return psutil.disk_usage(os.environ.get("SYSTEMDRIVE", "C:\\"))
+    return psutil.disk_usage("/")
 
 
 class SystemMonitorWidget(Widget):
@@ -28,7 +37,7 @@ class SystemMonitorWidget(Widget):
         """Обновление метрик системы"""
         cpu_percent = psutil.cpu_percent(interval=1)
         memory = psutil.virtual_memory()
-        disk = psutil.disk_usage('/')
+        disk = _get_disk_usage()
         net = psutil.net_io_counters()
 
         metrics = {

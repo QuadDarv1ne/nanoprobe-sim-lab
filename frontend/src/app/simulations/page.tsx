@@ -74,17 +74,14 @@ export default function SimulationsPage() {
 
   const handleStop = async (id: number) => {
     try {
-      const res = await fetch(`${API_BASE}/api/v1/simulations/${id}/stop`, {
-        method: 'POST',
-      });
-      if (res.ok) {
-        toast.success('Симуляция остановлена');
-        fetchSimulations();
-      } else {
-        toast.error('Ошибка остановки');
-      }
+      await apiClient.post(`/api/v1/simulations/${id}/stop`);
+      toast.success('Симуляция остановлена');
+      fetchSimulations();
     } catch (error) {
-      toast.error('Ошибка остановки симуляции');
+      const errorMessage = error instanceof Error ? error.message : 'Ошибка остановки';
+      toast.error('Ошибка остановки симуляции', {
+        description: errorMessage
+      });
     }
   };
 

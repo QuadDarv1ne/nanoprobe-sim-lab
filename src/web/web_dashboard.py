@@ -19,6 +19,7 @@ if sys.version_info < MIN_PYTHON_VERSION or sys.version_info >= (MAX_PYTHON_VERS
     sys.exit(1)
 
 import os
+import platform
 import time
 import threading
 import webbrowser
@@ -26,6 +27,13 @@ import subprocess
 from datetime import datetime
 from typing import Dict, Any
 from pathlib import Path
+
+
+def _get_disk_usage():
+    """Cross-platform disk usage"""
+    if platform.system() == "Windows":
+        return psutil.disk_usage(os.environ.get("SYSTEMDRIVE", "C:\\"))
+    return psutil.disk_usage("/")
 
 # Установка UTF-8 кодировки для Windows
 if sys.platform == "win32":
@@ -1201,7 +1209,7 @@ class WebDashboard:
                 metrics = {
                     'cpu_percent': psutil.cpu_percent(interval=1),
                     'memory_percent': psutil.virtual_memory().percent,
-                    'disk_usage': psutil.disk_usage('/').percent,
+                    'disk_usage': _get_disk_usage().percent,
                     'timestamp': datetime.now().isoformat()
                 }
                 emit('metrics', metrics)

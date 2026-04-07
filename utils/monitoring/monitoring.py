@@ -3,6 +3,8 @@ Enhanced System Monitor for Nanoprobe Sim Lab
 Расширенный мониторинг системы с аналитикой и алертами
 """
 
+import os
+import platform
 import psutil
 import time
 import threading
@@ -13,6 +15,13 @@ from dataclasses import dataclass, asdict
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def _get_disk_usage():
+    """Cross-platform disk usage (Windows: SYSTEMDRIVE, Unix: /)"""
+    if platform.system() == "Windows":
+        return psutil.disk_usage(os.environ.get("SYSTEMDRIVE", "C:\\"))
+    return psutil.disk_usage("/")
 
 
 @dataclass
@@ -150,7 +159,7 @@ class EnhancedSystemMonitor:
         memory_available_gb = memory.available / (1024 ** 3)
 
         # Disk
-        disk = psutil.disk_usage('/')
+        disk = _get_disk_usage()
         disk_used_gb = disk.used / (1024 ** 3)
         disk_total_gb = disk.total / (1024 ** 3)
         disk_free_gb = disk.free / (1024 ** 3)

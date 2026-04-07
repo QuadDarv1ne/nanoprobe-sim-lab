@@ -36,7 +36,20 @@ audit_logger = logging.getLogger("audit.security")
 router = APIRouter()
 security = HTTPBearer()
 
-JWT_SECRET = os.getenv("JWT_SECRET", secrets.token_urlsafe(32))
+# JWT Secret: env var > saved file > generate once and persist
+_jwt_secret_env = os.getenv("JWT_SECRET")
+if _jwt_secret_env:
+    JWT_SECRET = _jwt_secret_env
+else:
+    _jwt_secret_file = Path("data/.jwt_secret")
+    if _jwt_secret_file.exists():
+        JWT_SECRET = _jwt_secret_file.read_text().strip()
+    else:
+        JWT_SECRET = secrets.token_urlsafe(32)
+        _jwt_secret_file.parent.mkdir(parents=True, exist_ok=True)
+        _jwt_secret_file.write_text(JWT_SECRET)
+        logger.info(f"Generated new JWT secret, saved to {_jwt_secret_file}")
+
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_MINUTES = 60
 JWT_REFRESH_EXPIRATION_DAYS = 7
