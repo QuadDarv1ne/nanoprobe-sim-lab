@@ -492,8 +492,11 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             try:
-                # Получение команд от клиента с timeout
-                data = await websocket.receive_text()
+                # Получение команд от клиента с timeout (30s heartbeat)
+                data = await asyncio.wait_for(
+                    websocket.receive_text(), 
+                    timeout=30.0
+                )
                 last_pong = datetime.now()
                 message = json.loads(data)
 

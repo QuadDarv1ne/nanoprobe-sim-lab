@@ -734,6 +734,9 @@ async def stop_sstv_recording():
 
     # Останавливаем процесс
     try:
+        if recording_process is None:
+            raise ServiceUnavailableError("Recording process не найден в state")
+            
         recording_process.send_signal(signal.SIGINT)
         try:
             recording_process.wait(timeout=5)

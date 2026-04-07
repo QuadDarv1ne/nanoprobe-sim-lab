@@ -35,6 +35,7 @@ interface DashboardState {
   // WebSocket state moved into store to avoid module-level mutable state
   wsInstance: WebSocket | null;
   wsReconnectAttempts: number;
+  isReconnecting: boolean; // Guard against concurrent reconnection attempts
 
   fetchDashboardData: () => Promise<void>;
   subscribeToRealtime: () => void;
@@ -92,6 +93,7 @@ export const useDashboardStore = create<DashboardState>()(
     wsConnected: false,
     wsInstance: null,
     wsReconnectAttempts: 0,
+    isReconnecting: false,
 
     fetchDashboardData: async () => {
       set({ isLoading: true, error: null });
@@ -182,10 +184,10 @@ export const useDashboardStore = create<DashboardState>()(
     },
 
     _reconnectWS: () => {
-      const { wsInstance, wsReconnectAttempts } = get();
+      const { wsInstance, wsReconnectAttempts, isReconnecting } = get();
       
-      // Don't reconnect if there's an active connection
-      if (wsInstance) return;
+      // Prevent concurrent reconnection attempts
+      if (isReconnecting || wsInstance) return;
 
       if (wsReconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
         set({ error: 'WebSocket reconnection failed after multiple attempts' });
@@ -195,10 +197,11 @@ export const useDashboardStore = create<DashboardState>()(
       const newAttempts = wsReconnectAttempts + 1;
       const delay = Math.min(1000 * Math.pow(2, newAttempts), 30000);
       
-      set({ wsReconnectAttempts: newAttempts });
+      set({ isReconnecting: true, wsReconnectAttempts: newAttempts });
       
       setTimeout(() => {
         const currentState = get();
+        set({ isReconnecting: false });
         if (!currentState.wsInstance) {
           get().subscribeToRealtime();
         }

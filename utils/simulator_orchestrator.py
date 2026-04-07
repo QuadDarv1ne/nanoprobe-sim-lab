@@ -43,8 +43,8 @@ class SimulationOrchestrator:
         self.image_processor = None
         self.sstv_decoder = None
 
-        # Состояния симуляции
-        self.simulation_running = False
+        # Состояния симуляции - use threading.Event for thread-safe signaling
+        self._stop_event = threading.Event()
         self.simulation_thread = None
 
         # Очереди для межкомпонентного взаимодействия
@@ -289,13 +289,13 @@ class SimulationOrchestrator:
             f"Начало непрерывной симуляции на {duration_minutes} минут", "INFO"
         )
 
-        self.simulation_running = True
+        self._stop_event.clear()
         start_time = time.time()
         end_time = start_time + (duration_minutes * 60)
 
         cycle_count = 0
 
-        while time.time() < end_time and self.simulation_running:
+        while time.time() < end_time and not self._stop_event.is_set():
             try:
                 # Выполняем цикл симуляции
                 self.coordinate_multi_component_simulation()
@@ -305,19 +305,19 @@ class SimulationOrchestrator:
                     f"Цикл симуляции #{cycle_count} завершен", "INFO"
                 )
 
-                # Ждем перед следующим циклом
-                time.sleep(5)  # 5 секунд между циклами
+                # Wait with timeout for responsive stopping
+                self._stop_event.wait(timeout=5)
 
             except Exception as e:
                 self.logger_manager.log_system_event(f"Ошибка в цикле симуляции: {e}", "ERROR")
                 time.sleep(1)  # Пауза перед повторной попыткой
 
-        self.simulation_running = False
+        self._stop_event.clear()
         self.logger_manager.log_simulation_event("Непрерывная симуляция завершена", "INFO")
 
     def stop_simulation(self):
         """Останавливает текущую симуляцию"""
-        self.simulation_running = False
+        self._stop_event.set()
         self.logger_manager.log_system_event("Симуляция остановлена пользователем", "INFO")
 
     def start_background_simulation(self, duration_minutes: int = 10):
@@ -348,7 +348,7 @@ class SimulationOrchestrator:
             Словарь с информацией о статусе симуляции
         """
         return {
-            "simulation_running": self.simulation_running,
+            "simulation_running": self._stop_event.is_set(),
             "thread_active": self.simulation_thread.is_alive() if self.simulation_thread else False,
             "results_count": len(self.simulation_results),
             "timestamp": datetime.now().isoformat(),

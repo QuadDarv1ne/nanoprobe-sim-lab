@@ -15,6 +15,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { API_BASE } from '@/lib/config';
 import { 
   Wifi, 
   WifiOff, 
@@ -76,7 +77,7 @@ export default function MobileDashboard() {
   // Получение данных с защитой от overlapping requests
   const fetchStats = async () => {
     try {
-      const response = await fetch('/api/v1/monitoring/health/detailed');
+      const response = await fetch(`${API_BASE}/api/v1/monitoring/health/detailed`);
       if (response.ok) {
         const data = await response.json();
         setStats({
@@ -98,7 +99,7 @@ export default function MobileDashboard() {
   // Получение SSTV статуса
   const fetchSSTVStatus = async () => {
     try {
-      const response = await fetch('/api/v1/sstv/status');
+      const response = await fetch(`${API_BASE}/api/v1/sstv/status`);
       if (response.ok) {
         const data = await response.json();
         setSstv({

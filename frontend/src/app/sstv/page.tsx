@@ -67,20 +67,10 @@ export default function SSTVPage() {
   useEffect(() => {
     fetchData();
     
-    return () => {
-      if (pollIntervalRef.current) {
-        clearInterval(pollIntervalRef.current);
-      }
-    };
-  }, []);
-
-  // Setup polling after first fetch completes
-  useEffect(() => {
-    if (!isLoading && !pollIntervalRef.current) {
-      pollIntervalRef.current = setInterval(() => {
-        fetchData();
-      }, 10000);
-    }
+    // Start polling after initial fetch
+    pollIntervalRef.current = setInterval(() => {
+      fetchData();
+    }, 10000);
     
     return () => {
       if (pollIntervalRef.current) {
@@ -88,7 +78,7 @@ export default function SSTVPage() {
         pollIntervalRef.current = null;
       }
     };
-  }, [isLoading]);
+  }, []);
 
   const fetchData = async () => {
     // Prevent overlapping requests

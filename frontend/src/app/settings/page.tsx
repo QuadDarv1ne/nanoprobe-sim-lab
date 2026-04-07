@@ -1,7 +1,7 @@
 "use client";
 
 import { DashboardLayout } from "@/components/dashboard-layout";
-import { Settings as SettingsIcon, Database, Server, Bell, Monitor, Wifi } from "lucide-react";
+import { Settings as SettingsIcon, Database, Server, Bell, Monitor, Wifi, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -196,7 +196,7 @@ export default function SettingsPage() {
               <div className="grid gap-2">
                 <div className="text-sm font-medium">API Endpoint</div>
                 <code className="bg-secondary px-3 py-2 rounded-lg text-sm">
-                  http://localhost:8000
+                  {API_BASE}
                 </code>
               </div>
               <div className="flex gap-2">

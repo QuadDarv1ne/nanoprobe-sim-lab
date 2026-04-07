@@ -97,18 +97,43 @@ export default function ReportsPage() {
         iframe.style.display = 'none';
         iframe.src = url;
         document.body.appendChild(iframe);
-        iframe.onload = () => {
-          iframe.contentWindow?.print();
-          // Cleanup iframe after print
-          setTimeout(() => {
-            document.body.removeChild(iframe);
+        
+        let cleanedUp = false;
+        const cleanup = () => {
+          if (cleanedUp) return;
+          cleanedUp = true;
+          try {
+            if (iframe.parentNode) {
+              document.body.removeChild(iframe);
+            }
             window.URL.revokeObjectURL(url);
-          }, 1000);
+          } catch {
+            // Ignore cleanup errors
+          }
         };
+        
+        // Timeout fallback - cleanup after 10s
+        const timeoutId = setTimeout(() => {
+          cleanup();
+          toast.error('Печать не удалась (таймаут)');
+        }, 10000);
+        
+        iframe.onload = () => {
+          clearTimeout(timeoutId);
+          try {
+            iframe.contentWindow?.print();
+            // Cleanup after print dialog closes
+            setTimeout(cleanup, 1000);
+          } catch {
+            cleanup();
+            toast.error('Ошибка печати');
+          }
+        };
+        
         iframe.onerror = () => {
-          document.body.removeChild(iframe);
-          window.URL.revokeObjectURL(url);
-          toast.error('Ошибка печати');
+          clearTimeout(timeoutId);
+          cleanup();
+          toast.error('Ошибка загрузки для печати');
         };
       } else {
         toast.error('Ошибка печати');
