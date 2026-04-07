@@ -38,20 +38,6 @@ Thumbs.db
 
 # Логи
 logs/
-*.log
-
-# Отчёты (игнорируем содержимое, но не структуру)
-reports/errors/*.json
-reports/exports/**/*.json
-reports/analytics/**/*.json
-
-# Сохраняем структуру
-!reports/
-!reports/.gitkeep
-!reports/errors/.gitkeep
-!reports/exports/.gitkeep
-!reports/analytics/.gitkeep
-!reports/README.md
 
 # Данные
 data/*.db
@@ -66,3 +52,10 @@ output/
 .venv/
 venv/
 ENV/
+
+# RTL-SDR binary tools (downloaded via setup_rtlsdr.bat)
+zadig.exe
+zadig-2.9.exe
+rtl-sdr-bin/
+rtl-sdr-blog*.zip
+test_*.raw
