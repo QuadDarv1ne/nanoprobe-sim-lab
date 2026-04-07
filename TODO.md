@@ -38,6 +38,14 @@
 - [x] **usePWA Cleanup** - service worker event listeners теперь удаляются
 - [x] **api-client any Types** - заменены на AxiosRequestConfig и unknown
 
+### Session 3: Resource Leaks & Race Conditions
+- [x] **SSTV Subprocess Deadlock** - заменены PIPE на DEVNULL (предотвращение deadlock при заполнении буфера)
+- [x] **SSTV Global Scoping Bug** - удалены неиспользуемые globals, health check использует app_state
+- [x] **Delete Double-Click (5 pages)** - добавлен per-item deletingIds Set для предотвращения race conditions
+- [x] **Delete Button Disabled State** - кнопки блокируются во время async операции
+- [x] **Blob URL Leak Comparison** - добавлен revokeObjectURL
+- [x] **API Client Migration** - CRUD страницы мигрированы на централизованный apiClient
+
 ---
 
 ## 🚨 Code Review Issues Found (2026-04-07)
