@@ -13,7 +13,7 @@ NASA API Routes
 Получить ключ: https://api.nasa.gov/
 """
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Request
 from typing import Optional
 from datetime import datetime, timedelta, timezone
 import logging
@@ -39,8 +39,8 @@ router = APIRouter(prefix="/nasa", tags=["NASA API"])
     description="Astronomy Picture of the Day - ежедневное изображение космоса",
     response_model=APODResponse,
 )
-@rate_limit(max_requests=30, window_seconds=60)
 async def get_apod(
+    request: Request,
     date: Optional[str] = Query(None, description="Дата в формате YYYY-MM-DD"),
     count: Optional[int] = Query(None, ge=1, le=100, description="Количество случайных изображений"),
 ):

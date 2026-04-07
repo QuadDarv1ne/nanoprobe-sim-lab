@@ -25,7 +25,7 @@ from api.state import init_app_state
 
 # Импорты роутов
 from api.routes import scans, simulations, analysis, comparison, reports, auth, admin
-from api.routes import graphql, ml_analysis, external_services, nasa, monitoring
+from api.routes import graphql, ml_analysis, external_services, nasa, monitoring, weather
 
 logger = logging.getLogger(__name__)
 
@@ -405,6 +405,10 @@ app.include_router(external_services.router, prefix="/api/v1", tags=["External S
 # NASA API Integration
 app.include_router(nasa.router, prefix="/api/v1", tags=["NASA API"])
 logger.info("NASA API routes registered")
+
+# Weather API Integration (Open-Meteo, free, no API key needed)
+app.include_router(weather.router, prefix="/api/v1", tags=["Weather"])
+logger.info("Weather routes registered")
 
 
 # Performance Monitoring
