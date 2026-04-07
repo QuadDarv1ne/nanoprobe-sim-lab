@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { API_BASE } from "@/lib/config";
 import { format } from "date-fns";
 import { toast } from "@/components/ui/toaster";
+import { apiClient } from "@/lib/api-client";
 
 interface Scan {
   id: number;
@@ -19,6 +20,7 @@ interface Scan {
 export default function ScansPage() {
   const [scans, setScans] = useState<Scan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [deletingIds, setDeletingIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     fetchScans();
@@ -50,18 +52,25 @@ export default function ScansPage() {
   };
 
   const handleDelete = async (id: number) => {
+    // Prevent double-click / concurrent deletes
+    if (deletingIds.has(id)) return;
+    
+    setDeletingIds(prev => new Set(prev).add(id));
     try {
-      const res = await fetch(`${API_BASE}/api/v1/scans/${id}`, {
-        method: 'DELETE',
-      });
-      if (res.ok) {
-        toast.success('Сканирование удалено');
-        fetchScans();
-      } else {
-        toast.error('Ошибка удаления');
-      }
+      await apiClient.delete(`/api/v1/scans/${id}`);
+      toast.success('Сканирование удалено');
+      fetchScans();
     } catch (error) {
-      toast.error('Ошибка удаления сканирования');
+      const errorMessage = error instanceof Error ? error.message : 'Ошибка удаления';
+      toast.error('Ошибка удаления сканирования', {
+        description: errorMessage
+      });
+    } finally {
+      setDeletingIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
@@ -142,8 +151,14 @@ export default function ScansPage() {
                         <Button variant="outline" size="icon" onClick={() => handleDownload(scan)}>
                           <Download className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="icon" onClick={() => handleDelete(scan.id)}>
-                          <Trash2 className="h-4 w-4" />
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          onClick={() => handleDelete(scan.id)}
+                          disabled={deletingIds.has(scan.id)}
+                          aria-label={`Удалить сканирование #${scan.id}`}
+                        >
+                          <Trash2 className={`h-4 w-4 ${deletingIds.has(scan.id) ? 'animate-pulse' : ''}`} />
                         </Button>
                       </div>
                     </td>

@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { API_BASE } from "@/lib/config";
 import { format } from "date-fns";
 import { toast } from "@/components/ui/toaster";
+import { apiClient } from "@/lib/api-client";
 
 interface Analysis {
   id: number;
@@ -20,6 +21,7 @@ interface Analysis {
 export default function AnalysisPage() {
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [deletingIds, setDeletingIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     fetchAnalyses();
@@ -43,18 +45,24 @@ export default function AnalysisPage() {
   };
 
   const handleDelete = async (id: number) => {
+    if (deletingIds.has(id)) return;
+    
+    setDeletingIds(prev => new Set(prev).add(id));
     try {
-      const res = await fetch(`${API_BASE}/api/v1/analysis/${id}`, {
-        method: 'DELETE',
-      });
-      if (res.ok) {
-        toast.success('Анализ удалён');
-        fetchAnalyses();
-      } else {
-        toast.error('Ошибка удаления');
-      }
+      await apiClient.delete(`/api/v1/analysis/${id}`);
+      toast.success('Анализ удалён');
+      fetchAnalyses();
     } catch (error) {
-      toast.error('Ошибка удаления анализа');
+      const errorMessage = error instanceof Error ? error.message : 'Ошибка удаления';
+      toast.error('Ошибка удаления анализа', {
+        description: errorMessage
+      });
+    } finally {
+      setDeletingIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
@@ -211,8 +219,14 @@ export default function AnalysisPage() {
                         <Button variant="outline" size="icon" onClick={() => handleDownload(analysis.id)}>
                           <Download className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="icon" onClick={() => handleDelete(analysis.id)}>
-                          <Trash2 className="h-4 w-4" />
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          onClick={() => handleDelete(analysis.id)}
+                          disabled={deletingIds.has(analysis.id)}
+                          aria-label={`Удалить анализ #${analysis.id}`}
+                        >
+                          <Trash2 className={`h-4 w-4 ${deletingIds.has(analysis.id) ? 'animate-pulse' : ''}`} />
                         </Button>
                       </div>
                     </td>

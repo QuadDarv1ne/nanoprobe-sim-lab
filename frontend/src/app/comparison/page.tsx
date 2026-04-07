@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { API_BASE } from "@/lib/config";
 import { format } from "date-fns";
 import { toast } from "@/components/ui/toaster";
+import { apiClient } from "@/lib/api-client";
 
 interface Comparison {
   id: number;
@@ -20,6 +21,7 @@ interface Comparison {
 export default function ComparisonPage() {
   const [comparisons, setComparisons] = useState<Comparison[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [deletingIds, setDeletingIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     fetchComparisons();
@@ -43,18 +45,24 @@ export default function ComparisonPage() {
   };
 
   const handleDelete = async (id: number) => {
+    if (deletingIds.has(id)) return;
+    
+    setDeletingIds(prev => new Set(prev).add(id));
     try {
-      const res = await fetch(`${API_BASE}/api/v1/comparison/${id}`, {
-        method: 'DELETE',
-      });
-      if (res.ok) {
-        toast.success('Сравнение удалено');
-        fetchComparisons();
-      } else {
-        toast.error('Ошибка удаления');
-      }
+      await apiClient.delete(`/api/v1/comparison/${id}`);
+      toast.success('Сравнение удалено');
+      fetchComparisons();
     } catch (error) {
-      toast.error('Ошибка удаления сравнения');
+      const errorMessage = error instanceof Error ? error.message : 'Ошибка удаления';
+      toast.error('Ошибка удаления сравнения', {
+        description: errorMessage
+      });
+    } finally {
+      setDeletingIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
@@ -67,7 +75,10 @@ export default function ComparisonPage() {
         const a = document.createElement('a');
         a.href = url;
         a.download = `comparison_${id}.json`;
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
         toast.success('Сравнение загружено');
       } else {
         toast.error('Ошибка загрузки');
@@ -201,8 +212,14 @@ export default function ComparisonPage() {
                         <Button variant="outline" size="icon" onClick={() => handleDownload(comp.id)}>
                           <Download className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="icon" onClick={() => handleDelete(comp.id)}>
-                          <Trash2 className="h-4 w-4" />
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          onClick={() => handleDelete(comp.id)}
+                          disabled={deletingIds.has(comp.id)}
+                          aria-label={`Удалить сравнение #${comp.id}`}
+                        >
+                          <Trash2 className={`h-4 w-4 ${deletingIds.has(comp.id) ? 'animate-pulse' : ''}`} />
                         </Button>
                       </div>
                     </td>

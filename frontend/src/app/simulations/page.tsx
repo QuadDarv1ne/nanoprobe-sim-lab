@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { API_BASE } from "@/lib/config";
 import { toast } from "@/components/ui/toaster";
+import { apiClient } from "@/lib/api-client";
 
 interface Simulation {
   id: number;
@@ -18,6 +19,7 @@ interface Simulation {
 export default function SimulationsPage() {
   const [simulations, setSimulations] = useState<Simulation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [deletingIds, setDeletingIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     fetchSimulations();
@@ -49,18 +51,24 @@ export default function SimulationsPage() {
   };
 
   const handleDelete = async (id: number) => {
+    if (deletingIds.has(id)) return;
+    
+    setDeletingIds(prev => new Set(prev).add(id));
     try {
-      const res = await fetch(`${API_BASE}/api/v1/simulations/${id}`, {
-        method: 'DELETE',
-      });
-      if (res.ok) {
-        toast.success('Симуляция удалена');
-        fetchSimulations();
-      } else {
-        toast.error('Ошибка удаления');
-      }
+      await apiClient.delete(`/api/v1/simulations/${id}`);
+      toast.success('Симуляция удалена');
+      fetchSimulations();
     } catch (error) {
-      toast.error('Ошибка удаления симуляции');
+      const errorMessage = error instanceof Error ? error.message : 'Ошибка удаления';
+      toast.error('Ошибка удаления симуляции', {
+        description: errorMessage
+      });
+    } finally {
+      setDeletingIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
@@ -161,8 +169,14 @@ export default function SimulationsPage() {
                         <Button variant="outline" size="icon" onClick={() => handleStop(sim.id)} disabled={sim.status !== 'running'}>
                           <Square className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="icon" onClick={() => handleDelete(sim.id)}>
-                          <Trash2 className="h-4 w-4" />
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          onClick={() => handleDelete(sim.id)}
+                          disabled={deletingIds.has(sim.id)}
+                          aria-label={`Удалить симуляцию #${sim.id}`}
+                        >
+                          <Trash2 className={`h-4 w-4 ${deletingIds.has(sim.id) ? 'animate-pulse' : ''}`} />
                         </Button>
                       </div>
                     </td>

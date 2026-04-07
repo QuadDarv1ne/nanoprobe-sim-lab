@@ -9,6 +9,7 @@ import os
 import sys
 import subprocess
 import signal
+from subprocess import DEVNULL
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, Dict, Any
@@ -49,10 +50,8 @@ except ImportError:
 
 router = APIRouter()
 
-# Управление записью RTL-SDR
-_recording_process: Optional[subprocess.Popen] = None
-_recording_start_time: Optional[datetime] = None
-_recording_metadata: Dict[str, Any] = {}
+# Recording state is managed via app_state (see api/state.py)
+# No module-level globals needed - avoids scoping bugs
 
 
 def get_redis_cache() -> Optional[RedisCache]:
@@ -553,11 +552,13 @@ async def iss_websocket(websocket: WebSocket):
 @router.get("/health")
 async def sstv_health_check():
     """Проверка здоровья SSTV модуля."""
+    recording_process = get_app_state("recording_process")
+    
     status = {
         "sstv_decoder": "available" if SSTV_AVAILABLE else "unavailable",
         "satellite_tracker": "available" if tracker_module is not None else "unavailable",
         "redis_cache": "available" if REDIS_AVAILABLE else "unavailable",
-        "rtl_sdr": "ready" if _recording_process is None else "recording",
+        "rtl_sdr": "ready" if recording_process is None else "recording",
         "timestamp": datetime.now().isoformat()
     }
 
@@ -652,11 +653,13 @@ async def start_sstv_recording(
         }
 
     try:
+        # Use DEVNULL instead of PIPE to avoid deadlock when pipe buffers fill up
+        # PIPE would need background threads to drain, DEVNULL just discards output
         recording_process = subprocess.Popen(
             cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            stdin=subprocess.PIPE
+            stdout=DEVNULL,
+            stderr=DEVNULL,
+            stdin=DEVNULL
         )
         recording_start_time = datetime.now()
         recording_metadata = {
@@ -739,11 +742,7 @@ async def stop_sstv_recording():
             recording_process.kill()
             recording_process.wait(timeout=2)
 
-        # Освобождаем ресурсы
-        if recording_process.stdout:
-            recording_process.stdout.close()
-        if recording_process.stderr:
-            recording_process.stderr.close()
+        # Process resources automatically cleaned up on termination
 
         recording_start_time = get_app_state("recording_start_time")
         duration = (datetime.now() - recording_start_time).total_seconds() if recording_start_time else 0
