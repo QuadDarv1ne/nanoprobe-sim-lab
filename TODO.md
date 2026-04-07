@@ -57,6 +57,14 @@
 - [x] **Print Iframe Resource Leak** - добавлен timeout fallback cleanup с guard flag
 - [x] **Hardcoded API URL Display** - settings page теперь показывает реальный API_BASE
 
+### Session 5: Cache, Windows Compatibility & Thread Safety
+- [x] **@cached Decorator Import** - исправлен ImportError (from api.main -> api.state)
+- [x] **Cache Key Generation** - исправлена генерация ключа (раньше Depends объекты делали cache бесполезным)
+- [x] **psutil.disk_usage('/') Windows** - создана get_system_disk_usage() helper для кроссплатформенности (13+ locations)
+- [x] **Rate Limiter IP Lists** - добавлен threading.Lock() для TOCTOU race condition
+- [x] **Hardcoded Version Strings** - settings page теперь загружает версии из /health/detailed API
+- [x] **Health Endpoint Enhanced** - добавлены python_version и database поля
+
 ---
 
 ## 🚨 Code Review Issues Found (2026-04-07)
