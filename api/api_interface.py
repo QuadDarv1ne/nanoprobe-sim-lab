@@ -18,6 +18,7 @@ from cpp_spm_hardware_sim.src.spm_simulator import SurfaceModel, SPMController
 from py_surface_image_analyzer.src.image_processor import ImageProcessor
 from py_sstv_groundstation.src.sstv_decoder import SSTVDecoder
 from .validators import DataValidator, ResponseBuilder, ValidationError
+from api.state import get_system_disk_usage
 
 
 class NanoprobeAPI:
@@ -530,7 +531,7 @@ class NanoprobeAPI:
                 'memory_total': psutil.virtual_memory().total,
                 'memory_available': psutil.virtual_memory().available,
                 'memory_percent': psutil.virtual_memory().percent,
-                'disk_usage': psutil.disk_usage('/').percent if hasattr(psutil, 'disk_usage') else 0
+                'disk_usage': get_system_disk_usage().percent if hasattr(psutil, 'disk_usage') else 0
             },
             'software': {
                 'python_version': platform.python_version(),

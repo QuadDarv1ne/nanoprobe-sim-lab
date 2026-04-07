@@ -14,6 +14,12 @@ export default function SettingsPage() {
   const { theme, toggleTheme } = useTheme();
   const [notifications, setNotifications] = useState(true);
   const [autoSync, setAutoSync] = useState(true);
+  const [systemInfo, setSystemInfo] = useState({
+    frontendVersion: "2.0.0",
+    backendVersion: "Загрузка...",
+    pythonVersion: "Загрузка...",
+    dbVersion: "SQLite 3.x",
+  });
 
   useEffect(() => {
     const savedNotifications = localStorage.getItem('notifications');
@@ -21,6 +27,27 @@ export default function SettingsPage() {
 
     if (savedNotifications !== null) setNotifications(savedNotifications === 'true');
     if (savedAutoSync !== null) setAutoSync(savedAutoSync === 'true');
+
+    // Fetch system version info from API
+    fetch(`${API_BASE}/health/detailed`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data) {
+          setSystemInfo(prev => ({
+            ...prev,
+            backendVersion: data.version || "1.0.0",
+            pythonVersion: data.python_version || "Unknown",
+            dbVersion: data.database || "SQLite 3.x",
+          }));
+        }
+      })
+      .catch(() => {
+        setSystemInfo(prev => ({
+          ...prev,
+          backendVersion: "Недоступно",
+          pythonVersion: "Недоступно",
+        }));
+      });
   }, []);
 
   const handleNotificationsChange = (checked: boolean) => {
@@ -220,19 +247,19 @@ export default function SettingsPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-1">
                 <div className="text-sm text-muted-foreground">Frontend (Next.js)</div>
-                <div className="font-medium">2.0.0</div>
+                <div className="font-medium">{systemInfo.frontendVersion}</div>
               </div>
               <div className="space-y-1">
                 <div className="text-sm text-muted-foreground">Backend (FastAPI)</div>
-                <div className="font-medium">1.0.0</div>
+                <div className="font-medium">{systemInfo.backendVersion}</div>
               </div>
               <div className="space-y-1">
                 <div className="text-sm text-muted-foreground">Python</div>
-                <div className="font-medium">3.13</div>
+                <div className="font-medium">{systemInfo.pythonVersion}</div>
               </div>
               <div className="space-y-1">
                 <div className="text-sm text-muted-foreground">Database</div>
-                <div className="font-medium">SQLite 3.x</div>
+                <div className="font-medium">{systemInfo.dbVersion}</div>
               </div>
             </div>
           </CardContent>

@@ -3,6 +3,8 @@
 Хранит ссылки на общие ресурсы (БД, Redis, etc.)
 """
 
+import os
+import platform
 from typing import Optional, Any, Dict
 from utils.database import DatabaseManager
 from utils.caching.redis_cache import RedisCache
@@ -11,6 +13,20 @@ from utils.caching.redis_cache import RedisCache
 db_manager: Optional[DatabaseManager] = None
 redis_cache: Optional[RedisCache] = None
 app_state: Dict[str, Any] = {}
+
+
+def get_system_disk_usage():
+    """
+    Cross-platform disk usage.
+    On Windows uses SYSTEMDRIVE env var (default C:\), on Unix uses '/'.
+    Returns psutil.sdiskusage namedtuple.
+    """
+    import psutil
+    if platform.system() == "Windows":
+        path = os.environ.get("SYSTEMDRIVE", "C:\\")
+    else:
+        path = "/"
+    return psutil.disk_usage(path)
 
 
 def get_db_manager() -> DatabaseManager:

@@ -177,17 +177,23 @@ def cached(prefix: str = "api", expire: int = 300):
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(*args, **kwargs):
-            from api.main import redis_cache
+            from api.state import get_redis
 
-            # Генерация ключа
+            # Generate cache key from query params only (exclude Depends-injected objects)
+            # Filter out non-primitive types that would make the key unstable
+            stable_kwargs = {
+                k: v for k, v in kwargs.items()
+                if isinstance(v, (str, int, float, bool, type(None), list, dict, tuple))
+            }
             cache_key = f"{prefix}:{func.__name__}:"
             cache_key += hashlib.md5(
-                f"{args}:{kwargs}".encode()
+                json.dumps(stable_kwargs, sort_keys=True, default=str).encode()
             ).hexdigest()[:16]
 
             # Попытка получить из кэша
-            if redis_cache and redis_cache.is_available():
-                cached_value = redis_cache.get(cache_key)
+            redis_instance = get_redis()
+            if redis_instance and redis_instance.is_available():
+                cached_value = redis_instance.get(cache_key)
                 if cached_value is not None:
                     return cached_value
 
@@ -195,8 +201,8 @@ def cached(prefix: str = "api", expire: int = 300):
             result = await func(*args, **kwargs)
 
             # Сохранение в кэш
-            if redis_cache and redis_cache.is_available():
-                redis_cache.set(cache_key, result, expire)
+            if redis_instance and redis_instance.is_available():
+                redis_instance.set(cache_key, result, expire)
 
             return result
         return wrapper

@@ -9,6 +9,7 @@ import psutil
 
 from utils.config.config_manager import ConfigManager
 from utils.logger import setup_project_logging
+from api.state import get_system_disk_usage
 
 
 class WebSocketServer:
@@ -85,7 +86,7 @@ class WebSocketServer:
         return {
             'cpu_percent': psutil.cpu_percent(interval=1),
             'memory_percent': psutil.virtual_memory().percent,
-            'disk_usage': psutil.disk_usage('/').percent,
+            'disk_usage': get_system_disk_usage().percent,
             'timestamp': datetime.now().isoformat()
         }
 

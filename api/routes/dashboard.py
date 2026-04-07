@@ -19,6 +19,7 @@ Unified Dashboard API for Nanoprobe Sim Lab
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect, status, Depends
 from fastapi.responses import JSONResponse
 from fastapi import Header
+from api.state import get_system_disk_usage
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 import psutil
@@ -113,7 +114,7 @@ def get_storage_stats() -> Dict[str, float]:
                         continue
 
     # Общая ёмкость диска
-    disk = psutil.disk_usage('/')
+    disk = get_system_disk_usage()
     total_mb = disk.total / (1024 * 1024)
 
     return {
@@ -255,7 +256,7 @@ async def get_detailed_stats(
         # Использование ресурсов
         cpu_percent = psutil.cpu_percent(interval=0.1)
         memory = psutil.virtual_memory()
-        disk = psutil.disk_usage('/')
+        disk = get_system_disk_usage()
 
         # Uptime системы
         boot_time = datetime.fromtimestamp(psutil.boot_time())
@@ -539,7 +540,7 @@ async def get_realtime_metrics_detailed():
                 "total_mb": round(memory.total / (1024**2), 2)
             },
             "disk": {
-                "percent": psutil.disk_usage('/').percent,
+                "percent": get_system_disk_usage().percent,
                 "read_mb": round(disk_io.read_bytes / (1024**2), 2) if disk_io else 0,
                 "write_mb": round(disk_io.write_bytes / (1024**2), 2) if disk_io else 0
             },
@@ -720,7 +721,7 @@ async def get_storage_stats_endpoint(
         }
 
     try:
-        disk = psutil.disk_usage('/')
+        disk = get_system_disk_usage()
         
         # Размер БД
         db_path = Path("data/nanoprobe.db")
@@ -805,7 +806,7 @@ async def check_alerts():
         alerts = []
         cpu_percent = psutil.cpu_percent(interval=0.1)
         memory = psutil.virtual_memory()
-        disk = psutil.disk_usage('/')
+        disk = get_system_disk_usage()
 
         # CPU алерты
         if cpu_percent >= 90:

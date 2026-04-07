@@ -275,43 +275,53 @@ def reset_rate_limit_stats():
 
 # ==================== IP Whitelist/Blacklist ====================
 
+import threading
+
 _ip_whitelist: set = set()
 _ip_blacklist: set = set()
+_ip_lock = threading.Lock()  # Thread-safe access to IP lists
 
 
 def whitelist_ip(ip: str):
     """Добавить IP в whitelist (без ограничений)"""
-    _ip_whitelist.add(ip)
+    with _ip_lock:
+        _ip_whitelist.add(ip)
 
 
 def blacklist_ip(ip: str):
     """Добавить IP в blacklist (полная блокировка)"""
-    _ip_blacklist.add(ip)
+    with _ip_lock:
+        _ip_blacklist.add(ip)
 
 
 def remove_from_whitelist(ip: str):
     """Удалить IP из whitelist"""
-    _ip_whitelist.discard(ip)
+    with _ip_lock:
+        _ip_whitelist.discard(ip)
 
 
 def remove_from_blacklist(ip: str):
     """Удалить IP из blacklist"""
-    _ip_blacklist.discard(ip)
+    with _ip_lock:
+        _ip_blacklist.discard(ip)
 
 
 def is_ip_whitelisted(ip: str) -> bool:
     """Проверка IP в whitelist"""
-    return ip in _ip_whitelist
+    with _ip_lock:
+        return ip in _ip_whitelist
 
 
 def is_ip_blacklisted(ip: str) -> bool:
     """Проверка IP в blacklist"""
-    return ip in _ip_blacklist
+    with _ip_lock:
+        return ip in _ip_blacklist
 
 
 def get_ip_lists() -> Dict:
     """Получение списков IP"""
-    return {
-        "whitelist": list(_ip_whitelist),
-        "blacklist": list(_ip_blacklist)
-    }
+    with _ip_lock:
+        return {
+            "whitelist": list(_ip_whitelist),
+            "blacklist": list(_ip_blacklist)
+        }

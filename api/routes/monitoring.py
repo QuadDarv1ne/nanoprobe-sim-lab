@@ -18,6 +18,8 @@ import re
 from datetime import datetime, timezone
 import sqlite3
 from pathlib import Path
+
+from api.state import get_system_disk_usage
 from typing import Optional, Dict, Any
 
 logger = logging.getLogger(__name__)
@@ -68,7 +70,7 @@ async def get_detailed_health():
     memory = psutil.virtual_memory()
     
     # Disk
-    disk = psutil.disk_usage('/')
+    disk = get_system_disk_usage()
     
     # Network
     net = psutil.net_io_counters()

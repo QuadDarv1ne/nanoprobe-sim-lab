@@ -263,10 +263,13 @@ async def health_check():
 async def detailed_health_check():
     """Детальная проверка здоровья системы"""
     import psutil
+    import platform
 
     cpu_percent = psutil.cpu_percent(interval=0.1)
     memory = psutil.virtual_memory()
-    disk = psutil.disk_usage('/')
+    # Cross-platform disk usage: Windows uses drive letters, Unix uses '/'
+    disk_path = os.environ.get("SYSTEMDRIVE", "C:\\") if platform.system() == "Windows" else "/"
+    disk = psutil.disk_usage(disk_path)
 
     health_status = "healthy"
     issues = []
@@ -287,6 +290,8 @@ async def detailed_health_check():
         "status": health_status,
         "timestamp": datetime.now().isoformat(),
         "version": "1.0.0",
+        "python_version": f"{os.sys.version}",
+        "database": "SQLite 3.x",
         "metrics": {
             "cpu": {
                 "percent": cpu_percent,
@@ -320,11 +325,12 @@ async def realtime_metrics():
     """Метрики в реальном времени"""
     import psutil
 
+    from api.state import get_system_disk_usage
     return {
         "timestamp": datetime.now().isoformat(),
         "cpu_percent": psutil.cpu_percent(interval=0.1),
         "memory_percent": psutil.virtual_memory().percent,
-        "disk_percent": psutil.disk_usage('/').percent,
+        "disk_percent": get_system_disk_usage().percent,
     }
 
 
@@ -529,13 +535,14 @@ async def websocket_endpoint(websocket: WebSocket):
 
                 elif message.get("type") == "get_metrics":
                     # Отправка текущих метрик
+                    from api.state import get_system_disk_usage
                     metrics = {
                         "type": "metrics",
                         "timestamp": datetime.now().isoformat(),
                         "data": {
                             "cpu_percent": psutil.cpu_percent(interval=0.1),
                             "memory_percent": psutil.virtual_memory().percent,
-                            "disk_percent": psutil.disk_usage('/').percent,
+                            "disk_percent": get_system_disk_usage().percent,
                         }
                     }
                     await websocket.send_json(metrics)
