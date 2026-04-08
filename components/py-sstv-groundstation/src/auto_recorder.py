@@ -7,7 +7,6 @@ import sys
 import os
 import time
 import threading
-import subprocess
 import json
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -62,9 +61,6 @@ class AutoRecordingScheduler:
         self.is_running = False
         self.monitor_thread: Optional[threading.Thread] = None
         self.callback: Optional[Callable] = None
-
-        # Путь к main.py для запуска записи
-        self.main_script = Path(__file__).parent / "main.py"
 
         # Создаём директорию для записей
         Path("output/auto_recordings").mkdir(parents=True, exist_ok=True)
@@ -191,37 +187,49 @@ class AutoRecordingScheduler:
             time.sleep(10)
 
     def _start_recording(self, recording: ScheduledRecording):
-        """Начинает запись."""
+        """Начинает запись через SDRInterface напрямую (без subprocess)."""
         try:
             recording.status = 'recording'
 
-            # Создаём директорию для записи
             timestamp = recording.aos.strftime('%Y%m%d_%H%M%S')
             output_dir = Path(recording.output_dir) / f"{recording.satellite}_{timestamp}"
             output_dir.mkdir(parents=True, exist_ok=True)
 
-            # Формируем команду
-            cmd = [
-                'python', str(self.main_script),
-                '--sdr',
-                '-f', str(recording.frequency),
-                '--duration', str(recording.duration_minutes),
-                '--output-audio', str(output_dir / f"{recording.satellite}_{timestamp}.wav"),
-                '--output-image', str(output_dir / f"{recording.satellite}_{timestamp}.png"),
-                '--auto-decode',
-                '--bias-tee',
-                '--agc'
-            ]
+            audio_file = output_dir / f"{recording.satellite}_{timestamp}.wav"
+            image_file = output_dir / f"{recording.satellite}_{timestamp}.png"
 
-            # Запускаем процесс
-            recording.recording_process = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
-            )
+            from sdr_interface import SDRInterface
+            from sstv_decoder import SSTVDecoder
+
+            sdr = SDRInterface(center_freq=recording.frequency, sample_rate=2400000, gain=30)
+
+            if not sdr.initialize():
+                raise RuntimeError("SDR initialization failed")
+
+            decoder = SSTVDecoder(mode='auto')
+            duration_sec = recording.duration_minutes * 60
+
+            def _record_and_decode():
+                try:
+                    sdr.start_recording(duration_seconds=duration_sec, output_file=str(audio_file))
+                    import time as _t
+                    _t.sleep(duration_sec + 2)
+                    if audio_file.exists():
+                        image = decoder.decode_from_audio(str(audio_file))
+                        if image:
+                            image.save(str(image_file), 'PNG')
+                            print(f"✅ SSTV декодировано: {image_file}")
+                finally:
+                    sdr.close()
+
+            record_thread = threading.Thread(target=_record_and_decode, daemon=True)
+            record_thread.start()
+            recording.recording_process = record_thread  # type: ignore[assignment]
 
             recording.metadata['start_time'] = datetime.now().isoformat()
             recording.metadata['output_dir'] = str(output_dir)
+            recording.metadata['audio_file'] = str(audio_file)
+            recording.metadata['image_file'] = str(image_file)
 
             self._notify('recording_started', {
                 'satellite': recording.satellite,
@@ -245,15 +253,10 @@ class AutoRecordingScheduler:
     def _stop_recording(self, recording: ScheduledRecording):
         """Останавливает запись."""
         try:
-            if recording.recording_process:
-                # Останавливаем процесс
-                recording.recording_process.terminate()
-                try:
-                    recording.recording_process.wait(timeout=10)
-                except subprocess.TimeoutExpired:
-                    recording.recording_process.kill()
-                    recording.recording_process.wait(timeout=5)
-
+            if recording.recording_process is not None:
+                # Теперь это threading.Thread — просто ждём завершения (daemon=True)
+                if hasattr(recording.recording_process, 'join'):
+                    recording.recording_process.join(timeout=10)
                 recording.recording_process = None
 
             recording.status = 'completed'

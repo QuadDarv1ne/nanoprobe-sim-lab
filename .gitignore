@@ -44,7 +44,16 @@ data/*.db
 data/*.sqlite
 data/*.db-shm
 data/*.db-wal
+data/.jwt_secret
+data/.admin_password
+data/.user_password
+data/.password_hashes.json
+data/2fa_secrets.json
+data/tle_data.json
 output/
+
+# SSTV recordings
+sstv_recordings/
 
 # Env
 .env
