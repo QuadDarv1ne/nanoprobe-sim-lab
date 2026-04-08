@@ -1002,7 +1002,7 @@ async def export_data(format: str):
 async def clean_cache_action():
     """Очистка системного кэша"""
     try:
-        from utils.cache_manager import CacheManager
+        from utils.caching.cache_manager import CacheManager
         cache_mgr = CacheManager()
 
         cleaned_size = 0.0

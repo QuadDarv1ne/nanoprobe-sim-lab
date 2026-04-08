@@ -204,7 +204,7 @@ if __name__ == "__main__":
     def clean_cache(self):
         """Очищает кэш проекта."""
         try:
-            from utils.cache_manager import CacheManager
+            from utils.caching.cache_manager import CacheManager
 
             cache_manager = CacheManager(str(project_root))
 

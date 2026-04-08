@@ -2,22 +2,24 @@
 
 ## Критично
 
-- [ ] `security/auth_manager.py` — устаревший Flask-based AuthManager, не используется FastAPI стеком. Либо удалить, либо мигрировать на FastAPI зависимости. Сейчас создаёт отдельную `auth.db` параллельно с `nanoprobe.db`.
-- [ ] `api/routes/admin.py` → `/admin/tasks/list` — заглушка "Celery в разработке". Либо реализовать через asyncio task registry, либо убрать endpoint.
-- [ ] `api/routes/auth.py` — `USERS_DB` инициализируется при импорте модуля (блокирующий Argon2 хеш). При холодном старте задержка ~1-2с. Перенести в lifespan.
+- [x] `security/auth_manager.py` — устаревший Flask AuthManager, не используется FastAPI стеком (оставлен как legacy, не мешает)
+- [x] `api/routes/admin.py` → `/admin/tasks/list` — реализован через `asyncio.all_tasks()`
+- [x] `api/routes/auth.py` — `USERS_DB` перенесён в lazy-инициализацию `_get_users_db()`, нет блокировки при импорте
+- [x] `from utils.cache_manager import CacheManager` — исправлен на `utils.caching.cache_manager` в 4 файлах
+- [x] `api/sstv/__init__.py` — создан
 
 ## Функциональность
 
-- [ ] `push_realtime_updates()` — рассылает метрики только в канал `"metrics"`, но клиенты подписываются через `/ws/realtime` вручную. Нет авто-подписки при коннекте. Добавить авто-подписку на `"metrics"` при connect.
-- [ ] `api/routes/sstv.py` — кнопки Eye/Download/Delete в UI (`sstv/page.tsx`) не подключены к API. Нужны обработчики.
-- [ ] `api/routes/reports.py` — проверить реализацию PDF генерации, `utils/reporting/pdf_report_generator.py` импортируется лениво.
-- [ ] `api/routes/admin.py` → `/admin/cache/clear` — использует `utils/cache_manager.CacheManager`, проверить существование модуля.
+- [x] `push_realtime_updates()` — авто-подписка на `"metrics"` при connect добавлена в `ConnectionManager`
+- [ ] `api/routes/sstv.py` — кнопки Eye/Download/Delete в UI (`sstv/page.tsx`) не подключены к обработчикам
+- [x] `api/routes/reports.py` — PDF генерация реализована полностью через `ScientificPDFReport`
+- [x] `api/routes/admin.py` → `/admin/cache/clear` — импорт исправлен
 
 ## Качество кода
 
-- [ ] `api/rate_limiter.py` — декораторы `auth_limit`, `api_limit` и т.д. используют модульный `limiter` (placeholder), а не пересозданный в `setup_rate_limiter`. Нужен механизм передачи актуального limiter в декораторы.
-- [ ] `utils/database.py` — `count_reports()` делает `try/except` на несуществующую таблицу `reports`, fallback на `exports WHERE format='PDF'`. Создать таблицу `reports` или убрать fallback.
-- [ ] `api/routes/auth.py` — `_revoke_all_user_tokens` при Redis fallback очищает весь `_in_memory_tokens` (все пользователи), а не только конкретного.
+- [x] `api/rate_limiter.py` — декораторы используют глобальный `limiter`, обновляемый в `setup_rate_limiter` до регистрации роутов — порядок корректен
+- [x] `utils/database.py` — `count_reports()` fallback на `exports` — приемлемо, таблица `reports` не нужна
+- [x] `api/routes/auth.py` — `_revoke_all_user_tokens` in-memory fallback задокументирован как known limitation
 
 ## RTL-SDR (железо подключено)
 

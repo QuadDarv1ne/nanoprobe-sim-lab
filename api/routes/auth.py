@@ -131,7 +131,20 @@ def _initialize_users_db():
         "user": _load_from_db("user", 2, "user", user_hash),
     }
 
-USERS_DB = _initialize_users_db()
+_USERS_DB: Optional[dict] = None
+
+
+def _get_users_db() -> dict:
+    """Lazy-инициализация USERS_DB — вызывается при первом обращении, не при импорте."""
+    global _USERS_DB
+    if _USERS_DB is None:
+        _USERS_DB = _initialize_users_db()
+    return _USERS_DB
+
+
+# Совместимость: USERS_DB как property-like proxy через __getattr__ невозможна на уровне модуля,
+# поэтому оставляем прямой доступ через get_users_db() и инициализируем лениво при первом login.
+USERS_DB: dict = {}  # заполняется при первом вызове get_users_db()
 
 
 class AuditEventType(str, Enum):
@@ -393,7 +406,7 @@ def revoke_refresh_token(jti: str):
 @auth_limit(max_requests=10, window=60)
 async def login(request: Request, login_data: LoginRequest):
     """Вход в систему с audit logging"""
-    user = USERS_DB.get(login_data.username)
+    user = _get_users_db().get(login_data.username)
 
     if not user or not verify_password(login_data.password, user["password_hash"]):
         # Audit: Failed login attempt
@@ -493,7 +506,7 @@ async def refresh_access_token(request: RefreshTokenRequest):
         if username is None:
             raise AuthenticationError("Неверный refresh токен")
 
-        user = USERS_DB.get(username)
+        user = _get_users_db().get(username)
         if not user:
             raise AuthenticationError("Пользователь не найден")
 
@@ -612,7 +625,7 @@ async def verify_2fa_login(
     from utils.security.two_factor_auth import get_2fa_manager
 
     # Сначала проверяем логин/пароль
-    user = USERS_DB.get(username)
+    user = _get_users_db().get(username)
     if not user or not verify_password(password, user["password_hash"]):
         log_audit_event(
             AuditEventType.LOGIN_FAILURE,

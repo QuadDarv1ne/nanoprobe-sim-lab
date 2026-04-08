@@ -403,24 +403,23 @@ async def create_user(
     if current_user.get("role") != "admin":
         raise AuthorizationError("Требуется роль администратора")
 
-    from api.routes.auth import USERS_DB, hash_password, validate_password_strength
+    from api.routes.auth import _get_users_db, hash_password, validate_password_strength
 
-    if username in USERS_DB:
+    users_db = _get_users_db()
+    if username in users_db:
         raise ValidationError("Пользователь уже существует")
 
     ok, msg = validate_password_strength(password)
     if not ok:
         raise ValidationError(msg)
 
-    new_id = max(u["id"] for u in USERS_DB.values()) + 1 if USERS_DB else 1
+    new_id = max(u["id"] for u in users_db.values()) + 1 if users_db else 1
     pw_hash = hash_password(password)
 
-    # Сохраняем в SQLite
     db = get_db_manager()
     db.upsert_user(username, pw_hash, role)
 
-    # Обновляем in-memory
-    USERS_DB[username] = {
+    users_db[username] = {
         "id": new_id,
         "username": username,
         "password_hash": pw_hash,
@@ -445,20 +444,20 @@ async def delete_user(
     if current_user.get("role") != "admin":
         raise AuthorizationError("Требуется роль администратора")
 
-    from api.routes.auth import USERS_DB
+    from api.routes.auth import _get_users_db
 
-    if username not in USERS_DB:
+    users_db = _get_users_db()
+    if username not in users_db:
         raise NotFoundError(f"Пользователь {username} не найден", resource_type="user")
 
     if username == current_user.get("username"):
         raise ValidationError("Нельзя удалить самого себя")
 
-    # Удаляем из SQLite
     db = get_db_manager()
     with db.get_connection() as conn:
         conn.execute("DELETE FROM users WHERE username = ?", (username,))
 
-    del USERS_DB[username]
+    del users_db[username]
     logger.info(f"User deleted: {username} by {current_user['username']}")
     return {"message": f"Пользователь {username} удалён"}
 
@@ -506,7 +505,7 @@ async def clear_cache(
     if current_user.get("role") != "admin":
         raise AuthorizationError("Требуется роль администратора")
 
-    from utils.cache_manager import CacheManager
+    from utils.caching.cache_manager import CacheManager
 
     cache_mgr = CacheManager()
     cleared = cache_mgr.auto_cleanup()
@@ -523,15 +522,21 @@ async def clear_cache(
 @router.get(
     "/tasks/list",
     summary="Список задач",
-    description="Получить список фоновых задач",
+    description="Активные фоновые задачи asyncio",
 )
 async def list_tasks(current_user: dict = Depends(get_current_user)):
-    """Список задач"""
+    """Список активных asyncio задач"""
     if current_user.get("role") != "admin":
         raise AuthorizationError("Требуется роль администратора")
 
-    # Заглушка для будущей интеграции с Celery
-    return {
-        "tasks": [],
-        "message": "Интеграция с Celery в разработке",
-    }
+    import asyncio
+    tasks = []
+    for task in asyncio.all_tasks():
+        tasks.append({
+            "name": task.get_name(),
+            "done": task.done(),
+            "cancelled": task.cancelled(),
+            "coroutine": str(task.get_coro()),
+        })
+
+    return {"tasks": tasks, "total": len(tasks)}
