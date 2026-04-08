@@ -62,18 +62,28 @@ async def lifespan(app: FastAPI):
 
     # Инициализация ресурсов при старте
     try:
-        from api.state import get_db_manager, get_redis_cache, init_app_state
+        from api.state import init_app_state, set_db_manager, set_redis
+        from utils.database import DatabaseManager
+        from utils.caching.redis_cache import RedisCache
 
         # Инициализация БД
-        db = get_db_manager()
+        db = DatabaseManager("data/nanoprobe.db")
+        set_db_manager(db)
         logger.info("Database manager initialized")
 
-        # Инициализация Redis
-        redis = get_redis_cache()
-        logger.info("Redis cache initialized")
+        # Инициализация Redis (не критично, если Redis недоступен)
+        try:
+            redis = RedisCache()
+            set_redis(redis)
+            if redis.is_available():
+                logger.info("Redis cache initialized and connected")
+            else:
+                logger.info("Redis cache initialized (Redis server not available, using fallback mode)")
+        except Exception as e:
+            logger.warning(f"Redis initialization warning: {e}")
 
         # Инициализация app state
-        init_app_state(db, redis)
+        init_app_state(db, redis if 'redis' in locals() else None)
         logger.info("App state initialized")
 
         # Запуск автоматической очистки rate limiter
@@ -117,7 +127,7 @@ async def lifespan(app: FastAPI):
 
     # 4. Закрытие Redis
     try:
-        from api.state import get_redis_cache
+        from api.dependencies import get_redis_cache
         redis = get_redis_cache()
         if redis:
             redis.close()
@@ -254,6 +264,7 @@ async def track_requests(request: Request, call_next):
 async def health_check():
     """Проверка здоровья API"""
     import logging
+    import traceback
     logger = logging.getLogger(__name__)
     logger.info("Health check endpoint called")
     try:
@@ -265,8 +276,8 @@ async def health_check():
         logger.info(f"Health check result: {result}")
         return result
     except Exception as e:
-        import traceback
         tb = traceback.format_exc()
+        print(f"HEALTH ERROR: {e}\n{tb}")  # noqa: T201
         return {"error": str(e), "traceback": tb}
 
 

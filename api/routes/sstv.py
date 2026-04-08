@@ -59,26 +59,28 @@ def get_redis_cache() -> Optional[RedisCache]:
     return get_redis()
 
 
-def get_satellite_tracker() -> Optional[tracker_module.SatelliteTracker]:
+def get_satellite_tracker() -> Optional[Any]:
     """Получает SatelliteTracker instance."""
+    if tracker_module is None:
+        return None
+        
     tracker = get_app_state("satellite_tracker")
     if tracker is not None:
         return tracker
-    
-    if tracker_module is not None:
-        try:
-            # Координаты по умолчанию (Москва)
-            lat = float(os.getenv("GROUND_STATION_LAT", "55.75"))
-            lon = float(os.getenv("GROUND_STATION_LON", "37.61"))
-            tracker = tracker_module.SatelliteTracker(
-                ground_station_lat=lat,
-                ground_station_lon=lon
-            )
-            set_app_state("satellite_tracker", tracker)
-        except Exception as e:
-            logger.warning(f"SatelliteTracker initialization error: {e}")
-            tracker = None
-            set_app_state("satellite_tracker", tracker)
+
+    try:
+        # Координаты по умолчанию (Москва)
+        lat = float(os.getenv("GROUND_STATION_LAT", "55.75"))
+        lon = float(os.getenv("GROUND_STATION_LON", "37.61"))
+        tracker = tracker_module.SatelliteTracker(
+            ground_station_lat=lat,
+            ground_station_lon=lon
+        )
+        set_app_state("satellite_tracker", tracker)
+    except Exception as e:
+        logger.warning(f"SatelliteTracker initialization error: {e}")
+        tracker = None
+        set_app_state("satellite_tracker", tracker)
     return tracker
 
 

@@ -27,7 +27,8 @@ import os
 # ==================== Limiter Configuration ====================
 
 # Лимитер с использованием in-memory (Redis опционален)
-redis_disabled = os.getenv("REDIS_DISABLED", "0") == "1"
+# По умолчанию отключаем Redis, чтобы избежать ошибок подключения
+redis_disabled = os.getenv("REDIS_DISABLED", "1") == "1"  # Изменено на "1" по умолчанию
 if redis_disabled:
     # In-memory limiter без Redis
     limiter = Limiter(
@@ -77,7 +78,7 @@ def setup_rate_limiter(app):
         app: FastAPI приложение
     """
     # Отключаем middleware если Redis отключён (избегаем ошибок ConnectionError)
-    redis_disabled = os.getenv("REDIS_DISABLED", "0") == "1"
+    redis_disabled = os.getenv("REDIS_DISABLED", "1") == "1"  # Изменено на "1" по умолчанию
     if redis_disabled:
         # В режиме без Redis просто добавляем exception handler
         app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
