@@ -38,6 +38,7 @@ class WaterfallDisplay:
         # FFT параметры
         self.fft_size = width
         self.freq_bins = np.fft.fftfreq(width, 1/sample_rate) + center_freq
+        self._hann_window = np.hanning(width).astype(np.float32)
 
         # Цветовая палитра (grayscale)
         self.colormap = self._create_colormap()
