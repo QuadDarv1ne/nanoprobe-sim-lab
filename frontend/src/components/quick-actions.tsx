@@ -79,7 +79,7 @@ export function QuickActions() {
   const handleExportData = async () => {
     try {
       toast.info('Экспорт данных...');
-      const res = await fetch(`${API_BASE}/api/v1/export/all`);
+      const res = await fetch(`${API_BASE}/api/v1/export-bulk`);
       if (res.ok) {
         const blob = await res.blob();
         const url = window.URL.createObjectURL(blob);

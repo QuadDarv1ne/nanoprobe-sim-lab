@@ -76,7 +76,7 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
             <span>Доступно обновление приложения</span>
             <Button 
               size="sm" 
-              variant="secondary"
+              variant="outline"
               onClick={applyUpdate}
             >
               Обновить

@@ -952,8 +952,9 @@ class DatabaseManager:
             cursor = conn.cursor()
 
             query = """
-                SELECT id, simulation_type, parameters, results, status, 
-                       created_at, updated_at, duration_seconds, error_message
+                SELECT id, simulation_id, simulation_type, status,
+                       start_time, end_time, duration_seconds, parameters,
+                       results_summary, created_at
                 FROM simulations
             """
             params = []

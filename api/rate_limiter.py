@@ -82,86 +82,26 @@ def setup_rate_limiter(app):
 # ==================== Rate Limit Decorators ====================
 
 def auth_limit(max_requests: int = 5, window: int = 60):
-    """
-    Строгий лимит для auth endpoints (login, register, 2FA)
-    
-    Args:
-        max_requests: Максимум запросов
-        window: Окно времени в секундах
-
-    Returns:
-        Декоратор rate limit
-    """
     return limiter.limit(f"{max_requests}/{window}seconds")
 
 
 def api_limit(max_requests: int = 100, window: int = 60):
-    """
-    Стандартный лимит для обычных API endpoints (GET)
-
-    Args:
-        max_requests: Максимум запросов
-        window: Окно времени в секундах
-
-    Returns:
-        Декоратор rate limit
-    """
     return limiter.limit(f"{max_requests}/{window}seconds")
 
 
 def write_limit(max_requests: int = 30, window: int = 60):
-    """
-    Лимит для write операций (POST, PUT, DELETE)
-
-    Args:
-        max_requests: Максимум запросов
-        window: Окно времени в секундах
-
-    Returns:
-        Декоратор rate limit
-    """
     return limiter.limit(f"{max_requests}/{window}seconds")
 
 
 def download_limit(max_requests: int = 20, window: int = 60):
-    """
-    Лимит для download endpoints (файлы, изображения)
-
-    Args:
-        max_requests: Максимум запросов
-        window: Окно времени в секундах
-
-    Returns:
-        Декоратор rate limit
-    """
     return limiter.limit(f"{max_requests}/{window}seconds")
 
 
 def external_limit(max_requests: int = 10, window: int = 60):
-    """
-    Лимит для external API endpoints (NASA, external services)
-
-    Args:
-        max_requests: Максимум запросов
-        window: Окно времени в секундах
-
-    Returns:
-        Декоратор rate limit
-    """
     return limiter.limit(f"{max_requests}/{window}seconds")
 
 
 def sstv_limit(max_requests: int = 10, window: int = 60):
-    """
-    Лимит для SSTV operations (decode, upload)
-
-    Args:
-        max_requests: Максимум запросов
-        window: Окно времени в секундах
-
-    Returns:
-        Декоратор rate limit
-    """
     return limiter.limit(f"{max_requests}/{window}seconds")
 
 

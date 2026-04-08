@@ -97,8 +97,20 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Startup initialization warning (may be expected in dev): {e}")
 
+    # Запуск фоновой задачи push-уведомлений
+    push_task = asyncio.create_task(push_realtime_updates())
+    logger.info("Realtime push task started")
+
     yield
     logger.info("Application shutting down...")
+
+    # Остановка фоновой задачи push-уведомлений
+    try:
+        push_task.cancel()
+        await asyncio.gather(push_task, return_exceptions=True)
+        logger.info("Realtime push task stopped")
+    except Exception as e:
+        logger.debug(f"Push task cleanup error: {e}")
 
     # 1. Остановка мониторинга
     try:
@@ -309,6 +321,14 @@ async def detailed_health_check():
         health_status = "critical"
         issues.append("Критическое заполнение диска")
 
+    # Redis status
+    try:
+        from api.state import get_redis
+        _r = get_redis()
+        cache_status = "running" if _r and _r.is_available() else "unavailable"
+    except Exception:
+        cache_status = "unavailable"
+
     return {
         "status": health_status,
         "timestamp": datetime.now().isoformat(),
@@ -337,7 +357,7 @@ async def detailed_health_check():
         "services": {
             "api": "running",
             "database": "running",
-            "cache": "disabled"
+            "cache": cache_status,
         }
     }
 
@@ -354,23 +374,6 @@ async def realtime_metrics():
         "cpu_percent": psutil.cpu_percent(interval=0.1),
         "memory_percent": psutil.virtual_memory().percent,
         "disk_percent": get_system_disk_usage().percent,
-    }
-
-
-# Export endpoint
-@app.get("/api/v1/export/{format}", tags=["Export"])
-async def export_data(format: str):
-    """Экспорт данных в различных форматах"""
-    if format not in ["json", "csv", "pdf"]:
-        raise ValidationError(
-            f"Неподдерживаемый формат: {format}. Доступны: json, csv, pdf"
-        )
-
-    return {
-        "format": format,
-        "status": "success",
-        "message": f"Данные экспортированы в формате {format.upper()}",
-        "download_url": f"/downloads/export_{format}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{format}"
     }
 
 
@@ -563,14 +566,29 @@ async def websocket_endpoint(websocket: WebSocket):
 
 # Фоновая задача для push-уведомлений подписчикам
 async def push_realtime_updates():
-    """Периодическая отправка обновлений подписчикам"""
+    """Периодическая отправка метрик подписчикам канала 'metrics'"""
+    import psutil
+    from api.websocket_manager import get_connection_manager
+    from api.state import get_system_disk_usage
+
     while True:
         try:
-            await asyncio.sleep(5)  # Каждые 5 секунд
+            await asyncio.sleep(5)
 
-            # Здесь должна быть интеграция с ConnectionManager для рассылки
-            # Пока просто логируем
-            logger.debug("Realtime update tick")
+            manager = get_connection_manager()
+            if not manager.get_stats().get("total_connections", 0):
+                continue  # нет подключений — пропускаем
+
+            payload = {
+                "type": "metrics_update",
+                "timestamp": datetime.now().isoformat(),
+                "data": {
+                    "cpu_percent": psutil.cpu_percent(interval=None),
+                    "memory_percent": psutil.virtual_memory().percent,
+                    "disk_percent": get_system_disk_usage().percent,
+                },
+            }
+            await manager.send_to_channel("metrics", payload)
 
         except asyncio.CancelledError:
             logger.info("Realtime updates task cancelled")

@@ -65,7 +65,7 @@ class ConnectionManager:
             await websocket.accept()
             
             # Инициализация подписок
-            subscribed_channels = channels or {"realtime"}
+            subscribed_channels = channels or {"realtime", "metrics"}
             self.active_connections[websocket] = subscribed_channels
             
             # Добавление в каналы
