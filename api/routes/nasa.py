@@ -18,9 +18,6 @@ from typing import Optional
 from datetime import datetime, timedelta, timezone
 import logging
 
-from utils.api.nasa_api_client import get_nasa_client
-from utils.caching.redis_cache import cache
-from utils.security.rate_limiter import rate_limit
 from api.schemas import APODResponse
 from api.error_handlers import ExternalServiceError
 

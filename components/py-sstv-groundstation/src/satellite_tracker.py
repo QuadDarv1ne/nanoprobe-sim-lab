@@ -206,6 +206,35 @@ class SatelliteTracker:
         self.ground_station_lon = ground_station_lon
         self.satellites = self.DEFAULT_SATELLITES.copy()
         self.tle_file = Path("data/tle_data.json")
+        
+        # Загружаем TLE из кэша или обновляем с CelesTrak
+        self._load_or_refresh_tle()
+
+    def _load_or_refresh_tle(self, max_age_hours: int = 12):
+        """
+        Загружает TLE из кэша если свежие, иначе обновляет с CelesTrak.
+        
+        Args:
+            max_age_hours: Максимальный возраст кэша в часах (по умолчанию 12)
+        """
+        tle_file = Path("data/tle_data.json")
+        
+        # Проверяем возраст кэша
+        if tle_file.exists():
+            import time
+            age_hours = (time.time() - tle_file.stat().st_mtime) / 3600
+            if age_hours < max_age_hours:
+                loaded = self.load_tle(str(tle_file))
+                if loaded > 0:
+                    print(f"✓ TLE загружены из кэша ({age_hours:.1f}ч назад)")
+                    return
+        
+        # Кэш устарел или отсутствует — обновляем
+        updated = self.update_tle_from_celestrak()
+        if updated > 0:
+            self.save_tle(str(tle_file))
+        else:
+            print("⚠ Используются встроенные TLE (CelesTrak недоступен)")
 
     def load_tle(self, filepath: str) -> int:
         """
@@ -243,9 +272,9 @@ class SatelliteTracker:
         Returns:
             bool: True если успешно
         """
-        filepath = filepath or self.tle_file
+        save_path = Path(filepath) if filepath else self.tle_file
         try:
-            filepath.parent.mkdir(parents=True, exist_ok=True)
+            save_path.parent.mkdir(parents=True, exist_ok=True)
 
             tle_data = {}
             for name, sat in self.satellites.items():
@@ -254,10 +283,10 @@ class SatelliteTracker:
                     'line2': sat.tle_line2
                 }
 
-            with open(filepath, 'w') as f:
+            with open(save_path, 'w') as f:
                 json.dump(tle_data, f, indent=2)
 
-            print(f"TLE сохранены: {filepath}")
+            print(f"TLE сохранены: {save_path}")
             return True
         except Exception as e:
             print(f"Ошибка сохранения TLE: {e}")

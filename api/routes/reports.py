@@ -17,7 +17,6 @@ from api.schemas import (
 from api.dependencies import get_db
 from api.error_handlers import ValidationError, DatabaseError, NotFoundError
 from utils.database import DatabaseManager
-from utils.reporting.pdf_report_generator import ScientificPDFReport
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +34,8 @@ async def generate_pdf_report(
     db: DatabaseManager = Depends(get_db),
 ):
     """Сгенерировать PDF отчёт"""
+    # Lazy import - reportlab
+    from utils.reporting.pdf_report_generator import ScientificPDFReport
     from api.metrics import BusinessMetrics
 
     try:

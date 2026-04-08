@@ -29,13 +29,13 @@ class RedisCache:
                     port=self.port,
                     db=self.db,
                     decode_responses=True,
-                    socket_connect_timeout=5,
-                    socket_timeout=5,
-                    retry_on_timeout=True,
-                    health_check_interval=30,
+                    socket_connect_timeout=2,
+                    socket_timeout=2,
+                    retry_on_timeout=False,
                 )
+                # Non-blocking ping with short timeout
                 self._client.ping()
-            except (redis.ConnectionError, redis.TimeoutError, redis.RedisError):
+            except (redis.ConnectionError, redis.TimeoutError, redis.RedisError, OSError):
                 self._enabled = False
                 self._client = None
         return self._client

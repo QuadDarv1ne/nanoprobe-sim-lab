@@ -708,15 +708,49 @@ Backend (FastAPI:8000) ←→ Sync Manager ←→ Frontend (Flask:5000)
 - `c6c3a73` - fix: critical security and WebSocket improvements
 
 ---
-- [ ] SSTV Ground Station
-- [ ] External services integration
-- [ ] Тесты и валидацияty modules** for comprehensive functionality
-- Code quality: No bare except, no wildcard imports, proper type hints
-- Dashboard consolidation already completed (unified dashboard.py)
+- [x] SSTV Ground Station — RTL-SDR V4 подключён, баги исправлены (2026-04-08)
+- [ ] External services integration — circuit breaker есть, тесты нужны
+- [ ] Тесты и валидация — покрытие <80%, приоритет средний
 
 ---
 
-## 🎯 Рекомендации по улучшению (2026-03-23)
+## ✅ SSTV & Backend Improvements (2026-04-08) — ВЫПОЛНЕНО
+
+### Исправленные баги
+- [x] `decode_from_samples()` — убран `self.sdr.sample_rate` (AttributeError), добавлен `input_sample_rate`, ресемплинг через `resample_poly`
+- [x] `get_scan_results()` в `database.py` — запрос использовал несуществующие колонки (`scan_area_x` и др.)
+- [x] `auto_recorder.py` — добавлен `sys.path` fix, исправлен сломанный импорт `SatelliteTracker`
+- [x] `save_tle()` — баг с `filepath.parent` когда передаётся `str`
+- [x] `decode_token()` — не возвращает payload истёкшего токена без явного `allow_expired=True`
+- [x] `rtl_fm` gain — исправлена конвертация dB → tenths of dB (×10)
+- [x] `record/start` — параметр `gain` был 496 (raw), теперь 30 (dB)
+
+### Улучшения
+- [x] `SatelliteTracker` — автообновление TLE с CelesTrak при старте, кэш 12ч в `data/tle_data.json`
+- [x] `auth.py` — кэширование Argon2 хешей в `data/.password_hashes.json` (быстрый старт)
+- [x] API: новые эндпоинты `/sstv/tle/refresh`, `/sstv/tle/status`, `/sstv/device/check`
+- [x] `/record/start` — добавлен параметр `ppm` для коррекции частоты RTL-SDR V4
+- [x] Health check — показывает статус `rtl_fm` бинаря и возраст TLE кэша
+- [x] `requirements.txt` — добавлены `sgp4`, `requests`, `pyrtlsdr` с версиями
+
+## 🔧 TODO — Следующие шаги (приоритет)
+
+### Высокий
+- [ ] Убрать мусорные файлы из корня (`fix_lazy_imports.py`, `test_rtl_sdr.py`, `run_waterfall.py`, `run_sstv_decoder.py`, `sstv_ground_station.py`, `test_api_init.py`, `test_imports_step_by_step.py`, `start_api.bat`, `uvicorn_log.txt`, `waterfall_145.800.png`)
+- [ ] `USERS_DB` in-memory — перенести пользователей в SQLite (сейчас теряется `last_login` при рестарте)
+- [ ] Async `get_pass_predictions()` — сейчас блокирует event loop (SGP4 в потоке)
+- [ ] `auto_recorder.py` — запускает `python main.py` как subprocess, нужно прямое API
+
+### Средний
+- [ ] Test coverage 80%+ (сейчас 571 тестов, но SSTV/TLE не покрыты)
+- [ ] Doppler correction для частоты при пролёте спутника
+- [ ] N2YO API как fallback для TLE если CelesTrak недоступен
+
+### Низкий
+- [ ] Mobile app (React Native/Flutter)
+- [ ] NASA API полноценный ключ (не DEMO_KEY)
+
+---
 
 ### Высокий приоритет
 1. **Async Operations** - Заменить блокирующие операции в api_interface.py (time.sleep в потоках приемлемо)

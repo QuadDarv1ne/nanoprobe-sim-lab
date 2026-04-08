@@ -401,6 +401,18 @@ class DatabaseManager:
                 )
             """)
 
+            # Таблица пользователей (персистентное хранение вместо in-memory)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    password_hash TEXT NOT NULL,
+                    role TEXT NOT NULL DEFAULT 'user',
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                    last_login TEXT
+                )
+            """)
+
             # Индексы для новых таблиц
             cursor.execute("""
                 CREATE INDEX IF NOT EXISTS idx_comparison_timestamp
@@ -525,9 +537,8 @@ class DatabaseManager:
             cursor = conn.cursor()
 
             query = """
-                SELECT id, scan_type, surface_type, scan_area_x, scan_area_y, resolution_x, 
-                       resolution_y, scan_speed, timestamp, image_data, metadata, 
-                       processing_results, status, error_message, duration_seconds
+                SELECT id, timestamp, scan_type, surface_type, width, height,
+                       file_path, metadata, created_at
                 FROM scan_results
             """
             params = []
@@ -1845,6 +1856,65 @@ class DatabaseManager:
                 (cutoff_date,)
             )
             return cursor.rowcount
+
+    # ==================== User Management ====================
+
+    def get_user(self, username: str) -> Optional[Dict]:
+        """Получает пользователя по имени."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT id, username, password_hash, role, created_at, last_login FROM users WHERE username = ?",
+                (username,)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def get_user_by_id(self, user_id: int) -> Optional[Dict]:
+        """Получает пользователя по ID."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT id, username, password_hash, role, created_at, last_login FROM users WHERE id = ?",
+                (user_id,)
+            )
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def upsert_user(self, username: str, password_hash: str, role: str = "user") -> int:
+        """
+        Создаёт или обновляет пользователя (INSERT OR IGNORE + UPDATE hash если изменился).
+        Используется при старте для синхронизации паролей из ENV/файлов.
+        """
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO users (username, password_hash, role)
+                VALUES (?, ?, ?)
+                ON CONFLICT(username) DO UPDATE SET
+                    password_hash = excluded.password_hash,
+                    role = excluded.role
+            """, (username, password_hash, role))
+            return cursor.lastrowid
+
+    def update_last_login(self, username: str) -> None:
+        """Обновляет время последнего входа."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE users SET last_login = ? WHERE username = ?",
+                (datetime.now().isoformat(), username)
+            )
+
+    def update_password_hash(self, username: str, new_hash: str) -> bool:
+        """Обновляет хеш пароля пользователя."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE users SET password_hash = ? WHERE username = ?",
+                (new_hash, username)
+            )
+            return cursor.rowcount > 0
 
 
 # Глобальный экземляр для удобства

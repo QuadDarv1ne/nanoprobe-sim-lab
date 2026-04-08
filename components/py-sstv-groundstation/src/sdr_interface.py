@@ -569,6 +569,8 @@ class SDRInterface:
         # Callback для обработки сэмплов
         def sample_callback(samples):
             """Передаёт сэмплы в SSTV декодер для realtime обработки."""
+            # Передаём input_sample_rate чтобы decode_from_samples правильно ресемплировал
+            decoder._rt_input_sample_rate = self.sample_rate
             decoder.decode_realtime_push(samples)
 
         # Запускаем запись с real-time обработкой

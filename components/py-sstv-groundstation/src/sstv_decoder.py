@@ -91,13 +91,15 @@ class SSTVDecoder:
             print(f"Ошибка при декодировании SSTV-сигнала: {e}")
             return self._fallback_decode(audio_file)
 
-    def decode_from_samples(self, samples: np.ndarray, sample_rate: int = 44100) -> Optional[Image.Image]:
+    def decode_from_samples(self, samples: np.ndarray, sample_rate: int = 44100,
+                            input_sample_rate: int = None) -> Optional[Image.Image]:
         """
         Декодирует SSTV из numpy массива сэмплов (для RTL-SDR V4).
 
         Args:
-            samples: numpy массив сэмплов
-            sample_rate: частота дискретизации
+            samples: numpy массив сэмплов (комплексные I/Q или вещественные)
+            sample_rate: целевая частота дискретизации для WAV (44100 Гц)
+            input_sample_rate: исходная частота дискретизации I/Q (например 2400000 для RTL-SDR V4)
 
         Returns:
             Image.Image: Декодированное изображение или None
@@ -107,24 +109,26 @@ class SSTVDecoder:
         
         temp_path = None
         try:
-            # Сохраняем временный WAV файл
             import wave
 
             temp_file = tempfile.NamedTemporaryFile(suffix='.wav', delete=False)
             temp_path = temp_file.name
             temp_file.close()
 
-            # Нормализуем и конвертируем в 16-bit
-            # Извлекаем реальную часть из комплексных I/Q сэмплов
+            # Извлекаем аудио из I/Q сэмплов
             if np.iscomplexobj(samples):
-                # FM демодуляция для I/Q данных
+                # FM демодуляция: дифференцирование фазы
                 phase = np.angle(samples)
                 audio_data = np.diff(np.unwrap(phase))
-                # Ресемплинг к нужной частоте
-                from scipy.signal import resample
-                target_len = int(len(audio_data) * sample_rate / (self.sdr.sample_rate if hasattr(self, 'sdr') and self.sdr else 256000))
-                if target_len > 0:
-                    audio_data = resample(audio_data, target_len)
+                # Ресемплинг: input_sample_rate -> sample_rate
+                src_rate = input_sample_rate or 2400000  # RTL-SDR V4 default
+                if src_rate != sample_rate:
+                    from scipy.signal import resample_poly
+                    from math import gcd
+                    g = gcd(sample_rate, src_rate)
+                    up = sample_rate // g
+                    down = src_rate // g
+                    audio_data = resample_poly(audio_data, up, down)
             else:
                 audio_data = samples.real
             
@@ -211,14 +215,17 @@ class SSTVDecoder:
                 # Пробуем декодировать
                 try:
                     all_samples = np.concatenate(self.rt_buffer)
-                    self.rt_image = self.decode_from_samples(all_samples, self.rt_sample_rate)
+                    input_sr = getattr(self, '_rt_input_sample_rate', None)
+                    self.rt_image = self.decode_from_samples(
+                        all_samples, self.rt_sample_rate, input_sample_rate=input_sr
+                    )
 
                     if self.rt_image:
                         print(f"✓ SSTV декодировано: {self.rt_image.size[0]}x{self.rt_image.size[1]}")
                         if self.rt_callback:
                             self.rt_callback('image', self.rt_image)
                         self.rt_is_decoding = False
-                        self.rt_buffer = []  # Очищаем буфер
+                        self.rt_buffer = []
                         return self.rt_image
                     else:
                         print("? Не удалось декодировать")

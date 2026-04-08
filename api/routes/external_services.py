@@ -13,7 +13,6 @@ import requests
 from api.error_handlers import NotFoundError
 from api.state import get_app_state, set_app_state
 from utils.caching.circuit_breaker import circuit_breaker
-from utils.caching.redis_cache import cache as redis_cache
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +59,8 @@ async def get_nasa_apod(date: Optional[str] = None):
     Returns:
         Данные APOD
     """
+    from utils.caching.redis_cache import cache as redis_cache
+
     # Проверяем кэш
     cache_key = f"nasa:apod:{date or 'today'}"
     cached_data = redis_cache.get(cache_key)
@@ -121,6 +122,8 @@ async def search_zenodo(
     Returns:
         Результаты поиска
     """
+    from utils.caching.redis_cache import cache as redis_cache
+
     # Проверяем кэш
     cache_key = f"zenodo:search:{query}:{size}"
     cached_data = redis_cache.get(cache_key)
@@ -173,6 +176,8 @@ async def search_figshare(
     Returns:
         Результаты поиска
     """
+    from utils.caching.redis_cache import cache as redis_cache
+
     # Проверяем кэш
     cache_key = f"figshare:search:{query}:{limit}"
     cached_data = redis_cache.get(cache_key)

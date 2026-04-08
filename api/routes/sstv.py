@@ -132,10 +132,13 @@ async def get_iss_schedule(
 
     # Получаем предсказания
     try:
-        passes = tracker.get_pass_predictions(
-            satellite_name='iss',
-            hours_ahead=hours_ahead,
-            min_elevation=min_elevation
+        passes = await asyncio.get_event_loop().run_in_executor(
+            None,
+            lambda: tracker.get_pass_predictions(
+                satellite_name='iss',
+                hours_ahead=hours_ahead,
+                min_elevation=min_elevation
+            )
         )
 
         # Форматируем результат
@@ -194,7 +197,9 @@ async def get_iss_next_pass(
             }
 
     try:
-        next_pass = tracker.get_next_pass('iss')
+        next_pass = await asyncio.get_event_loop().run_in_executor(
+            None, lambda: tracker.get_next_pass('iss')
+        )
 
         if not next_pass:
             return {
@@ -460,7 +465,9 @@ async def get_all_satellites_schedule(hours_ahead: int = 24):
     hours_ahead = min(hours_ahead, 72)
     
     try:
-        schedule = tracker.get_sstv_schedule(hours_ahead)
+        schedule = await asyncio.get_event_loop().run_in_executor(
+            None, lambda: tracker.get_sstv_schedule(hours_ahead)
+        )
         
         result = []
         for pass_info in schedule:
@@ -545,6 +552,61 @@ async def iss_websocket(websocket: WebSocket):
             pass
 
 
+@router.post("/tle/refresh")
+async def refresh_tle():
+    """
+    Принудительное обновление TLE данных с CelesTrak.
+    
+    Returns:
+        Количество обновлённых спутников
+    """
+    tracker = get_satellite_tracker()
+    if not tracker:
+        raise ServiceUnavailableError("Satellite tracker недоступен")
+    
+    try:
+        updated = tracker.update_tle_from_celestrak()
+        if updated > 0:
+            tracker.save_tle("data/tle_data.json")
+            # Сбрасываем кэшированный трекер чтобы следующий запрос получил свежий
+            set_app_state("satellite_tracker", None)
+        
+        return {
+            "status": "success",
+            "updated": updated,
+            "message": f"Обновлено TLE: {updated} спутников"
+        }
+    except Exception as e:
+        logger.error(f"TLE refresh error: {e}")
+        raise ServiceUnavailableError(f"Ошибка обновления TLE: {str(e)}")
+
+
+@router.get("/tle/status")
+async def get_tle_status():
+    """Статус TLE данных (возраст, источник)."""
+    from pathlib import Path
+    import time
+    
+    tle_file = Path("data/tle_data.json")
+    
+    if tle_file.exists():
+        age_hours = (time.time() - tle_file.stat().st_mtime) / 3600
+        return {
+            "status": "cached",
+            "age_hours": round(age_hours, 2),
+            "fresh": age_hours < 12,
+            "file": str(tle_file),
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    return {
+        "status": "builtin",
+        "age_hours": None,
+        "fresh": False,
+        "message": "Используются встроенные TLE, рекомендуется обновить"
+    }
+
+
 # ============================================================================
 # Health Check
 # ============================================================================
@@ -554,23 +616,112 @@ async def sstv_health_check():
     """Проверка здоровья SSTV модуля."""
     recording_process = get_app_state("recording_process")
     
+    # Проверяем наличие rtl_fm в PATH
+    import shutil
+    rtl_fm_available = shutil.which("rtl_fm") is not None
+    
+    # Проверяем TLE возраст
+    from pathlib import Path as _Path
+    import time as _time
+    tle_file = _Path("data/tle_data.json")
+    tle_age_hours = None
+    if tle_file.exists():
+        tle_age_hours = round((_time.time() - tle_file.stat().st_mtime) / 3600, 1)
+    
     status = {
         "sstv_decoder": "available" if SSTV_AVAILABLE else "unavailable",
         "satellite_tracker": "available" if tracker_module is not None else "unavailable",
         "redis_cache": "available" if REDIS_AVAILABLE else "unavailable",
-        "rtl_sdr": "ready" if recording_process is None else "recording",
+        "rtl_sdr_recording": "idle" if recording_process is None else "recording",
+        "rtl_fm_binary": "found" if rtl_fm_available else "not_found",
+        "tle_cache_age_hours": tle_age_hours,
+        "tle_fresh": tle_age_hours is not None and tle_age_hours < 12,
         "timestamp": datetime.now().isoformat()
     }
 
-    all_ok = all([
-        SSTV_AVAILABLE,
-        tracker_module is not None
-    ])
+    all_ok = SSTV_AVAILABLE and tracker_module is not None
 
     return {
         "status": "healthy" if all_ok else "degraded",
         "components": status
     }
+
+
+@router.get("/device/check")
+async def check_rtlsdr_device():
+    """
+    Проверка подключения RTL-SDR устройства.
+    
+    Returns:
+        Информация об устройстве (тип, серийный номер, статус)
+    """
+    try:
+        from rtlsdr import RtlSdr
+    except ImportError:
+        return {
+            "status": "error",
+            "message": "pyrtlsdr не установлен",
+            "devices": []
+        }
+    
+    try:
+        if hasattr(RtlSdr, 'get_device_count'):
+            num_devices = RtlSdr.get_device_count()
+        else:
+            # Пробуем открыть устройство 0
+            try:
+                test = RtlSdr(device_index=0)
+                test.close()
+                num_devices = 1
+            except Exception:
+                num_devices = 0
+        
+        if num_devices == 0:
+            return {
+                "status": "no_devices",
+                "message": "RTL-SDR устройства не обнаружены",
+                "devices": []
+            }
+        
+        devices = []
+        for i in range(num_devices):
+            sdr = None
+            try:
+                sdr = RtlSdr(device_index=i)
+                name = sdr.get_device_name() if hasattr(sdr, 'get_device_name') else "Unknown"
+                serial = sdr.get_serial_number() if hasattr(sdr, 'get_serial_number') else "Unknown"
+                
+                is_v4 = 'R828D' in name.upper() or 'V4' in name.upper()
+                
+                devices.append({
+                    "index": i,
+                    "name": name,
+                    "serial": serial,
+                    "is_v4": is_v4,
+                    "recommended_sample_rate": 2400000 if is_v4 else 2000000
+                })
+            except Exception as e:
+                devices.append({"index": i, "error": str(e)})
+            finally:
+                if sdr:
+                    try:
+                        sdr.close()
+                    except Exception:
+                        pass
+        
+        return {
+            "status": "ok",
+            "count": num_devices,
+            "devices": devices
+        }
+    
+    except Exception as e:
+        logger.error(f"Device check error: {e}")
+        return {
+            "status": "error",
+            "message": str(e),
+            "devices": []
+        }
 
 
 # ============================================================================
@@ -581,16 +732,18 @@ async def sstv_health_check():
 async def start_sstv_recording(
     frequency: float = 145.800,
     sample_rate: int = 2048000,
-    gain: int = 496,
-    duration: int = 600
+    gain: int = 30,
+    duration: int = 600,
+    ppm: int = 0
 ):
     """
     Запуск записи с RTL-SDR для приёма SSTV.
 
     - **frequency**: Частота в MHz (по умолчанию 145.800 для МКС)
     - **sample_rate**: Частота дискретизации (по умолчанию 2048000)
-    - **gain**: Усиление RTL-SDR (0-496)
+    - **gain**: Усиление RTL-SDR в dB (0-50, по умолчанию 30)
     - **duration**: Длительность записи в секундах
+    - **ppm**: Коррекция частоты в ppm (для TCXO обычно 0)
 
     Returns:
         Статус записи
@@ -613,16 +766,17 @@ async def start_sstv_recording(
     output_file = output_dir / f"sstv_{frequency}MHz_{timestamp}.wav"
     
     # Команда для rtl_fm (часть rtl-sdr)
+    # rtl_fm принимает gain в tenths of dB (0.1 dB единицы), поэтому умножаем на 10
     cmd = [
         "rtl_fm",
-        "-f", str(frequency * 1e6),  # Конвертируем MHz в Hz
+        "-f", str(int(frequency * 1e6)),  # Конвертируем MHz в Hz
         "-s", str(sample_rate),
-        "-g", str(gain),
+        "-g", str(gain * 10),             # dB -> tenths of dB для rtl_fm
         "-F", "9",
         "-o", "4",
-        "-p", "0",  # ppm correction (настраивается)
+        "-p", str(ppm),                   # ppm коррекция (0 для TCXO)
         "-M", "fm",
-        output_file
+        str(output_file)
     ]
     
     try:

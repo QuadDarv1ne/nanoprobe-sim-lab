@@ -16,7 +16,6 @@ from api.schemas import (
 from api.dependencies import get_db
 from api.error_handlers import NotFoundError, ValidationError
 from utils.database import DatabaseManager
-from utils.ai.defect_analyzer import DefectAnalysisPipeline
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +33,8 @@ async def analyze_image_defects(
     db: DatabaseManager = Depends(get_db),
 ):
     """Анализ дефектов на изображении"""
+    # Lazy import - ML model loading
+    from utils.ai.defect_analyzer import DefectAnalysisPipeline
     from api.metrics import BusinessMetrics
 
     try:
