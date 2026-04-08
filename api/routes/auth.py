@@ -14,6 +14,7 @@ import jwt
 import os
 import secrets
 import logging
+import hashlib
 from enum import Enum
 
 from passlib.context import CryptContext
@@ -59,26 +60,75 @@ pwd_context = CryptContext(
 
 # Инициализация пользователей с безопасными паролями из ENV/файлов
 def _initialize_users_db():
-    """Инициализирует базу пользователей с безопасными паролями"""
+    """
+    Инициализирует базу пользователей.
+    Хеши кэшируются в data/.password_hashes.json чтобы не пересчитывать
+    Argon2 при каждом старте. Пользователи хранятся в SQLite — last_login
+    персистентен между рестартами.
+    """
     default_passwords = get_default_passwords()
-    
+    hash_cache_file = Path("data/.password_hashes.json")
+
+    cached_hashes = {}
+    if hash_cache_file.exists():
+        try:
+            import json as _json
+            cached_hashes = _json.loads(hash_cache_file.read_text())
+        except Exception:
+            cached_hashes = {}
+
+    def _get_or_create_hash(username: str, password: str) -> str:
+        cache_key = f"{username}:{hashlib.sha256(password.encode()).hexdigest()[:16]}"
+        if cache_key in cached_hashes:
+            return cached_hashes[cache_key]
+        new_hash = pwd_context.hash(password)
+        cached_hashes[cache_key] = new_hash
+        return new_hash
+
+    import json as _json
+
+    admin_hash = _get_or_create_hash("admin", default_passwords["admin"])
+    user_hash = _get_or_create_hash("user", default_passwords["user"])
+
+    # Сохраняем кэш хешей
+    try:
+        hash_cache_file.parent.mkdir(parents=True, exist_ok=True)
+        hash_cache_file.write_text(_json.dumps(cached_hashes))
+        hash_cache_file.chmod(0o600)
+    except Exception as e:
+        logger.warning(f"Could not save password hash cache: {e}")
+
+    # Синхронизируем с SQLite (upsert) — создаём если нет, обновляем хеш если изменился
+    try:
+        from utils.database import get_database
+        db = get_database()
+        db.upsert_user("admin", admin_hash, "admin")
+        db.upsert_user("user", user_hash, "user")
+        logger.info("Users synced to database")
+    except Exception as e:
+        logger.warning(f"Could not sync users to database: {e}")
+
+    # Возвращаем in-memory dict для совместимости с текущим кодом
+    # last_login подгружается из БД
+    def _load_from_db(username: str, uid: int, role: str, ph: str) -> dict:
+        try:
+            from utils.database import get_database
+            row = get_database().get_user(username)
+            last_login = row.get("last_login") if row else None
+        except Exception:
+            last_login = None
+        return {
+            "id": uid,
+            "username": username,
+            "password_hash": ph,
+            "role": role,
+            "created_at": "2026-03-11T00:00:00",
+            "last_login": last_login,
+        }
+
     return {
-        "admin": {
-            "id": 1,
-            "username": "admin",
-            "password_hash": pwd_context.hash(default_passwords["admin"]),
-            "role": "admin",
-            "created_at": "2026-03-11T00:00:00",
-            "last_login": None,
-        },
-        "user": {
-            "id": 2,
-            "username": "user",
-            "password_hash": pwd_context.hash(default_passwords["user"]),
-            "role": "user",
-            "created_at": "2026-03-11T00:00:00",
-            "last_login": None,
-        },
+        "admin": _load_from_db("admin", 1, "admin", admin_hash),
+        "user": _load_from_db("user", 2, "user", user_hash),
     }
 
 USERS_DB = _initialize_users_db()
@@ -168,15 +218,25 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return encoded_jwt
 
 
-def decode_token(token: str) -> dict:
-    """Декодирование JWT токена"""
+def decode_token(token: str, allow_expired: bool = False) -> dict:
+    """
+    Декодирование JWT токена.
+    
+    Args:
+        token: JWT токен
+        allow_expired: Если True — декодирует даже истёкший токен (только для logout/rotation)
+    """
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         return payload
     except jwt.ExpiredSignatureError:
-        # Токен истёк, но всё ещё можно декодировать
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM], options={"verify_exp": False})
-        return payload
+        if allow_expired:
+            payload = jwt.decode(
+                token, JWT_SECRET, algorithms=[JWT_ALGORITHM],
+                options={"verify_exp": False}
+            )
+            return payload
+        return {"error": "token_expired"}
     except jwt.InvalidTokenError:
         return {"error": "invalid_token"}
 
@@ -298,8 +358,14 @@ async def login(request: Request, login_data: LoginRequest):
         )
         raise AuthenticationError("Неверное имя пользователя или пароль")
 
-    # Обновление last_login
-    user["last_login"] = datetime.now().isoformat()
+    # Обновление last_login в памяти и в БД
+    now_iso = datetime.now().isoformat()
+    user["last_login"] = now_iso
+    try:
+        from utils.database import get_database
+        get_database().update_last_login(user["username"])
+    except Exception as e:
+        logger.debug(f"Could not persist last_login: {e}")
 
     # Auto-migration: если хеш bcrypt, перехешируем на Argon2 при входе
     if not user["password_hash"].startswith("$argon2"):
@@ -664,7 +730,8 @@ async def logout(request: Request, refresh_token: Optional[str] = None):
 
     if refresh_token:
         try:
-            payload = jwt.decode(refresh_token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+            payload = jwt.decode(refresh_token, JWT_SECRET, algorithms=[JWT_ALGORITHM],
+                                 options={"verify_exp": False})
             jti = payload.get("jti")
             username = payload.get("sub", "unknown")
 

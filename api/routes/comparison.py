@@ -16,7 +16,6 @@ from api.schemas import (
 )
 from api.dependencies import get_db
 from utils.database import DatabaseManager
-from utils.surface_comparator import SurfaceComparator
 
 
 logger = logging.getLogger(__name__)
@@ -36,6 +35,8 @@ async def compare_surfaces(
     db: DatabaseManager = Depends(get_db),
 ):
     """Сравнить две поверхности"""
+    # Lazy import - heavy ML/scipy dependencies
+    from utils.surface_comparator import SurfaceComparator
     from api.metrics import BusinessMetrics
 
     try:
