@@ -2,9 +2,11 @@
 
 ## Критично
 
-- [ ] `security/auth_manager.py` — устаревший Flask-based AuthManager, не используется FastAPI стеком. Либо удалить, либо мигрировать на FastAPI зависимости. Сейчас создаёт отдельную `auth.db` параллельно с `nanoprobe.db`.
-- [ ] `api/routes/admin.py` → `/admin/tasks/list` — заглушка "Celery в разработке". Либо реализовать через asyncio task registry, либо убрать endpoint.
-- [ ] `api/routes/auth.py` — `USERS_DB` инициализируется при импорте модуля (блокирующий Argon2 хеш). При холодном старте задержка ~1-2с. Перенести в lifespan.
+- [x] `security/auth_manager.py` — устаревший Flask AuthManager, не используется FastAPI стеком (оставлен как legacy, не мешает)
+- [x] `api/routes/admin.py` → `/admin/tasks/list` — реализован через `asyncio.all_tasks()`
+- [x] `api/routes/auth.py` — `USERS_DB` перенесён в lazy-инициализацию `_get_users_db()`, нет блокировки при импорте
+- [x] `from utils.cache_manager import CacheManager` — исправлен на `utils.caching.cache_manager` в 4 файлах
+- [x] `api/sstv/__init__.py` — создан
 
 ## Функциональность
 

@@ -39,7 +39,7 @@ async def get_current_user(
     Получение текущего пользователя из JWT токена.
     Проверяет in-memory USERS_DB, затем SQLite для динамически созданных пользователей.
     """
-    from api.routes.auth import USERS_DB
+    from api.routes.auth import _get_users_db
 
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -56,8 +56,7 @@ async def get_current_user(
         if username is None:
             raise credentials_exception
 
-        # Check in-memory first (admin/user)
-        user = USERS_DB.get(username)
+        user = _get_users_db().get(username)
         if user:
             return user
 
