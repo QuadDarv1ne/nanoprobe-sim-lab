@@ -10,8 +10,9 @@ import { apiClient } from "@/lib/api-client";
 
 interface Simulation {
   id: number;
+  simulation_id: string;
   simulation_type: string;
-  duration_sec: number;
+  duration_seconds?: number;
   status: string;
   created_at: string;
 }
@@ -30,7 +31,7 @@ export default function SimulationsPage() {
       const res = await fetch(`${API_BASE}/api/v1/simulations`);
       if (res.ok) {
         const data = await res.json();
-        setSimulations(Array.isArray(data) ? data : []);
+        setSimulations(Array.isArray(data) ? data : (data.items ?? []));
       } else {
         const errorData = await res.json().catch(() => null);
         toast.error('Ошибка загрузки симуляций', {
@@ -143,7 +144,9 @@ export default function SimulationsPage() {
                         {sim.simulation_type}
                       </span>
                     </td>
-                    <td className="p-4 text-muted-foreground">{sim.duration_sec}s</td>
+                    <td className="p-4 text-muted-foreground">
+                      {sim.duration_seconds != null ? `${sim.duration_seconds.toFixed(1)}s` : '—'}
+                    </td>
                     <td className="p-4">
                       <span className={`px-2 py-1 rounded-full text-sm ${
                         sim.status === 'completed' 

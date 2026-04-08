@@ -78,10 +78,6 @@ async def generate_pdf_report(
                 author=request.author,
             )
 
-        # Бизнес-метрики
-        if report_path:
-            BusinessMetrics.inc_report_generated(request.report_type.value)
-
         elif request.report_type == ReportType.BATCH:
             report_path = report_generator.generate_batch_report(
                 batch_data=request.data,
@@ -93,6 +89,9 @@ async def generate_pdf_report(
 
         if not report_path:
             raise DatabaseError("Не удалось сгенерировать отчёт")
+
+        # Бизнес-метрики
+        BusinessMetrics.inc_report_generated(request.report_type.value)
 
         # Получение размера файла
         file_size = Path(report_path).stat().st_size

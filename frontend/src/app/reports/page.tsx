@@ -12,8 +12,10 @@ import { apiClient } from "@/lib/api-client";
 interface Report {
   id: number;
   report_type: string;
-  format: string;
-  status: string;
+  title?: string;
+  report_path: string;
+  file_size_bytes?: number;
+  pages_count?: number;
   created_at: string;
 }
 
@@ -224,8 +226,8 @@ export default function ReportsPage() {
                 <tr>
                   <th className="text-left p-4 font-medium text-muted-foreground">ID</th>
                   <th className="text-left p-4 font-medium text-muted-foreground">Тип</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground">Формат</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground">Статус</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground">Название</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground">Размер</th>
                   <th className="text-left p-4 font-medium text-muted-foreground">Дата</th>
                   <th className="text-right p-4 font-medium text-muted-foreground">Действия</th>
                 </tr>
@@ -242,21 +244,11 @@ export default function ReportsPage() {
                         {report.report_type}
                       </span>
                     </td>
-                    <td className="p-4">
-                      <span className="px-2 py-1 rounded-full bg-gray-500/10 text-gray-500 text-sm">
-                        {report.format}
-                      </span>
+                    <td className="p-4 text-muted-foreground truncate max-w-[160px]">
+                      {report.title || report.report_path.split('/').pop() || '—'}
                     </td>
-                    <td className="p-4">
-                      <span className={`px-2 py-1 rounded-full text-sm ${
-                        report.status === 'ready'
-                          ? 'bg-green-500/10 text-green-500'
-                          : report.status === 'generating'
-                          ? 'bg-blue-500/10 text-blue-500'
-                          : 'bg-gray-500/10 text-gray-500'
-                      }`}>
-                        {report.status}
-                      </span>
+                    <td className="p-4 text-muted-foreground">
+                      {report.file_size_bytes ? `${(report.file_size_bytes / 1024).toFixed(1)} KB` : '—'}
                     </td>
                     <td className="p-4 text-muted-foreground">
                       {format(new Date(report.created_at), 'dd.MM.yyyy HH:mm')}
@@ -266,10 +258,10 @@ export default function ReportsPage() {
                         <Button variant="outline" size="icon" onClick={() => window.location.href = `/reports/${report.id}`}>
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="icon" onClick={() => handleDownload(report.id)} disabled={report.status !== 'ready'}>
+                        <Button variant="outline" size="icon" onClick={() => handleDownload(report.id)} disabled={!report.report_path}>
                           <Download className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="icon" onClick={() => handlePrint(report.id)} disabled={report.status !== 'ready'}>
+                        <Button variant="outline" size="icon" onClick={() => handlePrint(report.id)} disabled={!report.report_path}>
                           <Printer className="h-4 w-4" />
                         </Button>
                         <Button 

@@ -11,10 +11,12 @@ import { apiClient } from "@/lib/api-client";
 
 interface Analysis {
   id: number;
-  analysis_type: string;
-  model: string;
-  confidence: number;
-  status: string;
+  analysis_id: string;
+  image_path: string;
+  model_name: string;
+  defects_detected: number;
+  confidence_score: number;
+  processing_time_ms?: number;
   created_at: string;
 }
 
@@ -51,7 +53,7 @@ export default function AnalysisPage() {
     
     setDeletingIds(prev => new Set(prev).add(id));
     try {
-      await apiClient.delete(`/api/v1/analysis/${id}`);
+      await apiClient.delete(`/api/v1/analysis/defects/${id}`);
       toast.success('Анализ удалён');
       fetchAnalyses();
     } catch (error) {
@@ -70,7 +72,7 @@ export default function AnalysisPage() {
 
   const handleDownload = async (id: number) => {
     try {
-      const res = await fetch(`${API_BASE}/api/v1/analysis/${id}/export`);
+      const res = await fetch(`${API_BASE}/api/v1/analysis/defects/${id}/export`);
       if (res.ok) {
         const blob = await res.blob();
         const url = window.URL.createObjectURL(blob);
@@ -167,10 +169,10 @@ export default function AnalysisPage() {
               <thead className="bg-secondary/50 border-b border-border">
                 <tr>
                   <th className="text-left p-4 font-medium text-muted-foreground">ID</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground">Тип</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground">Изображение</th>
                   <th className="text-left p-4 font-medium text-muted-foreground">Модель</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground">Точность</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground">Статус</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground">Дефектов</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground">Уверенность</th>
                   <th className="text-left p-4 font-medium text-muted-foreground">Дата</th>
                   <th className="text-right p-4 font-medium text-muted-foreground">Действия</th>
                 </tr>
@@ -183,32 +185,22 @@ export default function AnalysisPage() {
                   >
                     <td className="p-4 font-medium">#{analysis.id}</td>
                     <td className="p-4">
-                      <span className="px-2 py-1 rounded-full bg-purple-500/10 text-purple-500 text-sm">
-                        {analysis.analysis_type}
+                      <span className="px-2 py-1 rounded-full bg-purple-500/10 text-purple-500 text-sm truncate max-w-[120px] block">
+                        {analysis.image_path.split('/').pop() || analysis.image_path}
                       </span>
                     </td>
-                    <td className="p-4 text-muted-foreground">{analysis.model}</td>
+                    <td className="p-4 text-muted-foreground">{analysis.model_name}</td>
+                    <td className="p-4 text-muted-foreground">{analysis.defects_detected}</td>
                     <td className="p-4">
                       <div className="flex items-center gap-2">
                         <div className="flex-1 h-2 bg-gray-500/20 rounded-full overflow-hidden">
                           <div
                             className="h-full bg-green-500 rounded-full"
-                            style={{ width: `${analysis.confidence}%` }}
+                            style={{ width: `${(analysis.confidence_score * 100).toFixed(0)}%` }}
                           />
                         </div>
-                        <span className="text-sm font-medium">{analysis.confidence}%</span>
+                        <span className="text-sm font-medium">{(analysis.confidence_score * 100).toFixed(1)}%</span>
                       </div>
-                    </td>
-                    <td className="p-4">
-                      <span className={`px-2 py-1 rounded-full text-sm ${
-                        analysis.status === 'completed'
-                          ? 'bg-green-500/10 text-green-500'
-                          : analysis.status === 'processing'
-                          ? 'bg-blue-500/10 text-blue-500'
-                          : 'bg-gray-500/10 text-gray-500'
-                      }`}>
-                        {analysis.status}
-                      </span>
                     </td>
                     <td className="p-4 text-muted-foreground">
                       {format(new Date(analysis.created_at), 'dd.MM.yyyy HH:mm')}

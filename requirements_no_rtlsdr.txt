@@ -1,0 +1,125 @@
+# Python requirements for Nanoprobe Simulation Lab
+# Unified dependencies (Core + FastAPI + Flask + SSTV)
+# Updated: 2026-04-08
+
+# ============================================
+# CORE: Image processing and analysis
+# ============================================
+numpy>=1.24.0
+matplotlib>=3.7.0
+pandas>=2.0.0
+Pillow>=10.0.0
+scipy>=1.11.0
+scikit-learn>=1.3.0
+scikit-image>=0.21.0
+opencv-python>=4.8.0
+
+# ============================================
+# CORE: Validation & Config
+# ============================================
+jsonschema>=4.19.0
+toml>=0.10.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+email-validator>=2.1.0
+
+# ============================================
+# CORE: System monitoring
+# ============================================
+psutil>=5.9.0
+prometheus-client>=0.19.0
+
+# ============================================
+# CORE: Scheduling and automation
+# ============================================
+schedule>=1.2.0
+
+# ============================================
+# CORE: Visualization and dashboards
+# ============================================
+plotly>=5.17.0
+seaborn>=0.13.0
+
+# ============================================
+# CORE: PDF reports
+# ============================================
+reportlab>=4.0.0
+pdfkit>=1.0.0
+wkhtmltopdf>=0.2.0
+
+# ============================================
+# FLASK: Legacy frontend
+# ============================================
+flask>=3.0.0
+flask-socketio>=5.3.0
+python-socketio>=5.10.0
+eventlet>=0.34.0
+
+# ============================================
+# FASTAPI: Modern API Backend
+# ============================================
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+python-multipart>=0.0.6
+
+# ============================================
+# FASTAPI: Authentication & Security
+# ============================================
+PyJWT>=2.8.0
+python-jose[cryptography]>=3.3.0
+passlib[argon2,bcrypt]>=1.7.4
+argon2-cffi>=23.1.0
+bcrypt>=4.0.1
+
+# ============================================
+# FASTAPI: WebSocket
+# ============================================
+websockets>=12.0
+
+# ============================================
+# FASTAPI: Caching & HTTP
+# ============================================
+redis>=5.0.0
+aiohttp>=3.9.0
+aiofiles>=23.2.1
+requests>=2.31.0
+
+# ============================================
+# FASTAPI: Rate Limiting
+# ============================================
+slowapi>=0.1.8
+
+# ============================================
+# FASTAPI: Database
+# ============================================
+sqlalchemy>=2.0.0
+alembic>=1.13.0
+
+# ============================================
+# FASTAPI: Monitoring & Error Tracking
+# ============================================
+prometheus-fastapi-instrumentator>=6.1.0
+sentry-sdk[fastapi]>=1.39.0
+
+# ============================================
+# FASTAPI: Production server
+# ============================================
+gunicorn>=21.2.0
+
+# ============================================
+# SSTV: Radio ground station
+# ============================================
+pysstv>=0.2.0
+
+# ============================================
+# Docker support
+# ============================================
+docker>=7.0.0
+
+# ============================================
+# Development and testing
+# ============================================
+pytest>=7.4.0
+pytest-asyncio>=0.23.0
+memory-profiler>=0.61.0
+objgraph>=3.6.0

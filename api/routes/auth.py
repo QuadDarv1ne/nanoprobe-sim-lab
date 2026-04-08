@@ -389,7 +389,6 @@ def revoke_refresh_token(jti: str):
         429: {"model": ErrorResponse, "description": "Слишком много запросов"},
     },
 )
-@rate_limit(max_requests=5, window_seconds=60)
 @auth_limit(max_requests=10, window=60)
 async def login(request: Request, login_data: LoginRequest):
     """Вход в систему с audit logging"""

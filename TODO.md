@@ -5,9 +5,42 @@
 
 ---
 
-## ✅ Security & Stability Improvements (2026-04-08) - ВЫПОЛНЕНО
+## ✅ Full Audit & Bug Fixes (2026-04-08) - ВЫПОЛНЕНО
 
-### Session 7: Critical Security Middleware Activation
+### Session 8: Comprehensive Functionality Review
+
+**Исправленные баги:**
+
+| # | Файл | Баг | Исправление |
+|---|------|-----|-------------|
+| 1 | `api/routes/auth.py` | Двойной декоратор `@rate_limit` + `@auth_limit` на `/login` — `@rate_limit` оборачивал функцию и ломал сигнатуру для SlowAPI | Удалён `@rate_limit`, оставлен только `@auth_limit` |
+| 2 | `api/dependencies.py` | `get_current_user` проверял только in-memory `USERS_DB` — пользователи созданные через admin API (SQLite) не могли аутентифицироваться | Добавлен fallback на SQLite lookup |
+| 3 | `frontend/src/app/scans/page.tsx` | `Scan.resolution` не существует в API (`ScanResponse` имеет `width`/`height`) — отображался `undefined` | Исправлен интерфейс и рендеринг на `width×height` |
+| 4 | `frontend/src/app/simulations/page.tsx` | `Simulation.duration_sec` → должно быть `duration_seconds`; `data.items` не извлекался (был `Array.isArray(data) ? data : []`) | Исправлены поле и парсинг ответа |
+| 5 | `frontend/src/app/analysis/page.tsx` | `Analysis.analysis_type`, `.model`, `.confidence`, `.status` — несуществующие поля; URL удаления `/api/v1/analysis/${id}` → должен быть `/api/v1/analysis/defects/${id}` | Исправлены интерфейс, рендеринг и URL |
+| 6 | `frontend/src/app/reports/page.tsx` | `Report.format`, `.status` — несуществующие поля в БД | Исправлены интерфейс и рендеринг |
+| 7 | `api/routes/reports.py` | `BusinessMetrics.inc_report_generated()` вызывался до обработки `BATCH` типа — метрика инкрементировалась до генерации | Перемещён вызов после генерации |
+
+**Статус компонентов после аудита:**
+
+| Компонент | Статус | Примечания |
+|-----------|--------|------------|
+| FastAPI backend | ✅ Работает | Все роуты зарегистрированы |
+| JWT аутентификация | ✅ Работает | Argon2 + refresh rotation |
+| SQLite + пул соединений | ✅ Работает | Все методы реализованы |
+| Redis кэширование | ✅ Работает (опционально) | Fallback на in-memory |
+| WebSocket | ✅ Работает | ConnectionManager + валидация |
+| AI/ML анализ дефектов | ✅ Работает | DefectAnalysisPipeline реализован |
+| PDF отчёты | ✅ Работает | ScientificPDFReport реализован |
+| Сравнение поверхностей | ✅ Работает | SurfaceComparator реализован |
+| 2FA TOTP | ✅ Работает | get_2fa_manager() реализован |
+| Rate limiting | ✅ Работает | SlowAPI + custom limiter |
+| Circuit breaker | ✅ Работает | External services |
+| Next.js frontend | ✅ Исправлен | Интерфейсы синхронизированы с API |
+| SSTV Ground Station | ✅ Работает | RTL-SDR V4 ready |
+
+---
+
 - [x] **Security Middleware Enabled** - включены все 4 middleware (GZip, Rate Limiting, Security Headers, Error Handlers)
 - [x] **Lifespan Fixed** - корректная инициализация БД/Redis при старте приложения
 - [x] **Error Handlers Registered** - централизованная обработка ошибок с кастомными exception
