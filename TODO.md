@@ -785,3 +785,24 @@ Backend (FastAPI:8000) ←→ Sync Manager ←→ Frontend (Flask:5000)
 ---
 
 **Проект в отличном состоянии! Качество кода высокое.** ✅
+
+
+---
+
+## ✅ API & Frontend Fixes (2026-04-08) — ВЫПОЛНЕНО
+
+- [x] `create_scan` — теперь возвращает именно созданную запись (по scan_id)
+- [x] `create_simulation` — аналогично, поиск по simulation_id UUID
+- [x] `active_websockets` в dashboard.py → ConnectionManager (thread-safe)
+- [x] `admin.py` users — list/create/delete работают с SQLite, не только in-memory
+- [x] `hasattr` стабы в analysis/comparison — убраны, методы вызываются напрямую
+- [x] Frontend: analysis/comparison/scans/reports — `data.items` вместо `data` напрямую
+- [x] Frontend: comparison/page.tsx — правильный URL `/comparison/history`
+- [x] Frontend: analysis/page.tsx — правильный URL `/analysis/defects/history`
+- [x] reports.py — добавлен DELETE endpoint
+- [x] todo.md — обновлён
+
+### Остаток
+- [ ] Doppler correction для частоты при пролёте спутника
+- [ ] N2YO API как fallback для TLE
+- [ ] Test coverage 80%+

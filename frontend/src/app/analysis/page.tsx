@@ -29,10 +29,12 @@ export default function AnalysisPage() {
 
   const fetchAnalyses = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/v1/analysis`);
+      const res = await fetch(`${API_BASE}/api/v1/analysis/defects/history`);
       if (res.ok) {
         const data = await res.json();
-        setAnalyses(Array.isArray(data) ? data : []);
+        setAnalyses(Array.isArray(data) ? data : (data.items ?? []));
+      } else {
+        toast.error('Ошибка загрузки анализов', { description: `HTTP ${res.status}` });
       }
     } catch (error) {
       console.error('Failed to fetch analyses:', error);

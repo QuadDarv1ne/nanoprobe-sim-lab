@@ -187,3 +187,23 @@ async def download_report(
     except Exception as e:
         logger.error(f"Error downloading PDF report: {e}")
         raise DatabaseError(f"Ошибка скачивания отчёта: {str(e)}")
+
+
+@router.delete(
+    "/{report_id}",
+    status_code=204,
+    summary="Удалить отчёт",
+)
+async def delete_report(
+    report_id: str,
+    db: DatabaseManager = Depends(get_db),
+):
+    """Удалить запись об отчёте из БД (числовой id или report_id)"""
+    with db.get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "DELETE FROM pdf_reports WHERE report_path LIKE ? OR CAST(id AS TEXT) = ?",
+            (f"%{report_id}%", report_id)
+        )
+        if cursor.rowcount == 0:
+            raise NotFoundError(f"Отчёт с ID {report_id} не найден", resource_type="pdf_report")

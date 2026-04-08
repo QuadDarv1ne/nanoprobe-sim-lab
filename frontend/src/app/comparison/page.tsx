@@ -29,10 +29,12 @@ export default function ComparisonPage() {
 
   const fetchComparisons = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/v1/comparison`);
+      const res = await fetch(`${API_BASE}/api/v1/comparison/history`);
       if (res.ok) {
         const data = await res.json();
-        setComparisons(Array.isArray(data) ? data : []);
+        setComparisons(Array.isArray(data) ? data : (data.items ?? []));
+      } else {
+        toast.error('Ошибка загрузки сравнений', { description: `HTTP ${res.status}` });
       }
     } catch (error) {
       console.error('Failed to fetch comparisons:', error);

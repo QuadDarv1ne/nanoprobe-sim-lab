@@ -101,7 +101,6 @@ async def analyze_image_defects(
 @router.get(
     "/defects/history",
     summary="История анализов дефектов",
-    description="Получить историю всех анализов дефектов",
 )
 async def get_defect_history(
     limit: int = 50,
@@ -109,16 +108,8 @@ async def get_defect_history(
 ):
     """История анализов дефектов"""
     try:
-        if hasattr(db, 'get_defect_analyses'):
-            analyses = db.get_defect_analyses(limit=limit)
-            logger.debug(f"Retrieved {len(analyses)} defect analyses")
-            return {
-                "items": analyses,
-                "total": len(analyses),
-                "limit": limit,
-            }
-        else:
-            return {"items": [], "total": 0, "limit": limit, "message": "Метод не реализован"}
+        analyses = db.get_defect_analyses(limit=limit)
+        return {"items": analyses, "total": len(analyses), "limit": limit}
     except Exception as e:
         logger.error(f"Error getting defect analysis history: {e}")
         raise ValidationError(f"Ошибка получения истории: {str(e)}")
@@ -132,20 +123,17 @@ async def get_defect_analysis(
     analysis_id: str,
     db: DatabaseManager = Depends(get_db),
 ):
-    """Получить результат анализа по ID"""
+    """Получить результат анализа по ID (UUID или числовой id)"""
     try:
-        # Поиск в БД
-        if hasattr(db, 'get_defect_analyses'):
-            analyses = db.get_defect_analyses(limit=100)
-            analysis = next((a for a in analyses if a.get('analysis_id') == analysis_id), None)
-
-            if not analysis:
-                logger.warning(f"Defect analysis not found: {analysis_id}")
-                raise NotFoundError(f"Анализ с ID {analysis_id} не найден")
-
-            return analysis
-        else:
-            raise ValidationError("Метод не реализован")
+        analyses = db.get_defect_analyses(limit=500)
+        analysis = next(
+            (a for a in analyses if
+             a.get('analysis_id') == analysis_id or str(a.get('id')) == analysis_id),
+            None
+        )
+        if not analysis:
+            raise NotFoundError(f"Анализ с ID {analysis_id} не найден")
+        return analysis
     except (ValidationError, NotFoundError):
         raise
     except Exception as e:

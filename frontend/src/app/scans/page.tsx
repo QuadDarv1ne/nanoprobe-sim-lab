@@ -31,7 +31,8 @@ export default function ScansPage() {
       const res = await fetch(`${API_BASE}/api/v1/scans`);
       if (res.ok) {
         const data = await res.json();
-        setScans(Array.isArray(data) ? data : []);
+        // API returns {items: [], total: N, limit: N, offset: N}
+        setScans(Array.isArray(data) ? data : (data.items ?? []));
       } else {
         const errorData = await res.json().catch(() => null);
         toast.error('Ошибка загрузки сканирований', {
@@ -42,9 +43,7 @@ export default function ScansPage() {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Не удалось получить список сканирований';
       console.error('Failed to fetch scans:', error);
-      toast.error('Ошибка загрузки сканирований', {
-        description: errorMessage
-      });
+      toast.error('Ошибка загрузки сканирований', { description: errorMessage });
       setScans([]);
     } finally {
       setIsLoading(false);
