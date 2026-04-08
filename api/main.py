@@ -22,10 +22,7 @@ from api.error_handlers import register_error_handlers, ValidationError
 from utils.database import DatabaseManager
 from utils.caching.redis_cache import RedisCache
 from api.state import init_app_state
-
-# Импорты роутов
-from api.routes import scans, simulations, analysis, comparison, reports, auth, admin
-from api.routes import graphql, ml_analysis, external_services, nasa, monitoring, weather
+from api.router_config import register_routes
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +31,35 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Управление жизненным циклом приложения"""
     logger.info("Application starting up...")
-    
+
+    # Инициализация Sentry для мониторинга ошибок
+    sentry_dsn = os.getenv("SENTRY_DSN")
+    if sentry_dsn:
+        try:
+            import sentry_sdk
+            from sentry_sdk.integrations.fastapi import FastApiIntegration
+            from sentry_sdk.integrations.starlette import StarletteIntegration
+            
+            sentry_sdk.init(
+                dsn=sentry_dsn,
+                traces_sample_rate=0.1,  # 10% транзакций для мониторинга
+                environment=os.getenv("ENVIRONMENT", "development"),
+                release=os.getenv("APP_VERSION", "1.0.0"),
+                integrations=[
+                    StarletteIntegration(),
+                    FastApiIntegration(),
+                ],
+                # Не отправлять PII данные
+                send_default_pii=False,
+            )
+            logger.info("Sentry SDK initialized")
+        except ImportError:
+            logger.warning("sentry-sdk not installed, skipping Sentry initialization")
+        except Exception as e:
+            logger.warning(f"Failed to initialize Sentry: {e}")
+    else:
+        logger.info("SENTRY_DSN not set, skipping Sentry initialization")
+
     # Инициализация ресурсов при старте
     try:
         from api.state import get_db_manager, get_redis_cache, init_app_state
@@ -61,7 +86,7 @@ async def lifespan(app: FastAPI):
 
     except Exception as e:
         logger.warning(f"Startup initialization warning (may be expected in dev): {e}")
-    
+
     yield
     logger.info("Application shutting down...")
 
@@ -351,100 +376,8 @@ async def api_root():
     }
 
 
-# Регистрация роутов
-app.include_router(auth.router, prefix="/api/v1/auth", tags=["Аутентификация"])
-app.include_router(scans.router, prefix="/api/v1/scans", tags=["Сканирования"])
-app.include_router(simulations.router, prefix="/api/v1/simulations", tags=["Симуляции"])
-app.include_router(analysis.router, prefix="/api/v1/analysis", tags=["Анализ"])
-app.include_router(comparison.router, prefix="/api/v1/comparison", tags=["Сравнение"])
-app.include_router(reports.router, prefix="/api/v1/reports", tags=["Отчёты"])
-app.include_router(admin.router, prefix="/api/v1", tags=["Администрирование"])
-
-# Алиасы для путей которые ожидает фронтенд
-@app.get("/api/v1/health/database", tags=["Health"])
-async def health_database():
-    """Проверка здоровья БД (алиас для фронтенда)"""
-    from api.state import get_db_manager
-    try:
-        db = get_db_manager()
-        with db.get_connection() as conn:
-            conn.execute("SELECT 1")
-        db_path = __import__('pathlib').Path(db.db_path)
-        return {
-            "status": "healthy",
-            "size_bytes": db_path.stat().st_size if db_path.exists() else 0,
-            "timestamp": datetime.now().isoformat(),
-        }
-    except Exception as e:
-        return {"status": "unhealthy", "error": str(e), "timestamp": datetime.now().isoformat()}
-
-
-@app.post("/api/v1/database/backup", tags=["Health"])
-async def database_backup_alias():
-    """Бэкап БД (алиас для фронтенда, без авторизации для удобства)"""
-    from api.state import get_db_manager
-    import shutil
-    db = get_db_manager()
-    backup_dir = __import__('pathlib').Path("data/backups")
-    backup_dir.mkdir(parents=True, exist_ok=True)
-    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    backup_path = backup_dir / f"nanoprobe_{ts}.db"
-    try:
-        shutil.copy2(str(db.db_path), str(backup_path))
-        return {"status": "success", "backup_path": str(backup_path), "timestamp": datetime.now().isoformat()}
-    except Exception as e:
-        from api.error_handlers import ValidationError
-        raise ValidationError(f"Ошибка бэкапа: {str(e)}")
-
-# Dashboard API
-try:
-    from api.routes import dashboard
-    app.include_router(dashboard.router, prefix="/api/v1/dashboard", tags=["Дашборд"])
-    logger.info("Dashboard routes registered")
-except ImportError as e:
-    logger.warning(f"Dashboard routes disabled: {e}")
-
-try:
-    from api.routes import alerting
-    app.include_router(alerting.router, prefix="/api/v1/alerting", tags=["Алертинг"])
-except ImportError:
-    pass
-
-try:
-    from api.routes import batch
-    app.include_router(batch.router, prefix="/api/v1/batch", tags=["Пакетная обработка"])
-except ImportError:
-    pass
-
-# GraphQL API
-app.include_router(graphql.router, prefix="/api/v1", tags=["GraphQL"])
-
-# AI/ML Analysis
-app.include_router(ml_analysis.router, prefix="/api/v1", tags=["AI/ML"])
-
-# External Services (with Circuit Breaker)
-app.include_router(external_services.router, prefix="/api/v1", tags=["External Services"])
-
-# NASA API Integration
-app.include_router(nasa.router, prefix="/api/v1", tags=["NASA API"])
-logger.info("NASA API routes registered")
-
-# Weather API Integration (Open-Meteo, free, no API key needed)
-app.include_router(weather.router, prefix="/api/v1", tags=["Weather"])
-logger.info("Weather routes registered")
-
-
-# Performance Monitoring
-app.include_router(monitoring.router, prefix="/api/v1", tags=["Monitoring"])
-logger.info("Monitoring routes registered")
-
-# SSTV Ground Station API (ISS schedule, satellite tracking, SSTV decoding)
-try:
-    from api.routes import sstv
-    app.include_router(sstv.router, prefix="/api/v1/sstv", tags=["SSTV Ground Station"])
-    logger.info("SSTV Ground Station routes registered")
-except ImportError as e:
-    logger.warning(f"SSTV Ground Station routes disabled: {e}")
+# Регистрация всех роутов через централизованный модуль
+register_routes(app)
 
 
 # Metrics endpoint для Prometheus
@@ -600,12 +533,21 @@ async def websocket_endpoint(websocket: WebSocket):
                     break
                 continue
 
+    except asyncio.CancelledError:
+        # Задача отменена (например, при shutdown)
+        logger.info("WebSocket task cancelled, closing connection")
+        await manager.disconnect(websocket)
+        raise  # Re-raise для корректной отмены задачи
     except WebSocketDisconnect:
-        logger.info(f"WebSocket client disconnected")
+        logger.info("WebSocket client disconnected")
     except Exception as e:
         logger.error(f"WebSocket error: {e}", exc_info=True)
     finally:
-        await manager.disconnect(websocket)
+        # Проверка что подключение ещё активно
+        try:
+            await manager.disconnect(websocket)
+        except Exception:
+            pass  # Уже отключено
 
 
 # Фоновая задача для push-уведомлений подписчикам
@@ -619,6 +561,9 @@ async def push_realtime_updates():
             # Пока просто логируем
             logger.debug("Realtime update tick")
 
+        except asyncio.CancelledError:
+            logger.info("Realtime updates task cancelled")
+            break
         except Exception as e:
             logger.error(f"Error in push_realtime_updates: {e}")
 

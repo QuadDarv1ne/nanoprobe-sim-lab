@@ -45,11 +45,11 @@ class ConnectionPool:
             return conn
         except Exception:
             with self._lock:
+                # Атомарная проверка и инкремент (race condition fix)
                 if self._created < self.pool_size:
-                    conn = self._create_connection()
-                    self._created += 1
+                    self._created += 1  # Инкрементируем ДО создания
                     self._stats["created"] += 1
-                    return conn
+                    return self._create_connection()
             self._stats["misses"] += 1
             return self._pool.get(timeout=timeout)
 

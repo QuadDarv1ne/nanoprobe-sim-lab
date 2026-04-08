@@ -645,13 +645,40 @@ class UnifiedWebDashboard:
 def main():
     """Точка входа для запуска веб-панели"""
     import argparse
+    import os
 
     parser = argparse.ArgumentParser(description='Унифицированная веб-панель Nanoprobe Sim Lab')
     parser.add_argument('--host', default='127.0.0.1', help='Хост сервера')
-    parser.add_argument('--port', type=int, default=5000, help='Порт сервера')
+    parser.add_argument('--port', type=int, default=None, help='Порт сервера (по умолчанию: автоопределение)')
     parser.add_argument('--no-browser', action='store_true', help='Не открывать браузер')
-    
+    parser.add_argument('--auto-port', action='store_true', default=True, help='Автоопределение порта (по умолчанию: True)')
+    parser.add_argument('--no-auto-port', action='store_true', help='Отключить автоопределение порта')
+
     args = parser.parse_args()
+
+    # Автоопределение порта
+    if args.port is None and args.auto_port and not args.no_autoport:
+        try:
+            import sys
+            from pathlib import Path
+            sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+            from utils.port_finder import find_port
+            
+            preferred_port = int(os.getenv("FLASK_PORT", 5000))
+            port = find_port("flask", preferred_port)
+            
+            if port != preferred_port:
+                print(f"⚠️  Порт {preferred_port} занят, выбран: {port}")
+            else:
+                print(f"✅ Flask порт: {port}")
+            
+            os.environ["FLASK_PORT"] = str(port)
+            args.port = port
+        except Exception as e:
+            print(f"⚠️  Автоопределение не удалось: {e}")
+            args.port = int(os.getenv("FLASK_PORT", 5000))
+    elif args.port is None:
+        args.port = int(os.getenv("FLASK_PORT", 5000))
 
     dashboard = UnifiedWebDashboard(host=args.host, port=args.port)
     dashboard.start(open_browser=not args.no_browser)

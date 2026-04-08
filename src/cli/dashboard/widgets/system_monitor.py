@@ -14,9 +14,8 @@ from .base import Widget, WidgetData, WidgetPriority
 
 def _get_disk_usage():
     """Cross-platform disk usage"""
-    if platform.system() == "Windows":
-        return psutil.disk_usage(os.environ.get("SYSTEMDRIVE", "C:\\"))
-    return psutil.disk_usage("/")
+    from utils.platform_utils import get_system_disk_usage
+    return get_system_disk_usage()
 
 
 class SystemMonitorWidget(Widget):

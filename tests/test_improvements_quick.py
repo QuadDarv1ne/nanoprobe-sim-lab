@@ -140,7 +140,7 @@ def test_database_cache():
             DatabaseManager.close_all_pools()
             time.sleep(0.5)
             os.unlink(db_path)
-        except:
+        except Exception:
             pass
 
 

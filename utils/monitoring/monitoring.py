@@ -18,10 +18,9 @@ logger = logging.getLogger(__name__)
 
 
 def _get_disk_usage():
-    """Cross-platform disk usage (Windows: SYSTEMDRIVE, Unix: /)"""
-    if platform.system() == "Windows":
-        return psutil.disk_usage(os.environ.get("SYSTEMDRIVE", "C:\\"))
-    return psutil.disk_usage("/")
+    """Cross-platform disk usage (использует platform_utils)"""
+    from utils.platform_utils import get_system_disk_usage
+    return get_system_disk_usage()
 
 
 @dataclass

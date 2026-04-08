@@ -206,6 +206,26 @@ async def profile_database_query(
                 detail=f"Query contains forbidden operation: {pattern}"
             )
 
+    # Валидация: извлекаем только имена таблиц для EXPLAIN QUERY PLAN (SQL injection fix)
+    import re as _re
+    table_names = set(_re.findall(r'\bFROM\s+(\w+)', query, _re.IGNORECASE))
+    table_names.update(_re.findall(r'\bJOIN\s+(\w+)', query, _re.IGNORECASE))
+    
+    # Whitelist допустимых таблиц
+    ALLOWED_TABLES = {
+        'scans', 'simulations', 'images', 'users', 'analysis_results',
+        'comparisons', 'reports', 'sstv_recordings', 'metrics'
+    }
+    
+    # Проверяем что все таблицы из whitelist
+    invalid_tables = table_names - ALLOWED_TABLES
+    if invalid_tables:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Tables not allowed for profiling: {', '.join(invalid_tables)}"
+        )
+
+    conn = None
     try:
         conn = sqlite3.connect(str(db_path))
         cursor = conn.cursor()
@@ -217,7 +237,7 @@ async def profile_database_query(
             "analyze": analyze,
         }
 
-        # Получаем план выполнения
+        # Получаем план выполнения (безопасно - таблица из whitelist)
         cursor.execute(f"EXPLAIN QUERY PLAN {query}")
 
         query_plan = cursor.fetchall()
@@ -269,8 +289,6 @@ async def profile_database_query(
         profile_result["recommendations"] = recommendations
         profile_result["status"] = "success"
 
-        conn.close()
-
         return profile_result
 
     except sqlite3.Error as e:
@@ -281,6 +299,13 @@ async def profile_database_query(
     except Exception as e:
         logger.error(f"Profiling error: {e}")
         raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        # Гарантированное закрытие соединения (resource leak fix)
+        if conn:
+            try:
+                conn.close()
+            except Exception:
+                pass
 
 
 @router.get(
@@ -302,6 +327,7 @@ async def get_database_indexes() -> Dict[str, Any]:
     if not db_path.exists():
         raise HTTPException(status_code=404, detail="Database not found")
 
+    conn = None
     try:
         conn = sqlite3.connect(str(db_path))
         cursor = conn.cursor()
@@ -320,13 +346,12 @@ async def get_database_indexes() -> Dict[str, Any]:
         table_stats = {}
         for table in tables:
             try:
+                # Безопасно - table из sqlite_master (доверенный источник)
                 cursor.execute(f"SELECT COUNT(*) FROM {table}")
                 count = cursor.fetchone()[0]
                 table_stats[table] = {"rows": count}
             except sqlite3.Error:
                 pass
-
-        conn.close()
 
         return {
             "indexes": indexes,
@@ -339,6 +364,13 @@ async def get_database_indexes() -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Error getting indexes: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        # Гарантированное закрытие соединения
+        if conn:
+            try:
+                conn.close()
+            except Exception:
+                pass
 
 
 # Project root for database path

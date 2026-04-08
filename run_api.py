@@ -18,12 +18,11 @@ if sys.version_info < MIN_PYTHON_VERSION or sys.version_info >= (MAX_PYTHON_VERS
 
 import uvicorn
 import argparse
-import sys
+import os
 from pathlib import Path
 
 # Установка UTF-8 кодировки для Windows
 if sys.platform == "win32":
-    import os
     os.system("chcp 65001 >nul")
     # Перенастройка stdout для UTF-8
     try:
@@ -52,8 +51,21 @@ def main():
     parser.add_argument(
         "--port",
         type=int,
-        default=8000,
-        help="Порт для прослушивания (по умолчанию: 8000)",
+        default=None,  # None для автоопределения
+        help="Порт для прослушивания (по умолчанию: автоопределение)",
+    )
+
+    parser.add_argument(
+        "--auto-port",
+        action="store_true",
+        default=True,  # Включено по умолчанию
+        help="Автоматический выбор свободного порта (по умолчанию: True)",
+    )
+
+    parser.add_argument(
+        "--no-auto-port",
+        action="store_true",
+        help="Отключить автоматический выбор порта",
     )
 
     parser.add_argument(
@@ -84,21 +96,52 @@ def main():
     Path("reports/pdf").mkdir(parents=True, exist_ok=True)
     Path("logs").mkdir(exist_ok=True)
 
+    # Автоматическое определение порта
+    use_auto_port = args.auto_port and not args.no_auto_port
+    
+    if args.port is not None:
+        # Порт задан явно
+        port = args.port
+        print(f"📌 Порт задан вручную: {port}")
+    elif use_auto_port:
+        # Автоопределение порта
+        try:
+            from utils.port_finder import find_port
+            
+            preferred_port = int(os.getenv("BACKEND_PORT", 8000))
+            port = find_port("backend", preferred_port)
+            
+            if port != preferred_port:
+                print(f"⚠️  Порт {preferred_port} занят, выбран: {port}")
+            else:
+                print(f"✅ Порт: {port}")
+            
+            # Сохраняем выбранный порт в переменную окружения
+            os.environ["BACKEND_PORT"] = str(port)
+        except Exception as e:
+            print(f"⚠️  Автоопределение порта не удалось: {e}")
+            print(f"📌 Используем порт по умолчанию: 8000")
+            port = 8000
+    else:
+        # Порт не задан и автоопределение отключено
+        port = int(os.getenv("BACKEND_PORT", 8000))
+        print(f"📌 Порт из BACKEND_PORT: {port}")
+
     print("=" * 60)
     print("🚀 Nanoprobe Sim Lab API")
     print("=" * 60)
     print(f"📍 Хост: {args.host}")
-    print(f"🔌 Порт: {args.port}")
-    print(f"📊 Документация: http://{args.host}:{args.port}/docs")
-    print(f"📖 ReDoc: http://{args.host}:{args.port}/redoc")
-    print(f"❤️  Health: http://{args.host}:{args.port}/health")
+    print(f"🔌 Порт: {port}")
+    print(f"📊 Документация: http://{args.host}:{port}/docs")
+    print(f"📖 ReDoc: http://{args.host}:{port}/redoc")
+    print(f"❤️  Health: http://{args.host}:{port}/health")
     print("=" * 60)
 
     # Конфигурация uvicorn
     config = uvicorn.Config(
         app="api.main:app",
         host=args.host,
-        port=args.port,
+        port=port,
         reload=args.reload,
         log_level=args.log_level,
         workers=args.workers if not args.reload else 1,
