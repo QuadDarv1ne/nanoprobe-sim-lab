@@ -154,6 +154,29 @@ class RateLimiter:
 
 limiter = RateLimiter()
 
+# Автоматическая очистка rate limiter каждые 5 минут
+_rate_limit_cleanup_task = None
+
+async def _rate_limit_cleanup_loop():
+    """Фоновый цикл очистки старых записей rate limiter"""
+    import asyncio
+    while True:
+        try:
+            await asyncio.sleep(300)  # 5 минут
+            limiter.cleanup_old_entries(max_age_seconds=3600)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Rate limiter cleanup error: {e}")
+
+def start_rate_limit_cleanup():
+    """Запуск автоматической очистки rate limiter"""
+    import asyncio
+    global _rate_limit_cleanup_task
+    if _rate_limit_cleanup_task is None or _rate_limit_cleanup_task.done():
+        _rate_limit_cleanup_task = asyncio.create_task(_rate_limit_cleanup_loop())
+        import logging
+        logging.getLogger(__name__).info("Rate limiter auto-cleanup started (every 5 minutes)")
+
 
 def rate_limit(max_requests: int = 10, window_seconds: int = 60):
     """

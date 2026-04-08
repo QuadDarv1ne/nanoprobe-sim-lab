@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.security import HTTPBearer
 from datetime import datetime, timedelta, timezone
 from typing import Set, Optional
+from pathlib import Path
 import jwt
 import os
 import secrets
@@ -27,6 +28,7 @@ from api.schemas import (
 from api.dependencies import rate_limit, get_current_user
 from api.error_handlers import AuthenticationError, ValidationError
 from api.rate_limiter import auth_limit
+from api.security.jwt_config import get_jwt_secret, get_default_passwords
 
 logger = logging.getLogger(__name__)
 
@@ -36,20 +38,8 @@ audit_logger = logging.getLogger("audit.security")
 router = APIRouter()
 security = HTTPBearer()
 
-# JWT Secret: env var > saved file > generate once and persist
-_jwt_secret_env = os.getenv("JWT_SECRET")
-if _jwt_secret_env:
-    JWT_SECRET = _jwt_secret_env
-else:
-    _jwt_secret_file = Path("data/.jwt_secret")
-    if _jwt_secret_file.exists():
-        JWT_SECRET = _jwt_secret_file.read_text().strip()
-    else:
-        JWT_SECRET = secrets.token_urlsafe(32)
-        _jwt_secret_file.parent.mkdir(parents=True, exist_ok=True)
-        _jwt_secret_file.write_text(JWT_SECRET)
-        logger.info(f"Generated new JWT secret, saved to {_jwt_secret_file}")
-
+# JWT Secret из централизованного источника
+JWT_SECRET = get_jwt_secret()
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_MINUTES = 60
 JWT_REFRESH_EXPIRATION_DAYS = 7
@@ -67,24 +57,31 @@ pwd_context = CryptContext(
     argon2__type="id",          # Argon2id (гибрид Data-dependent + Data-independent)
 )
 
-USERS_DB = {
-    "admin": {
-        "id": 1,
-        "username": "admin",
-        "password_hash": pwd_context.hash("Admin123!"),  # Перехешируется при первом входе на Argon2
-        "role": "admin",
-        "created_at": "2026-03-11T00:00:00",
-        "last_login": None,
-    },
-    "user": {
-        "id": 2,
-        "username": "user",
-        "password_hash": pwd_context.hash("User123!"),
-        "role": "user",
-        "created_at": "2026-03-11T00:00:00",
-        "last_login": None,
-    },
-}
+# Инициализация пользователей с безопасными паролями из ENV/файлов
+def _initialize_users_db():
+    """Инициализирует базу пользователей с безопасными паролями"""
+    default_passwords = get_default_passwords()
+    
+    return {
+        "admin": {
+            "id": 1,
+            "username": "admin",
+            "password_hash": pwd_context.hash(default_passwords["admin"]),
+            "role": "admin",
+            "created_at": "2026-03-11T00:00:00",
+            "last_login": None,
+        },
+        "user": {
+            "id": 2,
+            "username": "user",
+            "password_hash": pwd_context.hash(default_passwords["user"]),
+            "role": "user",
+            "created_at": "2026-03-11T00:00:00",
+            "last_login": None,
+        },
+    }
+
+USERS_DB = _initialize_users_db()
 
 
 class AuditEventType(str, Enum):
@@ -185,14 +182,10 @@ def decode_token(token: str) -> dict:
 
 
 def _get_redis_client():
-    """Получение Redis клиента"""
+    """Получение Redis клиента из connection pool"""
     try:
-        import redis
-        redis_host = os.getenv("REDIS_HOST", "localhost")
-        redis_port = int(os.getenv("REDIS_PORT", "6379"))
-        redis_client = redis.Redis(host=redis_host, port=redis_port, db=0, decode_responses=True)
-        redis_client.ping()  # Проверка подключения
-        return redis_client
+        from api.security.jwt_config import get_redis_client
+        return get_redis_client()
     except Exception as e:
         logger.warning(f"Redis not available, using in-memory storage: {e}")
         return None
@@ -227,6 +220,22 @@ def _is_token_valid(jti: str) -> bool:
             logger.error(f"Failed to check token in Redis: {e}")
             return jti in _in_memory_tokens
     return jti in _in_memory_tokens
+
+
+def _revoke_all_user_tokens(username: str):
+    """Отмена всех refresh токенов пользователя (при компрометации)"""
+    redis_client = _get_redis_client()
+    if redis_client:
+        try:
+            # Удаляем все ключи refresh_token:* для данного пользователя
+            pattern = f"refresh_token:*"
+            for key in redis_client.scan_iter(match=pattern):
+                if redis_client.get(key) == username:
+                    redis_client.delete(key)
+        except Exception as e:
+            logger.error(f"Failed to revoke all user tokens in Redis: {e}")
+    # Очищаем in-memory
+    _in_memory_tokens.clear()
 
 
 def _revoke_refresh_token(jti: str):
@@ -349,11 +358,25 @@ async def refresh_access_token(request: RefreshTokenRequest):
 
         # Проверка jti (rotation check) через Redis
         jti = payload.get("jti")
-        if not _is_token_valid(jti):
-            logger.warning(f"Token refresh attempt with revoked token, jti: {jti}")
-            raise AuthenticationError("Refresh токен был отозван")
-
         username: str = payload.get("sub")
+        
+        if not _is_token_valid(jti):
+            # REUSE DETECTION: Токен уже был использован (возможная атака)
+            if username:
+                logger.warning(
+                    f"⚠️ POSSIBLE TOKEN REUSE ATTACK detected for user: {username}, jti: {jti}"
+                )
+                _revoke_all_user_tokens(username)
+                
+                log_audit_event(
+                    AuditEventType.TOKEN_REVOKED,
+                    username=username,
+                    request=request,
+                    extra={"jti": jti, "reason": "reuse_detected", "all_sessions_revoked": True}
+                )
+            
+            raise AuthenticationError("Refresh токен был отозван (possible reuse)")
+
         if username is None:
             raise AuthenticationError("Неверный refresh токен")
 
@@ -464,6 +487,8 @@ async def verify_2fa_setup(
     summary="2FA верификация при входе",
     description="Проверка 2FA кода после успешного логина",
 )
+@rate_limit(max_requests=5, window_seconds=60)
+@auth_limit(max_requests=10, window=60)
 async def verify_2fa_login(
     otp_code: str,
     request: Request,

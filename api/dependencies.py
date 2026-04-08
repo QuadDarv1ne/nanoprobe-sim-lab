@@ -18,7 +18,17 @@ import jwt
 logger = logging.getLogger(__name__)
 
 security = HTTPBearer()
-JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key-change-in-production")
+
+# JWT Secret из централизованного источника
+def _get_jwt_secret() -> str:
+    """Получает JWT секрет из централизованного источника"""
+    try:
+        from api.security.jwt_config import get_jwt_secret
+        return get_jwt_secret()
+    except Exception as e:
+        logger.error(f"Failed to get JWT secret: {e}")
+        raise RuntimeError("JWT secret configuration error")
+
 JWT_ALGORITHM = "HS256"
 
 
@@ -47,7 +57,8 @@ async def get_current_user(
 
     try:
         token = credentials.credentials
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        jwt_secret = _get_jwt_secret()
+        payload = jwt.decode(token, jwt_secret, algorithms=[JWT_ALGORITHM])
         username: str = payload.get("sub")
 
         if username is None:

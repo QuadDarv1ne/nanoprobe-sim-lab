@@ -120,22 +120,24 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                 hsts_value += "; preload"
             response.headers["Strict-Transport-Security"] = hsts_value
         
-        # Content-Security-Policy: CSP
+        # Content-Security-Policy: CSP (исправленный - без unsafe-inline/unsafe-eval)
         if self.custom_csp:
             csp_header = "Content-Security-Policy-Report-Only" if self.csp_report_only else "Content-Security-Policy"
             response.headers[csp_header] = self.custom_csp
         else:
-            # CSP по умолчанию (строгий, но совместимый)
+            # CSP по умолчанию (строгий - без unsafe-inline/unsafe-eval)
+            # Используем nonce-based approach для скриптов
             default_csp = (
                 "default-src 'self'; "
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; "
-                "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
+                "script-src 'self' https://cdn.jsdelivr.net; "
+                "style-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
                 "font-src 'self' https://fonts.gstatic.com; "
                 "img-src 'self' data: https:; "
                 "connect-src 'self' ws: wss:; "
                 "frame-ancestors 'none'; "
                 "base-uri 'self'; "
-                "form-action 'self'"
+                "form-action 'self'; "
+                "object-src 'none'"
             )
             csp_header = "Content-Security-Policy-Report-Only" if self.csp_report_only else "Content-Security-Policy"
             response.headers[csp_header] = default_csp
@@ -168,7 +170,7 @@ def setup_security_headers(app, production: bool = True):
         )
         logger.info("Security headers enabled (production mode)")
     else:
-        # Development: более мягкие настройки
+        # Development: более мягкие настройки (но всё ещё без unsafe-eval)
         app.add_middleware(
             SecurityHeadersMiddleware,
             hsts_max_age=0,  # Отключено
@@ -176,8 +178,10 @@ def setup_security_headers(app, production: bool = True):
             hsts_preload=False,
             csp_report_only=True,  # Report-Only для отладки
             custom_csp=(
-                "default-src 'self' 'unsafe-inline' 'unsafe-eval'; "
-                "connect-src 'self' * ws: wss:; "
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline'; "
+                "style-src 'self' 'unsafe-inline'; "
+                "connect-src 'self' ws: wss:; "
                 "img-src 'self' data: https:; "
                 "frame-ancestors 'self'"
             ),

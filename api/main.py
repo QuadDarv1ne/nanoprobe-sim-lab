@@ -38,19 +38,27 @@ async def lifespan(app: FastAPI):
     # Инициализация ресурсов при старте
     try:
         from api.state import get_db_manager, get_redis_cache, init_app_state
-        
+
         # Инициализация БД
         db = get_db_manager()
         logger.info("Database manager initialized")
-        
+
         # Инициализация Redis
         redis = get_redis_cache()
         logger.info("Redis cache initialized")
-        
+
         # Инициализация app state
         init_app_state(db, redis)
         logger.info("App state initialized")
-        
+
+        # Запуск автоматической очистки rate limiter
+        try:
+            from utils.security.rate_limiter import start_rate_limit_cleanup
+            start_rate_limit_cleanup()
+            logger.info("Rate limiter auto-cleanup started")
+        except Exception as e:
+            logger.warning(f"Failed to start rate limiter cleanup: {e}")
+
     except Exception as e:
         logger.warning(f"Startup initialization warning (may be expected in dev): {e}")
     
@@ -470,12 +478,15 @@ query {
 # WebSocket эндпоинт для real-time обновлений
 @app.websocket("/ws/realtime")
 async def websocket_endpoint(websocket: WebSocket):
-    """WebSocket для real-time обновлений с поддержкой каналов"""
-    await websocket.accept()
+    """WebSocket для real-time обновлений с ConnectionManager"""
+    from api.websocket_manager import get_connection_manager
+    
+    manager = get_connection_manager()
+    
+    # Принятие подключения через менеджер
+    if not await manager.connect(websocket):
+        return
 
-    import psutil
-
-    subscribed_channels = set()
     last_pong = datetime.now()
 
     try:
@@ -483,41 +494,57 @@ async def websocket_endpoint(websocket: WebSocket):
             try:
                 # Получение команд от клиента с timeout (30s heartbeat)
                 data = await asyncio.wait_for(
-                    websocket.receive_text(), 
+                    websocket.receive_text(),
                     timeout=30.0
                 )
                 last_pong = datetime.now()
-                message = json.loads(data)
+                
+                # Валидация сообщения через менеджер
+                try:
+                    message = manager.validate_message(data)
+                except ValueError as e:
+                    await manager.send_personal(websocket, {
+                        "type": "error",
+                        "message": str(e),
+                        "timestamp": datetime.now().isoformat()
+                    })
+                    continue
 
                 # Обработка команд
                 if message.get("type") == "subscribe":
                     channel = message.get("channel")
-                    if channel:
-                        subscribed_channels.add(channel)
-                        await websocket.send_json({
+                    if await manager.subscribe(websocket, channel):
+                        await manager.send_personal(websocket, {
                             "type": "subscribed",
                             "channel": channel,
                             "timestamp": datetime.now().isoformat(),
                         })
                         logger.info(f"Client subscribed to channel: {channel}")
+                    else:
+                        await manager.send_personal(websocket, {
+                            "type": "error",
+                            "message": f"Failed to subscribe to {channel}",
+                            "timestamp": datetime.now().isoformat()
+                        })
 
                 elif message.get("type") == "unsubscribe":
                     channel = message.get("channel")
-                    subscribed_channels.discard(channel)
-                    await websocket.send_json({
+                    await manager.unsubscribe(websocket, channel)
+                    await manager.send_personal(websocket, {
                         "type": "unsubscribed",
                         "channel": channel,
                         "timestamp": datetime.now().isoformat(),
                     })
 
                 elif message.get("type") == "ping":
-                    await websocket.send_json({
+                    await manager.send_personal(websocket, {
                         "type": "pong",
                         "timestamp": datetime.now().isoformat(),
                     })
 
                 elif message.get("type") == "get_metrics":
                     # Отправка текущих метрик
+                    import psutil
                     from api.state import get_system_disk_usage
                     metrics = {
                         "type": "metrics",
@@ -528,7 +555,7 @@ async def websocket_endpoint(websocket: WebSocket):
                             "disk_percent": get_system_disk_usage().percent,
                         }
                     }
-                    await websocket.send_json(metrics)
+                    await manager.send_personal(websocket, metrics)
 
             except asyncio.TimeoutError:
                 # Проверка heartbeat
@@ -538,11 +565,11 @@ async def websocket_endpoint(websocket: WebSocket):
                 continue
 
     except WebSocketDisconnect:
-        logger.info(f"🔌 WebSocket client disconnected. Channels: {subscribed_channels}")
+        logger.info(f"WebSocket client disconnected")
     except Exception as e:
-        logger.error(f"WebSocket error: {e}")
+        logger.error(f"WebSocket error: {e}", exc_info=True)
     finally:
-        subscribed_channels.clear()
+        await manager.disconnect(websocket)
 
 
 # Фоновая задача для push-уведомлений подписчикам

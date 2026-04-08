@@ -757,20 +757,30 @@ async def metrics_websocket(websocket: WebSocket):
     """
     await websocket.accept()
     active_websockets.append(websocket)
+    logger.info(f"WebSocket metrics connected. Total: {len(active_websockets)}")
 
     try:
         while True:
-            metrics = await get_realtime_metrics_detailed()
-            await websocket.send_json(metrics)
-            await asyncio.sleep(1)
-
-    except WebSocketDisconnect:
+            try:
+                metrics = await get_realtime_metrics_detailed()
+                await websocket.send_json(metrics)
+                await asyncio.sleep(1)
+            except WebSocketDisconnect:
+                break
+            except Exception as e:
+                logger.error(f"WebSocket metrics error: {e}", exc_info=True)
+                await asyncio.sleep(1)
+                continue
+    except Exception as e:
+        logger.error(f"WebSocket metrics fatal error: {e}", exc_info=True)
+    finally:
         if websocket in active_websockets:
             active_websockets.remove(websocket)
-    except Exception:
-        if websocket in active_websockets:
-            active_websockets.remove(websocket)
-        raise
+        try:
+            await websocket.close()
+        except Exception:
+            pass
+        logger.info(f"WebSocket metrics disconnected. Total: {len(active_websockets)}")
 
 
 # ==================== Alerts ====================
