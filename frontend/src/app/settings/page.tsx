@@ -92,7 +92,7 @@ export default function SettingsPage() {
 
   const handleCheckAPI = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/v1/health`);
+      const res = await fetch(`${API_BASE}/health`);
       if (res.ok) {
         const data = await res.json();
         toast.success(`API работает: ${data.status || 'OK'}`);
