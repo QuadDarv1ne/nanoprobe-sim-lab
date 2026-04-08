@@ -39,7 +39,22 @@ def check_devices():
     try:
         from rtlsdr import RtlSdr
 
-        num_devices = RtlSdr.get_device_count()
+        # Пробуем разные методы получения количества устройств
+        num_devices = 0
+        
+        # Метод 1: через RtlSdr (older API)
+        if hasattr(RtlSdr, 'get_device_count'):
+            num_devices = RtlSdr.get_device_count()
+        # Метод 2: через создание устройства (newer API)
+        else:
+            # Пытаемся открыть устройство 0
+            try:
+                test_sdr = RtlSdr(device_index=0)
+                test_sdr.close()
+                num_devices = 1
+            except:
+                num_devices = 0
+
         print(f"Найдено устройств: {num_devices}")
 
         if num_devices == 0:
@@ -53,6 +68,8 @@ def check_devices():
         return num_devices
     except Exception as e:
         print(f"✗ Ошибка: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 
@@ -63,37 +80,53 @@ def identify_devices(num_devices):
     print("-" * 60)
 
     from rtlsdr import RtlSdr
+    import sys
+    from io import StringIO
 
     v4_found = False
 
     for i in range(num_devices):
+        sdr = None
+        device_type = "Unknown"
+        
         try:
+            # Перехватываем stdout для получения информации об устройстве
+            old_stdout = sys.stdout
+            sys.stdout = StringIO()
+            
             sdr = RtlSdr(device_index=i)
-
-            # Получаем информацию
-            device_name = sdr.get_device_name() if hasattr(sdr, 'get_device_name') else 'Unknown'
-            serial = sdr.get_serial_number() if hasattr(sdr, 'get_serial_number') else 'Unknown'
-            manufacturer = sdr.get_manufacturer() if hasattr(sdr, 'get_manufacturer') else 'Unknown'
-
-            print(f"\nУстройство #{i}:")
-            print(f"  Название: {device_name}")
-            print(f"  Серийный номер: {serial}")
-            print(f"  Производитель: {manufacturer}")
-
-            # Определяем RTL-SDR V4
-            device_upper = device_name.upper()
-            if 'R828D' in device_upper or 'V4' in device_upper:
-                print(f"  ✓✓✓ RTL-SDR V4 ОБНАРУЖЕН ✓✓✓")
+            
+            # Возвращаем stdout
+            output = sys.stdout.getvalue()
+            sys.stdout = old_stdout
+            
+            # Анализируем вывод для определения типа
+            output_upper = output.upper()
+            
+            if 'R828D' in output_upper or 'V4' in output_upper or 'RTL-SDR BLOG V4' in output_upper:
+                device_type = "RTL-SDR V4 (R828D)"
                 v4_found = True
-            elif 'R820T' in device_upper:
-                print(f"  → RTL-SDR V3 (R820T/R820T2)")
+            elif 'R820T' in output_upper or 'R820T2' in output_upper:
+                device_type = "RTL-SDR V3 (R820T/R820T2)"
             else:
-                print(f"  → RTL-SDR (классический)")
-
-            sdr.close()
+                device_type = "RTL-SDR (классический)"
+            
+            print(f"\nУстройство #{i}:")
+            print(f"  Тип: {device_type}")
+            print(f"  Индекс: {i}")
+            
+            if v4_found:
+                print(f"  ✓✓✓ RTL-SDR V4 ОБНАРУЖЕН ✓✓✓")
 
         except Exception as e:
+            sys.stdout = old_stdout  # Восстанавливаем stdout
             print(f"\nУстройство #{i}: Ошибка - {e}")
+        finally:
+            if sdr is not None:
+                try:
+                    sdr.close()
+                except:
+                    pass
 
     return v4_found
 
@@ -104,6 +137,7 @@ def test_basic_functionality(device_index=0):
     print("4. Базовый тест функциональности")
     print("-" * 60)
 
+    sdr = None
     try:
         from rtlsdr import RtlSdr
         import numpy as np
@@ -113,12 +147,12 @@ def test_basic_functionality(device_index=0):
         # Настройка
         sdr.sample_rate = 2.4e6  # 2.4 MSPS для V4
         sdr.center_freq = 145.8e6  # ISS частота
-        sdr.gain = 30
+        sdr.gain = 'auto'  # Автоматический gain
 
         print(f"✓ Устройство инициализировано")
         print(f"  Sample Rate: {sdr.sample_rate / 1e6:.1f} MSPS")
         print(f"  Center Freq: {sdr.center_freq / 1e6:.3f} MHz")
-        print(f"  Gain: {sdr.gain} dB")
+        print(f"  Gain: {sdr.gain}")
 
         # Читаем сэмплы
         print("\n  Чтение тестовых сэмплов...")
@@ -128,18 +162,29 @@ def test_basic_functionality(device_index=0):
             power = np.mean(np.abs(samples) ** 2)
             print(f"✓ Сэмплы получены: {len(samples)}")
             print(f"  Средняя мощность: {10 * np.log10(power + 1e-10):.1f} dB")
+            
+            if power > 0.001:
+                print(f"  ✓ Сигнал обнаружен")
+            else:
+                print(f"  ⚠ Сигнал очень слабый (проверьте антенну)")
         else:
             print("✗ Не удалось получить сэмплы")
-            sdr.close()
             return False
 
-        sdr.close()
         print("\n✓ Базовый тест пройден успешно")
         return True
 
     except Exception as e:
         print(f"✗ Ошибка теста: {e}")
+        import traceback
+        traceback.print_exc()
         return False
+    finally:
+        if sdr is not None:
+            try:
+                sdr.close()
+            except:
+                pass
 
 
 def print_next_steps(v4_found):

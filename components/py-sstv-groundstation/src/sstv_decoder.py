@@ -102,20 +102,38 @@ class SSTVDecoder:
         Returns:
             Image.Image: Декодированное изображение или None
         """
+        import tempfile
+        import os
+        
+        temp_path = None
         try:
             # Сохраняем временный WAV файл
             import wave
-            import tempfile
 
             temp_file = tempfile.NamedTemporaryFile(suffix='.wav', delete=False)
             temp_path = temp_file.name
+            temp_file.close()
 
             # Нормализуем и конвертируем в 16-bit
-            max_val = np.max(np.abs(samples.real))
-            if max_val > 0:
-                normalized = np.int16(samples.real / max_val * 32767)
+            # Извлекаем реальную часть из комплексных I/Q сэмплов
+            if np.iscomplexobj(samples):
+                # FM демодуляция для I/Q данных
+                phase = np.angle(samples)
+                audio_data = np.diff(np.unwrap(phase))
+                # Ресемплинг к нужной частоте
+                from scipy.signal import resample
+                target_len = int(len(audio_data) * sample_rate / (self.sdr.sample_rate if hasattr(self, 'sdr') and self.sdr else 256000))
+                if target_len > 0:
+                    audio_data = resample(audio_data, target_len)
             else:
-                normalized = np.int16(samples.real * 32767)
+                audio_data = samples.real
+            
+            # Нормализация
+            max_val = np.max(np.abs(audio_data))
+            if max_val > 0:
+                normalized = np.int16(audio_data / max_val * 32767)
+            else:
+                normalized = np.int16(audio_data * 32767)
 
             with wave.open(temp_path, 'w') as wav_file:
                 wav_file.setnchannels(1)
@@ -126,14 +144,17 @@ class SSTVDecoder:
             # Декодируем
             image = self.decode_from_audio(temp_path)
 
-            # Удаляем временный файл
-            import os
-            os.unlink(temp_path)
-
             return image
         except Exception as e:
             print(f"Ошибка декодирования из сэмплов: {e}")
             return None
+        finally:
+            # Гарантированное удаление временного файла
+            if temp_path and os.path.exists(temp_path):
+                try:
+                    os.unlink(temp_path)
+                except:
+                    pass
 
     def decode_realtime_init(self, sample_rate: int = 44100, callback=None):
         """
@@ -377,7 +398,13 @@ def detect_sstv_signal(
     audio_file: str
 ) -> Tuple[bool, Dict]:
     """
-    Обнаруживает SSTV-сигнал в аудиофайле.
+    Обнаруживает SSTV-сигнал в аудиофайле по VIS-тону.
+    
+    SSTV VIS (Vertical Interval Signal) состоит из:
+    - 300ms лидер-тон 1900 Hz
+    - 30ms тишина
+    - 300ms VIS-биты (1300 Hz = 0, 2100 Hz = 1)
+    - 300ms 1900 Hz завершение
 
     Args:
         audio_file: Путь к аудиофайлу
@@ -387,13 +414,69 @@ def detect_sstv_signal(
     """
     try:
         import wave
+        from scipy.signal import spectrogram
 
         with wave.open(audio_file, "r") as wav:
             n_frames = wav.getnframes()
             duration = n_frames / wav.getframerate()
             sample_rate = wav.getframerate()
 
+            # Читаем первые 2 секунды для анализа VIS
+            vis_samples = wav.readframes(min(int(sample_rate * 2), n_frames))
+            vis_data = np.frombuffer(vis_samples, dtype=np.int16).astype(np.float32)
+            
+            # Спектрограмма для анализа частот
+            f, t, Sxx = spectrogram(vis_data, sample_rate, nperseg=4096)
+            
+            # Ищем энергию на 1900 Hz (VIS лидер)
+            freq_1900_idx = np.argmin(np.abs(f - 1900))
+            vis_leader_energy = np.mean(Sxx[freq_1900_idx-2:freq_1900_idx+3, :])
+            
+            # Ищем энергию на 1200 Hz и 2100 Hz (VIS биты)
+            freq_1200_idx = np.argmin(np.abs(f - 1200))
+            freq_2100_idx = np.argmin(np.abs(f - 2100))
+            vis_1200_energy = np.mean(Sxx[freq_1200_idx-2:freq_1200_idx+3, :])
+            vis_2100_energy = np.mean(Sxx[freq_2100_idx-2:freq_2100_idx+3, :])
+            
+            # SSTV использует тона в диапазоне 1100-2300 Hz
+            sstv_band_mask = (f >= 1100) & (f <= 2300)
+            sstv_band_energy = np.mean(Sxx[sstv_band_mask, :])
+            total_energy = np.mean(Sxx)
+            
+            sstv_ratio = sstv_band_energy / (total_energy + 1e-10)
+            
             # Анализируем характеристики
+            metadata = {
+                'duration_seconds': duration,
+                'sample_rate': sample_rate,
+                'channels': wav.getnchannels(),
+                'sample_width': wav.getsampwidth(),
+                'file': audio_file,
+                'vis_1900_energy': float(vis_leader_energy),
+                'sstv_band_ratio': float(sstv_ratio),
+            }
+
+            # SSTV сигналы обычно длятся 30-180 секунд И имеют характерные VIS-тоны
+            has_duration = 10 <= duration <= 300  # Расширенный диапазон
+            has_vis_tones = sstv_ratio > 0.3  # Значительная энергия в SSTV полосе
+            
+            is_sstv = has_duration and (has_vis_tones or vis_leader_energy > 0)
+
+            if is_sstv:
+                print(f"✓ SSTV-сигнал обнаружен (длительность: {duration:.1f}с, VIS ratio: {sstv_ratio:.2f})")
+            else:
+                print(f"? Сомнительный SSTV-сигнал (длительность: {duration:.1f}с, VIS ratio: {sstv_ratio:.2f})")
+
+            return is_sstv, metadata
+
+    except ImportError:
+        # Fallback без scipy - только по длительности
+        import wave
+        with wave.open(audio_file, "r") as wav:
+            n_frames = wav.getnframes()
+            duration = n_frames / wav.getframerate()
+            sample_rate = wav.getframerate()
+            
             metadata = {
                 'duration_seconds': duration,
                 'sample_rate': sample_rate,
@@ -401,17 +484,10 @@ def detect_sstv_signal(
                 'sample_width': wav.getsampwidth(),
                 'file': audio_file
             }
-
-            # SSTV сигналы обычно длятся 30-180 секунд
-            is_sstv = 30 <= duration <= 180 and sample_rate >= 44100
-
-            if is_sstv:
-                print(f"✓ SSTV-сигнал обнаружен (длительность: {duration:.1f}с)")
-            else:
-                print(f"? Сомнительный SSTV-сигнал (длительность: {duration:.1f}с)")
-
+            
+            is_sstv = 10 <= duration <= 300
             return is_sstv, metadata
-
+            
     except Exception as e:
         print(f"Ошибка обнаружения сигнала: {e}")
         return False, {'error': str(e)}
@@ -422,7 +498,7 @@ def detect_sstv_signal_from_samples(
     sample_rate: int
 ) -> Tuple[bool, float]:
     """
-    Обнаруживает SSTV-сигнал в аудиоданных.
+    Обнаруживает SSTV-сигнал в аудиоданных по VIS-тону.
 
     Args:
         audio_data: Аудиоданные в формате numpy array
@@ -435,24 +511,48 @@ def detect_sstv_signal_from_samples(
         return False, 0.0
 
     duration = len(audio_data) / sample_rate
+    
+    # Ограничиваем размер FFT для производительности
+    fft_size = min(len(audio_data), 65536)
+    
+    # Проверяем длительность (SSTV обычно 10-300 секунд)
+    if not (5 <= duration <= 600):
+        return False, 0.0
 
-    # SSTV сигналы обычно длятся 30-180 секунд
-    if 30 <= duration <= 180:
-        # Дополнительный анализ частотных характеристик
-        fft_data = np.fft.fft(audio_data.astype(np.float32))
+    try:
+        from scipy.signal import welch
+        
+        # Используем Welch's method для эффективного спектрального анализа
+        f, Pxx = welch(audio_data[:fft_size].astype(np.float64), sample_rate, nperseg=4096)
+        
+        # SSTV VIS-тон использует 1900 Hz
+        freq_1900_idx = np.argmin(np.abs(f - 1900))
+        vis_energy = Pxx[freq_1900_idx]
+        
+        # SSTV полоса 1100-2300 Hz
+        sstv_mask = (f >= 1100) & (f <= 2300)
+        sstv_energy = np.sum(Pxx[sstv_mask])
+        total_energy = np.sum(Pxx)
+        
+        if total_energy > 0:
+            sstv_ratio = sstv_energy / total_energy
+            # Комбинированная оценка: VIS-тон + SSTV полоса
+            confidence = min(1.0, (sstv_ratio * 2) + (vis_energy / (np.mean(Pxx) + 1e-10) * 0.1))
+            return confidence > 0.3, confidence
+    except ImportError:
+        # Fallback - простой FFT
+        fft_data = np.fft.rfft(audio_data[:fft_size].astype(np.float64))
         frequencies = np.abs(fft_data)
-
+        freqs = np.fft.rfftfreq(fft_size, 1.0/sample_rate)
+        
         # SSTV использует тона в диапазоне 1100-2300 Гц
-        freq_bins = int(len(frequencies) * 1100 / sample_rate)
-        freq_bine = int(len(frequencies) * 2300 / sample_rate)
-
-        if freq_bine > freq_bins:
-            sstv_energy = np.sum(frequencies[freq_bins:freq_bine])
-            total_energy = np.sum(frequencies)
-
-            if total_energy > 0:
-                ratio = sstv_energy / total_energy
-                confidence = min(1.0, ratio * 2)
-                return confidence > 0.3, confidence
+        sstv_mask = (freqs >= 1100) & (freqs <= 2300)
+        sstv_energy = np.sum(frequencies[sstv_mask])
+        total_energy = np.sum(frequencies)
+        
+        if total_energy > 0:
+            ratio = sstv_energy / total_energy
+            confidence = min(1.0, ratio * 2)
+            return confidence > 0.3, confidence
 
     return False, 0.0
