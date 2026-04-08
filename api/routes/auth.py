@@ -338,7 +338,8 @@ def _revoke_all_user_tokens(username: str):
         except Exception as e:
             logger.error(f"Failed to revoke all user tokens in Redis: {e}")
     
-    # Очищаем in-memory
+    # Очищаем in-memory только токены данного пользователя
+    # (in-memory не хранит username → jti mapping, поэтому очищаем всё как fallback)
     with _in_memory_tokens_lock:
         _in_memory_tokens.clear()
 

@@ -26,64 +26,54 @@ import os
 
 # ==================== Limiter Configuration ====================
 
-# Лимитер с использованием in-memory (Redis опционален)
-# По умолчанию отключаем Redis, чтобы избежать ошибок подключения
-redis_disabled = os.getenv("REDIS_DISABLED", "1") == "1"  # Изменено на "1" по умолчанию
-if redis_disabled:
-    # In-memory limiter без Redis
-    limiter = Limiter(
+def _create_limiter() -> Limiter:
+    """
+    Создаёт limiter на основе текущих env-переменных.
+    Вызывается при setup_rate_limiter, когда .env уже загружен.
+    """
+    redis_disabled = os.getenv("REDIS_DISABLED", "0") == "1"
+    default_limits = ["100/minute", "20/second"]
+
+    if not redis_disabled:
+        redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
+        try:
+            return Limiter(
+                key_func=get_remote_address,
+                default_limits=default_limits,
+                storage_uri=redis_url,
+                strategy="fixed-window",
+            )
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(f"Redis limiter failed, falling back to memory: {e}")
+
+    return Limiter(
         key_func=get_remote_address,
-        default_limits=[
-            "100/minute",  # Default limit для всех endpoints
-            "20/second",   # Burst protection
-        ],
+        default_limits=default_limits,
         storage_uri="memory://",
-        strategy="fixed-window"
+        strategy="fixed-window",
     )
-else:
-    # Redis limiter для production — fallback to memory on connection error
-    redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
-    try:
-        limiter = Limiter(
-            key_func=get_remote_address,
-            default_limits=[
-                "100/minute",
-                "20/second",
-            ],
-            storage_uri=redis_url,
-            strategy="fixed-window"
-        )
-    except Exception:
-        # Fallback to memory if Redis unavailable
-        limiter = Limiter(
-            key_func=get_remote_address,
-            default_limits=["100/minute", "20/second"],
-            storage_uri="memory://",
-            strategy="fixed-window"
-        )
+
+
+# Placeholder — заменяется в setup_rate_limiter после загрузки .env
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=["100/minute", "20/second"],
+    storage_uri="memory://",
+    strategy="fixed-window",
+)
 
 
 # ==================== Setup ====================
 
 def setup_rate_limiter(app):
     """
-    Настройка rate limiter для FastAPI приложения
-
-    Добавляет:
-    - Middleware для автоматического rate limiting
-    - Exception handler
-    - State для доступа в роутах
-
-    Args:
-        app: FastAPI приложение
+    Настройка rate limiter для FastAPI приложения.
+    Вызывается после загрузки .env, пересоздаёт limiter с актуальными настройками.
     """
-    # Отключаем middleware если Redis отключён (избегаем ошибок ConnectionError)
-    redis_disabled = os.getenv("REDIS_DISABLED", "1") == "1"  # Изменено на "1" по умолчанию
-    if redis_disabled:
-        # В режиме без Redis просто добавляем exception handler
-        app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
-        return
-    
+    global limiter
+    limiter = _create_limiter()
+
     app.state.limiter = limiter
     app.add_middleware(SlowAPIMiddleware)
     app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
@@ -92,86 +82,26 @@ def setup_rate_limiter(app):
 # ==================== Rate Limit Decorators ====================
 
 def auth_limit(max_requests: int = 5, window: int = 60):
-    """
-    Строгий лимит для auth endpoints (login, register, 2FA)
-    
-    Args:
-        max_requests: Максимум запросов
-        window: Окно времени в секундах
-
-    Returns:
-        Декоратор rate limit
-    """
     return limiter.limit(f"{max_requests}/{window}seconds")
 
 
 def api_limit(max_requests: int = 100, window: int = 60):
-    """
-    Стандартный лимит для обычных API endpoints (GET)
-
-    Args:
-        max_requests: Максимум запросов
-        window: Окно времени в секундах
-
-    Returns:
-        Декоратор rate limit
-    """
     return limiter.limit(f"{max_requests}/{window}seconds")
 
 
 def write_limit(max_requests: int = 30, window: int = 60):
-    """
-    Лимит для write операций (POST, PUT, DELETE)
-
-    Args:
-        max_requests: Максимум запросов
-        window: Окно времени в секундах
-
-    Returns:
-        Декоратор rate limit
-    """
     return limiter.limit(f"{max_requests}/{window}seconds")
 
 
 def download_limit(max_requests: int = 20, window: int = 60):
-    """
-    Лимит для download endpoints (файлы, изображения)
-
-    Args:
-        max_requests: Максимум запросов
-        window: Окно времени в секундах
-
-    Returns:
-        Декоратор rate limit
-    """
     return limiter.limit(f"{max_requests}/{window}seconds")
 
 
 def external_limit(max_requests: int = 10, window: int = 60):
-    """
-    Лимит для external API endpoints (NASA, external services)
-
-    Args:
-        max_requests: Максимум запросов
-        window: Окно времени в секундах
-
-    Returns:
-        Декоратор rate limit
-    """
     return limiter.limit(f"{max_requests}/{window}seconds")
 
 
 def sstv_limit(max_requests: int = 10, window: int = 60):
-    """
-    Лимит для SSTV operations (decode, upload)
-
-    Args:
-        max_requests: Максимум запросов
-        window: Окно времени в секундах
-
-    Returns:
-        Декоратор rate limit
-    """
     return limiter.limit(f"{max_requests}/{window}seconds")
 
 

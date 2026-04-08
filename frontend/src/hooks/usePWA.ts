@@ -247,7 +247,7 @@ export function usePushNotifications() {
 
       const pushSubscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey).buffer as ArrayBuffer,
       });
 
       setSubscription(pushSubscription);
@@ -316,10 +316,4 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return outputArray;
 }
 
-// Export individual hooks
-export {
-  useInstallPWA,
-  useOnlineStatus,
-  useServiceWorker,
-  usePushNotifications,
-};
+

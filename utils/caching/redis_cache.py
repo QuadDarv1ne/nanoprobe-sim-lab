@@ -5,6 +5,7 @@ Redis кэш для Nanoprobe Sim Lab
 
 import json
 import hashlib
+import os
 import time
 import logging
 from typing import Any, Optional, Callable
@@ -22,13 +23,21 @@ class RedisCache:
     RECONNECT_MAX_ATTEMPTS = 10  # максимум попыток
     RECONNECT_BACKOFF_FACTOR = 1.5  # экспоненциальный backoff
 
-    def __init__(self, host: str = "localhost", port: int = 6379, db: int = 0):
-        self.host = host
-        self.port = port
-        self.db = db
+    def __init__(
+        self,
+        host: Optional[str] = None,
+        port: Optional[int] = None,
+        db: Optional[int] = None,
+        password: Optional[str] = None,
+    ):
+        # Приоритет: аргументы → env → defaults
+        self.host = host or os.getenv("REDIS_HOST", "localhost")
+        self.port = port or int(os.getenv("REDIS_PORT", "6379"))
+        self.db = db if db is not None else int(os.getenv("REDIS_DB", "0"))
+        self.password = password or os.getenv("REDIS_PASSWORD") or None
         self._client: Optional[redis.Redis] = None
         self._enabled = True
-        
+
         # Reconnect state
         self._last_connect_attempt: float = 0
         self._connect_attempts: int = 0
@@ -76,6 +85,7 @@ class RedisCache:
                     host=self.host,
                     port=self.port,
                     db=self.db,
+                    password=self.password,
                     decode_responses=True,
                     socket_connect_timeout=2,
                     socket_timeout=2,
@@ -280,7 +290,12 @@ def cached_sync(prefix: str = "api", expire: int = 300):
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args, **kwargs):
-            from utils.caching.redis_cache import cache
+            # Используем app state если доступен, иначе модульный cache
+            try:
+                from api.state import get_redis
+                redis_instance = get_redis()
+            except Exception:
+                redis_instance = cache
 
             # Генерация ключа
             cache_key = f"{prefix}:{func.__name__}:"
@@ -289,15 +304,17 @@ def cached_sync(prefix: str = "api", expire: int = 300):
             ).hexdigest()[:16]
 
             # Попытка получить из кэша
-            cached_value = cache.get(cache_key)
-            if cached_value is not None:
-                return cached_value
+            if redis_instance and redis_instance.is_available():
+                cached_value = redis_instance.get(cache_key)
+                if cached_value is not None:
+                    return cached_value
 
             # Вызов функции
             result = func(*args, **kwargs)
 
             # Сохранение в кэш
-            cache.set(cache_key, result, expire)
+            if redis_instance and redis_instance.is_available():
+                redis_instance.set(cache_key, result, expire)
 
             return result
         return wrapper

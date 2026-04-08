@@ -2,6 +2,7 @@
 
 import hashlib
 import secrets
+import os
 import jwt
 import bcrypt
 from datetime import datetime, timedelta, timezone
@@ -83,13 +84,21 @@ class AuthManager:
     def create_default_admin(self):
         """Создает пользователя администратора по умолчанию"""
         if not self.user_exists("admin"):
+            # Генерация безопасного пароля через环境变量 или случайного
+            default_password = os.getenv("DEFAULT_ADMIN_PASSWORD")
+            if not default_password:
+                # Генерация случайного пароля при первом запуске
+                default_password = secrets.token_urlsafe(16)
+                print(f"⚠️  Сгенерирован пароль администратора: {default_password}")
+                print("📌 Сохраните его! Для изменения установите DEFAULT_ADMIN_PASSWORD")
+
             self.register_user(
                 username="admin",
                 email="admin@nanoprobe-sim-lab.org",
-                password="SecurePass123!",
+                password=default_password,
                 role="admin"
             )
-            print("Создан пользователь администратора по умолчанию")
+            print("✅ Создан пользователь администратора по умолчанию")
 
 
     def hash_password(self, password: str, salt: str = None) -> tuple:

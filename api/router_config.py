@@ -20,11 +20,12 @@ def register_routes(app: FastAPI):
     # Основные роуты (обязательные)
     # ============================================
     from api.routes import (
-        auth, scans, simulations, analysis, comparison, 
-        reports, admin, graphql, ml_analysis, 
-        external_services, nasa, weather, monitoring
+        auth, scans, simulations, analysis, comparison,
+        reports, admin, graphql, ml_analysis,
+        external_services, nasa, weather, monitoring,
+        system_export  # Новые эндпоинты экспорта и системных операций
     )
-    
+
     app.include_router(auth.router, prefix="/api/v1/auth", tags=["Аутентификация"])
     app.include_router(scans.router, prefix="/api/v1/scans", tags=["Сканирования"])
     app.include_router(simulations.router, prefix="/api/v1/simulations", tags=["Симуляции"])
@@ -32,6 +33,9 @@ def register_routes(app: FastAPI):
     app.include_router(comparison.router, prefix="/api/v1/comparison", tags=["Сравнение"])
     app.include_router(reports.router, prefix="/api/v1/reports", tags=["Отчёты"])
     app.include_router(admin.router, prefix="/api/v1", tags=["Администрирование"])
+    
+    # Экспорт и системные операции (без prefix — роуты сами определяют пути)
+    app.include_router(system_export.router, tags=["Экспорт и система"])
     
     # ============================================
     # Health endpoints (алиасы для фронтенда)

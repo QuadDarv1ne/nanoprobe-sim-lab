@@ -119,53 +119,27 @@ def is_first_run() -> bool:
 
 def get_redis_connection_pool():
     """
-    Получает Redis connection pool (singleton).
-    
-    Returns:
-        redis.ConnectionPool: Pool для подключений
+    Получает Redis connection pool через RedisCache (singleton).
+    Делегирует в RedisCache чтобы не дублировать конфигурацию.
     """
-    import redis
-    
-    # Singleton pattern для connection pool
-    if not hasattr(get_redis_connection_pool, '_pool'):
-        redis_host = os.getenv("REDIS_HOST", "localhost")
-        redis_port = int(os.getenv("REDIS_PORT", "6379"))
-        redis_db = int(os.getenv("REDIS_DB", "0"))
-        redis_password = os.getenv("REDIS_PASSWORD")
-        
-        pool_kwargs = {
-            "host": redis_host,
-            "port": redis_port,
-            "db": redis_db,
-            "decode_responses": True,
-            "max_connections": 10,
-            "socket_timeout": 5,
-            "socket_connect_timeout": 5,
-            "retry_on_timeout": True,
-        }
-        
-        if redis_password:
-            pool_kwargs["password"] = redis_password
-        
-        get_redis_connection_pool._pool = redis.ConnectionPool(**pool_kwargs)
-        logger.info(f"Redis connection pool created: {redis_host}:{redis_port}")
-    
-    return get_redis_connection_pool._pool
+    from utils.caching.redis_cache import RedisCache
+    if not hasattr(get_redis_connection_pool, '_cache'):
+        get_redis_connection_pool._cache = RedisCache()
+    return get_redis_connection_pool._cache
 
 
 def get_redis_client():
     """
-    Получает Redis клиент из pool.
-    
-    Returns:
-        redis.Redis: Redis клиент или None если недоступен
+    Получает Redis клиент.
+    Сначала пробует app state, затем создаёт собственный через RedisCache.
     """
     try:
-        import redis
-        pool = get_redis_connection_pool()
-        client = redis.Redis(connection_pool=pool)
-        client.ping()
-        return client
-    except Exception as e:
-        logger.warning(f"Redis not available: {e}")
-        return None
+        from api.state import get_redis
+        instance = get_redis()
+        if instance and instance.is_available():
+            return instance.client
+    except Exception:
+        pass
+
+    cache = get_redis_connection_pool()
+    return cache.client if cache.is_available() else None

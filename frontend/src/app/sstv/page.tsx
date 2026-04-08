@@ -54,6 +54,10 @@ interface ISSResponse {
   data?: ISSPass | ISSPosition;
 }
 
+function isISSResponse(val: unknown): val is ISSResponse {
+  return typeof val === 'object' && val !== null;
+}
+
 export default function SSTVPage() {
   const [recordings, setRecordings] = useState<SSTVRecording[]>([]);
   const [isRecording, setIsRecording] = useState(false);
@@ -89,18 +93,18 @@ export default function SSTVPage() {
       const [recordingsData, statusData, passData, positionData] = await Promise.all([
         apiClient.get<RecordingsResponse>('/api/v1/sstv/recordings').catch(() => ({ recordings: [] })),
         apiClient.get<RecordingStatusResponse>('/api/v1/sstv/record/status').catch(() => ({ recording: false })),
-        apiClient.get<ISSResponse>('/api/v1/sstv/iss/next-pass').catch(() => ({})),
-        apiClient.get<ISSResponse>('/api/v1/sstv/iss/position').catch(() => ({})),
+        apiClient.get<ISSResponse>('/api/v1/sstv/iss/next-pass').catch(() => ({} as ISSResponse)),
+        apiClient.get<ISSResponse>('/api/v1/sstv/iss/position').catch(() => ({} as ISSResponse)),
       ]);
 
       setRecordings(recordingsData.recordings || []);
       setIsRecording(statusData.recording || false);
       
-      if (passData.status === "success" && passData.data) {
+      if (isISSResponse(passData) && passData.status === "success" && passData.data) {
         setNextPass(passData.data as ISSPass);
       }
       
-      if (positionData.status === "success" && positionData.data) {
+      if (isISSResponse(positionData) && positionData.status === "success" && positionData.data) {
         setIssPosition(positionData.data as ISSPosition);
       }
     } catch (error) {
@@ -121,7 +125,7 @@ export default function SSTVPage() {
 
   const startRecording = async () => {
     try {
-      const data = await apiClient.post('/api/v1/sstv/record/start', {
+      const data = await apiClient.post<{ message?: string }>('/api/v1/sstv/record/start', {
         frequency: SSTV_ISS_FREQUENCY_MHZ,
         duration: recordingDuration
       });
@@ -140,7 +144,7 @@ export default function SSTVPage() {
 
   const stopRecording = async () => {
     try {
-      const data = await apiClient.post('/api/v1/sstv/record/stop');
+      const data = await apiClient.post<{ message?: string }>('/api/v1/sstv/record/stop');
       setIsRecording(false);
       toast.success('Запись остановлена', {
         description: data.message
