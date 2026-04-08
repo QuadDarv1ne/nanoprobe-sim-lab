@@ -78,15 +78,15 @@ export default function MobileDashboard() {
   // Получение данных с защитой от overlapping requests
   const fetchStats = async () => {
     try {
-      const response = await fetch(`${API_BASE}/api/v1/monitoring/health/detailed`);
+      const response = await fetch(`${API_BASE}/health/detailed`);
       if (response.ok) {
         const data = await response.json();
         setStats({
-          cpu: data.system.cpu.percent,
-          memory: data.system.memory.percent,
-          disk: data.system.disk.percent,
-          network_sent: data.system.network.bytes_sent_mb,
-          network_recv: data.system.network.bytes_recv_mb,
+          cpu: data.metrics?.cpu?.percent ?? 0,
+          memory: data.metrics?.memory?.percent ?? 0,
+          disk: data.metrics?.disk?.percent ?? 0,
+          network_sent: data.system?.network?.bytes_sent_mb ?? 0,
+          network_recv: data.system?.network?.bytes_recv_mb ?? 0,
         });
         setLastUpdate(new Date());
       }
@@ -100,14 +100,14 @@ export default function MobileDashboard() {
   // Получение SSTV статуса
   const fetchSSTVStatus = async () => {
     try {
-      const response = await fetch(`${API_BASE}/api/v1/sstv/status`);
+      const response = await fetch(`${API_BASE}/api/v1/sstv/health`);
       if (response.ok) {
         const data = await response.json();
         setSstv({
-          active: data.active || false,
-          frequency: data.frequency || 145.800,
-          last_recording: data.last_recording || null,
-          decoded_count: data.decoded_count || 0,
+          active: data.components?.rtl_sdr_recording === 'recording',
+          frequency: 145.800,
+          last_recording: null,
+          decoded_count: 0,
         });
       }
     } catch (error) {

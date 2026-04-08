@@ -154,3 +154,59 @@ async def get_comparison(
         raise
     except Exception as e:
         raise ValidationError(f"Ошибка получения сравнения: {str(e)}")
+
+
+@router.delete(
+    "/{comparison_id}",
+    status_code=204,
+    summary="Удалить результат сравнения",
+)
+async def delete_comparison(
+    comparison_id: str,
+    db: DatabaseManager = Depends(get_db),
+):
+    """Удалить результат сравнения из БД (принимает comparison_id UUID или числовой id)"""
+    with db.get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "DELETE FROM surface_comparisons WHERE comparison_id = ? OR CAST(id AS TEXT) = ?",
+            (comparison_id, comparison_id)
+        )
+        if cursor.rowcount == 0:
+            raise NotFoundError(f"Сравнение с ID {comparison_id} не найдено", resource_type="comparison")
+
+
+@router.get(
+    "/{comparison_id}/export",
+    summary="Экспорт результата сравнения",
+)
+async def export_comparison(
+    comparison_id: str,
+    fmt: str = "json",
+    db: DatabaseManager = Depends(get_db),
+):
+    """Экспорт результата сравнения в JSON или CSV (принимает comparison_id UUID или числовой id)"""
+    comparisons = db.get_surface_comparisons(limit=500)
+    comparison = next(
+        (c for c in comparisons if
+         c.get('comparison_id') == comparison_id or str(c.get('id')) == comparison_id),
+        None
+    )
+
+    if not comparison:
+        raise NotFoundError(f"Сравнение с ID {comparison_id} не найдено", resource_type="comparison")
+
+    if fmt == "csv":
+        import csv, io
+        output = io.StringIO()
+        writer = csv.DictWriter(output, fieldnames=comparison.keys())
+        writer.writeheader()
+        writer.writerow(comparison)
+        from fastapi.responses import Response
+        return Response(
+            content=output.getvalue(),
+            media_type="text/csv",
+            headers={"Content-Disposition": f"attachment; filename=comparison_{comparison_id}.csv"},
+        )
+
+    return comparison

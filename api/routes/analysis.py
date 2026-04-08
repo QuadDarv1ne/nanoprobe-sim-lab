@@ -151,3 +151,59 @@ async def get_defect_analysis(
     except Exception as e:
         logger.error(f"Error getting defect analysis by ID: {e}")
         raise ValidationError(f"Ошибка получения анализа: {str(e)}")
+
+
+@router.delete(
+    "/defects/{analysis_id}",
+    status_code=204,
+    summary="Удалить результат анализа",
+)
+async def delete_defect_analysis(
+    analysis_id: str,
+    db: DatabaseManager = Depends(get_db),
+):
+    """Удалить результат анализа из БД (принимает analysis_id UUID или числовой id)"""
+    with db.get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "DELETE FROM defect_analysis WHERE analysis_id = ? OR CAST(id AS TEXT) = ?",
+            (analysis_id, analysis_id)
+        )
+        if cursor.rowcount == 0:
+            raise NotFoundError(f"Анализ с ID {analysis_id} не найден", resource_type="analysis")
+
+
+@router.get(
+    "/defects/{analysis_id}/export",
+    summary="Экспорт результата анализа",
+)
+async def export_defect_analysis(
+    analysis_id: str,
+    fmt: str = "json",
+    db: DatabaseManager = Depends(get_db),
+):
+    """Экспорт результата анализа в JSON или CSV (принимает analysis_id UUID или числовой id)"""
+    analyses = db.get_defect_analyses(limit=500)
+    analysis = next(
+        (a for a in analyses if
+         a.get('analysis_id') == analysis_id or str(a.get('id')) == analysis_id),
+        None
+    )
+
+    if not analysis:
+        raise NotFoundError(f"Анализ с ID {analysis_id} не найден", resource_type="analysis")
+
+    if fmt == "csv":
+        import csv, io
+        output = io.StringIO()
+        writer = csv.DictWriter(output, fieldnames=analysis.keys())
+        writer.writeheader()
+        writer.writerow(analysis)
+        from fastapi.responses import Response
+        return Response(
+            content=output.getvalue(),
+            media_type="text/csv",
+            headers={"Content-Disposition": f"attachment; filename=analysis_{analysis_id}.csv"},
+        )
+
+    return analysis

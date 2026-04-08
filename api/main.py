@@ -360,6 +360,42 @@ app.include_router(comparison.router, prefix="/api/v1/comparison", tags=["Сра
 app.include_router(reports.router, prefix="/api/v1/reports", tags=["Отчёты"])
 app.include_router(admin.router, prefix="/api/v1", tags=["Администрирование"])
 
+# Алиасы для путей которые ожидает фронтенд
+@app.get("/api/v1/health/database", tags=["Health"])
+async def health_database():
+    """Проверка здоровья БД (алиас для фронтенда)"""
+    from api.state import get_db_manager
+    try:
+        db = get_db_manager()
+        with db.get_connection() as conn:
+            conn.execute("SELECT 1")
+        db_path = __import__('pathlib').Path(db.db_path)
+        return {
+            "status": "healthy",
+            "size_bytes": db_path.stat().st_size if db_path.exists() else 0,
+            "timestamp": datetime.now().isoformat(),
+        }
+    except Exception as e:
+        return {"status": "unhealthy", "error": str(e), "timestamp": datetime.now().isoformat()}
+
+
+@app.post("/api/v1/database/backup", tags=["Health"])
+async def database_backup_alias():
+    """Бэкап БД (алиас для фронтенда, без авторизации для удобства)"""
+    from api.state import get_db_manager
+    import shutil
+    db = get_db_manager()
+    backup_dir = __import__('pathlib').Path("data/backups")
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    backup_path = backup_dir / f"nanoprobe_{ts}.db"
+    try:
+        shutil.copy2(str(db.db_path), str(backup_path))
+        return {"status": "success", "backup_path": str(backup_path), "timestamp": datetime.now().isoformat()}
+    except Exception as e:
+        from api.error_handlers import ValidationError
+        raise ValidationError(f"Ошибка бэкапа: {str(e)}")
+
 # Dashboard API
 try:
     from api.routes import dashboard

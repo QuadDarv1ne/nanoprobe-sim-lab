@@ -243,6 +243,63 @@ async def clear_logs(
 # ==================== Управление базой данных ====================
 
 @router.get(
+    "/database/health",
+    summary="Здоровье БД",
+    description="Проверка состояния базы данных",
+)
+async def get_database_health(current_user: dict = Depends(get_current_user)):
+    """Проверка здоровья БД"""
+    require_admin(current_user)
+
+    db = get_db_manager()
+    try:
+        with db.get_connection() as conn:
+            conn.execute("SELECT 1")
+        db_path = Path(db.db_path)
+        return {
+            "status": "healthy",
+            "path": str(db_path),
+            "size_bytes": db_path.stat().st_size if db_path.exists() else 0,
+            "pool_stats": db.get_pool_stats(),
+            "timestamp": datetime.now().isoformat(),
+        }
+    except Exception as e:
+        logger.error(f"Database health check failed: {e}")
+        return {"status": "unhealthy", "error": str(e), "timestamp": datetime.now().isoformat()}
+
+
+@router.post(
+    "/database/backup",
+    summary="Создать бэкап БД",
+    description="Создать резервную копию базы данных",
+)
+async def backup_database(current_user: dict = Depends(get_current_user)):
+    """Создание бэкапа БД"""
+    require_admin(current_user)
+
+    db = get_db_manager()
+    backup_dir = Path("data/backups")
+    backup_dir.mkdir(parents=True, exist_ok=True)
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    backup_path = backup_dir / f"nanoprobe_{timestamp}.db"
+
+    try:
+        import shutil
+        shutil.copy2(str(db.db_path), str(backup_path))
+        size = backup_path.stat().st_size
+        logger.info(f"Database backup created: {backup_path}")
+        return {
+            "status": "success",
+            "backup_path": str(backup_path),
+            "size_bytes": size,
+            "timestamp": datetime.now().isoformat(),
+        }
+    except Exception as e:
+        logger.error(f"Database backup failed: {e}")
+        raise ValidationError(f"Ошибка создания бэкапа: {str(e)}")
+
+@router.get(
     "/database/stats",
     summary="Статистика БД",
     description="Получить статистику базы данных",
