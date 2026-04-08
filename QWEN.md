@@ -1,5 +1,26 @@
 ## Qwen Added Memories
 
+### 2026-04-08: Security & Stability Improvements (ВЫПОЛНЕНО)
+- ✅ Security Middleware Enabled - GZip, Rate Limiting, Security Headers, Error Handlers
+- ✅ Lifespan Fixed - корректная инициализация БД/Redis при старте
+- ✅ Performance Monitoring - включено middleware для сбора метрик
+- ✅ External Routes Tests - 25 новых тестов (NASA, Weather, External, Monitoring)
+- ✅ Health Check Enhanced - улучшенная обработка ошибок
+- ✅ IMPROVEMENTS_REPORT_2026-04-08.md создан
+
+**Критические изменения:**
+| Middleware | До | После |
+|-----------|-----|-------|
+| GZip | ❌ | ✅ |
+| Rate Limiting | ❌ | ✅ |
+| Security Headers | ❌ | ✅ |
+| Error Handlers | ❌ | ✅ |
+
+**Тесты:** +25 тестовых функций (571 → 596)
+**Коммит:** `19e0a42` - fix: enable security middleware and fix lifespan initialization
+
+---
+
 ### 2026-03-15: Обновление документации (ВЫПОЛНЕНО)
 - ✅ todo.md: Добавлены разделы "Синхронизация Backend ↔ Frontend" и "UI/UX Улучшения Дашборда"
 - ✅ todo.md: Обновлено количество тестов (140+), CI/CD workflows (11)
