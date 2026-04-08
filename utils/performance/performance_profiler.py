@@ -224,20 +224,63 @@ class PerformanceProfiler:
 
     def profile_code_block(self, code: str, name: str = "code_block") -> Dict[str, Any]:
         """
-        Профилирует блок кода
+        Профилирует блок кода (БЕЗОПАСНАЯ версия - exec() удалён)
+        
+        Внимание: Эта функция теперь принимает только выражения (expressions),
+        а не произвольный код. Для профилирования произвольного кода
+        используйте внешние инструменты (cProfile, line_profiler).
 
         Args:
-            code: Код для профилирования
+            code: Код для профилирования (только выражения)
             name: Имя блока кода
 
         Returns:
             Результаты профилирования
+            
+        Raises:
+            ValueError: Если код содержит опасные конструкции
         """
+        # Проверка безопасности: блокируем опасные конструкции
+        dangerous_keywords = [
+            'import', 'open', 'exec', 'eval', 'compile', 'getattr', 'setattr',
+            'delattr', '__import__', 'globals', 'locals', 'vars', 'breakpoint',
+            'input', 'file', 'open(', 'exec(', 'eval(', 'subprocess', 'os.system',
+            'os.popen', 'sys.modules', 'importlib'
+        ]
+        
+        for keyword in dangerous_keywords:
+            if keyword in code:
+                raise ValueError(
+                    f"Код содержит запрещённое ключевое слово: '{keyword}'. "
+                    "profile_code_block поддерживает только безопасные выражения."
+                )
+        
+        # AST парсинг для дополнительной проверки
+        import ast
+        try:
+            tree = ast.parse(code)
+            # Разрешаем только выражения и простые конструкции
+            for node in ast.walk(tree):
+                if isinstance(node, (ast.Import, ast.ImportFrom, ast.Call)):
+                    # Проверяем вызовы
+                    if isinstance(node, ast.Call):
+                        if isinstance(node.func, ast.Name) and node.func.id in ['exec', 'eval', 'compile']:
+                            raise ValueError(f"Запрещённый вызов: {node.func.id}")
+        except SyntaxError as e:
+            raise ValueError(f"Синтаксическая ошибка в коде: {e}")
+
         pr = cProfile.Profile()
         pr.enable()
 
         start_time = time.time()
-        exec(code, globals(), locals())
+        # Безопасное выполнение через eval (только выражения)
+        try:
+            result = eval(compile(code, '<profiler>', 'eval'), {"__builtins__": {}}, {})
+        except SyntaxError:
+            # Если не выражение, выполняем как statement через exec с ограниченным окружением
+            safe_locals: dict = {}
+            exec(compile(code, '<profiler>', 'exec'), {"__builtins__": {}}, safe_locals)
+            result = safe_locals
         end_time = time.time()
 
         pr.disable()

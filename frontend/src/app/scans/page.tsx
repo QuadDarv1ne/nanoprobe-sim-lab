@@ -12,7 +12,8 @@ import { apiClient } from "@/lib/api-client";
 interface Scan {
   id: number;
   scan_type: string;
-  resolution: string;
+  width?: number;
+  height?: number;
   created_at: string;
   image_path?: string;
 }
@@ -121,8 +122,7 @@ export default function ScansPage() {
                 <tr>
                   <th className="text-left p-4 font-medium text-muted-foreground">ID</th>
                   <th className="text-left p-4 font-medium text-muted-foreground">Тип</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground">Разрешение</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground">Дата</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground">Разрешение</th>                  <th className="text-left p-4 font-medium text-muted-foreground">Дата</th>
                   <th className="text-right p-4 font-medium text-muted-foreground">Действия</th>
                 </tr>
               </thead>
@@ -138,7 +138,9 @@ export default function ScansPage() {
                         {scan.scan_type}
                       </span>
                     </td>
-                    <td className="p-4 text-muted-foreground">{scan.resolution}</td>
+                    <td className="p-4 text-muted-foreground">
+                      {scan.width && scan.height ? `${scan.width}×${scan.height}` : '—'}
+                    </td>
                     <td className="p-4 text-muted-foreground">
                       {format(new Date(scan.created_at), 'dd.MM.yyyy HH:mm')}
                     </td>

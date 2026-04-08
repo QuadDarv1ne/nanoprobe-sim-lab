@@ -1049,14 +1049,12 @@ class IntegratedWebDashboard:
             try:
                 import os, platform
                 import psutil
-                def _get_du():
-                    if platform.system() == "Windows":
-                        return psutil.disk_usage(os.environ.get("SYSTEMDRIVE", "C:\\"))
-                    return psutil.disk_usage("/")
+                from utils.platform_utils import get_system_disk_usage
+                disk_usage = get_system_disk_usage()
                 metrics = {
                     'cpu_percent': psutil.cpu_percent(interval=1),
                     'memory_percent': psutil.virtual_memory().percent,
-                    'disk_usage': _get_du().percent,
+                    'disk_usage': disk_usage.percent if disk_usage else 0,
                     'timestamp': datetime.now().isoformat()
                 }
                 emit('metrics', metrics)

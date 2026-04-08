@@ -35,6 +35,13 @@ from pathlib import Path
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 
+# Автоопределение портов
+try:
+    from utils.port_finder import find_port, find_ports, PortFinder
+    AUTO_PORT_ENABLED = True
+except ImportError:
+    AUTO_PORT_ENABLED = False
+
 if sys.platform == "win32":
     os.system("chcp 65001 >nul")
     try:
@@ -47,10 +54,10 @@ if sys.platform == "win32":
 
 PROJECT_ROOT = Path(__file__).parent
 
-# Порты
-BACKEND_PORT = 8000
-FLASK_PORT = 5000
-NEXTJS_PORT = 3000
+# Порты (будут обновлены при автоопределении)
+BACKEND_PORT = int(os.getenv("BACKEND_PORT", 8000))
+FLASK_PORT = int(os.getenv("FLASK_PORT", 5000))
+NEXTJS_PORT = int(os.getenv("NEXTJS_PORT", 3000))
 
 # Скрипты
 BACKEND_SCRIPT = PROJECT_ROOT / "run_api.py"
@@ -66,6 +73,68 @@ HEALTH_CHECK_INTERVAL = 2
 
 
 # ==================== Утилиты ====================
+
+def auto_detect_ports(services: List[str] = None) -> Dict[str, int]:
+    """
+    Автоматическое определение свободных портов
+    
+    Args:
+        services: Список сервисов ['backend', 'flask', 'nextjs']
+        
+    Returns:
+        Словарь {service: port}
+    """
+    global BACKEND_PORT, FLASK_PORT, NEXTJS_PORT
+    
+    if not AUTO_PORT_ENABLED:
+        print("⚠️  Автоопределение портов недоступно (portFinder не импортирован)")
+        return {
+            "backend": BACKEND_PORT,
+            "flask": FLASK_PORT,
+            "nextjs": NEXTJS_PORT
+        }
+    
+    if services is None:
+        services = ["backend", "flask", "nextjs"]
+    
+    try:
+        print("🔍 Автоопределение свободных портов...")
+        ports = find_ports(services)
+        
+        # Обновляем глобальные переменные
+        if "backend" in ports:
+            BACKEND_PORT = ports["backend"]
+            os.environ["BACKEND_PORT"] = str(BACKEND_PORT)
+        
+        if "flask" in ports:
+            FLASK_PORT = ports["flask"]
+            os.environ["FLASK_PORT"] = str(FLASK_PORT)
+        
+        if "nextjs" in ports:
+            NEXTJS_PORT = ports["nextjs"]
+            os.environ["NEXTJS_PORT"] = str(NEXTJS_PORT)
+        
+        print("✅ Найденные порты:")
+        for service, port in ports.items():
+            print(f"   {service:15s}: {port}")
+        print()
+        
+        return ports
+        
+    except Exception as e:
+        print(f"⚠️  Автоопределение не удалось: {e}")
+        print(f"📌 Используем порта по умолчанию:")
+        print(f"   backend: {BACKEND_PORT}")
+        print(f"   flask:   {FLASK_PORT}")
+        print(f"   nextjs:  {NEXTJS_PORT}")
+        print()
+        
+        return {
+            "backend": BACKEND_PORT,
+            "flask": FLASK_PORT,
+            "nextjs": NEXTJS_PORT
+        }
+
 
 def check_port(port: int) -> bool:
     """Проверка занятости порта"""
@@ -110,6 +179,7 @@ def print_versions():
     print()
     print("=" * 70)
     print("  💡 Sync Manager запускается автоматически (кроме api-only)")
+    print("  🔍 Автоопределение портов включено")
     print("=" * 70)
     print()
 
@@ -283,6 +353,16 @@ class ProcessManager:
     def __init__(self):
         self.processes: List[subprocess.Popen] = []
         self.running = True
+        # Регистрация signal handlers
+        if sys.platform != "win32":
+            signal.signal(signal.SIGTERM, self._signal_handler)
+            signal.signal(signal.SIGINT, self._signal_handler)
+
+    def _signal_handler(self, signum, frame):
+        """Обработка сигналов для корректного завершения"""
+        print(f"\n[INFO] Получен сигнал {signum}, остановка сервисов...")
+        self.stop_all()
+        sys.exit(0)
 
     def add_process(self, process: Optional[subprocess.Popen]):
         """Добавление процесса"""
@@ -293,19 +373,71 @@ class ProcessManager:
         """Ожидание завершения процессов"""
         try:
             for proc in self.processes:
-                proc.wait()
+                if proc.poll() is None:  # Только если процесс ещё работает
+                    proc.wait()
         except KeyboardInterrupt:
             print("\n\n[INFO] Остановка сервисов...")
             self.stop_all()
+        except Exception as e:
+            print(f"\n[ERROR] Ошибка ожидания: {e}")
+            self.stop_all()
 
     def stop_all(self):
-        """Остановка всех процессов"""
-        for proc in reversed(self.processes):
-            try:
-                proc.terminate()
-            except Exception:
-                proc.kill()
+        """Остановка всех процессов с корректным завершением"""
+        if not self.processes:
+            return
+
+        print("[INFO] Остановка всех сервисов...")
         
+        # Фаза 1: Отправка SIGTERM
+        for proc in reversed(self.processes):
+            if proc.poll() is None:  # Только живые процессы
+                try:
+                    proc.terminate()
+                    print(f"  → Отправлен SIGTERM процессу PID {proc.pid}")
+                except Exception as e:
+                    print(f"  ⚠️  Ошибка terminate PID {proc.pid}: {e}")
+        
+        # Фаза 2: Ожидание завершения (до 5 секунд)
+        for proc in self.processes:
+            if proc.poll() is None:
+                try:
+                    proc.wait(timeout=5)
+                    print(f"  ✓ Процесс PID {proc.pid} завершён")
+                except subprocess.TimeoutExpired:
+                    print(f"  ⚠️  Процесс PID {proc.pid} не завершился за 5с, отправляем SIGKILL")
+                    try:
+                        proc.kill()
+                        proc.wait(timeout=2)
+                        print(f"  ✓ Процесс PID {proc.pid} убит")
+                    except Exception as e:
+                        print(f"  ✗ Ошибка kill PID {proc.pid}: {e}")
+                except Exception as e:
+                    print(f"  ✗ Ошибка ожидания PID {proc.pid}: {e}")
+
+        # Фаза 3: Убиваем дочерние процессы (orphan cleanup)
+        try:
+            import psutil
+            parent = psutil.Process()
+            children = parent.children(recursive=True)
+            for child in children:
+                try:
+                    child.terminate()
+                except psutil.NoSuchProcess:
+                    pass
+            
+            # Ждём завершения дочерних
+            _, alive = psutil.wait_procs(children, timeout=3)
+            for p in alive:
+                try:
+                    p.kill()
+                except psutil.NoSuchProcess:
+                    pass
+        except ImportError:
+            pass  # psutil не установлен, пропускаем
+        except Exception as e:
+            print(f"  ⚠️  Ошибка очистки дочерних процессов: {e}")
+
         print("[OK] Все сервисы остановлены.")
 
 
@@ -331,6 +463,14 @@ def main():
     print(f"  Режим запуска: {mode.upper()}")
     print("=" * 70)
     print()
+
+    # Автоматическое определение портов
+    if mode == "api-only":
+        auto_detect_ports(["backend"])
+    elif mode == "nextjs":
+        auto_detect_ports(["backend", "nextjs"])
+    else:
+        auto_detect_ports(["backend", "flask"])
 
     # Инициализация менеджера процессов
     pm = ProcessManager()
@@ -398,6 +538,14 @@ def main():
         print("   ✅ Sync Manager запущен (автоматическая синхронизация каждые 5 сек)")
     else:
         print("   ❌ Sync Manager отключен (режим api-only)")
+
+    print()
+    print("Порты:")
+    print(f"   Backend:  {BACKEND_PORT}")
+    if mode in ["flask", "full", "dev"]:
+        print(f"   Flask:    {FLASK_PORT}")
+    elif mode == "nextjs":
+        print(f"   Next.js:  {NEXTJS_PORT}")
 
     print()
     print("Нажмите Ctrl+C для остановки всех сервисов")

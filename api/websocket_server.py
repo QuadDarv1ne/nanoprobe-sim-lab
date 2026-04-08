@@ -5,6 +5,8 @@ from flask_socketio import SocketIO, emit
 from datetime import datetime
 import threading
 import time
+import os
+import secrets
 import psutil
 
 from utils.config.config_manager import ConfigManager
@@ -18,7 +20,13 @@ class WebSocketServer:
     def __init__(self, app: Flask = None):
         """Инициализирует WebSocket сервер."""
         self.app = app or Flask(__name__)
-        self.app.config['SECRET_KEY'] = 'nanoprobe-secret-key'
+        
+        # Безопасный SECRET_KEY (из ENV или сгенерированный)
+        self.app.config['SECRET_KEY'] = os.getenv(
+            'WEBSOCKET_SECRET_KEY',
+            secrets.token_hex(32)  # 64 символа, криптографически безопасный
+        )
+        
         self.socketio = SocketIO(
             self.app,
             cors_allowed_origins="*",
@@ -27,7 +35,8 @@ class WebSocketServer:
             engineio_logger=False
         )
         self.config_manager = ConfigManager()
-        self.logger = setup_project_logging(self.config_manager)
+        logger_instance = setup_project_logging(self.config_manager)
+        self.logger = logger_instance.get_logger("websocket")
         self.running = False
         self._connected_clients = set()
         self._setup_routes()
@@ -39,15 +48,19 @@ class WebSocketServer:
         @self.socketio.on('connect')
         def handle_connect():
             """Обработчик подключения клиента."""
-            self._connected_clients.add(request.sid)
-            self.logger.info(f"Клиент подключился: {request.sid}")
+            sid = getattr(request, 'sid', None)
+            if sid:
+                self._connected_clients.add(sid)
+                self.logger.info(f"Клиент подключился: {sid}")
             emit('status', {'status': 'connected', 'timestamp': datetime.now().isoformat()})
 
         @self.socketio.on('disconnect')
         def handle_disconnect():
             """Обработчик отключения клиента."""
-            self._connected_clients.discard(request.sid)
-            self.logger.info(f"Клиент отключился: {request.sid}")
+            sid = getattr(request, 'sid', None)
+            if sid:
+                self._connected_clients.discard(sid)
+                self.logger.info(f"Клиент отключился: {sid}")
 
         @self.socketio.on('request_metrics')
         def handle_request_metrics():

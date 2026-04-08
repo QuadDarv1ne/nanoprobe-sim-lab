@@ -20,13 +20,13 @@ def check_rtlsdr_library():
         print(f"  Версия: {rtlsdr.__version__ if hasattr(rtlsdr, '__version__') else 'unknown'}")
         return True
     except ImportError:
-        print("✗ rtlsdr не установлен")
+        print("✗ pip package pyrtlsdr не установлен")
         print("\nУстановите:")
         print("  pip install pyrtlsdr")
-        print("\nТакже установите librtlsdr драйверы:")
-        print("  Windows: Zadig (см. RTL_SDR_SETUP.md)")
-        print("  Linux: sudo apt-get install librtlsdr-dev")
-        print("  macOS: brew install librtlsdr")
+        return False
+    except OSError as e:
+        print(f"✗ Native librtlsdr.dll не найдена: {e}")
+        print("\nУстановите драйверы Zadig (см. RTL_SDR_SETUP.md)")
         return False
 
 
@@ -52,7 +52,7 @@ def check_devices():
                 test_sdr = RtlSdr(device_index=0)
                 test_sdr.close()
                 num_devices = 1
-            except:
+            except Exception:
                 num_devices = 0
 
         print(f"Найдено устройств: {num_devices}")
@@ -80,7 +80,6 @@ def identify_devices(num_devices):
     print("-" * 60)
 
     from rtlsdr import RtlSdr
-    import sys
     from io import StringIO
 
     v4_found = False
@@ -125,7 +124,7 @@ def identify_devices(num_devices):
             if sdr is not None:
                 try:
                     sdr.close()
-                except:
+                except Exception:
                     pass
 
     return v4_found
@@ -183,7 +182,7 @@ def test_basic_functionality(device_index=0):
         if sdr is not None:
             try:
                 sdr.close()
-            except:
+            except Exception:
                 pass
 
 

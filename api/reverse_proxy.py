@@ -7,7 +7,6 @@ import logging
 import os
 import requests
 from flask import Blueprint, request, jsonify, session
-import jwt
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +15,17 @@ api_proxy = Blueprint('api_proxy', __name__, url_prefix='/api/v1')
 
 # Конфигурация
 FASTAPI_URL = os.getenv('FASTAPI_URL', 'http://localhost:8000')
-JWT_SECRET = os.getenv('JWT_SECRET', 'your-secret-key-change-in-production')
+
+# Безопасный JWT secret (импортируем из централизованного источника)
+try:
+    from api.security.jwt_config import get_jwt_secret
+    JWT_SECRET = get_jwt_secret()
+except ImportError:
+    # Fallback: используем ENV переменную, иначе генерируем безопасный ключ
+    import secrets
+    JWT_SECRET = os.getenv('JWT_SECRET') or secrets.token_hex(32)
+    if not os.getenv('JWT_SECRET'):
+        logger.warning("JWT_SECRET не установлен, используется сгенерированный ключ")
 
 
 def get_token_from_session():

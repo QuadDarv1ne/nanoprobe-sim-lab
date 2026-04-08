@@ -156,7 +156,7 @@ def test_context_logging():
         # Очистка тестовой директории
         try:
             shutil.rmtree(tmpdir, ignore_errors=True)
-        except:
+        except Exception:
             pass
 
 

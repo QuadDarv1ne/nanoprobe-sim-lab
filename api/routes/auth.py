@@ -8,7 +8,7 @@ Argon2 password hashing + Audit logging
 from fastapi import APIRouter, Depends, Request
 from fastapi.security import HTTPBearer
 from datetime import datetime, timedelta, timezone
-from typing import Set, Optional
+from typing import Dict, Set, Optional
 from pathlib import Path
 import jwt
 import os
@@ -42,8 +42,8 @@ security = HTTPBearer()
 # JWT Secret из централизованного источника
 JWT_SECRET = get_jwt_secret()
 JWT_ALGORITHM = "HS256"
-JWT_EXPIRATION_MINUTES = 60
-JWT_REFRESH_EXPIRATION_DAYS = 7
+JWT_EXPIRATION_MINUTES = int(os.getenv("JWT_EXPIRATION_MINUTES", "60"))
+JWT_REFRESH_EXPIRATION_DAYS = int(os.getenv("JWT_REFRESH_EXPIRATION_DAYS", "7"))
 
 # Argon2 + bcrypt fallback для совместимости
 # Argon2 - победитель Password Hashing Competition, более безопасный чем bcrypt
@@ -252,25 +252,53 @@ def _get_redis_client():
 
 
 # In-memory хранилище (fallback если Redis недоступен)
-_in_memory_tokens: Set[str] = set()
+# Формат: {jti: timestamp} для TTL-очистки
+_in_memory_tokens: Dict[str, float] = {}
+_in_memory_tokens_lock = __import__('threading').Lock()
+_IN_MEMORY_TOKENS_MAX_AGE = JWT_REFRESH_EXPIRATION_DAYS * 86400  # 7 дней в секундах
+_IN_MEMORY_TOKENS_MAX_SIZE = 10000  # Лимит размера
+
+
+def _cleanup_expired_tokens():
+    """Очистка протухших токенов (prevent memory leak)"""
+    import time
+    now = time.time()
+    expired = [jti for jti, ts in _in_memory_tokens.items() if now - ts > _IN_MEMORY_TOKENS_MAX_AGE]
+    for jti in expired:
+        _in_memory_tokens.pop(jti, None)
+    
+    # Если всё ещё слишком много токенов, удаляем самые старые
+    if len(_in_memory_tokens) > _IN_MEMORY_TOKENS_MAX_SIZE:
+        sorted_tokens = sorted(_in_memory_tokens.items(), key=lambda x: x[1])
+        for jti, _ in sorted_tokens[:len(sorted_tokens) // 2]:
+            _in_memory_tokens.pop(jti, None)
 
 
 def _store_refresh_token(jti: str, username: str):
     """Сохранение refresh токена в Redis"""
+    import time
+    
     redis_client = _get_redis_client()
     if redis_client:
         try:
             key = f"refresh_token:{jti}"
             redis_client.setex(key, JWT_REFRESH_EXPIRATION_DAYS * 86400, username)
+            return
         except Exception as e:
             logger.error(f"Failed to store token in Redis: {e}")
-            _in_memory_tokens.add(jti)
-    else:
-        _in_memory_tokens.add(jti)
+    
+    # Fallback: in-memory с TTL
+    with _in_memory_tokens_lock:
+        _in_memory_tokens[jti] = time.time()
+        # Периодическая очистка
+        if len(_in_memory_tokens) % 100 == 0:
+            _cleanup_expired_tokens()
 
 
 def _is_token_valid(jti: str) -> bool:
     """Проверка валидности refresh токена"""
+    import time
+    
     redis_client = _get_redis_client()
     if redis_client:
         try:
@@ -278,8 +306,23 @@ def _is_token_valid(jti: str) -> bool:
             return redis_client.exists(key)
         except Exception as e:
             logger.error(f"Failed to check token in Redis: {e}")
-            return jti in _in_memory_tokens
-    return jti in _in_memory_tokens
+            # Fallback к in-memory
+            with _in_memory_tokens_lock:
+                ts = _in_memory_tokens.get(jti)
+                if ts and time.time() - ts <= _IN_MEMORY_TOKENS_MAX_AGE:
+                    return True
+                _in_memory_tokens.pop(jti, None)
+                return False
+    
+    # Fallback: in-memory с проверкой TTL
+    with _in_memory_tokens_lock:
+        ts = _in_memory_tokens.get(jti)
+        if ts is None:
+            return False
+        if time.time() - ts > _IN_MEMORY_TOKENS_MAX_AGE:
+            _in_memory_tokens.pop(jti, None)
+            return False
+        return True
 
 
 def _revoke_all_user_tokens(username: str):
@@ -294,8 +337,10 @@ def _revoke_all_user_tokens(username: str):
                     redis_client.delete(key)
         except Exception as e:
             logger.error(f"Failed to revoke all user tokens in Redis: {e}")
+    
     # Очищаем in-memory
-    _in_memory_tokens.clear()
+    with _in_memory_tokens_lock:
+        _in_memory_tokens.clear()
 
 
 def _revoke_refresh_token(jti: str):
@@ -305,11 +350,13 @@ def _revoke_refresh_token(jti: str):
         try:
             key = f"refresh_token:{jti}"
             redis_client.delete(key)
+            return
         except Exception as e:
             logger.error(f"Failed to revoke token in Redis: {e}")
-            _in_memory_tokens.discard(jti)
-    else:
-        _in_memory_tokens.discard(jti)
+    
+    # Fallback: in-memory
+    with _in_memory_tokens_lock:
+        _in_memory_tokens.pop(jti, None)
 
 
 def create_refresh_token(data: dict) -> str:
@@ -342,7 +389,6 @@ def revoke_refresh_token(jti: str):
         429: {"model": ErrorResponse, "description": "Слишком много запросов"},
     },
 )
-@rate_limit(max_requests=5, window_seconds=60)
 @auth_limit(max_requests=10, window=60)
 async def login(request: Request, login_data: LoginRequest):
     """Вход в систему с audit logging"""

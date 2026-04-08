@@ -5,13 +5,22 @@ Redis кэш для Nanoprobe Sim Lab
 
 import json
 import hashlib
+import time
+import logging
 from typing import Any, Optional, Callable
 from functools import wraps
 import redis
 
+logger = logging.getLogger(__name__)
+
 
 class RedisCache:
-    """Менеджер Redis кэша"""
+    """Менеджер Redis кэша с автоматическим reconnect"""
+
+    # Константы для reconnect логики
+    RECONNECT_INTERVAL = 30  # секунд между попытками подключения
+    RECONNECT_MAX_ATTEMPTS = 10  # максимум попыток
+    RECONNECT_BACKOFF_FACTOR = 1.5  # экспоненциальный backoff
 
     def __init__(self, host: str = "localhost", port: int = 6379, db: int = 0):
         self.host = host
@@ -19,10 +28,49 @@ class RedisCache:
         self.db = db
         self._client: Optional[redis.Redis] = None
         self._enabled = True
+        
+        # Reconnect state
+        self._last_connect_attempt: float = 0
+        self._connect_attempts: int = 0
+        self._connection_lost: bool = False
+
+    def _should_attempt_reconnect(self) -> bool:
+        """Проверка стоит ли пытаться переподключиться"""
+        if self._connect_attempts >= self.RECONNECT_MAX_ATTEMPTS:
+            return False
+        
+        now = time.time()
+        elapsed = now - self._last_connect_attempt
+        
+        # Экспоненциальный backoff
+        backoff = self.RECONNECT_INTERVAL * (self.RECONNECT_BACKOFF_FACTOR ** min(self._connect_attempts, 5))
+        
+        return elapsed >= backoff
 
     @property
     def client(self) -> Optional[redis.Redis]:
-        if self._client is None:
+        """Получение Redis клиента с автоматическим reconnect"""
+        # Если клиент уже создан, проверяем соединение
+        if self._client is not None:
+            try:
+                self._client.ping()
+                # Соединение живо, сбрасываем флаг потери
+                if self._connection_lost:
+                    logger.info("Redis connection restored")
+                    self._connection_lost = False
+                return self._client
+            except (redis.ConnectionError, redis.TimeoutError, OSError):
+                # Соединение потеряно
+                self._connection_lost = True
+                self._client = None
+                self._connect_attempts = 0  # Сбрасываем для новых попыток
+                logger.warning("Redis connection lost, will attempt reconnect")
+        
+        # Пробуем переподключиться
+        if self._should_attempt_reconnect():
+            self._last_connect_attempt = time.time()
+            self._connect_attempts += 1
+            
             try:
                 self._client = redis.Redis(
                     host=self.host,
@@ -31,14 +79,26 @@ class RedisCache:
                     decode_responses=True,
                     socket_connect_timeout=2,
                     socket_timeout=2,
-                    retry_on_timeout=False,
+                    retry_on_timeout=True,
+                    health_check_interval=10,
                 )
-                # Non-blocking ping with short timeout
                 self._client.ping()
-            except (redis.ConnectionError, redis.TimeoutError, redis.RedisError, OSError):
-                self._enabled = False
+                self._enabled = True
+                self._connect_attempts = 0  # Сброс после успешного подключения
+                logger.info(f"Redis connected successfully (attempt {self._connect_attempts})")
+                return self._client
+            except (redis.ConnectionError, redis.TimeoutError, redis.RedisError, OSError) as e:
                 self._client = None
-        return self._client
+                if self._connect_attempts <= 3:
+                    logger.debug(f"Redis connect attempt {self._connect_attempts} failed: {e}")
+                else:
+                    logger.warning(f"Redis connect attempt {self._connect_attempts} failed: {e}")
+        
+        # Не пытаемся подключиться сейчас
+        if not self._should_attempt_reconnect():
+            self._enabled = False
+        
+        return None
 
     def get(self, key: str) -> Optional[Any]:
         if not self._enabled or not self.client:

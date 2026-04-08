@@ -20,6 +20,7 @@ import logging
 
 from api.schemas import APODResponse
 from api.error_handlers import ExternalServiceError
+from api.dependencies import rate_limit
 
 logger = logging.getLogger(__name__)
 

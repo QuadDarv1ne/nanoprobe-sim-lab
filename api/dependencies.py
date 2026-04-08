@@ -36,16 +36,8 @@ async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> dict:
     """
-    Получение текущего пользователя из JWT токена
-
-    Args:
-        credentials: HTTP Bearer credentials
-
-    Returns:
-        dict: Данные пользователя
-
-    Raises:
-        HTTPException: Если токен недействителен
+    Получение текущего пользователя из JWT токена.
+    Проверяет in-memory USERS_DB, затем SQLite для динамически созданных пользователей.
     """
     from api.routes.auth import USERS_DB
 
@@ -64,11 +56,29 @@ async def get_current_user(
         if username is None:
             raise credentials_exception
 
+        # Check in-memory first (admin/user)
         user = USERS_DB.get(username)
-        if not user:
-            raise credentials_exception
+        if user:
+            return user
 
-        return user
+        # Fallback: check SQLite for dynamically created users
+        try:
+            from api.state import get_db_manager
+            db = get_db_manager()
+            db_user = db.get_user(username)
+            if db_user:
+                return {
+                    "id": db_user["id"],
+                    "username": db_user["username"],
+                    "password_hash": db_user["password_hash"],
+                    "role": db_user["role"],
+                    "created_at": db_user.get("created_at", ""),
+                    "last_login": db_user.get("last_login"),
+                }
+        except Exception as e:
+            logger.warning(f"SQLite user lookup failed: {e}")
+
+        raise credentials_exception
     except jwt.PyJWTError:
         raise credentials_exception
 

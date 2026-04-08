@@ -31,9 +31,8 @@ from pathlib import Path
 
 def _get_disk_usage():
     """Cross-platform disk usage"""
-    if platform.system() == "Windows":
-        return psutil.disk_usage(os.environ.get("SYSTEMDRIVE", "C:\\"))
-    return psutil.disk_usage("/")
+    from utils.platform_utils import get_system_disk_usage
+    return get_system_disk_usage()
 
 # Установка UTF-8 кодировки для Windows
 if sys.platform == "win32":

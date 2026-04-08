@@ -92,7 +92,7 @@ class SSTVDecoder:
             return self._fallback_decode(audio_file)
 
     def decode_from_samples(self, samples: np.ndarray, sample_rate: int = 44100,
-                            input_sample_rate: int = None) -> Optional[Image.Image]:
+                            input_sample_rate: Optional[int] = None) -> Optional[Image.Image]:
         """
         Декодирует SSTV из numpy массива сэмплов (для RTL-SDR V4).
 
@@ -121,7 +121,7 @@ class SSTVDecoder:
                 phase = np.angle(samples)
                 audio_data = np.diff(np.unwrap(phase))
                 # Ресемплинг: input_sample_rate -> sample_rate
-                src_rate = input_sample_rate or 2400000  # RTL-SDR V4 default
+                src_rate = int(input_sample_rate or 2400000)  # RTL-SDR V4 default
                 if src_rate != sample_rate:
                     from scipy.signal import resample_poly
                     from math import gcd
@@ -157,7 +157,7 @@ class SSTVDecoder:
             if temp_path and os.path.exists(temp_path):
                 try:
                     os.unlink(temp_path)
-                except:
+                except Exception:
                     pass
 
     def decode_realtime_init(self, sample_rate: int = 44100, callback=None):
@@ -264,7 +264,8 @@ class SSTVDecoder:
             if image is not None and image.size[0] > 0 and image.size[1] > 0:
                 return image
             return None
-        except Exception:
+        except Exception as e:
+            print(f"  Mode {mode} failed: {e}")
             return None
 
     def _fallback_decode(self, audio_file: str) -> Optional[Image.Image]:
