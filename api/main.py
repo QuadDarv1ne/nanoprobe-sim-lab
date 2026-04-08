@@ -33,58 +33,28 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Управление жизненным циклом приложения"""
-    db = None
-    redis = None
+    logger.info("Application starting up...")
     
-    # Применение миграций БД
-    from api.database_init import ensure_database
-
-    if ensure_database("data/nanoprobe.db"):
-        logger.info("Database migrations applied")
-    else:
-        logger.error("Database initialization failed")
-        raise RuntimeError("Database initialization failed")
-
-    # Инициализация БД менеджера и Redis
+    # Инициализация ресурсов при старте
     try:
-        db = DatabaseManager("data/nanoprobe.db")
-        logger.info("Database initialized")
+        from api.state import get_db_manager, get_redis_cache, init_app_state
+        
+        # Инициализация БД
+        db = get_db_manager()
+        logger.info("Database manager initialized")
+        
+        # Инициализация Redis
+        redis = get_redis_cache()
+        logger.info("Redis cache initialized")
+        
+        # Инициализация app state
+        init_app_state(db, redis)
+        logger.info("App state initialized")
+        
     except Exception as e:
-        logger.error(f"Failed to initialize database: {e}", exc_info=True)
-        raise RuntimeError(f"Database initialization failed: {e}") from e
-
-    # Redis опционален (можно отключить через REDIS_DISABLED=1)
-    redis_disabled = os.getenv("REDIS_DISABLED", "0") == "1"
-    if redis_disabled:
-        logger.warning("Redis disabled - running without cache")
-    else:
-        redis_host = os.getenv("REDIS_HOST", "localhost")
-        redis_port = int(os.getenv("REDIS_PORT", "6379"))
-        try:
-            redis = RedisCache(host=redis_host, port=redis_port)
-            if not redis.is_available():
-                logger.warning("Redis not available - running without cache")
-                redis = None
-            else:
-                logger.info("Redis cache initialized")
-        except Exception as e:
-            logger.warning(f"Redis connection failed: {e} - running without cache")
-            redis = None
-
-    init_app_state(db, redis)
-
-    # Запуск мониторинга производительности
-    try:
-        from utils.monitoring.performance_monitor import start_monitoring
-        metrics_port = int(os.getenv("METRICS_PORT", "9090"))
-        start_monitoring(metrics_port)
-        logger.info(f"Performance monitoring started on port {metrics_port}")
-    except Exception as e:
-        logger.warning(f"Performance monitoring startup error: {e}")
-
+        logger.warning(f"Startup initialization warning (may be expected in dev): {e}")
+    
     yield
-
-    # Очистка при остановке (в обратном порядке инициализации)
     logger.info("Application shutting down...")
 
     # 1. Остановка мониторинга
@@ -114,6 +84,8 @@ async def lifespan(app: FastAPI):
 
     # 4. Закрытие Redis
     try:
+        from api.state import get_redis_cache
+        redis = get_redis_cache()
         if redis:
             redis.close()
             logger.info("Redis cache closed")
@@ -122,6 +94,8 @@ async def lifespan(app: FastAPI):
 
     # 5. Закрытие соединений БД (последним, т.к. может использоваться другими компонентами)
     try:
+        from api.state import get_db_manager
+        db = get_db_manager()
         if db:
             db.close_pool()
             DatabaseManager.close_all_pools()
@@ -197,14 +171,9 @@ except ImportError:
 
 # Rate Limiting для защиты от DDoS/bruteforce
 try:
-    # Отключаем rate limiting если Redis отключён (избегаем ошибок)
-    redis_disabled = os.getenv("REDIS_DISABLED", "0") == "1"
-    if not redis_disabled:
-        from api.rate_limiter import setup_rate_limiter
-        setup_rate_limiter(app)
-        logger.info("Rate limiting enabled")
-    else:
-        logger.warning("Rate limiting disabled (REDIS_DISABLED=1)")
+    from api.rate_limiter import setup_rate_limiter
+    setup_rate_limiter(app)
+    logger.info("Rate limiting enabled")
 except ImportError as e:
     logger.warning(f"Rate limiting disabled: {e}")
 
@@ -222,16 +191,16 @@ register_error_handlers(app)
 
 # Middleware для мониторинга производительности
 @app.middleware("http")
-async def track_requests(request, call_next):
+async def track_requests(request: Request, call_next):
     """Middleware для сбора метрик производительности"""
     import time
-    
+
     start_time = time.time()
-    
+
     response = await call_next(request)
-    
+
     latency = time.time() - start_time
-    
+
     # Запись метрик
     try:
         from utils.monitoring.performance_monitor import record_api_request
@@ -243,7 +212,7 @@ async def track_requests(request, call_next):
         )
     except Exception as e:
         logger.debug(f"Metrics recording error: {e}")
-    
+
     return response
 
 
@@ -251,11 +220,21 @@ async def track_requests(request, call_next):
 @app.get("/health", tags=["Health"])
 async def health_check():
     """Проверка здоровья API"""
-    return {
-        "status": "healthy",
-        "timestamp": datetime.now().isoformat(),
-        "version": "1.0.0",
-    }
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info("Health check endpoint called")
+    try:
+        result = {
+            "status": "healthy",
+            "timestamp": datetime.now().isoformat(),
+            "version": "1.0.0",
+        }
+        logger.info(f"Health check result: {result}")
+        return result
+    except Exception as e:
+        import traceback
+        tb = traceback.format_exc()
+        return {"error": str(e), "traceback": tb}
 
 
 # Detailed health check
