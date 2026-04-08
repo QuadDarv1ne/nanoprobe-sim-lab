@@ -506,7 +506,7 @@ async def clear_cache(
     if current_user.get("role") != "admin":
         raise AuthorizationError("Требуется роль администратора")
 
-    from utils.cache_manager import CacheManager
+    from utils.caching.cache_manager import CacheManager
 
     cache_mgr = CacheManager()
     cleared = cache_mgr.auto_cleanup()

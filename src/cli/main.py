@@ -162,7 +162,7 @@ def clean_project_cache() -> bool:
     """Очищает кэш проекта."""
     print("Очистка кэша проекта...")
     try:
-        from utils.cache_manager import CacheManager
+        from utils.caching.cache_manager import CacheManager
 
         cache_manager = CacheManager(str(project_root))
 
@@ -235,7 +235,7 @@ def main():
 
     print("Инициализация проекта...")
     try:
-        from utils.cache_manager import CacheManager
+        from utils.caching.cache_manager import CacheManager
 
         cache_manager = CacheManager(str(project_root))
         cache_manager.auto_cleanup()
