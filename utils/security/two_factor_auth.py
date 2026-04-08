@@ -8,6 +8,7 @@ import qrcode
 import secrets
 from typing import Dict, Optional, Tuple
 from pathlib import Path
+from datetime import datetime
 import json
 import logging
 
@@ -78,7 +79,7 @@ class TwoFactorAuth:
         self._secrets[username] = {
             'secret': secret,
             'enabled': False,  # Включается после верификации
-            'created_at': str(pyotp.datetime.now())
+            'created_at': str(datetime.now())
         }
         self._save_secrets()
 
@@ -107,7 +108,7 @@ class TwoFactorAuth:
         # Проверка OTP кода
         if totp.verify(otp_code, valid_window=1):
             self._secrets[username]['enabled'] = True
-            self._secrets[username]['verified_at'] = str(pyotp.datetime.now())
+            self._secrets[username]['verified_at'] = str(datetime.now())
             self._save_secrets()
             logger.info(f"2FA verified and enabled for user: {username}")
             return True
@@ -203,7 +204,7 @@ class TwoFactorAuth:
             self._secrets[username]['backup_codes'] = []
 
         self._secrets[username]['backup_codes'] = backup_codes
-        self._secrets[username]['backup_codes_generated_at'] = str(pyotp.datetime.now())
+        self._secrets[username]['backup_codes_generated_at'] = str(datetime.now())
         self._save_secrets()
 
         logger.info(f"Generated {count} backup codes for user: {username}")
@@ -229,7 +230,7 @@ class TwoFactorAuth:
             # Удаление использованного кода
             backup_codes.remove(backup_code)
             self._secrets[username]['backup_codes'] = backup_codes
-            self._secrets[username]['last_backup_code_used_at'] = str(pyotp.datetime.now())
+            self._secrets[username]['last_backup_code_used_at'] = str(datetime.now())
             self._save_secrets()
             logger.info(f"Backup code used for user: {username}")
             return True

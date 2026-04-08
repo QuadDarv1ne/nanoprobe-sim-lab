@@ -958,21 +958,93 @@ async def get_recording_status():
 
 @router.get("/recordings")
 async def list_recordings(limit: int = 20):
-    """Получить список записей SSTV."""
+    """Получить список записей SSTV (из файловой системы + БД)."""
     output_dir = Path("output/sstv/recordings")
-    
+
     if not output_dir.exists():
         return {"recordings": []}
-    
+
     recordings = []
     for file in sorted(output_dir.glob("*.wav"), reverse=True)[:limit]:
         stat = file.stat()
-        recordings.append({
+        # Ищем сопутствующий PNG
+        png = file.with_suffix('.png')
+        meta_json = file.with_suffix('.json')
+        entry = {
             "filename": file.name,
             "path": str(file),
             "size_bytes": stat.st_size,
             "created_at": datetime.fromtimestamp(stat.st_ctime).isoformat(),
-            "frequency": file.name.split('_')[1] if '_' in file.name else "unknown"
-        })
-    
-    return {"recordings": recordings}
+            "has_image": png.exists(),
+            "image_filename": png.name if png.exists() else None,
+        }
+        if meta_json.exists():
+            try:
+                import json as _json
+                entry["metadata"] = _json.loads(meta_json.read_text())
+            except Exception:
+                pass
+        recordings.append(entry)
+
+    return {"count": len(recordings), "recordings": recordings}
+
+
+@router.post("/sstv/decode-recording/{filename}")
+async def decode_existing_recording(filename: str, mode: str = "auto"):
+    """
+    Декодирует уже записанный WAV файл из output/sstv/recordings/.
+    Сохраняет результат рядом с WAV как PNG.
+    """
+    if not SSTV_AVAILABLE:
+        raise ServiceUnavailableError("SSTV декодер недоступен")
+
+    wav_path = Path("output/sstv/recordings") / filename
+    if not wav_path.exists():
+        raise NotFoundError(f"Файл не найден: {filename}")
+
+    decoder = get_sstv_decoder()
+    if not decoder:
+        raise ServiceUnavailableError("SSTV декодер не инициализирован")
+
+    try:
+        decoder.mode = mode
+        image = decoder.decode_from_audio(str(wav_path))
+
+        if not image:
+            raise ValidationError("Не удалось декодировать SSTV из файла")
+
+        output_path = wav_path.with_suffix('.png')
+        image.save(str(output_path), 'PNG')
+
+        metadata = decoder.get_metadata()
+
+        # Сохраняем в БД
+        try:
+            from utils.database import get_database
+            from api.state import get_db_manager
+            db = get_db_manager()
+            db.add_scan_result(
+                scan_type="sstv",
+                file_path=str(output_path),
+                metadata={
+                    "source_wav": filename,
+                    "sstv_mode": metadata.get("mode", "unknown"),
+                    "image_size": list(image.size),
+                }
+            )
+        except Exception as e:
+            logger.debug(f"Could not save SSTV scan to DB: {e}")
+
+        return {
+            "status": "success",
+            "image_path": str(output_path),
+            "image_size": image.size,
+            "mode": metadata.get("mode", "unknown"),
+            "download_url": f"/api/v1/sstv/download/{output_path.name}"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Decode recording error: {e}")
+        raise ServiceUnavailableError(f"Ошибка декодирования: {str(e)}")

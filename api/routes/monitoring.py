@@ -9,7 +9,6 @@ Endpoints для мониторинга производительности:
 """
 
 from fastapi import APIRouter, Response, Query, HTTPException
-from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 import psutil
 import logging
 import time
@@ -21,8 +20,6 @@ from pathlib import Path
 
 from api.state import get_system_disk_usage
 
-# Project root for database path
-PROJECT_ROOT = Path(__file__).parent.parent.parent
 
 from typing import Optional, Dict, Any
 
@@ -39,10 +36,12 @@ router = APIRouter(prefix="/monitoring", tags=["Monitoring"])
 async def get_metrics():
     """
     Prometheus metrics endpoint.
-    
+
     Используется Prometheus server для сбора метрик.
     Content-Type: text/plain; version=0.0.4
     """
+    from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+
     return Response(
         content=generate_latest(),
         media_type=CONTENT_TYPE_LATEST
