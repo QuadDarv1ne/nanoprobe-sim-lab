@@ -374,31 +374,24 @@ async def get_database_tables(current_user: dict = Depends(get_current_user)):
 @router.get(
     "/users/list",
     summary="Список пользователей",
-    description="Получить список всех пользователей",
 )
 async def list_users(current_user: dict = Depends(get_current_user)):
-    """Список пользователей"""
+    """Список пользователей из SQLite"""
     if current_user.get("role") != "admin":
         raise AuthorizationError("Требуется роль администратора")
 
-    from api.routes.auth import USERS_DB
+    db = get_db_manager()
+    with db.get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, username, role, created_at, last_login FROM users")
+        rows = [dict(r) for r in cursor.fetchall()]
 
-    users = []
-    for username, user_data in USERS_DB.items():
-        users.append({
-            "id": user_data["id"],
-            "username": user_data["username"],
-            "role": user_data["role"],
-            "created_at": user_data["created_at"],
-        })
-
-    return {"users": users, "total": len(users)}
+    return {"users": rows, "total": len(rows)}
 
 
 @router.post(
     "/users/create",
     summary="Создать пользователя",
-    description="Создать нового пользователя",
 )
 async def create_user(
     username: str,
@@ -406,45 +399,49 @@ async def create_user(
     role: str = "user",
     current_user: dict = Depends(get_current_user),
 ):
-    """Создание пользователя"""
+    """Создание пользователя — сохраняется в SQLite и in-memory"""
     if current_user.get("role") != "admin":
         raise AuthorizationError("Требуется роль администратора")
 
-    from api.routes.auth import USERS_DB, hash_password
+    from api.routes.auth import USERS_DB, hash_password, validate_password_strength
 
     if username in USERS_DB:
         raise ValidationError("Пользователь уже существует")
 
-    new_id = max(u["id"] for u in USERS_DB.values()) + 1 if USERS_DB else 1
+    ok, msg = validate_password_strength(password)
+    if not ok:
+        raise ValidationError(msg)
 
+    new_id = max(u["id"] for u in USERS_DB.values()) + 1 if USERS_DB else 1
+    pw_hash = hash_password(password)
+
+    # Сохраняем в SQLite
+    db = get_db_manager()
+    db.upsert_user(username, pw_hash, role)
+
+    # Обновляем in-memory
     USERS_DB[username] = {
         "id": new_id,
         "username": username,
-        "password_hash": hash_password(password),
+        "password_hash": pw_hash,
         "role": role,
         "created_at": datetime.now().isoformat(),
+        "last_login": None,
     }
 
-    return {
-        "message": f"Пользователь {username} создан",
-        "user": {
-            "id": new_id,
-            "username": username,
-            "role": role,
-        },
-    }
+    logger.info(f"User created: {username} (role={role}) by {current_user['username']}")
+    return {"message": f"Пользователь {username} создан", "user": {"id": new_id, "username": username, "role": role}}
 
 
 @router.delete(
     "/users/delete/{username}",
     summary="Удалить пользователя",
-    description="Удалить пользователя",
 )
 async def delete_user(
     username: str,
     current_user: dict = Depends(get_current_user),
 ):
-    """Удаление пользователя"""
+    """Удаление пользователя из SQLite и in-memory"""
     if current_user.get("role") != "admin":
         raise AuthorizationError("Требуется роль администратора")
 
@@ -456,8 +453,13 @@ async def delete_user(
     if username == current_user.get("username"):
         raise ValidationError("Нельзя удалить самого себя")
 
-    del USERS_DB[username]
+    # Удаляем из SQLite
+    db = get_db_manager()
+    with db.get_connection() as conn:
+        conn.execute("DELETE FROM users WHERE username = ?", (username,))
 
+    del USERS_DB[username]
+    logger.info(f"User deleted: {username} by {current_user['username']}")
     return {"message": f"Пользователь {username} удалён"}
 
 

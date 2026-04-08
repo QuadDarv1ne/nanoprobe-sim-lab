@@ -108,23 +108,15 @@ async def compare_surfaces(
 @router.get(
     "/history",
     summary="История сравнений",
-    description="Получить историю всех сравнений поверхностей",
 )
 async def get_comparison_history(
     limit: int = 50,
     db: DatabaseManager = Depends(get_db),
 ):
-    """История сравнений"""
+    """История сравнений поверхностей"""
     try:
-        if hasattr(db, 'get_surface_comparisons'):
-            comparisons = db.get_surface_comparisons(limit=limit)
-            return {
-                "items": comparisons,
-                "total": len(comparisons),
-                "limit": limit,
-            }
-        else:
-            return {"items": [], "total": 0, "limit": limit, "message": "Метод не реализован"}
+        comparisons = db.get_surface_comparisons(limit=limit)
+        return {"items": comparisons, "total": len(comparisons), "limit": limit}
     except Exception as e:
         logger.error(f"History error: {e}")
         raise ValidationError(f"Ошибка получения истории: {str(e)}")
@@ -138,18 +130,17 @@ async def get_comparison(
     comparison_id: str,
     db: DatabaseManager = Depends(get_db),
 ):
-    """Получить результат сравнения по ID"""
+    """Получить результат сравнения по ID (UUID или числовой id)"""
     try:
-        if hasattr(db, 'get_surface_comparisons'):
-            comparisons = db.get_surface_comparisons(limit=100)
-            comparison = next((c for c in comparisons if c.get('comparison_id') == comparison_id), None)
-
-            if not comparison:
-                raise NotFoundError(f"Сравнение с ID {comparison_id} не найдено", resource_type="comparison")
-
-            return comparison
-        else:
-            raise ValidationError("Метод не реализован")
+        comparisons = db.get_surface_comparisons(limit=500)
+        comparison = next(
+            (c for c in comparisons if
+             c.get('comparison_id') == comparison_id or str(c.get('id')) == comparison_id),
+            None
+        )
+        if not comparison:
+            raise NotFoundError(f"Сравнение с ID {comparison_id} не найдено", resource_type="comparison")
+        return comparison
     except (ValidationError, NotFoundError):
         raise
     except Exception as e:

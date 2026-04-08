@@ -109,17 +109,18 @@ async def create_simulation(
         parameters=simulation.parameters,
     )
 
-    # Инвалидация кэша
     redis = get_redis()
     if redis and redis.is_available():
         redis.clear_pattern("simulations:*")
-        redis.clear_pattern("dashboard:*")  # Инвалидация dashboard кэша
+        redis.clear_pattern("dashboard:*")
 
-    simulations = db.get_simulations(limit=1)
-    if not simulations:
+    # Получаем именно созданную запись по simulation_id
+    simulations = db.get_simulations(limit=500)
+    sim = next((s for s in simulations if s.get('simulation_id') == sim_id), None)
+    if not sim:
         raise NotFoundError("Не удалось получить созданную симуляцию", resource_type="simulation")
 
-    return SimulationResponse.model_validate(simulations[0])
+    return SimulationResponse.model_validate(sim)
 
 
 @router.patch(

@@ -53,8 +53,7 @@ STATS_CACHE_TTL = 5  # секунд
 # Кэш для метрик (1 секунда для real-time)
 METRICS_CACHE_TTL = 1  # секунда
 
-# WebSocket подключения
-active_websockets: List[WebSocket] = []
+# WebSocket подключения управляются через ConnectionManager (api/websocket_manager.py)
 
 # Префиксы для Redis кэша
 CACHE_PREFIX = {
@@ -751,17 +750,25 @@ async def get_storage_stats_endpoint(
 
 @router.websocket("/ws/metrics")
 async def metrics_websocket(websocket: WebSocket):
-    """
-    WebSocket для real-time метрик
-    Отправляет обновления каждую секунду
-    """
-    await websocket.accept()
-    active_websockets.append(websocket)
-    logger.info(f"WebSocket metrics connected. Total: {len(active_websockets)}")
+    """WebSocket для real-time метрик — отправляет обновления каждую секунду"""
+    from api.websocket_manager import get_connection_manager
+    manager = get_connection_manager()
 
+    if not await manager.connect(websocket):
+        return
+
+    logger.info(f"WebSocket metrics connected. Active: {manager.connection_count}")
     try:
         while True:
             try:
+                # Проверяем входящие сообщения (ping/disconnect) без блокировки
+                try:
+                    msg = await asyncio.wait_for(websocket.receive_text(), timeout=0.1)
+                    if msg == "ping":
+                        await websocket.send_text("pong")
+                except asyncio.TimeoutError:
+                    pass
+
                 metrics = await get_realtime_metrics_detailed()
                 await websocket.send_json(metrics)
                 await asyncio.sleep(1)
@@ -770,17 +777,11 @@ async def metrics_websocket(websocket: WebSocket):
             except Exception as e:
                 logger.error(f"WebSocket metrics error: {e}", exc_info=True)
                 await asyncio.sleep(1)
-                continue
     except Exception as e:
         logger.error(f"WebSocket metrics fatal error: {e}", exc_info=True)
     finally:
-        if websocket in active_websockets:
-            active_websockets.remove(websocket)
-        try:
-            await websocket.close()
-        except Exception:
-            pass
-        logger.info(f"WebSocket metrics disconnected. Total: {len(active_websockets)}")
+        await manager.disconnect(websocket)
+        logger.info(f"WebSocket metrics disconnected. Active: {manager.connection_count}")
 
 
 # ==================== Alerts ====================

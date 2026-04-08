@@ -31,7 +31,10 @@ export default function ReportsPage() {
       const res = await fetch(`${API_BASE}/api/v1/reports`);
       if (res.ok) {
         const data = await res.json();
-        setReports(Array.isArray(data) ? data : []);
+        // API returns {items: [], total: N} or plain array
+        setReports(Array.isArray(data) ? data : (data.items ?? []));
+      } else {
+        toast.error('Ошибка загрузки отчётов', { description: `HTTP ${res.status}` });
       }
     } catch (error) {
       console.error('Failed to fetch reports:', error);

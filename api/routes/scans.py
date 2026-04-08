@@ -128,7 +128,7 @@ async def create_scan(
     """Создать новое сканирование"""
     from api.metrics import BusinessMetrics
 
-    db.add_scan_result(
+    scan_id = db.add_scan_result(
         scan_type=scan.scan_type.value,
         surface_type=scan.surface_type,
         width=scan.width,
@@ -136,21 +136,18 @@ async def create_scan(
         metadata=scan.metadata,
     )
 
-    # Получение созданной записи
-    scans = db.get_scan_results(limit=1)
-    if not scans:
+    created = db.get_scan_by_id(scan_id)
+    if not created:
         raise NotFoundError("Не удалось получить созданную запись", resource_type="scan")
 
-    # Бизнес-метрики
     BusinessMetrics.inc_scan_created(scan.scan_type.value)
 
-    # Инвалидация кэша
     redis = get_redis()
     if redis and redis.is_available():
         redis.clear_pattern("scans:*")
-        redis.clear_pattern("dashboard:*")  # Инвалидация dashboard кэша
+        redis.clear_pattern("dashboard:*")
 
-    return ScanResponse.model_validate(scans[0])
+    return ScanResponse.model_validate(created)
 
 
 @router.delete(
