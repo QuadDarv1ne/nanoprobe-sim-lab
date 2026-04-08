@@ -134,5 +134,10 @@ def register_routes(app: FastAPI):
         from api.routes import sstv
         app.include_router(sstv.router, prefix="/api/v1/sstv", tags=["SSTV Ground Station"])
         logger.info("SSTV Ground Station routes registered")
+        
+        # Advanced SSTV endpoints (WebSocket, spectrum, real-time)
+        from api.routes import sstv_advanced
+        app.include_router(sstv_advanced.router, tags=["SSTV Advanced"])
+        logger.info("SSTV Advanced routes registered")
     except ImportError as e:
         logger.warning(f"SSTV Ground Station routes disabled: {e}")
