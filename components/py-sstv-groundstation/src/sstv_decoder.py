@@ -123,8 +123,14 @@ class SSTVDecoder:
                 # Ресемплинг: input_sample_rate -> sample_rate
                 src_rate = int(input_sample_rate or 2400000)  # RTL-SDR V4 default
                 if src_rate != sample_rate:
-                    from scipy.signal import resample_poly
+                    from scipy.signal import resample_poly, firwin, lfilter
                     from math import gcd
+                    # Low-pass фильтр перед ресемплингом (anti-aliasing)
+                    nyq = src_rate / 2
+                    cutoff = min(sample_rate / 2 * 0.9, nyq * 0.9)
+                    numtaps = 127
+                    fir = firwin(numtaps, cutoff / nyq)
+                    audio_data = lfilter(fir, 1.0, audio_data)
                     g = gcd(sample_rate, src_rate)
                     up = sample_rate // g
                     down = src_rate // g

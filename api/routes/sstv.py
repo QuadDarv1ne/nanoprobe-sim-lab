@@ -213,10 +213,10 @@ async def get_iss_next_pass(
         result = {
             "aos": next_pass['aos'].isoformat(),
             "los": next_pass['los'].isoformat(),
-            "max_elevation": next_pass['max_elevation'],
+            "max_elevation": round(next_pass['max_elevation'], 1),
             "frequency_mhz": next_pass['frequency'],
-            "duration_minutes": next_pass['duration_minutes'],
-            "time_until_aos": str(next_pass['aos'] - datetime.now())
+            "duration_minutes": round(next_pass['duration_minutes'], 1),
+            "time_until_aos": next_pass.get('time_until_aos', str(next_pass['aos'] - datetime.utcnow())),
         }
 
         # Кэшируем на 2 минуты
@@ -310,7 +310,7 @@ async def is_iss_visible(
         return {
             "status": "success",
             "visible": visible,
-            "elevation": position['latitude'] if position else 0,
+            "elevation": tracker._elevation_from_position(position, __import__('datetime').datetime.utcnow()) if position else 0,
             "message": "ISS видна" if visible else "ISS не видна",
             "timestamp": datetime.now().isoformat()
         }

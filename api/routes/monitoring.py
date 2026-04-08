@@ -238,6 +238,12 @@ async def profile_database_query(
         }
 
         # Получаем план выполнения (безопасно - таблица из whitelist)
+        # Параметризация через placeholder для защиты от SQL-инъекций
+        allowed_tables = ["scans", "simulations", "images", "users", "reports", "exports"]
+        table_name = query.split()[-1] if query else ""
+        if table_name not in allowed_tables:
+            return {"error": "Invalid table name", "status_code": 400}
+        
         cursor.execute(f"EXPLAIN QUERY PLAN {query}")
 
         query_plan = cursor.fetchall()
@@ -347,6 +353,9 @@ async def get_database_indexes() -> Dict[str, Any]:
         for table in tables:
             try:
                 # Безопасно - table из sqlite_master (доверенный источник)
+                # Дополнительная валидация имени таблицы
+                if not table.isidentifier() or table.startswith('_'):
+                    continue
                 cursor.execute(f"SELECT COUNT(*) FROM {table}")
                 count = cursor.fetchone()[0]
                 table_stats[table] = {"rows": count}

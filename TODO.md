@@ -19,11 +19,17 @@
 - [ ] `utils/database.py` — `count_reports()` делает `try/except` на несуществующую таблицу `reports`, fallback на `exports WHERE format='PDF'`. Создать таблицу `reports` или убрать fallback.
 - [ ] `api/routes/auth.py` — `_revoke_all_user_tokens` при Redis fallback очищает весь `_in_memory_tokens` (все пользователи), а не только конкретного.
 
-## RTL-SDR (ждём железо)
+## RTL-SDR (железо подключено)
 
-- [ ] Протестировать `components/py-sstv-groundstation` с реальным RTL-SDR V4
+- [x] `satellite_tracker.py` — elevation расчёт заменён на точный ECI→ECEF через GMST
+- [x] `waterfall_display.py` — добавлено Hann-окно, скользящий динамический диапазон
+- [x] `sstv_decoder.py` — FM демодуляция с anti-aliasing FIR фильтром перед ресемплингом
+- [x] `auto_recorder.py` — добавлен `import subprocess`
+- [x] `sstv.py` — исправлен баг `elevation: position['latitude']`, `time_until_aos` из трекера
+- [ ] Протестировать `--check` с реальным RTL-SDR V4
 - [ ] Проверить `bias_tee=True` для активной антенны
-- [ ] Откалибровать TCXO
+- [ ] Откалибровать TCXO (`--freq-correction`)
+- [ ] Записать первый пролёт NOAA/ISS
 
 ## Инфраструктура
 
