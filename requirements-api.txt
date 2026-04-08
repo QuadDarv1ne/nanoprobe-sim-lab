@@ -1,47 +1,74 @@
-# FastAPI API dependencies for Nanoprobe Sim Lab
-# Дополнительные зависимости для REST API
+# ============================================================================
+# Nanoprobe Sim Lab - Минимальный API сервер
+# ============================================================================
+# Минимальный набор для запуска только FastAPI backend
+# Без научных пакетов (numpy, scipy, opencv), Flask, SSTV
+#
+# Для production деплоя только API:
+#   pip install -r requirements-api.txt
+#   gunicorn api.main:app -w 4 -k uvicorn.workers.UvicornWorker
+# ============================================================================
 
-# FastAPI и сервер
-fastapi>=0.109.0
-uvicorn[standard]>=0.27.0
-python-multipart>=0.0.6
+# ============================================
+# BACKEND: FastAPI сервер
+# ============================================
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9
+starlette>=0.37.0
 
-# Аутентификация
+# ============================================
+# BACKEND: Аутентификация и безопасность
+# ============================================
 PyJWT>=2.8.0
 python-jose[cryptography]>=3.3.0
-# Argon2 - победитель Password Hashing Competition (рекомендован OWASP)
-# passlib включает argon2 через argon2-cffi
 passlib[argon2,bcrypt]>=1.7.4
 argon2-cffi>=23.1.0
-bcrypt==4.0.1  # Compatible version with passlib (fallback)
-
-# Валидация
-pydantic>=2.5.0
-pydantic-settings>=2.1.0
+bcrypt>=4.1.2
+pyotp>=2.9.0
+qrcode[pil]>=8.0
 email-validator>=2.1.0
 
-# WebSocket
+# ============================================
+# BACKEND: Валидация
+# ============================================
+pydantic>=2.6.0
+pydantic-settings>=2.2.0
+
+# ============================================
+# BACKEND: Кэширование и HTTP
+# ============================================
+redis>=5.0.3
+aiohttp>=3.9.3
+aiofiles>=23.2.1
+requests>=2.31.0
+httpx>=0.27.0
+
+# ============================================
+# BACKEND: Rate Limiting
+# ============================================
+slowapi>=0.1.9
+
+# ============================================
+# BACKEND: База данных
+# ============================================
+sqlalchemy>=2.0.29
+alembic>=1.13.1
+
+# ============================================
+# BACKEND: WebSocket
+# ============================================
 websockets>=12.0
 
-# Кэширование
-redis>=5.0.0
+# ============================================
+# BACKEND: Мониторинг
+# ============================================
+psutil>=5.9.8
+prometheus-client>=0.20.0
+prometheus-fastapi-instrumentator>=7.0.0
+sentry-sdk[fastapi]>=1.43.0
 
-# HTTP клиент (для NASA API)
-aiohttp>=3.9.0
-
-# Rate Limiting
-slowapi>=0.1.8
-
-# Для production
+# ============================================
+# BACKEND: Production сервер
+# ============================================
 gunicorn>=21.2.0
-aiofiles>=23.2.1
-
-# Мониторинг (опционально)
-prometheus-client>=0.19.0
-prometheus-fastapi-instrumentator>=6.1.0
-sentry-sdk[fastapi]>=1.39.0
-psutil>=5.9.0
-
-# Миграции БД
-sqlalchemy>=2.0.0
-alembic>=1.13.0
