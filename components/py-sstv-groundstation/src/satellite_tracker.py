@@ -194,7 +194,48 @@ class SatelliteTracker:
         print(f"✓ Обновлены TLE: {updated}/{len(self.SATELLITE_NORAD_IDS)}")
         return updated
 
-    def __init__(self, ground_station_lat: float = 55.75, ground_station_lon: float = 37.61):
+    def _elevation_from_position(self, pos: Dict, dt: datetime) -> float:
+        """
+        Вычисляет угол возвышения спутника над горизонтом наблюдателя.
+        Учитывает вращение Земли через GMST.
+        
+        Args:
+            pos: Позиция спутника (ECI координаты)
+            dt: Время UTC
+            
+        Returns:
+            float: Угол возвышения в градусах
+        """
+        # GMST (Greenwich Mean Sidereal Time) для перевода ECI → ECEF
+        jd = (dt - datetime(2000, 1, 1, 12)).total_seconds() / 86400.0 + 2451545.0
+        gmst_rad = (280.46061837 + 360.98564736629 * (jd - 2451545.0)) % 360
+        gmst_rad = np.radians(gmst_rad)
+
+        # Позиция наблюдателя в ECEF (км)
+        R_earth = 6371.0
+        lat_r = np.radians(self.ground_station_lat)
+        lon_r = np.radians(self.ground_station_lon) + gmst_rad
+        obs_x = R_earth * np.cos(lat_r) * np.cos(lon_r)
+        obs_y = R_earth * np.cos(lat_r) * np.sin(lon_r)
+        obs_z = R_earth * np.sin(lat_r)
+
+        # Вектор от наблюдателя к спутнику (ECI)
+        r = pos['position_km']
+        dx = r[0] - obs_x
+        dy = r[1] - obs_y
+        dz = r[2] - obs_z
+
+        # Единичный вектор "вверх" для наблюдателя
+        up_x = np.cos(lat_r) * np.cos(lon_r)
+        up_y = np.cos(lat_r) * np.sin(lon_r)
+        up_z = np.sin(lat_r)
+
+        # Elevation = arcsin(dot(range_vec, up_vec) / |range_vec|)
+        range_mag = np.sqrt(dx**2 + dy**2 + dz**2)
+        if range_mag < 1e-6:
+            return 0.0
+        dot = (dx * up_x + dy * up_y + dz * up_z) / range_mag
+        return float(np.degrees(np.arcsin(np.clip(dot, -1.0, 1.0))))
         """
         Инициализация трекера.
 
@@ -329,33 +370,13 @@ class SatelliteTracker:
         current_pass = None
         
         while current_time < end_time:
-            # Получаем позицию спутника
             pos = sat.get_position(current_time)
-            
+
             if pos:
-                # Вычисляем elevation angle (упрощённо)
-                # Реальная тригонометрия для elevation
-                lat_rad = np.radians(self.ground_station_lat)
-                lon_rad = np.radians(self.ground_station_lon)
-                sat_lat_rad = np.radians(pos['latitude'])
-                sat_lon_rad = np.radians(pos['longitude'])
-                
-                # Разница координат
-                dlon = sat_lon_rad - lon_rad
-                dlat = sat_lat_rad - lat_rad
-                
-                # Упрощённое расстояние
-                a = np.sin(dlat/2)**2 + np.cos(lat_rad) * np.cos(sat_lat_rad) * np.sin(dlon/2)**2
-                distance_degrees = 2 * np.arcsin(np.sqrt(a))
-                distance_km = np.radians(distance_degrees) * 6371.0
-                
-                # Elevation angle (приближённо)
-                altitude = pos['altitude_km']
-                elevation = np.degrees(np.arctan2(altitude, distance_km))
-                
+                elevation = self._elevation_from_position(pos, current_time)
+
                 if elevation >= min_elevation:
                     if not in_pass:
-                        # Начало пролёта
                         in_pass = True
                         current_pass = {
                             'satellite': satellite_name,
@@ -364,36 +385,32 @@ class SatelliteTracker:
                             'frequency': self.SSTV_FREQUENCIES.get(satellite_name, 0),
                         }
                     else:
-                        # Обновляем максимум
                         current_pass['max_elevation'] = max(current_pass['max_elevation'], elevation)
                 else:
                     if in_pass:
-                        # Конец пролёта
                         current_pass['los'] = current_time
-                        aos = current_pass['aos']
-                        los = current_pass['los']
-                        duration_minutes = (los - aos).total_seconds() / 60.0
-                        
-                        if duration_minutes >= 2:  # Минимальная длительность 2 минуты
-                            passes.append({
-                                **current_pass,
-                                'duration_minutes': duration_minutes
-                            })
+                        duration_minutes = (current_time - current_pass['aos']).total_seconds() / 60.0
+                        if duration_minutes >= 2:
+                            passes.append({**current_pass, 'duration_minutes': duration_minutes})
                         in_pass = False
                         current_pass = None
-            
+
             current_time += time_step
-        
-        # Если пролёт ещё продолжается
+
         if in_pass and current_pass:
             current_pass['los'] = current_time
-            aos = current_pass['aos']
-            los = current_pass['los']
-            duration_minutes = (los - aos).total_seconds() / 60.0
-            passes.append({
-                **current_pass,
-                'duration_minutes': duration_minutes
-            })
+            duration_minutes = (current_time - current_pass['aos']).total_seconds() / 60.0
+            passes.append({**current_pass, 'duration_minutes': duration_minutes})
+
+        # Добавляем time_until_aos для каждого пролёта
+        now_local = datetime.utcnow()
+        for p in passes:
+            delta = (p['aos'] - now_local).total_seconds()
+            sign = "" if delta >= 0 else "-"
+            delta = abs(int(delta))
+            h, rem = divmod(delta, 3600)
+            m, s = divmod(rem, 60)
+            p['time_until_aos'] = f"{sign}{h:02d}:{m:02d}:{s:02d}"
 
         return passes
 
@@ -424,36 +441,10 @@ class SatelliteTracker:
 
     def is_satellite_visible(self, satellite_name: str,
                              min_elevation: float = 10.0) -> bool:
-        """
-        Проверяет видимость спутника через SGP4.
-
-        Args:
-            satellite_name: Название спутника
-            min_elevation: Минимальная высота
-
-        Returns:
-            bool: True если виден
-        """
         pos = self.get_current_position(satellite_name)
         if not pos:
             return False
-
-        # Вычисляем elevation
-        lat_rad = np.radians(self.ground_station_lat)
-        lon_rad = np.radians(self.ground_station_lon)
-        sat_lat_rad = np.radians(pos['latitude'])
-        sat_lon_rad = np.radians(pos['longitude'])
-        
-        dlon = sat_lon_rad - lon_rad
-        dlat = sat_lat_rad - lat_rad
-        
-        a = np.sin(dlat/2)**2 + np.cos(lat_rad) * np.cos(sat_lat_rad) * np.sin(dlon/2)**2
-        distance_degrees = 2 * np.arcsin(np.sqrt(a))
-        distance_km = np.radians(distance_degrees) * 6371.0
-        
-        altitude = pos['altitude_km']
-        elevation = np.degrees(np.arctan2(altitude, distance_km))
-        
+        elevation = self._elevation_from_position(pos, datetime.utcnow())
         return elevation >= min_elevation
 
     def get_next_pass(self, satellite_name: str) -> Optional[Dict]:

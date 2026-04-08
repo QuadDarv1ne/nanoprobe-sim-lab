@@ -87,8 +87,9 @@ class WaterfallDisplay:
         if len(samples) < self.fft_size:
             return None
 
-        # Вычисляем FFT
-        fft_data = np.fft.fft(samples[:self.fft_size])
+        # Вычисляем FFT с Hann-окном (убирает спектральные утечки)
+        windowed = samples[:self.fft_size] * self._hann_window
+        fft_data = np.fft.fft(windowed)
         fft_shifted = np.fft.fftshift(fft_data)
 
         # Мощность сигнала
@@ -97,9 +98,10 @@ class WaterfallDisplay:
         # Конвертируем в dB
         power_db = 10 * np.log10(power + 1e-10)
 
-        # Обновляем динамический диапазон
-        self.min_power = min(self.min_power, np.min(power_db))
-        self.max_power = max(self.max_power, np.max(power_db))
+        # Скользящий динамический диапазон (не даём min/max застывать)
+        alpha = 0.01  # медленное обновление
+        self.min_power = self.min_power * (1 - alpha) + np.percentile(power_db, 5) * alpha
+        self.max_power = self.max_power * (1 - alpha) + np.percentile(power_db, 95) * alpha
 
         # Нормализуем к 0-255
         power_normalized = np.clip(
