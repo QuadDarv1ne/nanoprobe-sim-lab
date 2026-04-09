@@ -1,14 +1,26 @@
 # Nanoprobe Sim Lab — TODO
 
-**Последнее обновление:** 2026-04-09 20:30
+**Последнее обновление:** 2026-04-09 20:55
 
 ## Последние улучшения (2026-04-09)
 
 - ✅ RTL-SDR V4: исправлены импорты pysstv, создана документация и тесты
 - ✅ SSTV UI: подключены кнопки Eye/Download/Delete
 - ✅ SSTV API: добавлены эндпоинты GET/DELETE /recordings/{filename}
-- ✅ Тесты: исправлен test_login_success (чтение пароя из файла/ENV)
+- ✅ Тесты: исправлен test_login_success (чтение пароля из файла/ENV)
+- ✅ Тесты: исправлены 24 теста auth.py (JWT, refresh tokens)
+- ✅ Тесты: исправлены 15 тестов api.py (инициализация БД)
 - ✅ Настройка окружения: создан .env для разработки
+
+---
+
+## Known Issues
+
+- ⚠️ `created_at` возвращает NULL из БД (4 теста пропущены)
+  - **Файл:** `api/routes/scans.py`, `api/routes/simulations.py`
+  - **Причина:** DatabaseManager не устанавливает created_at при создании записи
+  - **Влияние:** Эндпоинты создания сканов/симуляций возвращают ValidationError
+  - **Статус:** Требует исправления в utils/database.py
 
 ---
 
