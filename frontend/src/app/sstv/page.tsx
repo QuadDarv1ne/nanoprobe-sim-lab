@@ -167,6 +167,43 @@ export default function SSTVPage() {
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
 
+  const viewRecording = (recording: SSTVRecording) => {
+    toast.info('Просмотр записи', {
+      description: `Открытие ${recording.filename}`
+    });
+    // TODO: Добавить модальное окно с плеером
+  };
+
+  const downloadRecording = (recording: SSTVRecording) => {
+    const url = `${API_BASE}/api/v1/sstv/recordings/${recording.filename}`;
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = recording.filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    toast.success('Скачивание', {
+      description: `${recording.filename} сохранён`
+    });
+  };
+
+  const deleteRecording = async (recording: SSTVRecording) => {
+    if (!confirm(`Удалить ${recording.filename}?`)) return;
+    
+    try {
+      await apiClient.delete(`/api/v1/sstv/recordings/${recording.filename}`);
+      toast.success('Удалено', {
+        description: `${recording.filename} удалён`
+      });
+      fetchData(); // Обновить список
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Не удалось удалить';
+      toast.error('Ошибка удаления', {
+        description: errorMessage
+      });
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -370,13 +407,28 @@ export default function SSTVPage() {
                         {formatFileSize(recording.size_bytes)}
                       </div>
                       <div className="flex gap-2">
-                        <Button variant="outline" size="icon">
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          onClick={() => viewRecording(recording)}
+                          title="Просмотр"
+                        >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="icon">
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          onClick={() => downloadRecording(recording)}
+                          title="Скачать"
+                        >
                           <Download className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="icon">
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          onClick={() => deleteRecording(recording)}
+                          title="Удалить"
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

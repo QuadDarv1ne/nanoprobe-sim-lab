@@ -972,6 +972,16 @@ async def list_recordings(limit: int = 20):
         # Ищем сопутствующий PNG
         png = file.with_suffix('.png')
         meta_json = file.with_suffix('.json')
+        
+        # Читаем метаданные сначала
+        metadata = {}
+        if meta_json.exists():
+            try:
+                import json as _json
+                metadata = _json.loads(meta_json.read_text())
+            except Exception:
+                pass
+        
         entry = {
             "filename": file.name,
             "path": str(file),
@@ -979,16 +989,63 @@ async def list_recordings(limit: int = 20):
             "created_at": datetime.fromtimestamp(stat.st_ctime).isoformat(),
             "has_image": png.exists(),
             "image_filename": png.name if png.exists() else None,
+            "frequency": metadata.get('frequency', '145.800'),
+            "metadata": metadata
         }
-        if meta_json.exists():
-            try:
-                import json as _json
-                entry["metadata"] = _json.loads(meta_json.read_text())
-            except Exception:
-                pass
         recordings.append(entry)
 
     return {"count": len(recordings), "recordings": recordings}
+
+
+@router.get("/recordings/{filename}")
+async def download_recording(filename: str):
+    """Скачать запись SSTV (WAV файл)."""
+    file_path = Path("output/sstv/recordings") / filename
+    
+    if not file_path.exists():
+        raise NotFoundError(f"Запись не найдена: {filename}")
+    
+    return FileResponse(
+        str(file_path),
+        media_type="audio/wav",
+        filename=filename
+    )
+
+
+@router.delete("/recordings/{filename}")
+async def delete_recording(filename: str):
+    """Удалить запись SSTV."""
+    wav_path = Path("output/sstv/recordings") / filename
+    
+    if not wav_path.exists():
+        raise NotFoundError(f"Запись не найдена: {filename}")
+    
+    try:
+        # Удаляем WAV
+        wav_path.unlink()
+        
+        # Удаляем PNG если есть
+        png_path = wav_path.with_suffix('.png')
+        if png_path.exists():
+            png_path.unlink()
+        
+        # Удаляем JSON метаданные если есть
+        json_path = wav_path.with_suffix('.json')
+        if json_path.exists():
+            json_path.unlink()
+        
+        return {
+            "status": "success",
+            "message": f"Запись {filename} удалена",
+            "deleted_files": [
+                str(wav_path),
+                str(png_path) if png_path.exists() else None,
+                str(json_path) if json_path.exists() else None
+            ]
+        }
+    except Exception as e:
+        logger.error(f"Delete recording error: {e}")
+        raise ServiceUnavailableError(f"Ошибка удаления записи: {str(e)}")
 
 
 @router.post("/sstv/decode-recording/{filename}")
