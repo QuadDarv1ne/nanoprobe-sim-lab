@@ -1,5 +1,17 @@
 # Nanoprobe Sim Lab — TODO
 
+**Последнее обновление:** 2026-04-09 20:30
+
+## Последние улучшения (2026-04-09)
+
+- ✅ RTL-SDR V4: исправлены импорты pysstv, создана документация и тесты
+- ✅ SSTV UI: подключены кнопки Eye/Download/Delete
+- ✅ SSTV API: добавлены эндпоинты GET/DELETE /recordings/{filename}
+- ✅ Тесты: исправлен test_login_success (чтение пароя из файла/ENV)
+- ✅ Настройка окружения: создан .env для разработки
+
+---
+
 ## Критично
 
 - [x] `security/auth_manager.py` — устаревший Flask AuthManager, не используется FastAPI стеком (оставлен как legacy, не мешает)
@@ -11,7 +23,7 @@
 ## Функциональность
 
 - [x] `push_realtime_updates()` — авто-подписка на `"metrics"` при connect добавлена в `ConnectionManager`
-- [ ] `api/routes/sstv.py` — кнопки Eye/Download/Delete в UI (`sstv/page.tsx`) не подключены к обработчикам
+- [x] `api/routes/sstv.py` — кнопки Eye/Download/Delete в UI (`sstv/page.tsx`) подключены к обработчикам (2026-04-09)
 - [x] `api/routes/reports.py` — PDF генерация реализована полностью через `ScientificPDFReport`
 - [x] `api/routes/admin.py` → `/admin/cache/clear` — импорт исправлен
 
@@ -36,4 +48,4 @@
 ## Инфраструктура
 
 - [ ] `deployment/docker-compose.prod.yml` — PostgreSQL сервис есть, но API использует SQLite. Либо добавить миграцию на PostgreSQL, либо убрать PostgreSQL из prod compose.
-- [ ] `.env` — `ENVIRONMENT=production` при локальной разработке. Поменять на `development`.
+- [x] `.env` — `ENVIRONMENT=development` для локальной разработки (2026-04-09)

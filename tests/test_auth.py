@@ -168,8 +168,12 @@ class TestJWTToken:
         from api.routes.auth import JWT_SECRET, JWT_ALGORITHM
         expired_token = jwt.encode(expired_payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
-        payload = decode_token(expired_token)
-        # Истёкший токен декодируется с verify_exp=False
+        # Без allow_expired должен вернуть ошибку
+        result = decode_token(expired_token)
+        assert result == {"error": "token_expired"}
+        
+        # С allow_expired=True должен декодировать
+        payload = decode_token(expired_token, allow_expired=True)
         assert payload["sub"] == "testuser"
         assert payload["type"] == "access"
         print("  [PASS] Decode token expired")
@@ -198,33 +202,33 @@ class TestRefreshTokenRotation:
         """Тест: сохранение и проверка refresh токена"""
         jti = "test_jti_12345"
         username = "testuser"
-        
+
         # Сохраняем
         _store_refresh_token(jti, username)
-        
-        # Проверяем
-        assert _is_token_valid(jti) is True
+
+        # Проверяем (Redis exists() возвращает int, приводим к bool)
+        assert bool(_is_token_valid(jti)) is True
         print("  [PASS] Store and check refresh token")
 
     def test_revoke_refresh_token(self):
         """Тест: отзыв refresh токена"""
         jti = "test_jti_revoke"
         username = "testuser"
-        
+
         # Сохраняем
         _store_refresh_token(jti, username)
-        assert _is_token_valid(jti) is True
-        
+        assert bool(_is_token_valid(jti)) is True
+
         # Отозываем
         _revoke_refresh_token(jti)
-        
+
         # Проверяем - должен быть невалиден
-        assert _is_token_valid(jti) is False
+        assert bool(_is_token_valid(jti)) is False
         print("  [PASS] Revoke refresh token")
 
     def test_nonexistent_token_invalid(self):
         """Тест: несуществующий токен невалиден"""
-        assert _is_token_valid("nonexistent_jti") is False
+        assert bool(_is_token_valid("nonexistent_jti")) is False
         print("  [PASS] Nonexistent token invalid")
 
 
@@ -233,14 +237,14 @@ class TestTokenTypes:
 
     def test_access_token_type(self):
         """Тест: тип access токена"""
-        token = create_access_token("testuser")
+        token = create_access_token(data={"sub": "testuser"})
         payload = decode_token(token)
         assert payload["type"] == "access"
         print("  [PASS] Access token type")
 
     def test_refresh_token_type(self):
         """Тест: тип refresh токена"""
-        token = create_refresh_token("testuser")
+        token = create_refresh_token(data={"sub": "testuser"})
         payload = decode_token(token)
         assert payload["type"] == "refresh"
         print("  [PASS] Refresh token type")
@@ -251,19 +255,19 @@ class TestJWTClaims:
 
     def test_access_token_has_subject(self):
         """Тест: access токен имеет subject"""
-        token = create_access_token("myuser")
+        token = create_access_token(data={"sub": "myuser"})
         payload = decode_token(token)
         assert payload["sub"] == "myuser"
         print("  [PASS] Access token has subject")
 
     def test_refresh_token_has_jti(self):
         """Тест: refresh токен имеет уникальный jti"""
-        token1 = create_refresh_token("user1")
-        token2 = create_refresh_token("user1")
-        
+        token1 = create_refresh_token(data={"sub": "user1"})
+        token2 = create_refresh_token(data={"sub": "user1"})
+
         payload1 = decode_token(token1)
         payload2 = decode_token(token2)
-        
+
         # jti должен быть уникальным для каждого токена
         assert payload1["jti"] != payload2["jti"]
         print("  [PASS] Refresh token has unique jti")
