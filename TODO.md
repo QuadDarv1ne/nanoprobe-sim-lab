@@ -78,7 +78,13 @@
 - [x] FM Радио (101.7 MHz) - приём подтверждён, мощность 0.33
 - [x] Созданы скрипты: listen_fm.bat, listen_airband.bat
 - [x] Авиасвязь - rtl_fm работает, записаны данные (118.1 MHz)
-- [x] **RTL-SDR V4 захват**: test_sdr_quick.py — 7.3M I/Q сэмплов за 3.1 сек
+- [x] МКС SSTV - частота 145.800 MHz настраивается, rtl_fm FM работает
+- [x] MMSSTV 1.13A установлен в C:\Ham\MMSSTV\
+- [x] Создан capture_sstv_mmsstv.py - запись + автооткрытие MMSSTV
+- [x] iss_tracker.py - расчёт пролётов МКС (SGP4 + CelesTrak)
+- [x] Найден лучший пролёт: 08:11 (38.1° высота)
+- [ ] Записать SSTV во время пролёта МКС (08:09 утра)
+- [ ] **RTL-SDR V4 захват**: test_sdr_quick.py — 7.3M I/Q сэмплов за 3.1 сек
 - [x] **NOAA захват**: rtl_sdr_noaa_capture.py — 24.1M I/Q за 10.2 сек
 - [x] **SSTV анализ**: analyze_sstv.py — спектрограмма, частотный анализ
 - [x] **Real-time visualizer**: rtl_sdr_visualizer.py — спектр + waterfall
