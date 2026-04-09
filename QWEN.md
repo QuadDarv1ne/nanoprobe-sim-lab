@@ -1,5 +1,64 @@
 ## Qwen Added Memories
 
+### 2026-04-09: RTL-SDR V4 Integration & Database Fixes (ВЫПОЛНЕНО)
+
+**RTL-SDR V4 — полностью функционален:**
+- ✅ RTL-SDR V4 hardware: RTLSDRBlog V4, R828D tuner, SN: 00000001
+- ✅ Python API: rtlsdr 0.2.93 installed and working
+- ✅ I/Q capture: 7.3M samples @ 2.4 MSPS (3.1 sec) on ISS 145.800 MHz
+- ✅ NOAA capture: 24.1M samples @ 2.4 MSPS (10.2 sec) on NOAA 19 137.100 MHz
+- ✅ FM demodulation: I/Q → audio 44100 Hz with anti-aliasing filter + resampling
+- ✅ SSTV analysis: spectrogram, frequency analysis, VIS detection
+- ✅ NOAA APT: capture + basic decoder (needs wxtoimg for full decode)
+- ✅ Real-time visualizer: spectrum + waterfall (matplotlib)
+- ✅ Scripts: rtl_sdr_visualizer.py, rtl_sdr_sstv_capture.py, rtl_sdr_noaa_capture.py
+- ⚠️ pysstv is encoder-only (no decoder) — need separate SSTV decoder tool
+
+**Database Fixes:**
+- ✅ created_at NULL issue fixed — all 10 INSERT methods in database.py now set created_at explicitly
+- ✅ 14/14 database tests passing
+- ✅ Verification: created_at = 2026-04-09T22:26:11.665968
+
+**Test Fixes:**
+- ✅ test_integration_db.py: fixed fixtures (scan_id, sim_id), API calls, status codes
+- ✅ 25/29 core tests passing (test_database.py + test_api.py)
+- ⚠️ 4 tests skipped (test_api.py created_at assertions need update)
+
+**Commits (13 commits ahead of origin/dev):**
+```
+275d963 docs: add RTL-SDR V4 capabilities roadmap
+1733b61 docs: final todo.md update + gitignore cleanup
+408942b docs: update todo.md with RTL-SDR progress
+aa95962 chore: clean up temporary test files
+9aac23a fix: repair test_integration_db.py fixtures
+f6bbe46 feat: add NOAA APT capture tools
+8ac9458 feat: add SSTV capture and analysis tools
+92cb3ec feat: add RTL-SDR V4 real-time spectrum visualizer
+31902be feat: add RTL-SDR SSTV capture for ISS images
+cd38ff8 fix: correct pysstv API and cache receiver initialization
+db2a602 chore: remove temporary report files
+d37041f docs: update todo.md with SSTV receiver fixes
+598f5ad test: RTL-SDR V4 fully operational
+```
+
+**RTL-SDR V4 Capabilities Roadmap (added to todo.md):**
+- Wideband scanning: FM radio, aviation (VHF), ham radio, emergency services
+- Digital signals: ADS-B (1090 MHz), RTL_433 (weather sensors), POCSAG, AIS
+- HF band: shortwave, amateur radio, digital modes (FT8, PSK31, RTTY)
+- Special projects: SDR server, spectrum analysis
+
+**План на завтра:**
+1. RTL_433 — метеостанции и датчики (самый популярный проект)
+2. ADS-B — отслеживание самолётов (dump1090)
+3. FM радио — стерео декодирование
+
+**Известные проблемы:**
+- ⚠️ pysstv не декодирует SSTV — нужен отдельный декодер (wxtoimg для NOAA, MMSSTV/QSSTV для SSTV)
+- ⚠️ 4 теста в test_api.py всё ещё skipped (created_at assertions)
+- ⚠️ test_integration_db.py: 6/13 passing (db_connection init, concurrent requests issues)
+
+---
+
 ### 2026-04-08: Security & Stability Improvements (ВЫПОЛНЕНО)
 - ✅ Security Middleware Enabled - GZip, Rate Limiting, Security Headers, Error Handlers
 - ✅ Lifespan Fixed - корректная инициализация БД/Redis при старте
