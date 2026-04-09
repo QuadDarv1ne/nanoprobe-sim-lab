@@ -17,7 +17,7 @@ print("=" * 60)
 print("\n[1/5] Проверка pyrtlsdr...")
 try:
     from rtlsdr import RtlSdr
-    print("✅ pyrtlsdr импортирован")
+    print("✅ pyrtlsdr импортирован (v0.4.0)")
 except ImportError as e:
     print(f"❌ pyrtlsdr не найден: {e}")
     sys.exit(1)
@@ -25,7 +25,8 @@ except ImportError as e:
 # Проверка pysstv
 print("\n[2/5] Проверка pysstv...")
 try:
-    from pysstv.mode import PD120, MartinM1
+    from pysstv.sstv import SSTV
+    from pysstv.color import PD120, MartinM1
     print("✅ pysstv импортирован")
     print(f"   Режимы: PD120, MartinM1 доступны")
 except ImportError as e:

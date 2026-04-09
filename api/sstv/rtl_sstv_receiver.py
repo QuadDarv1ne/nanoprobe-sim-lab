@@ -26,7 +26,8 @@ except ImportError:
 # Импорт SSTV
 try:
     from pysstv.sstv import SSTV
-    from pysstv.mode import PD120, PD90, PD180, MartinM1, MartinM2, ScottieS1, ScottieS2, Robot36BW, Robot72CW
+    from pysstv.color import PD120, PD90, PD180, MartinM1, MartinM2, ScottieS1, ScottieS2, Robot36
+    from pysstv.grayscale import Robot36BW, Robot8BW
     SSTV_AVAILABLE = True
 except ImportError:
     SSTV_AVAILABLE = False
@@ -40,8 +41,9 @@ SSTV_MODES = {
     'MartinM2': MartinM2 if SSTV_AVAILABLE else None,
     'ScottieS1': ScottieS1 if SSTV_AVAILABLE else None,
     'ScottieS2': ScottieS2 if SSTV_AVAILABLE else None,
+    'Robot36': Robot36 if SSTV_AVAILABLE else None,
     'Robot36BW': Robot36BW if SSTV_AVAILABLE else None,
-    'Robot72CW': Robot72CW if SSTV_AVAILABLE else None,
+    'Robot8BW': Robot8BW if SSTV_AVAILABLE else None,
 }
 
 # Частоты SSTV
