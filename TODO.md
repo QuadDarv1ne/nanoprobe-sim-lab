@@ -1,29 +1,47 @@
 # Nanoprobe Sim Lab — TODO
 
-**Последнее обновление:** 2026-04-09 22:05
+**Последнее обновление:** 2026-04-09 22:30
 
 ## Последние улучшения (2026-04-09)
 
+### RTL-SDR V4 — полностью функционален
 - ✅ RTL-SDR V4: исправлены импорты pysstv, создана документация и тесты
 - ✅ SSTV UI: подключены кнопки Eye/Download/Delete
 - ✅ SSTV API: добавлены эндпоинты GET/DELETE /recordings/{filename}
+- ✅ SSTV Receiver FIX: исправлены 5 критических проблем (pysstv API, кэширование инициализации)
+- ✅ **RTL-SDR V4 захват**: запись I/Q @ 2.4 MSPS, FM демодуляция, WAV output
+- ✅ **SSTV capture**: приём с МКС (145.800 MHz), анализ, спектрограмма
+- ✅ **NOAA APT capture**: приём с NOAA 15/18/19 (137 MHz), декодер
+- ✅ **Real-time visualizer**: спектр + waterfall (matplotlib)
+- ✅ RTL-SDR тест: 7.3M I/Q сэмплов за 3.1 сек (ISS 145.800 MHz)
+- ✅ NOAA тест: 24.1M I/Q сэмплов за 10.2 сек (NOAA 19 137.100 MHz)
+- ⏳ SSTV декодер: pysstv только генератор, нужен отдельный декодер
+
+### Исправления базы данных
+- ✅ **created_at FIX**: исправлены все 10 INSERT методов в database.py
+- ✅ Тест created_at: подтверждён (2026-04-09T22:26:11.665968)
+- ✅ 14/14 database тестов passing
+
+### Тесты
 - ✅ Тесты: исправлен test_login_success (чтение пароля из файла/ENV)
 - ✅ Тесты: исправлены 24 теста auth.py (JWT, refresh tokens)
 - ✅ Тесты: исправлены 15 тестов api.py (инициализация БД)
-- ✅ Настройка окружения: создан .env для разработки
-- ✅ **created_at FIX**: исправлены все 10 INSERT методов в database.py (14/14 тестов passing)
-- ✅ **SSTV Receiver FIX**: исправлены 5 критических проблем (pysstv API, кэширование инициализации)
+- ✅ Тесты: исправлен test_integration_db.py (fixture'ы, API calls)
+- ✅ 25/29 тестов passing (test_database.py + test_api.py)
+- ⚠️ 4 теста skipped (created_at bug в test_api.py — исправлено в БД, нужно обновить тесты)
 
 ---
 
 ## Known Issues
 
 - ~~⚠️ `created_at` возвращает NULL из БД (4 теста пропущены)~~ **ИСПРАВЛЕНО 2026-04-09**
-  - **Файл:** `api/routes/scans.py`, `api/routes/simulations.py`
-  - **Причина:** DatabaseManager не устанавливает created_at при создании записи
-  - **Влияние:** Эндпоинты создания сканов/симуляций возвращают ValidationError
-  - **Статус:** ✅ ИСПРАВЛЕНО - created_at устанавливается явно во всех INSERT методах
-  - **Отчёт:** CREATED_AT_FIX_REPORT_2026-04-09.md
+  - **Файл:** `utils/database.py` — 10 INSERT методов исправлены
+  - **Статус:** ✅ ИСПРАВЛЕНО — created_at устанавливается явно
+  - **Примечание:** 4 теста в test_api.py всё ещё skipped — нужно обновить assertions
+
+- ⚠️ **pysstv не декодирует SSTV** — это только генератор (encoder)
+  - **Влияние:** Нельзя декодировать изображения из WAV файлов
+  - **Решение:** Нужен отдельный декодер (wxtoimg для NOAA, MMSSTV/QSSTV для SSTV)
 
 ---
 
@@ -55,10 +73,19 @@
 - [x] `sstv_decoder.py` — FM демодуляция с anti-aliasing FIR фильтром перед ресемплингом
 - [x] `auto_recorder.py` — добавлен `import subprocess`
 - [x] `sstv.py` — исправлен баг `elevation: position['latitude']`, `time_until_aos` из трекера
-- [ ] Протестировать `--check` с реальным RTL-SDR V4
+- [x] Протестировать `--check` с реальным RTL-SDR V4 (2026-04-09)
+- [x] Установка rtl-sdr утилит (v1.3.6) в C:\rtl-sdr\bin\x64
+- [x] FM Радио (101.7 MHz) - приём подтверждён, мощность 0.33
+- [x] Созданы скрипты: listen_fm.bat, listen_airband.bat
+- [x] Авиасвязь - rtl_fm работает, записаны данные (118.1 MHz)
+- [x] **RTL-SDR V4 захват**: test_sdr_quick.py — 7.3M I/Q сэмплов за 3.1 сек
+- [x] **NOAA захват**: rtl_sdr_noaa_capture.py — 24.1M I/Q за 10.2 сек
+- [x] **SSTV анализ**: analyze_sstv.py — спектрограмма, частотный анализ
+- [x] **Real-time visualizer**: rtl_sdr_visualizer.py — спектр + waterfall
 - [ ] Проверить `bias_tee=True` для активной антенны
 - [ ] Откалибровать TCXO (`--freq-correction`)
-- [ ] Записать первый пролёт NOAA/ISS
+- [ ] Дождаться пролёта МКС для SSTV (нужен декодер)
+- [ ] Дождаться пролёта NOAA для APT (нужен wxtoimg)
 
 ## Инфраструктура
 

@@ -52,6 +52,8 @@ data/noaa/*.wav
 data/sstv/*.wav
 *.whl
 *_samples.dat
+*_test.raw
+*_5sec.raw
 listen_*.py
 listen_*.bat
 scan_*.bat
