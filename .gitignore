@@ -51,6 +51,13 @@ data/.password_hashes.json
 data/noaa/*.wav
 data/sstv/*.wav
 *.whl
+*_samples.dat
+listen_*.py
+listen_*.bat
+scan_*.bat
+quick_scan_*.py
+aviation_scan.csv
+reports/pdf/
 data/2fa_secrets.json
 data/tle_data.json
 output/
