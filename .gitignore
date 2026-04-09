@@ -48,6 +48,9 @@ data/.jwt_secret
 data/.admin_password
 data/.user_password
 data/.password_hashes.json
+data/noaa/*.wav
+data/sstv/*.wav
+*.whl
 data/2fa_secrets.json
 data/tle_data.json
 output/
