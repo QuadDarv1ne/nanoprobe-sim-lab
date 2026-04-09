@@ -218,12 +218,16 @@ async def get_sstv_spectrum(
     """Получить спектр сигнала"""
     if not RECEIVER_AVAILABLE:
         raise ServiceUnavailableError("SSTV receiver not available")
-    
+
     receiver = get_receiver()
-    if not receiver.initialize():
+    # Инициализируем только если устройство ещё не открыто
+    if receiver.sdr is None and not receiver.initialize():
         raise ServiceUnavailableError("Failed to initialize RTL-SDR")
+
+    # Настраиваем частоту если нужно
+    if abs(receiver.frequency - frequency) > 0.001:
+        receiver.set_frequency(frequency)
     
-    receiver.frequency = frequency
     freqs, power = receiver.get_spectrum(num_points=points)
     
     if freqs is None or power is None:
@@ -244,11 +248,12 @@ async def get_signal_strength():
     """Получить текущую силу сигнала"""
     if not RECEIVER_AVAILABLE:
         raise ServiceUnavailableError("SSTV receiver not available")
-    
+
     receiver = get_receiver()
-    if not receiver.initialize():
+    # Инициализируем только если устройство ещё не открыто
+    if receiver.sdr is None and not receiver.initialize():
         raise ServiceUnavailableError("Failed to initialize RTL-SDR")
-    
+
     strength = receiver.get_signal_strength()
     
     return {
@@ -264,30 +269,35 @@ async def sstv_websocket_stream(websocket: WebSocket):
     session_manager = get_session_manager()
     await session_manager.add_websocket(websocket)
     
+    # Инициализируем receiver один раз при подключении
+    receiver = None
+    if RECEIVER_AVAILABLE:
+        receiver = get_receiver()
+        if receiver.sdr is None:
+            receiver.initialize()
+
     try:
         while True:
             # Получаем данные от приемника
-            if RECEIVER_AVAILABLE:
-                receiver = get_receiver()
-                if receiver.sdr:
-                    # Отправляем спектр
-                    freqs, power = receiver.get_spectrum(num_points=512)
-                    if freqs is not None and power is not None:
-                        await websocket.send_json({
-                            'type': 'spectrum',
-                            'frequencies': freqs.tolist()[-100:],  # Последние 100 точек
-                            'power_db': power.tolist()[-100:],
-                            'timestamp': datetime.now().isoformat(),
-                        })
-                    
-                    # Отправляем силу сигнала
-                    strength = receiver.get_signal_strength()
+            if receiver and receiver.sdr:
+                # Отправляем спектр
+                freqs, power = receiver.get_spectrum(num_points=512)
+                if freqs is not None and power is not None:
                     await websocket.send_json({
-                        'type': 'signal_strength',
-                        'strength': strength,
+                        'type': 'spectrum',
+                        'frequencies': freqs.tolist()[-100:],  # Последние 100 точек
+                        'power_db': power.tolist()[-100:],
                         'timestamp': datetime.now().isoformat(),
                     })
-            
+
+                # Отправляем силу сигнала
+                strength = receiver.get_signal_strength()
+                await websocket.send_json({
+                    'type': 'signal_strength',
+                    'strength': strength,
+                    'timestamp': datetime.now().isoformat(),
+                })
+
             await asyncio.sleep(1.0)  # Обновление каждую секунду
             
     except WebSocketDisconnect:
