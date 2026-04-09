@@ -454,20 +454,22 @@ class DatabaseManager:
         Returns:
             ID записи
         """
+        now = datetime.now().isoformat()
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO scan_results
-                (timestamp, scan_type, surface_type, width, height, file_path, metadata)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                (timestamp, scan_type, surface_type, width, height, file_path, metadata, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """, (
-                datetime.now().isoformat(),
+                now,
                 scan_type,
                 surface_type,
                 width,
                 height,
                 file_path,
-                json.dumps(metadata) if metadata else None
+                json.dumps(metadata) if metadata else None,
+                now  # Устанавливаем created_at явно
             ))
             scan_id = cursor.lastrowid
 
@@ -489,23 +491,25 @@ class DatabaseManager:
         Returns:
             Количество добавленных записей
         """
+        now = datetime.now().isoformat()
         with self.get_connection() as conn:
             cursor = conn.cursor()
             data = []
             for scan in scan_results:
                 data.append((
-                    datetime.now().isoformat(),
+                    now,
                     scan.get('scan_type'),
                     scan.get('surface_type'),
                     scan.get('width'),
                     scan.get('height'),
                     scan.get('file_path'),
-                    json.dumps(scan.get('metadata')) if scan.get('metadata') else None
+                    json.dumps(scan.get('metadata')) if scan.get('metadata') else None,
+                    now  # Устанавливаем created_at явно
                 ))
             cursor.executemany("""
                 INSERT INTO scan_results
-                (timestamp, scan_type, surface_type, width, height, file_path, metadata)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                (timestamp, scan_type, surface_type, width, height, file_path, metadata, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """, data)
             # Инвалидация кэша после вставки
             self.invalidate_cache("scans:")
@@ -747,17 +751,19 @@ class DatabaseManager:
         Returns:
             ID записи
         """
+        now = datetime.now().isoformat()
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO simulations
-                (simulation_id, simulation_type, start_time, status, parameters)
-                VALUES (?, ?, ?, 'running', ?)
+                (simulation_id, simulation_type, start_time, status, parameters, created_at)
+                VALUES (?, ?, ?, 'running', ?, ?)
             """, (
                 simulation_id,
                 simulation_type,
-                datetime.now().isoformat(),
-                json.dumps(parameters) if parameters else None
+                now,
+                json.dumps(parameters) if parameters else None,
+                now  # Устанавливаем created_at явно
             ))
             sim_id = cursor.lastrowid
 
@@ -820,17 +826,19 @@ class DatabaseManager:
         parameters: Dict = None
     ) -> int:
         """Асинхронное добавление записи о симуляции"""
+        now = datetime.now().isoformat()
         async with self.get_connection_async() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO simulations
-                (simulation_id, simulation_type, start_time, status, parameters)
-                VALUES (?, ?, ?, 'running', ?)
+                (simulation_id, simulation_type, start_time, status, parameters, created_at)
+                VALUES (?, ?, ?, 'running', ?, ?)
             """, (
                 simulation_id,
                 simulation_type,
-                datetime.now().isoformat(),
-                json.dumps(parameters) if parameters else None
+                now,
+                json.dumps(parameters) if parameters else None,
+                now  # Устанавливаем created_at явно
             ))
             sim_id = cursor.lastrowid
 
@@ -996,12 +1004,13 @@ class DatabaseManager:
         Returns:
             ID записи
         """
+        now = datetime.now().isoformat()
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO images
-                (image_path, image_type, source, width, height, channels, metadata)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                (image_path, image_type, source, width, height, channels, metadata, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 image_path,
                 image_type,
@@ -1009,7 +1018,8 @@ class DatabaseManager:
                 width,
                 height,
                 channels,
-                json.dumps(metadata) if metadata else None
+                json.dumps(metadata) if metadata else None,
+                now  # Устанавливаем created_at явно
             ))
             return cursor.lastrowid
 
@@ -1081,18 +1091,20 @@ class DatabaseManager:
         Returns:
             ID записи
         """
+        now = datetime.now().isoformat()
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO exports
-                (export_path, export_format, source_type, source_id, file_size_bytes)
-                VALUES (?, ?, ?, ?, ?)
+                (export_path, export_format, source_type, source_id, file_size_bytes, created_at)
+                VALUES (?, ?, ?, ?, ?, ?)
             """, (
                 export_path,
                 export_format,
                 source_type,
                 source_id,
-                file_size_bytes
+                file_size_bytes,
+                now  # Устанавливаем created_at явно
             ))
             return cursor.lastrowid
 
@@ -1396,19 +1408,21 @@ class DatabaseManager:
         Returns:
             ID записи
         """
+        now = datetime.now().isoformat()
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO surface_comparisons
-                (comparison_id, image1_path, image2_path, similarity_score, difference_map_path, metrics)
-                VALUES (?, ?, ?, ?, ?, ?)
+                (comparison_id, image1_path, image2_path, similarity_score, difference_map_path, metrics, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (
                 comparison_id,
                 image1_path,
                 image2_path,
                 similarity_score,
                 difference_map_path,
-                json.dumps(metrics) if metrics else None
+                json.dumps(metrics) if metrics else None,
+                now  # Устанавливаем created_at явно
             ))
             return cursor.lastrowid
 
@@ -1448,12 +1462,13 @@ class DatabaseManager:
         Returns:
             ID записи
         """
+        now = datetime.now().isoformat()
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO defect_analysis
-                (analysis_id, image_path, model_name, defects_detected, defects_data, confidence_score, processing_time_ms)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                (analysis_id, image_path, model_name, defects_detected, defects_data, confidence_score, processing_time_ms, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 analysis_id,
                 image_path,
@@ -1461,7 +1476,8 @@ class DatabaseManager:
                 defects_detected,
                 json.dumps(defects_data) if defects_data else None,
                 confidence_score,
-                processing_time_ms
+                processing_time_ms,
+                now  # Устанавливаем created_at явно
             ))
             return cursor.lastrowid
 
@@ -1508,19 +1524,21 @@ class DatabaseManager:
         Returns:
             ID записи
         """
+        now = datetime.now().isoformat()
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO pdf_reports
-                (report_path, report_type, title, source_ids, file_size_bytes, pages_count)
-                VALUES (?, ?, ?, ?, ?, ?)
+                (report_path, report_type, title, source_ids, file_size_bytes, pages_count, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (
                 report_path,
                 report_type,
                 title,
                 json.dumps(source_ids) if source_ids else None,
                 file_size_bytes,
-                pages_count
+                pages_count,
+                now  # Устанавливаем created_at явно
             ))
             return cursor.lastrowid
 
@@ -1563,18 +1581,20 @@ class DatabaseManager:
         Returns:
             ID записи
         """
+        now = datetime.now().isoformat()
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO batch_jobs
-                (job_id, job_type, total_items, started_at, parameters)
-                VALUES (?, ?, ?, ?, ?)
+                (job_id, job_type, total_items, started_at, parameters, created_at)
+                VALUES (?, ?, ?, ?, ?, ?)
             """, (
                 job_id,
                 job_type,
                 total_items,
-                datetime.now().isoformat(),
-                json.dumps(parameters) if parameters else None
+                now,
+                json.dumps(parameters) if parameters else None,
+                now  # Устанавливаем created_at явно
             ))
             return cursor.lastrowid
 
