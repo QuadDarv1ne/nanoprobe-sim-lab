@@ -236,6 +236,8 @@ class SatelliteTracker:
             return 0.0
         dot = (dx * up_x + dy * up_y + dz * up_z) / range_mag
         return float(np.degrees(np.arcsin(np.clip(dot, -1.0, 1.0))))
+
+    def __init__(self, ground_station_lat: float = 55.7558, ground_station_lon: float = 37.6173):
         """
         Инициализация трекера.
 
@@ -247,7 +249,7 @@ class SatelliteTracker:
         self.ground_station_lon = ground_station_lon
         self.satellites = self.DEFAULT_SATELLITES.copy()
         self.tle_file = Path("data/tle_data.json")
-        
+
         # Загружаем TLE из кэша или обновляем с CelesTrak
         self._load_or_refresh_tle()
 
