@@ -47,9 +47,23 @@ class TestAuth:
 
     def test_login_success(self):
         """Успешный вход"""
+        # Читаем пароль из файла или используем ENV
+        import os
+        from pathlib import Path
+        
+        admin_password = os.getenv("ADMIN_PASSWORD")
+        if not admin_password:
+            password_file = Path("data/.admin_password")
+            if password_file.exists():
+                admin_password = password_file.read_text().strip()
+            else:
+                # Если пароль не найдено, пропускаем тест
+                import pytest
+                pytest.skip("Admin password not configured")
+        
         response = client.post(
             "/api/v1/auth/login",
-            json={"username": "admin", "password": "Admin123!"},
+            json={"username": "admin", "password": admin_password},
         )
         assert response.status_code == 200
         data = response.json()
