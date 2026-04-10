@@ -327,7 +327,9 @@ class PerformanceAnalyticsDashboard:
                     description=f"Использование памяти составляет {memory_usage:.1f}%, следите за потреблением",
                     severity="medium",
                     value=memory_usage,
-                    recommendation="Мониторьте использование памяти и очищайте кэш при необходимости",
+                    recommendation=(
+                        "Мониторьте использование памяти и очищайте кэш при необходимости"
+                    ),
                     timestamp=datetime.now(timezone.utc),
                 )
             )
@@ -539,7 +541,8 @@ class PerformanceAnalyticsDashboard:
 
         if current.get("efficiency_score", 0) < 70:
             recommendations.append(
-                "Запустите комплексную оптимизацию через OptimizationOrchestrator для повышения эффективности"
+                "Запустите комплексную оптимизацию через "
+                "OptimizationOrchestrator для повышения эффективности"
             )
 
         if current.get("cpu_percent", 0) > 80:
@@ -584,9 +587,9 @@ class PerformanceAnalyticsDashboard:
             Путь к сохраненной визуализации
         """
         if output_path is None:
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             output_path = str(
-                self.output_dir
-                / f"performance_dashboard_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.png"
+                self.output_dir / f"performance_dashboard_{timestamp}.png"
             )
 
         if not self.performance_history:

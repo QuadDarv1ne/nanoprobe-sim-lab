@@ -417,7 +417,8 @@ class ResourceManager:
             Путь к сохраненному отчету
         """
         if output_path is None:
-            output_path = f"resource_report_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+            output_path = f"resource_report_{timestamp}.json"
 
         report = self.get_resource_report()
 

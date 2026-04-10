@@ -541,9 +541,9 @@ class PerformanceBenchmarkSuite:
             return ""
 
         if output_path is None:
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             output_path = str(
-                self.output_dir
-                / f"benchmark_visualization_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.png"
+                self.output_dir / f"benchmark_visualization_{timestamp}.png"
             )
 
         # Подготовка данных

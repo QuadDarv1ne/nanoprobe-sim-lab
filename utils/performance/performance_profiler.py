@@ -337,7 +337,8 @@ class PerformanceProfiler:
             "execution_time": execution_time,
             "profile_file": str(profile_file),
             "call_count": ps.total_calls,
-            "primitive_calls": ps.total_calls,  # primitive_calls is not a valid attribute, using total_calls instead
+            "primitive_calls": ps.total_calls,
+            # primitive_calls is not a valid attribute, using total_calls instead
         }
 
     def memory_profile_function(self, func: Callable) -> Callable:
@@ -552,9 +553,9 @@ class PerformanceProfiler:
             Путь к сохраненной визуализации
         """
         if output_path is None:
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             output_path = str(
-                self.output_dir
-                / f"performance_visualization_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.png"
+                self.output_dir / f"performance_visualization_{timestamp}.png"
             )
 
         if not self.monitoring_data["timestamps"]:
@@ -642,7 +643,8 @@ class PerformanceProfiler:
 
         if avg_cpu > 80:
             recommendations.append(
-                "Высокая загрузка CPU (>80%). Рассмотрите оптимизацию алгоритмов или параллелизацию."
+                "Высокая загрузка CPU (>80%). "
+                "Рассмотрите оптимизацию алгоритмов или параллелизацию."
             )
 
         if avg_memory > 1000:  # больше 1GB

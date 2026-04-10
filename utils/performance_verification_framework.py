@@ -504,7 +504,8 @@ class PerformanceVerificationFramework:
         best_test = max(self.test_results, key=lambda x: x.improvement_percent)
         if best_test.improvement_percent > 10:
             recommendations.append(
-                f"'{best_test.test_name}' показал отличный результат - {best_test.improvement_percent:.2f}% улучшения."
+                f"'{best_test.test_name}' показал отличный результат - "
+                f"{best_test.improvement_percent:.2f}% улучшения."
             )
 
         # Рекомендации по системе в целом
@@ -705,7 +706,9 @@ class PerformanceVerificationFramework:
         regression_results["execution_time"] = time.time() - start_time
 
         print(
-            f"Регрессионные тесты завершены: {regression_results['tests_passed']} пройдено, {regression_results['tests_failed']} провалено"
+            f"Регрессионные тесты завершены: "
+            f"{regression_results['tests_passed']} пройдено, "
+            f"{regression_results['tests_failed']} провалено"
         )
 
         return regression_results
@@ -741,7 +744,8 @@ def main():
     print("\nЗапуск регрессионных тестов...")
     regression_results = verification_framework.run_regression_tests()
     print(
-        f"✓ Регрессионные тесты: {regression_results['tests_passed']} пройдено, {regression_results['tests_failed']} провалено"
+        f"✓ Регрессионные тесты: {regression_results['tests_passed']} пройдено, "
+        f"{regression_results['tests_failed']} провалено"
     )
 
     # Генерируем отчет
