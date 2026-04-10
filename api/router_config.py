@@ -195,3 +195,19 @@ def register_routes(app: FastAPI):
         logger.info("ADS-B Aircraft Tracker routes registered")
     except ImportError as e:
         logger.warning(f"ADS-B routes disabled: {e}")
+
+    # FM Radio (88-108 MHz)
+    try:
+        from api.routes import fm_radio
+        from api.state import get_db_manager
+        from utils.caching.cache_manager import get_cache_manager
+        
+        db = get_db_manager()
+        cache = get_cache_manager()
+        if db and cache:
+            fm_radio.set_managers(db, cache)
+        
+        app.include_router(fm_radio.router, prefix="/api/v1", tags=["FM Radio"])
+        logger.info("FM Radio routes registered")
+    except ImportError as e:
+        logger.warning(f"FM Radio routes disabled: {e}")
