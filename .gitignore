@@ -48,6 +48,10 @@ dump1090*.zip
 test_*.raw
 *_5sec.raw
 
+# Ошибки и отчёты (автогенерированные)
+error_log.json
+reports/
+
 # Бинарные файлы (большие)
 bin/*.exe
 bin/*.dll

@@ -6,8 +6,9 @@
 
 import sys
 import time
-import numpy as np
 from pathlib import Path
+
+import numpy as np
 
 print("=" * 60)
 print("  RTL-SDR V4 SSTV Receiver Test")
@@ -17,6 +18,7 @@ print("=" * 60)
 print("\n[1/5] Проверка pyrtlsdr...")
 try:
     from rtlsdr import RtlSdr
+
     print("✅ pyrtlsdr импортирован (v0.4.0)")
 except ImportError as e:
     print(f"❌ pyrtlsdr не найден: {e}")
@@ -25,8 +27,9 @@ except ImportError as e:
 # Проверка pysstv
 print("\n[2/5] Проверка pysstv...")
 try:
-    from pysstv.sstv import SSTV
     from pysstv.color import PD120, MartinM1
+    from pysstv.sstv import SSTV
+
     print("✅ pysstv импортирован")
     print(f"   Режимы: PD120, MartinM1 доступны")
 except ImportError as e:
@@ -36,13 +39,9 @@ except ImportError as e:
 print("\n[3/5] Инициализация RTL-SDR V4...")
 try:
     from api.sstv.rtl_sstv_receiver import RTLSDRReceiver
-    
-    receiver = RTLSDRReceiver(
-        frequency=145.800,  # МКС SSTV
-        sample_rate=2.4e6,
-        gain=49.6
-    )
-    
+
+    receiver = RTLSDRReceiver(frequency=145.800, sample_rate=2.4e6, gain=49.6)  # МКС SSTV
+
     if receiver.initialize():
         print("✅ RTL-SDR инициализирован")
         info = receiver.get_device_info()
@@ -52,10 +51,11 @@ try:
     else:
         print("❌ Не удалось инициализировать RTL-SDR")
         sys.exit(1)
-        
+
 except Exception as e:
     print(f"❌ Ошибка: {e}")
     import traceback
+
     traceback.print_exc()
     sys.exit(1)
 

@@ -94,6 +94,22 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.warning(f"Failed to start rate limiter cleanup: {e}")
 
+        # Инициализация Sync Manager
+        try:
+            from api.routes.sync_manager import set_sync_manager
+            from api.sync_manager import BackendFrontendSync
+
+            sync_mgr = BackendFrontendSync()
+            await sync_mgr.initialize()
+            set_sync_manager(sync_mgr)
+            logger.info("Sync Manager initialized")
+
+            # Запуск цикла синхронизации в фоне
+            asyncio.create_task(sync_mgr.start_sync_loop(interval=5.0))
+            logger.info("Sync Manager sync loop started")
+        except Exception as e:
+            logger.warning(f"Failed to initialize Sync Manager: {e}")
+
     except Exception as e:
         logger.warning(f"Startup initialization warning (may be expected in dev): {e}")
 
@@ -162,6 +178,18 @@ async def lifespan(app: FastAPI):
             logger.info("Database connections closed")
     except Exception as e:
         logger.debug(f"Database cleanup error: {e}")
+
+    # 6. Закрытие Sync Manager
+    try:
+        from api.routes.sync_manager import get_sync_manager
+
+        sync_mgr = get_sync_manager()
+        if sync_mgr:
+            sync_mgr._running = False  # Остановить цикл
+            await sync_mgr.close()
+            logger.info("Sync Manager stopped")
+    except Exception as e:
+        logger.debug(f"Sync Manager cleanup error: {e}")
 
     logger.info("Application stopped gracefully")
 

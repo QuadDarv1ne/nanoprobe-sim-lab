@@ -20,6 +20,7 @@ print("=" * 70)
 print("\n[1/8] Проверка pyrtlsdr...")
 try:
     from rtlsdr import RtlSdr
+
     print("✅ pyrtlsdr импортирован (v0.3.0)")
 except ImportError as e:
     print(f"❌ pyrtlsdr не найден: {e}")
@@ -30,6 +31,7 @@ print("\n[2/8] Проверка pysstv...")
 try:
     from pysstv.color import PD120, MartinM1
     from pysstv.sstv import SSTV
+
     print("✅ pysstv импортирован (0.5.7)")
     print(f"   Доступные режимы: PD120, MartinM1, ScottieS1, Robot36")
 except ImportError as e:
@@ -40,6 +42,7 @@ print("\n[3/8] Проверка numpy/scipy...")
 try:
     import numpy as np
     from scipy.signal import find_peaks
+
     print(f"✅ numpy {np.__version__}, scipy доступны")
 except ImportError as e:
     print(f"❌ Ошибка: {e}")
@@ -49,11 +52,7 @@ print("\n[4/8] Инициализация RTL-SDR V4...")
 try:
     from api.sstv.rtl_sstv_receiver import RTLSDRReceiver
 
-    receiver = RTLSDRReceiver(
-        frequency=145.800,  # МКС SSTV
-        sample_rate=2.4e6,
-        gain=49.6
-    )
+    receiver = RTLSDRReceiver(frequency=145.800, sample_rate=2.4e6, gain=49.6)  # МКС SSTV
 
     if receiver.initialize():
         print("✅ RTL-SDR V4 инициализирован")
@@ -74,6 +73,7 @@ try:
 except Exception as e:
     print(f"❌ Ошибка инициализации: {e}")
     import traceback
+
     traceback.print_exc()
     sys.exit(1)
 
@@ -128,9 +128,9 @@ try:
         print(f"✅ Записано {len(samples)} сэмплов")
         print(f"   ⏱️ Длительность: {duration:.2f} сек")
         print(f"   📊 Частота дискретизации: 48000 Гц")
-        
+
         # Сохраняем тестовый файл
-        output_file = 'test_recording.wav'
+        output_file = "test_recording.wav"
         receiver._save_wav(samples, output_file, 48000)
         print(f"   💾 Сохранено: {output_file}")
     else:

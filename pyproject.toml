@@ -119,6 +119,8 @@ exclude = [
     ".venv",
     "build",
     "dist",
+    "scripts/active_tests",
+    "scripts/rtl_sdr_full_power_test.py",
 ]
 ignore = ["E203", "W503"]
 

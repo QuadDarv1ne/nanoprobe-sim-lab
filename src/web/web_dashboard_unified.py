@@ -23,7 +23,10 @@ import sys
 
 MIN_PYTHON_VERSION = (3, 11)
 MAX_PYTHON_VERSION = (3, 14)
-if sys.version_info < MIN_PYTHON_VERSION or sys.version_info >= (MAX_PYTHON_VERSION[0], MAX_PYTHON_VERSION[1] + 1):
+if sys.version_info < MIN_PYTHON_VERSION or sys.version_info >= (
+    MAX_PYTHON_VERSION[0],
+    MAX_PYTHON_VERSION[1] + 1,
+):
     print(f"[ERROR] Требуется Python 3.11 - 3.14, текущая версия: {sys.version}")
     sys.exit(1)
 
@@ -39,12 +42,13 @@ from typing import List
 if sys.platform == "win32":
     os.system("chcp 65001 >nul")
     try:
-        sys.stdout.reconfigure(encoding='utf-8')
-        sys.stderr.reconfigure(encoding='utf-8')
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
     except AttributeError:
         import io
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 from functools import wraps
 
@@ -68,40 +72,45 @@ from utils.database import DatabaseManager
 
 # Импорт утилит
 from utils.logger import NanoprobeLogger
+from utils.monitoring.system_monitor import SystemMonitor
 from utils.performance_monitor import PerformanceMonitor
 from utils.surface_comparator import compare_surfaces as compare_surfaces_util
-from utils.system_monitor import SystemMonitor
 
 # Reverse proxy интеграция
 try:
     from api.reverse_proxy import FASTAPI_URL, JWT_SECRET, register_proxy
+
     PROXY_AVAILABLE = True
 except ImportError:
     PROXY_AVAILABLE = False
-    FASTAPI_URL = os.getenv('FASTAPI_URL', 'http://localhost:8000')
-    JWT_SECRET = os.getenv('JWT_SECRET', 'nanoprobe-secret-key-change-in-production')
+    FASTAPI_URL = os.getenv("FASTAPI_URL", "http://localhost:8000")
+    JWT_SECRET = os.getenv("JWT_SECRET", "nanoprobe-secret-key-change-in-production")
 
 
 # ==================== Декораторы ====================
 
+
 def login_required(f):
     """Декоратор для защиты маршрутов"""
+
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not session.get('logged_in'):
+        if not session.get("logged_in"):
             if request.is_json:
-                return jsonify({'error': 'Требуется аутентификация'}), 401
-            return redirect(url_for('login_page'))
+                return jsonify({"error": "Требуется аутентификация"}), 401
+            return redirect(url_for("login_page"))
         return f(*args, **kwargs)
+
     return decorated_function
 
 
 # ==================== Класс веб-панели ====================
 
+
 class UnifiedWebDashboard:
     """
     Унифицированная веб-панель управления с интеграцией FastAPI
-    
+
     Функционал:
     - Reverse proxy к FastAPI API
     - WebSocket real-time обновления
@@ -131,15 +140,14 @@ class UnifiedWebDashboard:
         self.app = Flask(
             __name__,
             template_folder=str(template_folder),
-            static_folder=str(static_folder) if static_folder.exists() else None
+            static_folder=str(static_folder) if static_folder.exists() else None,
         )
-        
+
         self.app.config["SECRET_KEY"] = os.getenv(
-            'FLASK_SECRET_KEY',
-            'nanoprobe_unified_dashboard_secret_key_change_in_production'
+            "FLASK_SECRET_KEY", "nanoprobe_unified_dashboard_secret_key_change_in_production"
         )
-        self.app.config['SESSION_TYPE'] = 'filesystem'
-        self.app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 час
+        self.app.config["SESSION_TYPE"] = "filesystem"
+        self.app.config["PERMANENT_SESSION_LIFETIME"] = 3600  # 1 час
 
         # SocketIO
         self.socketio = SocketIO(
@@ -147,7 +155,7 @@ class UnifiedWebDashboard:
             cors_allowed_origins="*",
             ping_timeout=60,
             ping_interval=25,
-            async_mode='threading'
+            async_mode="threading",
         )
 
         # Логирование
@@ -210,97 +218,102 @@ class UnifiedWebDashboard:
         def api_login():
             """
             Аутентификация через FastAPI
-            
+
             POST параметры:
             - username: Имя пользователя
             - password: Пароль
-            
+
             Returns:
                 JSON с токенами или ошибкой
             """
             try:
-                username = request.form.get('username')
-                password = request.form.get('password')
+                username = request.form.get("username")
+                password = request.form.get("password")
 
                 if not username or not password:
-                    return jsonify({'error': 'Требуется имя пользователя и пароль'}), 400
+                    return jsonify({"error": "Требуется имя пользователя и пароль"}), 400
 
                 # Запрос к FastAPI
                 response = requests.post(
                     f"{self.fastapi_url}/api/v1/auth/login",
-                    data={'username': username, 'password': password},
-                    timeout=10
+                    data={"username": username, "password": password},
+                    timeout=10,
                 )
 
                 if response.status_code == 200:
                     tokens = response.json()
-                    session['logged_in'] = True
-                    session['username'] = username
-                    session['access_token'] = tokens.get('access_token')
-                    session['refresh_token'] = tokens.get('refresh_token')
+                    session["logged_in"] = True
+                    session["username"] = username
+                    session["access_token"] = tokens.get("access_token")
+                    session["refresh_token"] = tokens.get("refresh_token")
                     session.permanent = True
 
                     self.logger.log_user_action(username, "Вход в систему выполнен")
 
-                    return jsonify({
-                        'success': True,
-                        'username': username,
-                        'message': 'Вход выполнен успешно'
-                    })
+                    return jsonify(
+                        {"success": True, "username": username, "message": "Вход выполнен успешно"}
+                    )
                 else:
                     error_data = response.json() if response.content else {}
-                    return jsonify({
-                        'error': error_data.get('detail', 'Неверное имя пользователя или пароль')
-                    }), 401
+                    return (
+                        jsonify(
+                            {
+                                "error": error_data.get(
+                                    "detail", "Неверное имя пользователя или пароль"
+                                )
+                            }
+                        ),
+                        401,
+                    )
 
             except requests.exceptions.RequestException as e:
                 self.logger.log_error(f"Login error: {e}")
-                return jsonify({'error': 'Сервер аутентификации недоступен'}), 503
+                return jsonify({"error": "Сервер аутентификации недоступен"}), 503
             except Exception as e:
                 self.logger.log_error(f"Unexpected login error: {e}")
-                return jsonify({'error': 'Внутренняя ошибка сервера'}), 500
+                return jsonify({"error": "Внутренняя ошибка сервера"}), 500
 
         @self.app.route("/api/auth/logout", methods=["POST"])
         @login_required
         def api_logout():
             """Выход из системы"""
-            username = session.get('username', 'Unknown')
-            
+            username = session.get("username", "Unknown")
+
             # Очистка сессии
             session.clear()
-            
+
             self.logger.log_user_action(username, "Выход из системы")
-            
-            return jsonify({'success': True, 'message': 'Выход выполнен'})
+
+            return jsonify({"success": True, "message": "Выход выполнен"})
 
         @self.app.route("/api/auth/refresh", methods=["POST"])
         def api_refresh_token():
             """Обновление токена доступа"""
             try:
-                refresh_token = session.get('refresh_token')
+                refresh_token = session.get("refresh_token")
                 if not refresh_token:
-                    return jsonify({'error': 'Токен обновления не найден'}), 401
+                    return jsonify({"error": "Токен обновления не найден"}), 401
 
                 response = requests.post(
                     f"{self.fastapi_url}/api/v1/auth/refresh",
-                    json={'refresh_token': refresh_token},
-                    timeout=10
+                    json={"refresh_token": refresh_token},
+                    timeout=10,
                 )
 
                 if response.status_code == 200:
                     tokens = response.json()
-                    session['access_token'] = tokens.get('access_token')
-                    if 'refresh_token' in tokens:
-                        session['refresh_token'] = tokens['refresh_token']
-                    
-                    return jsonify({'success': True})
+                    session["access_token"] = tokens.get("access_token")
+                    if "refresh_token" in tokens:
+                        session["refresh_token"] = tokens["refresh_token"]
+
+                    return jsonify({"success": True})
                 else:
                     session.clear()
-                    return jsonify({'error': 'Не удалось обновить токен'}), 401
+                    return jsonify({"error": "Не удалось обновить токен"}), 401
 
             except Exception as e:
                 self.logger.log_error(f"Token refresh error: {e}")
-                return jsonify({'error': 'Ошибка обновления токена'}), 500
+                return jsonify({"error": "Ошибка обновления токена"}), 500
 
         # ==================== API маршруты ====================
 
@@ -312,7 +325,7 @@ class UnifiedWebDashboard:
                 return jsonify(system_info)
             except Exception as e:
                 self.logger.log_error(f"System info error: {e}")
-                return jsonify({'error': str(e)}), 500
+                return jsonify({"error": str(e)}), 500
 
         @self.app.route("/api/stats")
         @login_required
@@ -323,8 +336,8 @@ class UnifiedWebDashboard:
                 try:
                     response = requests.get(
                         f"{self.fastapi_url}/api/v1/dashboard/stats",
-                        headers={'Authorization': f'Bearer {session.get("access_token")}'},
-                        timeout=5
+                        headers={"Authorization": f'Bearer {session.get("access_token")}'},
+                        timeout=5,
                     )
                     if response.status_code == 200:
                         return jsonify(response.json())
@@ -334,56 +347,58 @@ class UnifiedWebDashboard:
                 # Локальное получение статистики
                 db = self.database
                 stats = {
-                    'scans_count': db.count_scans() if db else 0,
-                    'simulations_count': db.count_simulations() if db else 0,
-                    'analysis_count': db.count_analysis_results() if db else 0,
-                    'comparisons_count': db.count_comparisons() if db else 0,
-                    'reports_count': db.count_reports() if db else 0,
-                    'uptime': str(datetime.now(timezone.utc) - self._start_time)
+                    "scans_count": db.count_scans() if db else 0,
+                    "simulations_count": db.count_simulations() if db else 0,
+                    "analysis_count": db.count_analysis_results() if db else 0,
+                    "comparisons_count": db.count_comparisons() if db else 0,
+                    "reports_count": db.count_reports() if db else 0,
+                    "uptime": str(datetime.now(timezone.utc) - self._start_time),
                 }
                 return jsonify(stats)
 
             except Exception as e:
                 self.logger.log_error(f"Stats error: {e}")
-                return jsonify({'error': str(e)}), 500
+                return jsonify({"error": str(e)}), 500
 
         @self.app.route("/api/health")
         def api_health():
             """Проверка здоровья сервисов"""
             health = {
-                'flask': 'ok',
-                'fastapi': 'unknown',
-                'database': 'unknown',
-                'sync_manager': 'unknown',
-                'timestamp': datetime.now(timezone.utc).isoformat()
+                "flask": "ok",
+                "fastapi": "unknown",
+                "database": "unknown",
+                "sync_manager": "unknown",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
             # Проверка FastAPI
             try:
                 response = requests.get(f"{self.fastapi_url}/health", timeout=3)
-                health['fastapi'] = 'ok' if response.status_code == 200 else 'error'
+                health["fastapi"] = "ok" if response.status_code == 200 else "error"
             except Exception:
-                health['fastapi'] = 'error'
+                health["fastapi"] = "error"
 
             # Проверка БД
             try:
                 if self.database:
-                    health['database'] = 'ok'
+                    health["database"] = "ok"
             except Exception:
-                health['database'] = 'error'
+                health["database"] = "error"
 
             # Проверка Sync Manager
             try:
                 response = requests.get(f"{self.fastapi_url}/api/v1/sync/status", timeout=3)
                 if response.status_code == 200:
                     sync_data = response.json()
-                    health['sync_manager'] = 'ok' if sync_data.get('running') else 'standby'
-                    health['sync_last_update'] = sync_data.get('last_sync_time')
+                    health["sync_manager"] = "ok" if sync_data.get("running") else "standby"
+                    health["sync_last_update"] = sync_data.get("last_sync_time")
             except Exception:
-                health['sync_manager'] = 'not_available'
+                health["sync_manager"] = "not_available"
 
-            all_ok = all(v == 'ok' for k, v in health.items() if k not in ['timestamp', 'sync_last_update'])
-            health['status'] = 'healthy' if all_ok else 'degraded'
+            all_ok = all(
+                v == "ok" for k, v in health.items() if k not in ["timestamp", "sync_last_update"]
+            )
+            health["status"] = "healthy" if all_ok else "degraded"
 
             return jsonify(health)
 
@@ -397,15 +412,9 @@ class UnifiedWebDashboard:
                 if response.status_code == 200:
                     return jsonify(response.json())
                 else:
-                    return jsonify({
-                        'running': False,
-                        'message': 'Sync Manager недоступен'
-                    })
+                    return jsonify({"running": False, "message": "Sync Manager недоступен"})
             except Exception as e:
-                return jsonify({
-                    'running': False,
-                    'message': f'Ошибка: {str(e)}'
-                })
+                return jsonify({"running": False, "message": f"Ошибка: {str(e)}"})
 
         # ==================== СЗМ операции ====================
 
@@ -415,27 +424,29 @@ class UnifiedWebDashboard:
             """Запуск симуляции СЗМ"""
             try:
                 data = request.json
-                scan_type = data.get('scan_type', 'afm')
-                surface_type = data.get('surface_type', 'flat')
-                resolution = data.get('resolution', 64)
+                scan_type = data.get("scan_type", "afm")
+                surface_type = data.get("surface_type", "flat")
+                resolution = data.get("resolution", 64)
 
                 # Логирование
-                username = session.get('username', 'Unknown')
+                username = session.get("username", "Unknown")
                 self.logger.log_user_action(
                     username,
-                    f"Запуск СЗМ симуляции: {scan_type}, {surface_type}, {resolution}x{resolution}"
+                    f"Запуск СЗМ симуляции: {scan_type}, {surface_type}, {resolution}x{resolution}",
                 )
 
                 # Здесь должна быть логика симуляции
-                return jsonify({
-                    'success': True,
-                    'message': f'Симуляция запущена: {scan_type}',
-                    'scan_id': int(time.time())
-                })
+                return jsonify(
+                    {
+                        "success": True,
+                        "message": f"Симуляция запущена: {scan_type}",
+                        "scan_id": int(time.time()),
+                    }
+                )
 
             except Exception as e:
                 self.logger.log_error(f"SPM simulation error: {e}")
-                return jsonify({'error': str(e)}), 500
+                return jsonify({"error": str(e)}), 500
 
         @self.app.route("/api/spm/scan", methods=["POST"])
         @login_required
@@ -443,21 +454,23 @@ class UnifiedWebDashboard:
             """Сканирование поверхности"""
             try:
                 data = request.json
-                scan_type = data.get('scan_type', 'afm')
-                surface_type = data.get('surface_type', 'flat')
+                scan_type = data.get("scan_type", "afm")
+                surface_type = data.get("surface_type", "flat")
 
-                username = session.get('username', 'Unknown')
+                username = session.get("username", "Unknown")
                 self.logger.log_user_action(username, f"Сканирование: {scan_type}, {surface_type}")
 
-                return jsonify({
-                    'success': True,
-                    'message': 'Сканирование выполнено',
-                    'scan_id': int(time.time())
-                })
+                return jsonify(
+                    {
+                        "success": True,
+                        "message": "Сканирование выполнено",
+                        "scan_id": int(time.time()),
+                    }
+                )
 
             except Exception as e:
                 self.logger.log_error(f"SPM scan error: {e}")
-                return jsonify({'error': str(e)}), 500
+                return jsonify({"error": str(e)}), 500
 
         # ==================== Анализ изображений ====================
 
@@ -467,22 +480,19 @@ class UnifiedWebDashboard:
             """Сравнение поверхностей"""
             try:
                 data = request.json
-                image1_path = data.get('image1')
-                image2_path = data.get('image2')
+                image1_path = data.get("image1")
+                image2_path = data.get("image2")
 
                 if not image1_path or not image2_path:
-                    return jsonify({'error': 'Требуется два изображения'}), 400
+                    return jsonify({"error": "Требуется два изображения"}), 400
 
                 result = compare_surfaces_util(image1_path, image2_path)
 
-                return jsonify({
-                    'success': True,
-                    'comparison': result
-                })
+                return jsonify({"success": True, "comparison": result})
 
             except Exception as e:
                 self.logger.log_error(f"Surface comparison error: {e}")
-                return jsonify({'error': str(e)}), 500
+                return jsonify({"error": str(e)}), 500
 
         @self.app.route("/api/analysis/defects", methods=["POST"])
         @login_required
@@ -490,21 +500,18 @@ class UnifiedWebDashboard:
             """Анализ дефектов"""
             try:
                 data = request.json
-                image_path = data.get('image')
+                image_path = data.get("image")
 
                 if not image_path:
-                    return jsonify({'error': 'Требуется изображение'}), 400
+                    return jsonify({"error": "Требуется изображение"}), 400
 
                 result = analyze_defects_util(image_path)
 
-                return jsonify({
-                    'success': True,
-                    'analysis': result
-                })
+                return jsonify({"success": True, "analysis": result})
 
             except Exception as e:
                 self.logger.log_error(f"Defect analysis error: {e}")
-                return jsonify({'error': str(e)}), 500
+                return jsonify({"error": str(e)}), 500
 
         # ==================== Экспорт данных ====================
 
@@ -513,77 +520,73 @@ class UnifiedWebDashboard:
         def api_export_json():
             """Экспорт данных в JSON"""
             try:
-                export_type = request.args.get('type', 'all')
+                export_type = request.args.get("type", "all")
                 output_file = self.data_exporter.export_to_json(export_type)
 
-                return jsonify({
-                    'success': True,
-                    'file': str(output_file)
-                })
+                return jsonify({"success": True, "file": str(output_file)})
 
             except Exception as e:
                 self.logger.log_error(f"JSON export error: {e}")
-                return jsonify({'error': str(e)}), 500
+                return jsonify({"error": str(e)}), 500
 
         @self.app.route("/api/export/csv", methods=["GET"])
         @login_required
         def api_export_csv():
             """Экспорт данных в CSV"""
             try:
-                export_type = request.args.get('type', 'scans')
+                export_type = request.args.get("type", "scans")
                 output_file = self.data_exporter.export_to_csv(export_type)
 
-                return jsonify({
-                    'success': True,
-                    'file': str(output_file)
-                })
+                return jsonify({"success": True, "file": str(output_file)})
 
             except Exception as e:
                 self.logger.log_error(f"CSV export error: {e}")
-                return jsonify({'error': str(e)}), 500
+                return jsonify({"error": str(e)}), 500
 
     def _register_socket_handlers(self):
         """Регистрация обработчиков WebSocket"""
 
-        @self.socketio.on('connect')
+        @self.socketio.on("connect")
         def handle_connect():
             """Подключение клиента"""
             self.active_websockets.append(request.sid)
             self.logger.log_system_event(f"WebSocket подключён: {request.sid}")
-            emit('connected', {'sid': request.sid})
+            emit("connected", {"sid": request.sid})
 
-        @self.socketio.on('disconnect')
+        @self.socketio.on("disconnect")
         def handle_disconnect():
             """Отключение клиента"""
             if request.sid in self.active_websockets:
                 self.active_websockets.remove(request.sid)
             self.logger.log_system_event(f"WebSocket отключён: {request.sid}")
 
-        @self.socketio.on('subscribe_metrics')
+        @self.socketio.on("subscribe_metrics")
         def handle_subscribe_metrics():
             """Подписка на метрики"""
             self.logger.log_system_event(f"Клиент {request.sid} подписан на метрики")
-            
+
             # Отправка текущих метрик
             try:
                 metrics = self.system_monitor.get_current_metrics()
-                emit('metrics_update', metrics)
+                emit("metrics_update", metrics)
             except Exception as e:
                 self.logger.log_error(f"Metrics send error: {e}")
 
-        @self.socketio.on('subscribe_stats')
+        @self.socketio.on("subscribe_stats")
         def handle_subscribe_stats():
             """Подписка на статистику"""
             self.logger.log_system_event(f"Клиент {request.sid} подписан на статистику")
-            
+
             # Отправка текущей статистики
             try:
                 stats = {
-                    'scans_count': self.database.count_scans() if self.database else 0,
-                    'simulations_count': self.database.count_simulations() if self.database else 0,
-                    'analysis_count': self.database.count_analysis_results() if self.database else 0,
+                    "scans_count": self.database.count_scans() if self.database else 0,
+                    "simulations_count": self.database.count_simulations() if self.database else 0,
+                    "analysis_count": (
+                        self.database.count_analysis_results() if self.database else 0
+                    ),
                 }
-                emit('stats_update', stats)
+                emit("stats_update", stats)
             except Exception as e:
                 self.logger.log_error(f"Stats send error: {e}")
 
@@ -591,13 +594,13 @@ class UnifiedWebDashboard:
         """Фоновое обновление метрик (WebSocket)"""
         while True:
             time.sleep(5)  # Каждые 5 секунд
-            
+
             try:
                 metrics = self.system_monitor.get_current_metrics()
-                
+
                 # Отправка всем подключённым клиентам
-                self.socketio.emit('metrics_update', metrics)
-                
+                self.socketio.emit("metrics_update", metrics)
+
             except Exception as e:
                 self.logger.log_error(f"Background metrics error: {e}")
 
@@ -616,10 +619,11 @@ class UnifiedWebDashboard:
 
         # Открытие браузера
         if open_browser:
+
             def open_browser_delayed():
                 time.sleep(2)
                 webbrowser.open(f"http://{self.host}:{self.port}")
-            
+
             browser_thread = threading.Thread(target=open_browser_delayed, daemon=True)
             browser_thread.start()
 
@@ -639,42 +643,53 @@ class UnifiedWebDashboard:
             port=self.port,
             debug=False,
             log_output=False,
-            allow_unsafe_werkzeug=True
+            allow_unsafe_werkzeug=True,
         )
 
 
 # ==================== Точка входа ====================
+
 
 def main():
     """Точка входа для запуска веб-панели"""
     import argparse
     import os
 
-    parser = argparse.ArgumentParser(description='Унифицированная веб-панель Nanoprobe Sim Lab')
-    parser.add_argument('--host', default='127.0.0.1', help='Хост сервера')
-    parser.add_argument('--port', type=int, default=None, help='Порт сервера (по умолчанию: автоопределение)')
-    parser.add_argument('--no-browser', action='store_true', help='Не открывать браузер')
-    parser.add_argument('--auto-port', action='store_true', default=True, help='Автоопределение порта (по умолчанию: True)')
-    parser.add_argument('--no-auto-port', action='store_true', help='Отключить автоопределение порта')
+    parser = argparse.ArgumentParser(description="Унифицированная веб-панель Nanoprobe Sim Lab")
+    parser.add_argument("--host", default="127.0.0.1", help="Хост сервера")
+    parser.add_argument(
+        "--port", type=int, default=None, help="Порт сервера (по умолчанию: автоопределение)"
+    )
+    parser.add_argument("--no-browser", action="store_true", help="Не открывать браузер")
+    parser.add_argument(
+        "--auto-port",
+        action="store_true",
+        default=True,
+        help="Автоопределение порта (по умолчанию: True)",
+    )
+    parser.add_argument(
+        "--no-auto-port", action="store_true", help="Отключить автоопределение порта"
+    )
 
     args = parser.parse_args()
 
     # Автоопределение порта
-    if args.port is None and args.auto_port and not args.no_autoport:
+    if args.port is None and args.auto_port and not args.no_auto_port:
         try:
             import sys
             from pathlib import Path
+
             sys.path.insert(0, str(Path(__file__).parent.parent.parent))
             from utils.port_finder import find_port
-            
+
             preferred_port = int(os.getenv("FLASK_PORT", 5000))
             port = find_port("flask", preferred_port)
-            
+
             if port != preferred_port:
                 print(f"⚠️  Порт {preferred_port} занят, выбран: {port}")
             else:
                 print(f"✅ Flask порт: {port}")
-            
+
             os.environ["FLASK_PORT"] = str(port)
             args.port = port
         except Exception as e:
