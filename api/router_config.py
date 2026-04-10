@@ -167,47 +167,44 @@ def register_routes(app: FastAPI):
     # RTL_433 Weather Sensors
     try:
         from api.routes import rtl433
-        from api.state import get_db_manager
+        from api.state import db_manager as state_db
         from utils.caching.cache_manager import get_cache_manager
         
-        db = get_db_manager()
         cache = get_cache_manager()
-        if db and cache:
-            rtl433.set_managers(db, cache)
+        if state_db and cache:
+            rtl433.set_managers(state_db, cache)
         
         app.include_router(rtl433.router, prefix="/api/v1", tags=["RTL-433 Sensors"])
         logger.info("RTL_433 Weather Sensor routes registered")
-    except ImportError as e:
+    except (ImportError, RuntimeError) as e:
         logger.warning(f"RTL_433 routes disabled: {e}")
 
     # ADS-B Aircraft Tracker (1090 MHz)
     try:
         from api.routes import adsb
-        from api.state import get_db_manager
+        from api.state import db_manager as state_db
         from utils.caching.cache_manager import get_cache_manager
         
-        db = get_db_manager()
         cache = get_cache_manager()
-        if db and cache:
-            adsb.set_managers(db, cache)
+        if state_db and cache:
+            adsb.set_managers(state_db, cache)
         
         app.include_router(adsb.router, prefix="/api/v1", tags=["ADS-B Aircraft Tracker"])
         logger.info("ADS-B Aircraft Tracker routes registered")
-    except ImportError as e:
+    except (ImportError, RuntimeError) as e:
         logger.warning(f"ADS-B routes disabled: {e}")
 
     # FM Radio (88-108 MHz)
     try:
         from api.routes import fm_radio
-        from api.state import get_db_manager
+        from api.state import db_manager as state_db
         from utils.caching.cache_manager import get_cache_manager
         
-        db = get_db_manager()
         cache = get_cache_manager()
-        if db and cache:
-            fm_radio.set_managers(db, cache)
+        if state_db and cache:
+            fm_radio.set_managers(state_db, cache)
         
         app.include_router(fm_radio.router, prefix="/api/v1", tags=["FM Radio"])
         logger.info("FM Radio routes registered")
-    except ImportError as e:
+    except (ImportError, RuntimeError) as e:
         logger.warning(f"FM Radio routes disabled: {e}")
