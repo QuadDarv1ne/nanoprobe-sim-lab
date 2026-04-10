@@ -314,7 +314,9 @@ class DocumentationGenerator:
         # Генерируем Markdown
         md_content = []
         md_content.append("# API Reference\n")
-        md_content.append(f"*Generated on {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}*\n\n")
+        md_content.append(
+            f"*Generated on {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}*\n\n"
+        )
 
         # Добавляем информацию о структуре проекта
         structure = self.analyze_project_structure()

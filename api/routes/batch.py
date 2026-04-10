@@ -2,14 +2,14 @@
 API роуты для пакетной обработки
 """
 
-from fastapi import APIRouter, Depends, Query, Body
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 
-from api.schemas import ErrorResponse
+from fastapi import APIRouter, Body, Depends, Query
+
 from api.dependencies import get_batch_processor
 from api.error_handlers import NotFoundError, ValidationError
+from api.schemas import ErrorResponse
 from utils.batch_processor import BatchProcessor
-
 
 router = APIRouter()
 
@@ -86,7 +86,9 @@ async def cancel_job(
     """Отменить задание"""
     success = processor.cancel_job(job_id)
     if not success:
-        raise ValidationError("Не удалось отменить задание (возможно, оно уже выполняется или завершено)")
+        raise ValidationError(
+            "Не удалось отменить задание (возможно, оно уже выполняется или завершено)"
+        )
     return {"success": True, "job_id": job_id}
 
 

@@ -4,10 +4,10 @@ Prometheus метрики для Nanoprobe FastAPI приложения
 """
 
 import logging
-import time
 import os
+import time
 from functools import wraps
-from typing import List, Dict
+from typing import Dict, List
 
 from fastapi.responses import PlainTextResponse
 
@@ -15,15 +15,16 @@ logger = logging.getLogger(__name__)
 
 try:
     from prometheus_client import (
+        CONTENT_TYPE_LATEST,
+        REGISTRY,
         Counter,
-        Histogram,
         Gauge,
+        Histogram,
         Summary,
         generate_latest,
-        CONTENT_TYPE_LATEST,
         start_http_server,
     )
-    from prometheus_client import REGISTRY
+
     PROMETHEUS_AVAILABLE = True
 except ImportError:
     PROMETHEUS_AVAILABLE = False
@@ -32,144 +33,181 @@ except ImportError:
 
     # Заглушки если prometheus_client не установлен
     class Counter:
-        def __init__(self, *args, **kwargs): pass
-        def inc(self, *args, **kwargs): pass
-        def labels(self, *args, **kwargs): return self
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def inc(self, *args, **kwargs):
+            pass
+
+        def labels(self, *args, **kwargs):
+            return self
 
     class Histogram:
-        def __init__(self, *args, **kwargs): pass
-        def observe(self, *args, **kwargs): pass
-        def labels(self, *args, **kwargs): return self
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def observe(self, *args, **kwargs):
+            pass
+
+        def labels(self, *args, **kwargs):
+            return self
 
     class Gauge:
-        def __init__(self, *args, **kwargs): pass
-        def set(self, *args, **kwargs): pass
-        def inc(self, *args, **kwargs): pass
-        def dec(self, *args, **kwargs): pass
-        def labels(self, *args, **kwargs): return self
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def set(self, *args, **kwargs):
+            pass
+
+        def inc(self, *args, **kwargs):
+            pass
+
+        def dec(self, *args, **kwargs):
+            pass
+
+        def labels(self, *args, **kwargs):
+            return self
 
     class Summary:
-        def __init__(self, *args, **kwargs): pass
-        def observe(self, *args, **kwargs): pass
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def observe(self, *args, **kwargs):
+            pass
 
 
 # ==================== Метрики ====================
 
 # HTTP запросы
-http_requests_total = Counter(
-    'http_requests_total',
-    'Total HTTP requests',
-    ['method', 'endpoint', 'status']
-) if PROMETHEUS_AVAILABLE else None
+http_requests_total = (
+    Counter("http_requests_total", "Total HTTP requests", ["method", "endpoint", "status"])
+    if PROMETHEUS_AVAILABLE
+    else None
+)
 
 # Время ответа HTTP
-http_request_duration_seconds = Histogram(
-    'http_request_duration_seconds',
-    'HTTP request duration in seconds',
-    ['method', 'endpoint'],
-    buckets=(0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5, 10.0)
-) if PROMETHEUS_AVAILABLE else None
+http_request_duration_seconds = (
+    Histogram(
+        "http_request_duration_seconds",
+        "HTTP request duration in seconds",
+        ["method", "endpoint"],
+        buckets=(0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5, 10.0),
+    )
+    if PROMETHEUS_AVAILABLE
+    else None
+)
 
 # Активные запросы
-http_requests_in_progress = Gauge(
-    'http_requests_in_progress',
-    'Number of HTTP requests currently being processed',
-    ['method', 'endpoint']
-) if PROMETHEUS_AVAILABLE else None
+http_requests_in_progress = (
+    Gauge(
+        "http_requests_in_progress",
+        "Number of HTTP requests currently being processed",
+        ["method", "endpoint"],
+    )
+    if PROMETHEUS_AVAILABLE
+    else None
+)
 
 # Размер ответа
-http_response_size_bytes = Histogram(
-    'http_response_size_bytes',
-    'HTTP response size in bytes',
-    ['method', 'endpoint'],
-    buckets=(100, 1000, 10000, 100000, 1000000, 10000000)
-) if PROMETHEUS_AVAILABLE else None
+http_response_size_bytes = (
+    Histogram(
+        "http_response_size_bytes",
+        "HTTP response size in bytes",
+        ["method", "endpoint"],
+        buckets=(100, 1000, 10000, 100000, 1000000, 10000000),
+    )
+    if PROMETHEUS_AVAILABLE
+    else None
+)
 
 # Ошибки приложений
-app_errors_total = Counter(
-    'app_errors_total',
-    'Total application errors',
-    ['type', 'module']
-) if PROMETHEUS_AVAILABLE else None
+app_errors_total = (
+    Counter("app_errors_total", "Total application errors", ["type", "module"])
+    if PROMETHEUS_AVAILABLE
+    else None
+)
 
 # Бизнес-метрики: Сканирования
-scans_created_total = Counter(
-    'scans_created_total',
-    'Total scans created',
-    ['scan_type']
-) if PROMETHEUS_AVAILABLE else None
+scans_created_total = (
+    Counter("scans_created_total", "Total scans created", ["scan_type"])
+    if PROMETHEUS_AVAILABLE
+    else None
+)
 
-scans_in_database = Gauge(
-    'scans_in_database',
-    'Number of scans currently in database'
-) if PROMETHEUS_AVAILABLE else None
+scans_in_database = (
+    Gauge("scans_in_database", "Number of scans currently in database")
+    if PROMETHEUS_AVAILABLE
+    else None
+)
 
 # Бизнес-метрики: Симуляции
-simulations_created_total = Counter(
-    'simulations_created_total',
-    'Total simulations created',
-    ['simulation_type', 'status']
-) if PROMETHEUS_AVAILABLE else None
+simulations_created_total = (
+    Counter("simulations_created_total", "Total simulations created", ["simulation_type", "status"])
+    if PROMETHEUS_AVAILABLE
+    else None
+)
 
-simulations_active = Gauge(
-    'simulations_active',
-    'Number of active simulations'
-) if PROMETHEUS_AVAILABLE else None
+simulations_active = (
+    Gauge("simulations_active", "Number of active simulations") if PROMETHEUS_AVAILABLE else None
+)
 
 # Бизнес-метрики: Анализ дефектов
-defect_analyses_total = Counter(
-    'defect_analyses_total',
-    'Total defect analyses performed',
-    ['model_name']
-) if PROMETHEUS_AVAILABLE else None
+defect_analyses_total = (
+    Counter("defect_analyses_total", "Total defect analyses performed", ["model_name"])
+    if PROMETHEUS_AVAILABLE
+    else None
+)
 
-defects_detected_total = Counter(
-    'defects_detected_total',
-    'Total defects detected',
-    ['defect_type']
-) if PROMETHEUS_AVAILABLE else None
+defects_detected_total = (
+    Counter("defects_detected_total", "Total defects detected", ["defect_type"])
+    if PROMETHEUS_AVAILABLE
+    else None
+)
 
 # Бизнес-метрики: Сравнение поверхностей
-comparisons_total = Counter(
-    'comparisons_total',
-    'Total surface comparisons performed'
-) if PROMETHEUS_AVAILABLE else None
+comparisons_total = (
+    Counter("comparisons_total", "Total surface comparisons performed")
+    if PROMETHEUS_AVAILABLE
+    else None
+)
 
 # Бизнес-метрики: PDF отчёты
-reports_generated_total = Counter(
-    'reports_generated_total',
-    'Total PDF reports generated',
-    ['report_type']
-) if PROMETHEUS_AVAILABLE else None
+reports_generated_total = (
+    Counter("reports_generated_total", "Total PDF reports generated", ["report_type"])
+    if PROMETHEUS_AVAILABLE
+    else None
+)
 
 # Система
-system_info = Gauge(
-    'system_info',
-    'System information',
-    ['version', 'environment']
-) if PROMETHEUS_AVAILABLE else None
+system_info = (
+    Gauge("system_info", "System information", ["version", "environment"])
+    if PROMETHEUS_AVAILABLE
+    else None
+)
 
 # WebSocket подключения
-websocket_connections = Gauge(
-    'websocket_connections',
-    'Number of active WebSocket connections'
-) if PROMETHEUS_AVAILABLE else None
+websocket_connections = (
+    Gauge("websocket_connections", "Number of active WebSocket connections")
+    if PROMETHEUS_AVAILABLE
+    else None
+)
 
 # Кэш
-cache_hits_total = Counter(
-    'cache_hits_total',
-    'Total cache hits',
-    ['cache_type']
-) if PROMETHEUS_AVAILABLE else None
+cache_hits_total = (
+    Counter("cache_hits_total", "Total cache hits", ["cache_type"])
+    if PROMETHEUS_AVAILABLE
+    else None
+)
 
-cache_misses_total = Counter(
-    'cache_misses_total',
-    'Total cache misses',
-    ['cache_type']
-) if PROMETHEUS_AVAILABLE else None
+cache_misses_total = (
+    Counter("cache_misses_total", "Total cache misses", ["cache_type"])
+    if PROMETHEUS_AVAILABLE
+    else None
+)
 
 
 # ==================== Middleware ====================
+
 
 class PrometheusMiddleware:
     """
@@ -182,14 +220,14 @@ class PrometheusMiddleware:
         self.app = app
 
     async def __call__(self, scope, receive, send):
-        if scope['type'] != 'http':
+        if scope["type"] != "http":
             return await self.app(scope, receive, send)
 
         if not PROMETHEUS_AVAILABLE:
             return await self.app(scope, receive, send)
 
-        method = scope['method']
-        path = scope['path']
+        method = scope["method"]
+        path = scope["path"]
         start_time = time.time()
 
         # Увеличиваем счётчик активных запросов
@@ -201,17 +239,17 @@ class PrometheusMiddleware:
 
         async def send_wrapper(message):
             nonlocal status_code, response_size
-            if message['type'] == 'http.response.start':
-                status_code = message['status']
-            elif message['type'] == 'http.response.body':
-                response_size += len(message.get('body', b''))
+            if message["type"] == "http.response.start":
+                status_code = message["status"]
+            elif message["type"] == "http.response.body":
+                response_size += len(message.get("body", b""))
             await send(message)
 
         try:
             await self.app(scope, receive, send_wrapper)
         except Exception as e:
             status_code = 500
-            app_errors_total.labels(type=type(e).__name__, module='http').inc()
+            app_errors_total.labels(type=type(e).__name__, module="http").inc()
             raise
         finally:
             duration = time.time() - start_time
@@ -221,24 +259,15 @@ class PrometheusMiddleware:
 
             # Записываем метрики
             if status_code:
-                http_requests_total.labels(
-                    method=method,
-                    endpoint=path,
-                    status=status_code
-                ).inc()
+                http_requests_total.labels(method=method, endpoint=path, status=status_code).inc()
 
-                http_request_duration_seconds.labels(
-                    method=method,
-                    endpoint=path
-                ).observe(duration)
+                http_request_duration_seconds.labels(method=method, endpoint=path).observe(duration)
 
-                http_response_size_bytes.labels(
-                    method=method,
-                    endpoint=path
-                ).observe(response_size)
+                http_response_size_bytes.labels(method=method, endpoint=path).observe(response_size)
 
 
 # ==================== Декораторы ====================
+
 
 def track_metrics(endpoint_name: str = None):
     """
@@ -248,6 +277,7 @@ def track_metrics(endpoint_name: str = None):
         def analyze_defects(...):
             pass
     """
+
     def decorator(func):
         @wraps(func)
         async def async_wrapper(*args, **kwargs):
@@ -264,7 +294,9 @@ def track_metrics(endpoint_name: str = None):
             finally:
                 if PROMETHEUS_AVAILABLE:
                     duration = time.time() - start_time
-                    http_request_duration_seconds.labels(method='function', endpoint=name).observe(duration)
+                    http_request_duration_seconds.labels(method="function", endpoint=name).observe(
+                        duration
+                    )
 
         @wraps(func)
         def sync_wrapper(*args, **kwargs):
@@ -282,13 +314,17 @@ def track_metrics(endpoint_name: str = None):
             finally:
                 if PROMETHEUS_AVAILABLE:
                     duration = time.time() - start_time
-                    http_request_duration_seconds.labels(method='function', endpoint=name).observe(duration)
+                    http_request_duration_seconds.labels(method="function", endpoint=name).observe(
+                        duration
+                    )
 
         return async_wrapper if asyncio.iscoroutinefunction(func) else sync_wrapper
+
     return decorator
 
 
 # ==================== Бизнес-метрики ====================
+
 
 class BusinessMetrics:
     """
@@ -308,7 +344,7 @@ class BusinessMetrics:
             scans_in_database.set(count)
 
     @staticmethod
-    def inc_simulation_created(simulation_type: str, status: str = 'created'):
+    def inc_simulation_created(simulation_type: str, status: str = "created"):
         """Увеличить счётчик созданных симуляций"""
         if PROMETHEUS_AVAILABLE:
             simulations_created_total.labels(simulation_type=simulation_type, status=status).inc()
@@ -326,7 +362,7 @@ class BusinessMetrics:
             defect_analyses_total.labels(model_name=model_name).inc()
             if defects:
                 for defect in defects:
-                    defect_type = defect.get('type', 'unknown')
+                    defect_type = defect.get("type", "unknown")
                     defects_detected_total.labels(defect_type=defect_type).inc()
 
     @staticmethod
@@ -362,6 +398,7 @@ class BusinessMetrics:
 
 # ==================== Endpoint для метрик ====================
 
+
 async def get_metrics():
     """
     Endpoint для метрик Prometheus
@@ -372,16 +409,14 @@ async def get_metrics():
     if not PROMETHEUS_AVAILABLE:
         return PlainTextResponse(
             "Prometheus client not installed. Install with: pip install prometheus-client",
-            status_code=503
+            status_code=503,
         )
 
-    return PlainTextResponse(
-        generate_latest(),
-        media_type=CONTENT_TYPE_LATEST
-    )
+    return PlainTextResponse(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 # ==================== Инициализация ====================
+
 
 def setup_prometheus(port: int = 9090):
     """
@@ -394,8 +429,8 @@ def setup_prometheus(port: int = 9090):
 
     try:
         # Установка системной информации
-        version = os.getenv('APP_VERSION', '1.0.0')
-        environment = os.getenv('ENVIRONMENT', 'production')
+        version = os.getenv("APP_VERSION", "1.0.0")
+        environment = os.getenv("ENVIRONMENT", "production")
         system_info.labels(version=version, environment=environment).set(1)
 
         # Запуск сервера метрик
@@ -409,13 +444,14 @@ def setup_prometheus(port: int = 9090):
 
 # ==================== Утилиты ====================
 
+
 def get_metrics_as_dict() -> Dict:
     """
     Получение всех метрик в виде словаря
     Полезно для отладки и API ответов
     """
     if not PROMETHEUS_AVAILABLE:
-        return {'error': 'Prometheus not available'}
+        return {"error": "Prometheus not available"}
 
     from prometheus_client import REGISTRY
 
@@ -427,10 +463,7 @@ def get_metrics_as_dict() -> Dict:
                     key = sample.name
                     if key not in metrics:
                         metrics[key] = []
-                    metrics[key].append({
-                        'value': sample.value,
-                        'labels': sample.labels
-                    })
+                    metrics[key].append({"value": sample.value, "labels": sample.labels})
         except (ValueError, TypeError, AttributeError):
             continue
 

@@ -384,7 +384,7 @@ class SystemHealthMonitor:
         def monitor():
             """
             Функция мониторинга системы в фоновом потоке
-            
+
             Получает метрики системы, оценивает их состояние
             и генерирует оповещения при превышении порогов.
             """
@@ -405,19 +405,31 @@ class SystemHealthMonitor:
                                 metric_obj = HealthMetric(
                                     name=metric_name,
                                     value=value,
-                                    unit="%"
-                                    if "percent" in metric_name
-                                    else "GB"
-                                    if "gb" in metric_name
-                                    else "°C"
-                                    if "temperature" in metric_name
-                                    else "count"
-                                    if "count" in metric_name
-                                    else "bytes"
-                                    if "bytes" in metric_name
-                                    else "ms"
-                                    if "latency" in metric_name
-                                    else "unknown",
+                                    unit=(
+                                        "%"
+                                        if "percent" in metric_name
+                                        else (
+                                            "GB"
+                                            if "gb" in metric_name
+                                            else (
+                                                "°C"
+                                                if "temperature" in metric_name
+                                                else (
+                                                    "count"
+                                                    if "count" in metric_name
+                                                    else (
+                                                        "bytes"
+                                                        if "bytes" in metric_name
+                                                        else (
+                                                            "ms"
+                                                            if "latency" in metric_name
+                                                            else "unknown"
+                                                        )
+                                                    )
+                                                )
+                                            )
+                                        )
+                                    ),
                                     timestamp=metrics.get("timestamp", datetime.now(timezone.utc)),
                                     severity=severity,
                                     source="system_monitor",
@@ -494,7 +506,8 @@ class SystemHealthMonitor:
         """
         if output_path is None:
             output_path = str(
-                self.output_dir / f"health_report_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
+                self.output_dir
+                / f"health_report_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
             )
 
         report = {
@@ -638,7 +651,7 @@ def main():
     def alert_handler(alert):
         """
         Обработчик оповещений для вывода в консоль
-        
+
         Args:
             alert: Объект оповещения с сообщением и уровнем критичности
         """

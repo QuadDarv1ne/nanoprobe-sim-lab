@@ -2,11 +2,12 @@
 AI/ML Analysis routes с pre-trained моделями
 """
 
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
-from pathlib import Path
 import logging
+from pathlib import Path
 
-from api.error_handlers import ValidationError, DatabaseError
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+
+from api.error_handlers import DatabaseError, ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,9 @@ router = APIRouter(prefix="/ml", tags=["AI/ML Analysis"])
 )
 async def analyze_with_pretrained(
     image: UploadFile = File(..., description="Изображение для анализа"),
-    model_type: str = Form(default="resnet50", description="Тип модели: resnet50, efficientnet, mobilenet")
+    model_type: str = Form(
+        default="resnet50", description="Тип модели: resnet50, efficientnet, mobilenet"
+    ),
 ):
     """
     Анализ изображения на дефекты
@@ -39,7 +42,7 @@ async def analyze_with_pretrained(
 
     # Sanitize filename to prevent path traversal
     safe_filename = Path(image.filename).name
-    if not safe_filename or safe_filename.startswith('.'):
+    if not safe_filename or safe_filename.startswith("."):
         raise ValidationError("Invalid filename")
 
     # Save temporary file
@@ -56,8 +59,8 @@ async def analyze_with_pretrained(
         analyzer = get_analyzer(model_type=model_type)
         result = analyzer.analyze_image(str(temp_path))
 
-        if not result.get('success'):
-            raise DatabaseError(result.get('error', 'Analysis failed'))
+        if not result.get("success"):
+            raise DatabaseError(result.get("error", "Analysis failed"))
 
         return result
 
@@ -130,11 +133,11 @@ async def fine_tune_model(
         train_data_path=str(train_path),
         epochs=epochs,
         batch_size=batch_size,
-        validation_split=validation_split
+        validation_split=validation_split,
     )
 
-    if not result.get('success'):
-        raise DatabaseError(result.get('error', 'Fine-tuning failed'))
+    if not result.get("success"):
+        raise DatabaseError(result.get("error", "Fine-tuning failed"))
 
     return result
 
@@ -179,6 +182,7 @@ async def batch_analyze(
 ):
     """Пакетный анализ изображений"""
     import json
+
     from utils.ai.pretrained_defect_analyzer import get_analyzer
 
     try:
@@ -192,5 +196,5 @@ async def batch_analyze(
     return {
         "results": results,
         "total": len(results),
-        "success_count": sum(1 for r in results if r.get('success')),
+        "success_count": sum(1 for r in results if r.get("success")),
     }

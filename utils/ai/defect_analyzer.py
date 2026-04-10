@@ -17,12 +17,14 @@ logger = logging.getLogger(__name__)
 
 try:
     from PIL import Image
+
     PIL_AVAILABLE = True
 except ImportError:
     PIL_AVAILABLE = False
 
 try:
     import cv2
+
     CV2_AVAILABLE = True
 except ImportError:
     CV2_AVAILABLE = False
@@ -53,26 +55,23 @@ class DefectDetector:
 
         # Категории дефектов
         self.defect_categories = {
-            0: 'pit',           # Впадина
-            1: 'hillock',       # Выступ
-            2: 'scratch',       # Царапина
-            3: 'particle',      # Частица
-            4: 'crack',         # Трещина
-            5: 'normal',        # Нормальная область
+            0: "pit",  # Впадина
+            1: "hillock",  # Выступ
+            2: "scratch",  # Царапина
+            3: "particle",  # Частица
+            4: "crack",  # Трещина
+            5: "normal",  # Нормальная область
         }
 
     def _create_model(self, model_name: str):
         """Создание модели детектирования"""
-        if model_name == 'isolation_forest':
+        if model_name == "isolation_forest":
             return IsolationForest(
-                n_estimators=100,
-                contamination=0.1,
-                random_state=42,
-                bootstrap=True
+                n_estimators=100, contamination=0.1, random_state=42, bootstrap=True
             )
-        elif model_name == 'kmeans':
+        elif model_name == "kmeans":
             return KMeans(n_clusters=6, random_state=42, n_init=10)
-        elif model_name == 'dbscan':
+        elif model_name == "dbscan":
             return DBSCAN(eps=0.5, min_samples=5)
         else:
             raise ValueError(f"Неизвестная модель: {model_name}")
@@ -100,7 +99,7 @@ class DefectDetector:
 
         for i in range(0, height - patch_size, patch_size // 2):
             for j in range(0, width - patch_size, patch_size // 2):
-                patch = gray[i:i+patch_size, j:j+patch_size]
+                patch = gray[i : i + patch_size, j : j + patch_size]
 
                 # Статистические признаки
                 feat_vector = [
@@ -116,19 +115,23 @@ class DefectDetector:
 
                 # Градиенты (текстура)
                 grad_x, grad_y = np.gradient(patch)
-                feat_vector.extend([
-                    np.mean(np.abs(grad_x)),
-                    np.mean(np.abs(grad_y)),
-                    np.std(grad_x),
-                    np.std(grad_y),
-                ])
+                feat_vector.extend(
+                    [
+                        np.mean(np.abs(grad_x)),
+                        np.mean(np.abs(grad_y)),
+                        np.std(grad_x),
+                        np.std(grad_y),
+                    ]
+                )
 
                 # Лапласиан (обнаружение краев)
                 laplacian = ndimage.laplace(patch)
-                feat_vector.extend([
-                    np.mean(np.abs(laplacian)),
-                    np.std(laplacian),
-                ])
+                feat_vector.extend(
+                    [
+                        np.mean(np.abs(laplacian)),
+                        np.std(laplacian),
+                    ]
+                )
 
                 # Энтропия (сложность текстуры)
                 hist, _ = np.histogram(patch.flatten(), bins=32)
@@ -142,11 +145,7 @@ class DefectDetector:
 
         return np.array(features), positions
 
-    def detect_defects(
-        self,
-        image: np.ndarray,
-        threshold: float = -0.5
-    ) -> Dict[str, Any]:
+    def detect_defects(self, image: np.ndarray, threshold: float = -0.5) -> Dict[str, Any]:
         """
         Обнаружение дефектов на изображении
 
@@ -164,10 +163,10 @@ class DefectDetector:
         features_scaled = self.scaler.fit_transform(features)
 
         # Предсказание
-        if self.model_name == 'isolation_forest':
+        if self.model_name == "isolation_forest":
             predictions = self.model.fit_predict(features_scaled)
             scores = self.model.decision_function(features_scaled)
-        elif self.model_name == 'kmeans':
+        elif self.model_name == "kmeans":
             predictions = self.model.fit_predict(features_scaled)
             # Дефекты - наиболее удалённые от центроидов кластеры
             distances = self.model.transform(features_scaled)
@@ -187,19 +186,16 @@ class DefectDetector:
         classified_defects = self._classify_defects(defect_regions, image)
 
         return {
-            'defects_count': len(classified_defects),
-            'defects': classified_defects,
-            'defect_mask': defect_mask,
-            'scores': scores,
-            'positions': positions,
-            'summary': self._generate_defect_summary(classified_defects)
+            "defects_count": len(classified_defects),
+            "defects": classified_defects,
+            "defect_mask": defect_mask,
+            "scores": scores,
+            "positions": positions,
+            "summary": self._generate_defect_summary(classified_defects),
         }
 
     def _group_defects(
-        self,
-        mask: np.ndarray,
-        positions: List[Tuple[int, int]],
-        image_shape: Tuple[int, int]
+        self, mask: np.ndarray, positions: List[Tuple[int, int]], image_shape: Tuple[int, int]
     ) -> List[Dict[str, Any]]:
         """Группировка дефектов по регионам"""
         # Создание карты дефектов
@@ -226,19 +222,19 @@ class DefectDetector:
             coords = np.where(region_mask)
 
             if len(coords[0]) > 0:
-                regions.append({
-                    'y_coords': coords[0],
-                    'x_coords': coords[1],
-                    'size': len(coords[0]),
-                    'centroid': (np.mean(coords[0]), np.mean(coords[1]))
-                })
+                regions.append(
+                    {
+                        "y_coords": coords[0],
+                        "x_coords": coords[1],
+                        "size": len(coords[0]),
+                        "centroid": (np.mean(coords[0]), np.mean(coords[1])),
+                    }
+                )
 
         return regions
 
     def _classify_defects(
-        self,
-        regions: List[Dict[str, Any]],
-        image: np.ndarray
+        self, regions: List[Dict[str, Any]], image: np.ndarray
     ) -> List[Dict[str, Any]]:
         """Классификация дефектов по типам"""
         classified = []
@@ -249,8 +245,8 @@ class DefectDetector:
             gray = image
 
         for region in regions:
-            y_coords = region['y_coords']
-            x_coords = region['x_coords']
+            y_coords = region["y_coords"]
+            x_coords = region["x_coords"]
 
             # Извлечение области дефекта
             y_min, y_max = int(y_coords.min()), int(y_coords.max())
@@ -260,34 +256,36 @@ class DefectDetector:
 
             # Признаки для классификации
             aspect_ratio = (x_max - x_min) / (y_max - y_min + 1e-10)
-            area = region['size']
+            area = region["size"]
             mean_intensity = np.mean(defect_patch)
             std_intensity = np.std(defect_patch)
 
             # Определение типа дефекта
             if aspect_ratio > 3 or aspect_ratio < 0.33:
-                defect_type = 'scratch'  # Царапина
+                defect_type = "scratch"  # Царапина
             elif area < 10:
-                defect_type = 'particle'  # Частица
+                defect_type = "particle"  # Частица
             elif std_intensity < 0.1 * mean_intensity:
-                defect_type = 'pit'  # Впадина
+                defect_type = "pit"  # Впадина
             else:
-                defect_type = 'hillock'  # Выступ
+                defect_type = "hillock"  # Выступ
 
             # Вычисление доверительного интервала
             confidence = min(0.95, 0.5 + 0.1 * np.log(area + 1))
 
-            classified.append({
-                'type': defect_type,
-                'x': float(region['centroid'][1]),
-                'y': float(region['centroid'][0]),
-                'width': x_max - x_min,
-                'height': y_max - y_min,
-                'area': area,
-                'aspect_ratio': aspect_ratio,
-                'mean_intensity': float(mean_intensity),
-                'confidence': confidence,
-            })
+            classified.append(
+                {
+                    "type": defect_type,
+                    "x": float(region["centroid"][1]),
+                    "y": float(region["centroid"][0]),
+                    "width": x_max - x_min,
+                    "height": y_max - y_min,
+                    "area": area,
+                    "aspect_ratio": aspect_ratio,
+                    "mean_intensity": float(mean_intensity),
+                    "confidence": confidence,
+                }
+            )
 
         return classified
 
@@ -298,7 +296,7 @@ class DefectDetector:
 
         type_counts = {}
         for defect in defects:
-            dtype = defect['type']
+            dtype = defect["type"]
             type_counts[dtype] = type_counts.get(dtype, 0) + 1
 
         summary_parts = [f"Обнаружено дефектов: {len(defects)}"]
@@ -350,11 +348,12 @@ class DefectDetector:
     def save_model(self, filepath: str):
         """Сохранение модели"""
         import joblib
+
         model_data = {
-            'model': self.model,
-            'scaler': self.scaler,
-            'model_name': self.model_name,
-            'is_trained': self.is_trained
+            "model": self.model,
+            "scaler": self.scaler,
+            "model_name": self.model_name,
+            "is_trained": self.is_trained,
         }
         joblib.dump(model_data, filepath)
         print(f"Модель сохранена: {filepath}")
@@ -362,11 +361,12 @@ class DefectDetector:
     def load_model(self, filepath: str):
         """Загрузка модели"""
         import joblib
+
         model_data = joblib.load(filepath)
-        self.model = model_data['model']
-        self.scaler = model_data['scaler']
-        self.model_name = model_data['model_name']
-        self.is_trained = model_data['is_trained']
+        self.model = model_data["model"]
+        self.scaler = model_data["scaler"]
+        self.model_name = model_data["model_name"]
+        self.is_trained = model_data["is_trained"]
         print(f"Модель загружена: {filepath}")
 
 
@@ -390,10 +390,7 @@ class DefectAnalysisPipeline:
         self._executor = ThreadPoolExecutor(max_workers=4)
 
     def analyze_image(
-        self,
-        image_path: str,
-        model_name: str = "isolation_forest",
-        save_results: bool = True
+        self, image_path: str, model_name: str = "isolation_forest", save_results: bool = True
     ) -> Dict[str, Any]:
         """
         Полный анализ изображения на дефекты
@@ -420,12 +417,12 @@ class DefectAnalysisPipeline:
         analysis_id = f"defect_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
 
         full_report = {
-            'analysis_id': analysis_id,
-            'timestamp': datetime.now(timezone.utc).isoformat(),
-            'image_path': image_path,
-            'image_name': Path(image_path).name,
-            'model_name': model_name,
-            **results
+            "analysis_id": analysis_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "image_path": image_path,
+            "image_name": Path(image_path).name,
+            "model_name": model_name,
+            **results,
         }
 
         # Сохранение в БД
@@ -434,39 +431,36 @@ class DefectAnalysisPipeline:
                 analysis_id=analysis_id,
                 image_path=image_path,
                 model_name=model_name,
-                defects_detected=results['defects_count'],
-                defects_data={'defects': results['defects']},
-                confidence_score=np.mean([d['confidence'] for d in results['defects']]) if results['defects'] else 0,
+                defects_detected=results["defects_count"],
+                defects_data={"defects": results["defects"]},
+                confidence_score=(
+                    np.mean([d["confidence"] for d in results["defects"]])
+                    if results["defects"]
+                    else 0
+                ),
             )
 
         # Сохранение JSON отчёта
         if save_results:
             report_path = self.output_dir / f"{analysis_id}_report.json"
-            with open(report_path, 'w', encoding='utf-8') as f:
+            with open(report_path, "w", encoding="utf-8") as f:
                 json.dump(full_report, f, indent=2, ensure_ascii=False, default=str)
-            full_report['report_path'] = str(report_path)
+            full_report["report_path"] = str(report_path)
 
         # Сохранение визуализации
-        if save_results and results['defects']:
-            viz_path = self._visualize_defects(image_array, results['defects'], analysis_id)
-            full_report['visualization_path'] = viz_path
+        if save_results and results["defects"]:
+            viz_path = self._visualize_defects(image_array, results["defects"], analysis_id)
+            full_report["visualization_path"] = viz_path
 
         return full_report
 
     async def analyze_image_async(
-        self,
-        image_path: str,
-        model_name: str = "isolation_forest",
-        save_results: bool = True
+        self, image_path: str, model_name: str = "isolation_forest", save_results: bool = True
     ) -> Dict[str, Any]:
         """Асинхронный анализ изображения"""
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
-            self._executor,
-            self.analyze_image,
-            image_path,
-            model_name,
-            save_results
+            self._executor, self.analyze_image, image_path, model_name, save_results
         )
 
     async def analyze_batch_async(
@@ -474,7 +468,7 @@ class DefectAnalysisPipeline:
         image_paths: List[str],
         model_name: str = "isolation_forest",
         save_results: bool = True,
-        max_concurrent: int = 4
+        max_concurrent: int = 4,
     ) -> List[Dict[str, Any]]:
         """
         Асинхронный пакетный анализ изображений
@@ -501,7 +495,7 @@ class DefectAnalysisPipeline:
         self,
         image_paths: List[str],
         model_name: str = "isolation_forest",
-        save_results: bool = True
+        save_results: bool = True,
     ) -> List[Dict[str, Any]]:
         """
         Пакетный анализ изображений
@@ -521,18 +515,11 @@ class DefectAnalysisPipeline:
                 results.append(result)
             except Exception as e:
                 logger.error(f"Error analyzing image {path}: {e}")
-                results.append({
-                    'image_path': path,
-                    'error': str(e),
-                    'success': False
-                })
+                results.append({"image_path": path, "error": str(e), "success": False})
         return results
 
     def _visualize_defects(
-        self,
-        image: np.ndarray,
-        defects: List[Dict[str, Any]],
-        analysis_id: str
+        self, image: np.ndarray, defects: List[Dict[str, Any]], analysis_id: str
     ) -> str:
         """Визуализация дефектов на изображении"""
         if not CV2_AVAILABLE:
@@ -546,27 +533,28 @@ class DefectAnalysisPipeline:
 
         # Отрисовка дефектов
         colors = {
-            'pit': (255, 0, 0),      # Синий
-            'hillock': (0, 255, 0),   # Зелёный
-            'scratch': (0, 0, 255),   # Красный
-            'particle': (255, 255, 0), # Циан
-            'crack': (0, 255, 255),   # Жёлтый
+            "pit": (255, 0, 0),  # Синий
+            "hillock": (0, 255, 0),  # Зелёный
+            "scratch": (0, 0, 255),  # Красный
+            "particle": (255, 255, 0),  # Циан
+            "crack": (0, 255, 255),  # Жёлтый
         }
 
         for defect in defects:
-            color = colors.get(defect['type'], (255, 255, 255))
-            x = int(defect['x'])
-            y = int(defect['y'])
-            w = int(defect['width'])
-            h = int(defect['height'])
+            color = colors.get(defect["type"], (255, 255, 255))
+            x = int(defect["x"])
+            y = int(defect["y"])
+            w = int(defect["width"])
+            h = int(defect["height"])
 
             # Рисуем прямоугольник
-            cv2.rectangle(vis, (x - w//2, y - h//2), (x + w//2, y + h//2), color, 2)
+            cv2.rectangle(vis, (x - w // 2, y - h // 2), (x + w // 2, y + h // 2), color, 2)
 
             # Подпись
             label = f"{defect['type']}: {defect['confidence']:.2f}"
-            cv2.putText(vis, label, (x - w//2, y - h//2 - 5),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
+            cv2.putText(
+                vis, label, (x - w // 2, y - h // 2 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1
+            )
 
         # Сохранение
         output_path = self.output_dir / f"{analysis_id}_visualization.png"
@@ -575,10 +563,7 @@ class DefectAnalysisPipeline:
         return str(output_path)
 
     def batch_analyze(
-        self,
-        image_folder: str,
-        pattern: str = "*.png",
-        model_name: str = "isolation_forest"
+        self, image_folder: str, pattern: str = "*.png", model_name: str = "isolation_forest"
     ) -> List[Dict[str, Any]]:
         """
         Пакетный анализ изображений
@@ -601,7 +586,7 @@ class DefectAnalysisPipeline:
                 results.append(result)
             except Exception as e:
                 logger.error(f"Error analyzing folder image {img_path}: {e}")
-                results.append({'error': str(e), 'image_path': str(img_path)})
+                results.append({"error": str(e), "image_path": str(img_path)})
 
         return results
 
@@ -610,7 +595,7 @@ class DefectAnalysisPipeline:
 def analyze_defects(
     image_path: str,
     model_name: str = "isolation_forest",
-    output_dir: str = "output/defect_analysis"
+    output_dir: str = "output/defect_analysis",
 ) -> Dict[str, Any]:
     """
     Быстрый анализ дефектов
@@ -656,27 +641,29 @@ class AdvancedDefectAnalyzer:
             Результаты детектирования
         """
         # Детектирование разными методами
-        if_detector = DefectDetector('isolation_forest')
-        km_detector = DefectDetector('kmeans')
+        if_detector = DefectDetector("isolation_forest")
+        km_detector = DefectDetector("kmeans")
 
         if_result = if_detector.detect_defects(image)
         km_result = km_detector.detect_defects(image)
 
         # Объединение результатов
-        combined_defects = self._combine_detections(if_result.get('defects', []),
-                                                     km_result.get('defects', []))
+        combined_defects = self._combine_detections(
+            if_result.get("defects", []), km_result.get("defects", [])
+        )
 
         # Фильтрация по порогу уверенности
-        filtered_defects = [d for d in combined_defects
-                          if d.get('confidence', 0) >= self.confidence_threshold]
+        filtered_defects = [
+            d for d in combined_defects if d.get("confidence", 0) >= self.confidence_threshold
+        ]
 
         return {
-            'defects': filtered_defects,
-            'defects_count': len(filtered_defects),
-            'if_defects_count': len(if_result.get('defects', [])),
-            'km_defects_count': len(km_result.get('defects', [])),
-            'confidence_threshold': self.confidence_threshold,
-            'ensemble': True,
+            "defects": filtered_defects,
+            "defects_count": len(filtered_defects),
+            "if_defects_count": len(if_result.get("defects", [])),
+            "km_defects_count": len(km_result.get("defects", [])),
+            "confidence_threshold": self.confidence_threshold,
+            "ensemble": True,
         }
 
     def _combine_detections(self, defects1: List[Dict], defects2: List[Dict]) -> List[Dict]:
@@ -685,24 +672,24 @@ class AdvancedDefectAnalyzer:
         used_indices = set()
 
         for d1 in defects1:
-            x1, y1 = d1.get('x', 0), d1.get('y', 0)
+            x1, y1 = d1.get("x", 0), d1.get("y", 0)
             matched = False
 
             for i, d2 in enumerate(defects2):
                 if i in used_indices:
                     continue
-                x2, y2 = d2.get('x', 0), d2.get('y', 0)
-                dist = np.sqrt((x1 - x2)**2 + (y1 - y2)**2)
+                x2, y2 = d2.get("x", 0), d2.get("y", 0)
+                dist = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
 
                 if dist < 20:  # Близкие детектирования
                     # Усреднение координат и уверенности
                     combined = {
-                        'x': (x1 + x2) / 2,
-                        'y': (y1 + y2) / 2,
-                        'width': (d1.get('width', 0) + d2.get('width', 0)) / 2,
-                        'height': (d1.get('height', 0) + d2.get('height', 0)) / 2,
-                        'confidence': (d1.get('confidence', 0) + d2.get('confidence', 0)) / 2,
-                        'type': d1.get('type', 'unknown'),
+                        "x": (x1 + x2) / 2,
+                        "y": (y1 + y2) / 2,
+                        "width": (d1.get("width", 0) + d2.get("width", 0)) / 2,
+                        "height": (d1.get("height", 0) + d2.get("height", 0)) / 2,
+                        "confidence": (d1.get("confidence", 0) + d2.get("confidence", 0)) / 2,
+                        "type": d1.get("type", "unknown"),
                     }
                     all_defects.append(combined)
                     used_indices.add(i)
@@ -710,13 +697,13 @@ class AdvancedDefectAnalyzer:
                     break
 
             if not matched:
-                d1['confidence'] = d1.get('confidence', 0) * 0.8  # Снижаем уверенность
+                d1["confidence"] = d1.get("confidence", 0) * 0.8  # Снижаем уверенность
                 all_defects.append(d1)
 
         # Добавляем unmatched детектирования из второго набора
         for i, d2 in enumerate(defects2):
             if i not in used_indices:
-                d2['confidence'] = d2.get('confidence', 0) * 0.8
+                d2["confidence"] = d2.get("confidence", 0) * 0.8
                 all_defects.append(d2)
 
         return all_defects
@@ -734,28 +721,36 @@ class AdvancedDefectAnalyzer:
         ensemble_result = self.ensemble_detect(image)
 
         # Расширенная статистика
-        defects = ensemble_result.get('defects', [])
+        defects = ensemble_result.get("defects", [])
         stats = {
-            'total_area': image.shape[0] * image.shape[1] if len(image.shape) == 2 else 0,
-            'defect_density': len(defects) / (image.shape[0] * image.shape[1]) * 10000 if len(image.shape) == 2 else 0,
-            'avg_defect_size': np.mean([d.get('width', 0) * d.get('height', 0) for d in defects]) if defects else 0,
-            'max_defect_size': max([d.get('width', 0) * d.get('height', 0) for d in defects]) if defects else 0,
-            'defect_types': {},
-            'severity': 'low',
+            "total_area": image.shape[0] * image.shape[1] if len(image.shape) == 2 else 0,
+            "defect_density": (
+                len(defects) / (image.shape[0] * image.shape[1]) * 10000
+                if len(image.shape) == 2
+                else 0
+            ),
+            "avg_defect_size": (
+                np.mean([d.get("width", 0) * d.get("height", 0) for d in defects]) if defects else 0
+            ),
+            "max_defect_size": (
+                max([d.get("width", 0) * d.get("height", 0) for d in defects]) if defects else 0
+            ),
+            "defect_types": {},
+            "severity": "low",
         }
 
         # Подсчёт типов дефектов
         for defect in defects:
-            defect_type = defect.get('type', 'unknown')
-            stats['defect_types'][defect_type] = stats['defect_types'].get(defect_type, 0) + 1
+            defect_type = defect.get("type", "unknown")
+            stats["defect_types"][defect_type] = stats["defect_types"].get(defect_type, 0) + 1
 
         # Оценка серьёзности
-        if stats['defect_density'] > 5:
-            stats['severity'] = 'high'
-        elif stats['defect_density'] > 2:
-            stats['severity'] = 'medium'
+        if stats["defect_density"] > 5:
+            stats["severity"] = "high"
+        elif stats["defect_density"] > 2:
+            stats["severity"] = "medium"
 
-        return {**ensemble_result, 'statistics': stats}
+        return {**ensemble_result, "statistics": stats}
 
     def generate_defect_map(self, image: np.ndarray, defects: List[Dict]) -> np.ndarray:
         """
@@ -771,8 +766,8 @@ class AdvancedDefectAnalyzer:
         defect_map = np.zeros_like(image, dtype=np.uint8)
 
         for defect in defects:
-            x, y = int(defect.get('x', 0)), int(defect.get('y', 0))
-            w, h = int(defect.get('width', 0)) // 2, int(defect.get('height', 0)) // 2
+            x, y = int(defect.get("x", 0)), int(defect.get("y", 0))
+            w, h = int(defect.get("width", 0)) // 2, int(defect.get("height", 0)) // 2
 
             if w > 0 and h > 0:
                 y1, y2 = max(0, y - h), min(image.shape[0], y + h)
@@ -796,14 +791,14 @@ class AdvancedDefectAnalyzer:
         report_path = self.output_dir / f"{report_id}_report.json"
 
         report = {
-            'id': report_id,
-            'timestamp': datetime.now(timezone.utc).isoformat(),
-            'image_path': image_path,
-            'analysis': result,
-            'recommendations': self._generate_recommendations(result),
+            "id": report_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "image_path": image_path,
+            "analysis": result,
+            "recommendations": self._generate_recommendations(result),
         }
 
-        with open(report_path, 'w', encoding='utf-8') as f:
+        with open(report_path, "w", encoding="utf-8") as f:
             json.dump(report, f, indent=2, ensure_ascii=False)
 
         return str(report_path)
@@ -811,21 +806,23 @@ class AdvancedDefectAnalyzer:
     def _generate_recommendations(self, result: Dict[str, Any]) -> List[str]:
         """Генерация рекомендаций на основе анализа"""
         recommendations = []
-        stats = result.get('statistics', {})
-        severity = stats.get('severity', 'low')
+        stats = result.get("statistics", {})
+        severity = stats.get("severity", "low")
 
-        if severity == 'high':
+        if severity == "high":
             recommendations.append("Критический уровень дефектов - требуется немедленная проверка")
             recommendations.append("Рекомендуется повторное сканирование области")
-        elif severity == 'medium':
-            recommendations.append("Обнаружены заметные дефекты - рекомендуется дополнительный анализ")
+        elif severity == "medium":
+            recommendations.append(
+                "Обнаружены заметные дефекты - рекомендуется дополнительный анализ"
+            )
 
-        defect_types = stats.get('defect_types', {})
-        if defect_types.get('scratch', 0) > 2:
+        defect_types = stats.get("defect_types", {})
+        if defect_types.get("scratch", 0) > 2:
             recommendations.append("Множественные царапины - проверить оборудование")
-        if defect_types.get('particle', 0) > 5:
+        if defect_types.get("particle", 0) > 5:
             recommendations.append("Загрязнение поверхности - требуется очистка")
-        if defect_types.get('crack', 0) > 0:
+        if defect_types.get("crack", 0) > 0:
             recommendations.append("Обнаружены трещины - критический дефект")
 
         if not recommendations:
@@ -859,7 +856,7 @@ if __name__ == "__main__":
         print(f"  Найдено дефектов: {result['defects_count']}")
         print(f"  Резюме: {result['summary']}")
 
-        for i, defect in enumerate(result['defects'][:5], 1):
+        for i, defect in enumerate(result["defects"][:5], 1):
             print(f"\n  Дефект #{i}:")
             print(f"    Тип: {defect['type']}")
             print(f"    Координаты: ({defect['x']:.1f}, {defect['y']:.1f})")

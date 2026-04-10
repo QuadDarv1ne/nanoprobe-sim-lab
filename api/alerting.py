@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 class AlertSeverity(Enum):
     """Уровни серьёзности алертов"""
+
     INFO = "info"
     WARNING = "warning"
     ERROR = "error"
@@ -32,6 +33,7 @@ class AlertSeverity(Enum):
 
 class AlertStatus(Enum):
     """Статусы алертов"""
+
     FIRING = "firing"
     RESOLVED = "resolved"
     SILENCED = "silenced"
@@ -40,6 +42,7 @@ class AlertStatus(Enum):
 @dataclass
 class Alert:
     """Модель алерта"""
+
     alert_id: str
     timestamp: str
     alert_name: str
@@ -68,7 +71,7 @@ class AlertManager:
         self.config = self._load_config(config_path)
         self.alerts: Dict[str, Alert] = {}
         self.alert_history: List[Dict] = []
-        self.alert_log_path = Path('logs/alerts.log')
+        self.alert_log_path = Path("logs/alerts.log")
         self.alert_log_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Deduplication
@@ -86,32 +89,32 @@ class AlertManager:
     def _load_config(self, config_path: str = None) -> Dict:
         """Загрузка конфигурации"""
         if config_path and Path(config_path).exists():
-            with open(config_path, 'r', encoding='utf-8') as f:
+            with open(config_path, "r", encoding="utf-8") as f:
                 return json.load(f)
 
         # Конфигурация из переменных окружения
         return {
-            'telegram': {
-                'bot_token': os.getenv('TELEGRAM_BOT_TOKEN'),
-                'chat_id': os.getenv('TELEGRAM_CHAT_ID'),
-                'enabled': bool(os.getenv('TELEGRAM_BOT_TOKEN')),
+            "telegram": {
+                "bot_token": os.getenv("TELEGRAM_BOT_TOKEN"),
+                "chat_id": os.getenv("TELEGRAM_CHAT_ID"),
+                "enabled": bool(os.getenv("TELEGRAM_BOT_TOKEN")),
             },
-            'email': {
-                'smtp_host': os.getenv('SMTP_HOST', 'smtp.gmail.com'),
-                'smtp_port': int(os.getenv('SMTP_PORT', '587')),
-                'smtp_user': os.getenv('SMTP_USER'),
-                'smtp_password': os.getenv('SMTP_PASSWORD'),
-                'from_email': os.getenv('FROM_EMAIL', 'alerts@nanoprobe-lab.local'),
-                'to_emails': os.getenv('TO_EMAILS', '').split(','),
-                'enabled': bool(os.getenv('SMTP_USER')),
+            "email": {
+                "smtp_host": os.getenv("SMTP_HOST", "smtp.gmail.com"),
+                "smtp_port": int(os.getenv("SMTP_PORT", "587")),
+                "smtp_user": os.getenv("SMTP_USER"),
+                "smtp_password": os.getenv("SMTP_PASSWORD"),
+                "from_email": os.getenv("FROM_EMAIL", "alerts@nanoprobe-lab.local"),
+                "to_emails": os.getenv("TO_EMAILS", "").split(","),
+                "enabled": bool(os.getenv("SMTP_USER")),
             },
-            'slack': {
-                'webhook_url': os.getenv('SLACK_WEBHOOK_URL'),
-                'enabled': bool(os.getenv('SLACK_WEBHOOK_URL')),
+            "slack": {
+                "webhook_url": os.getenv("SLACK_WEBHOOK_URL"),
+                "enabled": bool(os.getenv("SLACK_WEBHOOK_URL")),
             },
-            'webhook': {
-                'url': os.getenv('ALERT_WEBHOOK_URL'),
-                'enabled': bool(os.getenv('ALERT_WEBHOOK_URL')),
+            "webhook": {
+                "url": os.getenv("ALERT_WEBHOOK_URL"),
+                "enabled": bool(os.getenv("ALERT_WEBHOOK_URL")),
             },
         }
 
@@ -128,9 +131,7 @@ class AlertManager:
 
         # Очистка старых записей
         cutoff = now - self._rate_limit_window
-        self._rate_limits[alert_name] = [
-            ts for ts in self._rate_limits[alert_name] if ts > cutoff
-        ]
+        self._rate_limits[alert_name] = [ts for ts in self._rate_limits[alert_name] if ts > cutoff]
 
         # Проверка лимита
         if len(self._rate_limits[alert_name]) >= self._rate_limit_max:
@@ -149,7 +150,7 @@ class AlertManager:
     def silence_alert(self, alert_id: str, duration_minutes: int = 60):
         """
         Заглушить алерт на указанное время.
-        
+
         Args:
             alert_id: ID алерта для заглушения
             duration_minutes: Длительность заглушения в минутах (по умолчанию 60)
@@ -160,7 +161,10 @@ class AlertManager:
         def unsilence():
             """Автоматическое снятие заглушения через таймер"""
             import threading
-            threading.Timer(duration_minutes * 60, self._silenced_alerts.discard, [alert_id]).start()
+
+            threading.Timer(
+                duration_minutes * 60, self._silenced_alerts.discard, [alert_id]
+            ).start()
 
         unsilence()
 
@@ -174,7 +178,7 @@ class AlertManager:
         severity: str,
         description: str,
         details: Dict = None,
-        channels: List[str] = None
+        channels: List[str] = None,
     ) -> Dict[str, bool]:
         """
         Отправка алерта с deduplication и rate limiting
@@ -213,7 +217,9 @@ class AlertManager:
         self.alerts[alert_id] = alert
         self.alert_history.append(asdict(alert))
         self._log_alert(asdict(alert))
-        self._alert_hashes[alert_name] = hashlib.md5(f"{alert_name}:{description}".encode()).hexdigest()
+        self._alert_hashes[alert_name] = hashlib.md5(
+            f"{alert_name}:{description}".encode()
+        ).hexdigest()
 
         # Вызов callback'ов
         for callback in self._on_alert_callbacks:
@@ -229,17 +235,17 @@ class AlertManager:
         # Отправка по каналам
         results = {}
 
-        if 'telegram' in channels and self.config['telegram']['enabled']:
-            results['telegram'] = self._send_telegram(asdict(alert))
+        if "telegram" in channels and self.config["telegram"]["enabled"]:
+            results["telegram"] = self._send_telegram(asdict(alert))
 
-        if 'email' in channels and self.config['email']['enabled']:
-            results['email'] = self._send_email(asdict(alert))
+        if "email" in channels and self.config["email"]["enabled"]:
+            results["email"] = self._send_email(asdict(alert))
 
-        if 'slack' in channels and self.config['slack']['enabled']:
-            results['slack'] = self._send_slack(asdict(alert))
+        if "slack" in channels and self.config["slack"]["enabled"]:
+            results["slack"] = self._send_slack(asdict(alert))
 
-        if 'webhook' in channels and self.config['webhook']['enabled']:
-            results['webhook'] = self._send_webhook(asdict(alert))
+        if "webhook" in channels and self.config["webhook"]["enabled"]:
+            results["webhook"] = self._send_webhook(asdict(alert))
 
         return {"status": "sent", "alert_id": alert_id, **results}
 
@@ -249,18 +255,12 @@ class AlertManager:
         severity: str,
         description: str,
         details: Dict = None,
-        channels: List[str] = None
+        channels: List[str] = None,
     ) -> Dict[str, bool]:
         """Асинхронная отправка алерта"""
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
-            None,
-            self.send_alert,
-            alert_name,
-            severity,
-            description,
-            details,
-            channels
+            None, self.send_alert, alert_name, severity, description, details, channels
         )
 
     def resolve_alert(self, alert_id: str) -> bool:
@@ -288,10 +288,7 @@ class AlertManager:
 
     def get_active_alerts(self) -> List[Alert]:
         """Получение активных алертов"""
-        return [
-            alert for alert in self.alerts.values()
-            if alert.status == AlertStatus.FIRING.value
-        ]
+        return [alert for alert in self.alerts.values() if alert.status == AlertStatus.FIRING.value]
 
     def get_alert_statistics(self) -> Dict[str, Any]:
         """Получение статистики алертов"""
@@ -300,8 +297,7 @@ class AlertManager:
         last_24h = now - timedelta(hours=24)
 
         recent_alerts = [
-            a for a in self.alert_history
-            if datetime.fromisoformat(a['timestamp']) > last_hour
+            a for a in self.alert_history if datetime.fromisoformat(a["timestamp"]) > last_hour
         ]
 
         by_severity = {}
@@ -315,21 +311,16 @@ class AlertManager:
             "total_alerts": len(self.alerts),
             "active_alerts": len(self.get_active_alerts()),
             "alerts_last_hour": len(recent_alerts),
-            "alerts_last_24h": len([
-                a for a in self.alert_history
-                if datetime.fromisoformat(a['timestamp']) > last_24h
-            ]),
+            "alerts_last_24h": len(
+                [a for a in self.alert_history if datetime.fromisoformat(a["timestamp"]) > last_24h]
+            ),
             "by_severity": by_severity,
             "by_status": by_status,
             "silenced_count": len(self._silenced_alerts),
         }
 
     def send_recovery(
-        self,
-        alert_name: str,
-        severity: str,
-        description: str,
-        channels: List[str] = None
+        self, alert_name: str, severity: str, description: str, channels: List[str] = None
     ):
         """
         Отправка уведомления о восстановлении
@@ -342,24 +333,24 @@ class AlertManager:
         """
         # Поиск последнего алерта
         for alert in reversed(self.alert_history):
-            if alert['alert_name'] == alert_name and alert['status'] == 'firing':
-                alert['status'] = 'resolved'
-                alert['resolved_at'] = datetime.now(timezone.utc).isoformat()
-                self._log_alert(alert, event='resolved')
+            if alert["alert_name"] == alert_name and alert["status"] == "firing":
+                alert["status"] = "resolved"
+                alert["resolved_at"] = datetime.now(timezone.utc).isoformat()
+                self._log_alert(alert, event="resolved")
 
                 if channels is None:
                     channels = self._get_channels_for_severity(severity)
 
                 results = {}
 
-                if 'telegram' in channels and self.config['telegram']['enabled']:
-                    results['telegram'] = self._send_telegram(alert, is_recovery=True)
+                if "telegram" in channels and self.config["telegram"]["enabled"]:
+                    results["telegram"] = self._send_telegram(alert, is_recovery=True)
 
-                if 'email' in channels and self.config['email']['enabled']:
-                    results['email'] = self._send_email(alert, is_recovery=True)
+                if "email" in channels and self.config["email"]["enabled"]:
+                    results["email"] = self._send_email(alert, is_recovery=True)
 
-                if 'slack' in channels and self.config['slack']['enabled']:
-                    results['slack'] = self._send_slack(alert, is_recovery=True)
+                if "slack" in channels and self.config["slack"]["enabled"]:
+                    results["slack"] = self._send_slack(alert, is_recovery=True)
 
                 return results
 
@@ -367,20 +358,20 @@ class AlertManager:
 
     def _get_channels_for_severity(self, severity: str) -> List[str]:
         """Получение каналов для уровня серьёзности"""
-        if severity == 'critical':
-            return ['telegram', 'email', 'slack', 'webhook']
-        elif severity == 'warning':
-            return ['telegram', 'email', 'webhook']
+        if severity == "critical":
+            return ["telegram", "email", "slack", "webhook"]
+        elif severity == "warning":
+            return ["telegram", "email", "webhook"]
         else:  # info
-            return ['webhook']
+            return ["webhook"]
 
     def _send_telegram(self, alert: Dict, is_recovery: bool = False) -> bool:
         """Отправка уведомления в Telegram"""
         try:
-            config = self.config['telegram']
+            config = self.config["telegram"]
 
-            emoji = {'critical': '🚨', 'warning': '⚠️', 'info': 'ℹ️'}
-            status = '✅ RESOLVED' if is_recovery else '🔥 FIRING'
+            emoji = {"critical": "🚨", "warning": "⚠️", "info": "ℹ️"}
+            status = "✅ RESOLVED" if is_recovery else "🔥 FIRING"
 
             message = f"""
 {emoji.get(alert['severity'], '📢')} *{status}*
@@ -397,9 +388,9 @@ class AlertManager:
 
             url = f"https://api.telegram.org/bot{config['bot_token']}/sendMessage"
             data = {
-                'chat_id': config['chat_id'],
-                'text': message,
-                'parse_mode': 'Markdown',
+                "chat_id": config["chat_id"],
+                "text": message,
+                "parse_mode": "Markdown",
             }
 
             response = requests.post(url, json=data, timeout=10)
@@ -412,7 +403,7 @@ class AlertManager:
     def _send_email(self, alert: Dict, is_recovery: bool = False) -> bool:
         """Отправка Email уведомления"""
         try:
-            config = self.config['email']
+            config = self.config["email"]
 
             subject = f"{'✅ RESOLVED' if is_recovery else '🚨 ALERT'}: {alert['alert_name']} ({alert['severity'].upper()})"
 
@@ -438,16 +429,16 @@ class AlertManager:
 </html>
             """
 
-            msg = MIMEMultipart('alternative')
-            msg['Subject'] = subject
-            msg['From'] = config['from_email']
-            msg['To'] = ', '.join(config['to_emails'])
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = subject
+            msg["From"] = config["from_email"]
+            msg["To"] = ", ".join(config["to_emails"])
 
-            msg.attach(MIMEText(body, 'html', 'utf-8'))
+            msg.attach(MIMEText(body, "html", "utf-8"))
 
-            server = smtplib.SMTP(config['smtp_host'], config['smtp_port'])
+            server = smtplib.SMTP(config["smtp_host"], config["smtp_port"])
             server.starttls()
-            server.login(config['smtp_user'], config['smtp_password'])
+            server.login(config["smtp_user"], config["smtp_password"])
             server.send_message(msg)
             server.quit()
 
@@ -460,28 +451,32 @@ class AlertManager:
     def _send_slack(self, alert: Dict, is_recovery: bool = False) -> bool:
         """Отправка уведомления в Slack"""
         try:
-            config = self.config['slack']
+            config = self.config["slack"]
 
-            color = {'critical': 'danger', 'warning': 'warning', 'info': 'good'}
-            status = '✅ RESOLVED' if is_recovery else '🔥 FIRING'
+            color = {"critical": "danger", "warning": "warning", "info": "good"}
+            status = "✅ RESOLVED" if is_recovery else "🔥 FIRING"
 
             payload = {
-                'attachments': [
+                "attachments": [
                     {
-                        'color': color.get(alert['severity'], 'gray'),
-                        'title': f"{status}: {alert['alert_name']}",
-                        'fields': [
-                            {'title': 'Severity', 'value': alert['severity'].upper(), 'short': True},
-                            {'title': 'Time', 'value': alert['timestamp'][:19], 'short': True},
-                            {'title': 'Description', 'value': alert['description'], 'short': False},
+                        "color": color.get(alert["severity"], "gray"),
+                        "title": f"{status}: {alert['alert_name']}",
+                        "fields": [
+                            {
+                                "title": "Severity",
+                                "value": alert["severity"].upper(),
+                                "short": True,
+                            },
+                            {"title": "Time", "value": alert["timestamp"][:19], "short": True},
+                            {"title": "Description", "value": alert["description"], "short": False},
                         ],
-                        'footer': 'Nanoprobe Sim Lab Alerting',
-                        'ts': int(datetime.fromisoformat(alert['timestamp']).timestamp()),
+                        "footer": "Nanoprobe Sim Lab Alerting",
+                        "ts": int(datetime.fromisoformat(alert["timestamp"]).timestamp()),
                     }
                 ]
             }
 
-            response = requests.post(config['webhook_url'], json=payload, timeout=10)
+            response = requests.post(config["webhook_url"], json=payload, timeout=10)
             return response.status_code == 200
 
         except Exception as e:
@@ -491,29 +486,29 @@ class AlertManager:
     def _send_webhook(self, alert: Dict, is_recovery: bool = False) -> bool:
         """Отправка на кастомный webhook"""
         try:
-            config = self.config['webhook']
+            config = self.config["webhook"]
 
-            response = requests.post(config['url'], json=alert, timeout=10)
+            response = requests.post(config["url"], json=alert, timeout=10)
             return response.status_code == 200
 
         except Exception as e:
             self._log_error(f"Webhook error: {e}")
             return False
 
-    def _log_alert(self, alert: Dict, event: str = 'firing'):
+    def _log_alert(self, alert: Dict, event: str = "firing"):
         """Логирование алерта"""
         log_entry = {
-            'timestamp': datetime.now(timezone.utc).isoformat(),
-            'event': event,
-            'alert': alert,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "event": event,
+            "alert": alert,
         }
 
-        with open(self.alert_log_path, 'a', encoding='utf-8') as f:
-            f.write(json.dumps(log_entry, ensure_ascii=False) + '\n')
+        with open(self.alert_log_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(log_entry, ensure_ascii=False) + "\n")
 
     def _log_error(self, message: str):
         """Логирование ошибки"""
-        with open(self.alert_log_path, 'a', encoding='utf-8') as f:
+        with open(self.alert_log_path, "a", encoding="utf-8") as f:
             f.write(f"[ERROR] {datetime.now(timezone.utc).isoformat()}: {message}\n")
 
     def get_alert_history(self, limit: int = 100) -> List[Dict]:
@@ -541,12 +536,12 @@ def send_alert(name: str, severity: str, description: str, details: Dict = None)
 
 def send_critical_alert(name: str, description: str, details: Dict = None):
     """Отправка критического алерта"""
-    return send_alert(name, 'critical', description, details)
+    return send_alert(name, "critical", description, details)
 
 
 def send_warning_alert(name: str, description: str, details: Dict = None):
     """Отправка предупреждения"""
-    return send_alert(name, 'warning', description, details)
+    return send_alert(name, "warning", description, details)
 
 
 # Интеграция с FastAPI (middleware для алертинга)
@@ -558,7 +553,7 @@ class AlertingMiddleware:
     def __init__(self, app, alert_on_5xx: bool = True, alert_threshold: int = 5):
         """
         Инициализация middleware.
-        
+
         Args:
             app: FastAPI приложение
             alert_on_5xx: Включить алертинг на 5xx ошибки (по умолчанию True)
@@ -571,7 +566,7 @@ class AlertingMiddleware:
         self.alert_manager = get_alert_manager()
 
     async def __call__(self, scope, receive, send):
-        if scope['type'] != 'http':
+        if scope["type"] != "http":
             return await self.app(scope, receive, send)
 
         try:
@@ -581,10 +576,10 @@ class AlertingMiddleware:
 
             if self.alert_on_5xx and self.error_count >= self.alert_threshold:
                 self.alert_manager.send_alert(
-                    alert_name='HighErrorRate',
-                    severity='critical',
-                    description=f'High error rate detected: {self.error_count} errors',
-                    details={'error': str(e), 'count': self.error_count},
+                    alert_name="HighErrorRate",
+                    severity="critical",
+                    description=f"High error rate detected: {self.error_count} errors",
+                    details={"error": str(e), "count": self.error_count},
                 )
                 self.error_count = 0
 
@@ -600,11 +595,11 @@ if __name__ == "__main__":
     # Тестовый алерт
     print("Отправка тестового алерта...")
     result = manager.send_alert(
-        alert_name='TestAlert',
-        severity='warning',
-        description='Это тестовый алерт для проверки системы уведомлений',
-        details={'test': True, 'value': 42},
-        channels=['webhook']  # Только webhook для теста
+        alert_name="TestAlert",
+        severity="warning",
+        description="Это тестовый алерт для проверки системы уведомлений",
+        details={"test": True, "value": 42},
+        channels=["webhook"],  # Только webhook для теста
     )
 
     print(f"Результат: {result}")

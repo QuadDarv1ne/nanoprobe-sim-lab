@@ -14,11 +14,11 @@ Security Headers Middleware для FastAPI
 """
 
 import logging
+from typing import Optional
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """
     Middleware для добавления security headers
-    
+
     Headers:
     - X-Frame-Options: DENY (защита от clickjacking)
     - X-Content-Type-Options: nosniff (защита от MIME sniffing)
@@ -48,7 +48,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     ):
         """
         Инициализация middleware
-        
+
         Args:
             app: FastAPI приложение
             hsts_max_age: Max-Age для HSTS (секунды)
@@ -67,19 +67,19 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next) -> Response:
         """Добавление security headers к ответу"""
         response = await call_next(request)
-        
+
         # X-Frame-Options: защита от clickjacking
         response.headers["X-Frame-Options"] = "DENY"
-        
+
         # X-Content-Type-Options: запрет MIME sniffing
         response.headers["X-Content-Type-Options"] = "nosniff"
-        
+
         # X-XSS-Protection: XSS защита (для старых браузеров)
         response.headers["X-XSS-Protection"] = "1; mode=block"
-        
+
         # Referrer-Policy: контроль передачи referrer
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        
+
         # Permissions-Policy: ограничение функций браузера
         response.headers["Permissions-Policy"] = (
             "accelerometer=(), "
@@ -110,7 +110,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "web-share=(), "
             "xr-spatial-tracking=()"
         )
-        
+
         # Strict-Transport-Security: HSTS (только для HTTPS)
         if request.url.scheme == "https":
             hsts_value = f"max-age={self.hsts_max_age}"
@@ -119,10 +119,14 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             if self.hsts_preload:
                 hsts_value += "; preload"
             response.headers["Strict-Transport-Security"] = hsts_value
-        
+
         # Content-Security-Policy: CSP (исправленный - без unsafe-inline/unsafe-eval)
         if self.custom_csp:
-            csp_header = "Content-Security-Policy-Report-Only" if self.csp_report_only else "Content-Security-Policy"
+            csp_header = (
+                "Content-Security-Policy-Report-Only"
+                if self.csp_report_only
+                else "Content-Security-Policy"
+            )
             response.headers[csp_header] = self.custom_csp
         else:
             # CSP по умолчанию (строгий - без unsafe-inline/unsafe-eval)
@@ -139,9 +143,13 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                 "form-action 'self'; "
                 "object-src 'none'"
             )
-            csp_header = "Content-Security-Policy-Report-Only" if self.csp_report_only else "Content-Security-Policy"
+            csp_header = (
+                "Content-Security-Policy-Report-Only"
+                if self.csp_report_only
+                else "Content-Security-Policy"
+            )
             response.headers[csp_header] = default_csp
-        
+
         # Удаление заголовков с информацией о сервере
         if "Server" in response.headers:
             del response.headers["Server"]
@@ -154,7 +162,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 def setup_security_headers(app, production: bool = True):
     """
     Настройка security headers для приложения
-    
+
     Args:
         app: FastAPI приложение
         production: Production режим (более строгие настройки)

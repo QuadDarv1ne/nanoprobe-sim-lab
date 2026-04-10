@@ -48,7 +48,7 @@ def close_http_session():
     name="nasa_api",
     failure_threshold=3,
     recovery_timeout=120,
-    fallback={"error": "NASA API unavailable", "fallback": True}
+    fallback={"error": "NASA API unavailable", "fallback": True},
 )
 async def get_nasa_apod(date: Optional[str] = None):
     """
@@ -78,9 +78,9 @@ async def get_nasa_apod(date: Optional[str] = None):
 
     response = get_http_session().get(url, params=params, timeout=10)
     response.raise_for_status()
-    
+
     data = response.json()
-    
+
     # Кэшируем на 1 час для исторических дат, на 5 минут для сегодняшней
     now = datetime.now(timezone.utc).date()
     if date:
@@ -91,10 +91,10 @@ async def get_nasa_apod(date: Optional[str] = None):
             expire = 300
     else:
         expire = 300  # Сегодня - 5 минут
-    
+
     redis_cache.set(cache_key, data, expire)
     data["cached"] = False
-    
+
     return data
 
 
@@ -107,11 +107,11 @@ async def get_nasa_apod(date: Optional[str] = None):
     name="zenodo_api",
     failure_threshold=5,
     recovery_timeout=60,
-    fallback={"hits": {"hits": [], "total": 0}, "fallback": True}
+    fallback={"hits": {"hits": [], "total": 0}, "fallback": True},
 )
 async def search_zenodo(
     query: str = Query(..., description="Поисковый запрос"),
-    size: int = Query(10, ge=1, le=100, description="Количество результатов")
+    size: int = Query(10, ge=1, le=100, description="Количество результатов"),
 ):
     """
     Поиск научных данных на Zenodo
@@ -133,22 +133,17 @@ async def search_zenodo(
         return cached_data
 
     url = "https://zenodo.org/api/records"
-    params = {
-        "q": query,
-        "size": size,
-        "sort": "bestmatch",
-        "order": "desc"
-    }
+    params = {"q": query, "size": size, "sort": "bestmatch", "order": "desc"}
 
     response = get_http_session().get(url, params=params, timeout=10)
     response.raise_for_status()
-    
+
     data = response.json()
-    
+
     # Кэшируем на 10 минут
     redis_cache.set(cache_key, data, expire=600)
     data["cached"] = False
-    
+
     return data
 
 
@@ -161,11 +156,10 @@ async def search_zenodo(
     name="figshare_api",
     failure_threshold=5,
     recovery_timeout=60,
-    fallback={"items": [], "total": 0, "fallback": True}
+    fallback={"items": [], "total": 0, "fallback": True},
 )
 async def search_figshare(
-    query: str = Query(..., description="Поисковый запрос"),
-    limit: int = Query(10, ge=1, le=100)
+    query: str = Query(..., description="Поисковый запрос"), limit: int = Query(10, ge=1, le=100)
 ):
     """
     Поиск данных на Figshare
@@ -187,20 +181,17 @@ async def search_figshare(
         return cached_data
 
     url = "https://api.figshare.com/v2/articles"
-    params = {
-        "search": query,
-        "limit": limit
-    }
+    params = {"search": query, "limit": limit}
 
     response = get_http_session().get(url, params=params, timeout=10)
     response.raise_for_status()
-    
+
     data = response.json()
-    
+
     # Кэшируем на 10 минут
     redis_cache.set(cache_key, data, expire=600)
     data["cached"] = False
-    
+
     return data
 
 
@@ -212,9 +203,8 @@ async def search_figshare(
 async def get_circuit_breakers_status():
     """Статус всех circuit breakers для внешних сервисов"""
     from utils.caching.circuit_breaker import get_all_circuit_breakers_stats
-    return {
-        "circuit_breakers": get_all_circuit_breakers_stats()
-    }
+
+    return {"circuit_breakers": get_all_circuit_breakers_stats()}
 
 
 @router.post(
@@ -225,6 +215,7 @@ async def get_circuit_breakers_status():
 async def reset_circuit_breakers():
     """Сброс всех circuit breakers"""
     from utils.caching.circuit_breaker import reset_all_circuit_breakers
+
     reset_all_circuit_breakers()
     return {"success": True, "message": "All circuit breakers reset"}
 

@@ -25,7 +25,7 @@ class FlaskFastAPIIntegration:
         self,
         fastapi_url: str = "http://localhost:8000",
         flask_url: str = "http://localhost:5000",
-        jwt_secret: str = None
+        jwt_secret: str = None,
     ):
         """
         Инициализация интеграции
@@ -35,9 +35,11 @@ class FlaskFastAPIIntegration:
             flask_url: URL Flask приложения
             jwt_secret: Секретный ключ для JWT токенов
         """
-        self.fastapi_url = fastapi_url.rstrip('/')
-        self.flask_url = flask_url.rstrip('/')
-        self.jwt_secret = jwt_secret or os.getenv("JWT_SECRET", "your-secret-key-change-in-production")
+        self.fastapi_url = fastapi_url.rstrip("/")
+        self.flask_url = flask_url.rstrip("/")
+        self.jwt_secret = jwt_secret or os.getenv(
+            "JWT_SECRET", "your-secret-key-change-in-production"
+        )
         self._token_cache: Optional[str] = None
         self._token_expiry: Optional[datetime] = None
 
@@ -58,7 +60,7 @@ class FlaskFastAPIIntegration:
             response = requests.post(
                 f"{self.fastapi_url}/api/v1/auth/login",
                 data={"username": username, "password": password},
-                timeout=10
+                timeout=10,
             )
 
             if response.status_code == 200:
@@ -67,11 +69,7 @@ class FlaskFastAPIIntegration:
 
                 # Декодирование токена для получения срока действия
                 try:
-                    payload = jwt.decode(
-                        self._token_cache,
-                        self.jwt_secret,
-                        algorithms=["HS256"]
-                    )
+                    payload = jwt.decode(self._token_cache, self.jwt_secret, algorithms=["HS256"])
                     self._token_expiry = datetime.fromtimestamp(payload.get("exp", 0))
                 except (jwt.PyJWTError, KeyError, TypeError, ValueError):
                     self._token_expiry = datetime.now(timezone.utc)
@@ -99,11 +97,7 @@ class FlaskFastAPIIntegration:
     # ==================== FastAPI вызовы ====================
 
     def call_fastapi(
-        self,
-        endpoint: str,
-        method: str = "GET",
-        data: Optional[Dict] = None,
-        use_auth: bool = True
+        self, endpoint: str, method: str = "GET", data: Optional[Dict] = None, use_auth: bool = True
     ) -> Optional[Dict[str, Any]]:
         """
         Вызов FastAPI endpoint
@@ -148,10 +142,7 @@ class FlaskFastAPIIntegration:
     # ==================== Flask вызовы ====================
 
     def call_flask(
-        self,
-        endpoint: str,
-        method: str = "GET",
-        data: Optional[Dict] = None
+        self, endpoint: str, method: str = "GET", data: Optional[Dict] = None
     ) -> Optional[Dict[str, Any]]:
         """
         Выов Flask endpoint
@@ -187,7 +178,9 @@ class FlaskFastAPIIntegration:
 
     # ==================== Сканирования ====================
 
-    def get_scans(self, scan_type: Optional[str] = None, limit: int = 100, offset: int = 0) -> List[Dict]:
+    def get_scans(
+        self, scan_type: Optional[str] = None, limit: int = 100, offset: int = 0
+    ) -> List[Dict]:
         """Получение списка сканирований из FastAPI"""
         params = {"limit": limit, "offset": offset}
         if scan_type:
@@ -226,11 +219,15 @@ class FlaskFastAPIIntegration:
 
     def update_simulation(self, simulation_id: str, status: str) -> Optional[Dict]:
         """Обновление статуса симуляции"""
-        return self.call_fastapi(f"/api/v1/simulations/{simulation_id}", method="PUT", data={"status": status})
+        return self.call_fastapi(
+            f"/api/v1/simulations/{simulation_id}", method="PUT", data={"status": status}
+        )
 
     # ==================== Анализ дефектов ====================
 
-    def analyze_defects(self, image_path: str, model_name: str = "isolation_forest") -> Optional[Dict]:
+    def analyze_defects(
+        self, image_path: str, model_name: str = "isolation_forest"
+    ) -> Optional[Dict]:
         """
         Анализ дефектов через FastAPI
 
@@ -244,7 +241,7 @@ class FlaskFastAPIIntegration:
         return self.call_fastapi(
             "/api/v1/analysis/defects",
             method="POST",
-            data={"image_path": image_path, "model_name": model_name}
+            data={"image_path": image_path, "model_name": model_name},
         )
 
     def get_defect_history(self, limit: int = 50) -> List[Dict]:
@@ -268,7 +265,7 @@ class FlaskFastAPIIntegration:
         return self.call_fastapi(
             "/api/v1/comparison/surfaces",
             method="POST",
-            data={"image1_path": image1_path, "image2_path": image2_path}
+            data={"image1_path": image1_path, "image2_path": image2_path},
         )
 
     def get_comparison_history(self, limit: int = 50) -> List[Dict]:
@@ -279,10 +276,7 @@ class FlaskFastAPIIntegration:
     # ==================== PDF отчёты ====================
 
     def generate_pdf_report(
-        self,
-        report_type: str,
-        title: str,
-        source_ids: List[int] = None
+        self, report_type: str, title: str, source_ids: List[int] = None
     ) -> Optional[Dict]:
         """
         Генерация PDF отчёта через FastAPI
@@ -298,11 +292,7 @@ class FlaskFastAPIIntegration:
         return self.call_fastapi(
             "/api/v1/reports/generate",
             method="POST",
-            data={
-                "report_type": report_type,
-                "title": title,
-                "source_ids": source_ids or []
-            }
+            data={"report_type": report_type, "title": title, "source_ids": source_ids or []},
         )
 
     def get_reports(self, limit: int = 50) -> List[Dict]:
@@ -363,15 +353,17 @@ class FlaskFastAPIIntegration:
         return self.call_flask(
             "/api/surface/compare",
             method="POST",
-            data={"image1_path": image1_path, "image2_path": image2_path}
+            data={"image1_path": image1_path, "image2_path": image2_path},
         )
 
-    def analyze_defects_flask(self, image_path: str, model_name: str = "isolation_forest") -> Optional[Dict]:
+    def analyze_defects_flask(
+        self, image_path: str, model_name: str = "isolation_forest"
+    ) -> Optional[Dict]:
         """Анализ дефектов через Flask"""
         return self.call_flask(
             "/api/defect/analyze",
             method="POST",
-            data={"image_path": image_path, "model_name": model_name}
+            data={"image_path": image_path, "model_name": model_name},
         )
 
     # ==================== Утилиты ====================
@@ -386,7 +378,7 @@ class FlaskFastAPIIntegration:
         result = {
             "fastapi": {"status": "unknown", "response_time_ms": None},
             "flask": {"status": "unknown", "response_time_ms": None},
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         # Проверка FastAPI
@@ -427,11 +419,7 @@ class FlaskFastAPIIntegration:
         Returns:
             Результаты синхронизации
         """
-        result = {
-            "synced": [],
-            "errors": [],
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
+        result = {"synced": [], "errors": [], "timestamp": datetime.now(timezone.utc).isoformat()}
 
         # Оба приложения используют одну БД, поэтому синхронизация не требуется
         # Этот метод для проверки консистентности данных
@@ -444,7 +432,9 @@ class FlaskFastAPIIntegration:
                 if len(fastapi_scans) == len(flask_scans):
                     result["synced"].append("scans")
                 else:
-                    result["errors"].append(f"Несовпадение количества сканирований: FastAPI={len(fastapi_scans)}, Flask={len(flask_scans)}")
+                    result["errors"].append(
+                        f"Несовпадение количества сканирований: FastAPI={len(fastapi_scans)}, Flask={len(flask_scans)}"
+                    )
             except Exception as e:
                 result["errors"].append(f"Ошибка синхронизации сканирований: {e}")
 
@@ -456,7 +446,9 @@ class FlaskFastAPIIntegration:
                 if len(fastapi_sims) == len(flask_sims):
                     result["synced"].append("simulations")
                 else:
-                    result["errors"].append(f"Несовпадение количества симуляций: FastAPI={len(fastapi_sims)}, Flask={len(flask_sims)}")
+                    result["errors"].append(
+                        f"Несовпадение количества симуляций: FastAPI={len(fastapi_sims)}, Flask={len(flask_sims)}"
+                    )
             except Exception as e:
                 result["errors"].append(f"Ошибка синхронизации симуляций: {e}")
 
@@ -468,9 +460,7 @@ _integration_instance: Optional[FlaskFastAPIIntegration] = None
 
 
 def get_integration(
-    fastapi_url: str = None,
-    flask_url: str = None,
-    jwt_secret: str = None
+    fastapi_url: str = None, flask_url: str = None, jwt_secret: str = None
 ) -> FlaskFastAPIIntegration:
     """
     Получение экземпляра интеграции (singleton)
@@ -489,7 +479,7 @@ def get_integration(
         _integration_instance = FlaskFastAPIIntegration(
             fastapi_url=fastapi_url or "http://localhost:8000",
             flask_url=flask_url or "http://localhost:5000",
-            jwt_secret=jwt_secret or os.getenv("JWT_SECRET")
+            jwt_secret=jwt_secret or os.getenv("JWT_SECRET"),
         )
 
     return _integration_instance
@@ -549,7 +539,7 @@ if __name__ == "__main__":
     print("\n5. Проверка синхронизации...")
     sync_result = integration.sync_data()
     print(f"   Синхронизировано: {sync_result['synced']}")
-    if sync_result['errors']:
+    if sync_result["errors"]:
         print(f"   Ошибки: {sync_result['errors']}")
 
     print("\n=== Тестирование завершено ===")

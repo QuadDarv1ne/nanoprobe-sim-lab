@@ -2,21 +2,17 @@
 API роуты для управления симуляциями
 """
 
-from fastapi import APIRouter, Depends, Query, status
-from typing import Optional
 import uuid
+from typing import Optional
 
-from api.schemas import (
-    SimulationCreate,
-    SimulationResponse,
-    SimulationListResponse,
-)
+from fastapi import APIRouter, Depends, Query, status
+
 from api.dependencies import get_db, get_redis_cache
 from api.error_handlers import NotFoundError, ValidationError
+from api.schemas import SimulationCreate, SimulationListResponse, SimulationResponse
 from api.state import get_redis
-from utils.database import DatabaseManager
 from utils.caching.redis_cache import RedisCache
-
+from utils.database import DatabaseManager
 
 router = APIRouter()
 
@@ -77,10 +73,12 @@ async def get_simulation(
             return SimulationResponse(**cached)
 
     simulations = db.get_simulations(limit=100)
-    sim = next((s for s in simulations if s.get('simulation_id') == simulation_id), None)
+    sim = next((s for s in simulations if s.get("simulation_id") == simulation_id), None)
 
     if not sim:
-        raise NotFoundError(f"Симуляция с ID {simulation_id} не найдена", resource_type="simulation")
+        raise NotFoundError(
+            f"Симуляция с ID {simulation_id} не найдена", resource_type="simulation"
+        )
 
     result = SimulationResponse.model_validate(sim)
 
@@ -116,7 +114,7 @@ async def create_simulation(
 
     # Получаем именно созданную запись по simulation_id
     simulations = db.get_simulations(limit=500)
-    sim = next((s for s in simulations if s.get('simulation_id') == sim_id), None)
+    sim = next((s for s in simulations if s.get("simulation_id") == sim_id), None)
     if not sim:
         raise NotFoundError("Не удалось получить созданную симуляцию", resource_type="simulation")
 
@@ -143,10 +141,12 @@ async def update_simulation(
         redis.delete(f"simulation:{simulation_id}")
 
     simulations = db.get_simulations(limit=100)
-    sim = next((s for s in simulations if s.get('simulation_id') == simulation_id), None)
+    sim = next((s for s in simulations if s.get("simulation_id") == simulation_id), None)
 
     if not sim:
-        raise NotFoundError(f"Симуляция с ID {simulation_id} не найдена", resource_type="simulation")
+        raise NotFoundError(
+            f"Симуляция с ID {simulation_id} не найдена", resource_type="simulation"
+        )
 
     return SimulationResponse.model_validate(sim)
 
@@ -165,19 +165,24 @@ async def stop_simulation(
 
     # Ищем по simulation_id (UUID) или по числовому id
     sim = next(
-        (s for s in simulations if
-         s.get('simulation_id') == simulation_id or str(s.get('id')) == simulation_id),
-        None
+        (
+            s
+            for s in simulations
+            if s.get("simulation_id") == simulation_id or str(s.get("id")) == simulation_id
+        ),
+        None,
     )
 
     if not sim:
-        raise NotFoundError(f"Симуляция с ID {simulation_id} не найдена", resource_type="simulation")
+        raise NotFoundError(
+            f"Симуляция с ID {simulation_id} не найдена", resource_type="simulation"
+        )
 
-    if sim.get('status') not in ('running', 'pending'):
+    if sim.get("status") not in ("running", "pending"):
         raise ValidationError(f"Симуляция уже завершена (статус: {sim.get('status')})")
 
-    real_sim_id = sim['simulation_id']
-    db.update_simulation(simulation_id=real_sim_id, status='stopped')
+    real_sim_id = sim["simulation_id"]
+    db.update_simulation(simulation_id=real_sim_id, status="stopped")
 
     redis = get_redis()
     if redis and redis.is_available():
@@ -186,7 +191,7 @@ async def stop_simulation(
         redis.delete(f"simulation:{real_sim_id}")
 
     simulations = db.get_simulations(limit=500)
-    sim = next((s for s in simulations if s.get('simulation_id') == real_sim_id), None)
+    sim = next((s for s in simulations if s.get("simulation_id") == real_sim_id), None)
     return SimulationResponse.model_validate(sim)
 
 
@@ -205,10 +210,12 @@ async def delete_simulation(
         # Пробуем удалить по simulation_id (UUID) или по числовому id
         cursor.execute(
             "DELETE FROM simulations WHERE simulation_id = ? OR CAST(id AS TEXT) = ?",
-            (simulation_id, simulation_id)
+            (simulation_id, simulation_id),
         )
         if cursor.rowcount == 0:
-            raise NotFoundError(f"Симуляция с ID {simulation_id} не найдена", resource_type="simulation")
+            raise NotFoundError(
+                f"Симуляция с ID {simulation_id} не найдена", resource_type="simulation"
+            )
 
     redis = get_redis()
     if redis and redis.is_available():

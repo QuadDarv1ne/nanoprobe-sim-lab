@@ -64,7 +64,11 @@ class ErrorInfo:
     def from_dict(cls, data: Dict[str, Any]) -> "ErrorInfo":
         """Создание из словаря"""
         return cls(
-            timestamp=datetime.fromisoformat(data["timestamp"]) if data.get("timestamp") else datetime.now(timezone.utc),
+            timestamp=(
+                datetime.fromisoformat(data["timestamp"])
+                if data.get("timestamp")
+                else datetime.now(timezone.utc)
+            ),
             severity=ErrorSeverity(data.get("severity", 40)),
             message=data.get("message", ""),
             exception_type=data.get("exception_type", ""),
@@ -95,7 +99,9 @@ class ErrorHandler:
                     cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, log_file: str = "error_log.json", max_log_size: int = 1000, auto_save: bool = True):
+    def __init__(
+        self, log_file: str = "error_log.json", max_log_size: int = 1000, auto_save: bool = True
+    ):
         """
         Инициализирует обработчик ошибок
 
@@ -144,10 +150,13 @@ class ErrorHandler:
         try:
             with self.lock:
                 # Сохраняем только последние max_log_size ошибок
-                recent_errors = self.error_history[-self.max_log_size:]
+                recent_errors = self.error_history[-self.max_log_size :]
 
                 # Преобразуем объекты ErrorInfo в словари
-                serializable_errors = [error.to_dict() if isinstance(error, ErrorInfo) else error for error in recent_errors]
+                serializable_errors = [
+                    error.to_dict() if isinstance(error, ErrorInfo) else error
+                    for error in recent_errors
+                ]
 
                 with open(self.log_file, "w", encoding="utf-8") as f:
                     json.dump(serializable_errors, f, ensure_ascii=False, default=str)
@@ -332,10 +341,7 @@ class ErrorHandler:
             cutoff = datetime.now(timezone.utc) - timedelta(days=max_age_days)
             original_count = len(self.error_history)
 
-            self.error_history = [
-                error for error in self.error_history
-                if error.timestamp > cutoff
-            ]
+            self.error_history = [error for error in self.error_history if error.timestamp > cutoff]
 
             removed = original_count - len(self.error_history)
             if removed > 0:
@@ -346,10 +352,7 @@ class ErrorHandler:
     def get_recent_errors(self, hours: int = 24) -> List[ErrorInfo]:
         """Получение недавних ошибок"""
         cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
-        return [
-            error for error in self.error_history
-            if error.timestamp > cutoff
-        ]
+        return [error for error in self.error_history if error.timestamp > cutoff]
 
     def resolve_error(self, error_id: str) -> bool:
         """Отметка ошибки как решенной"""
@@ -430,7 +433,10 @@ class RecoveryManager:
             state_data: Данные состояния
         """
         with self.lock:
-            self.state_backups[state_id] = {"timestamp": datetime.now(timezone.utc), "data": state_data}
+            self.state_backups[state_id] = {
+                "timestamp": datetime.now(timezone.utc),
+                "data": state_data,
+            }
 
     def restore_state(self, state_id: str) -> Optional[Any]:
         """

@@ -57,33 +57,70 @@ class NanoprobeAPI:
     def setup_routes(self) -> None:
         """Настраивает маршруты API"""
         # Маршруты для СЗМ симуляции
-        self.app.add_url_rule('/api/spm/create-surface', 'create_surface', self.create_surface, methods=['POST'])
-        self.app.add_url_rule('/api/spm/scan-surface', 'scan_surface', self.scan_surface, methods=['POST'])
-        self.app.add_url_rule('/api/spm/get-results', 'get_spm_results', self.get_spm_results, methods=['GET'])
+        self.app.add_url_rule(
+            "/api/spm/create-surface", "create_surface", self.create_surface, methods=["POST"]
+        )
+        self.app.add_url_rule(
+            "/api/spm/scan-surface", "scan_surface", self.scan_surface, methods=["POST"]
+        )
+        self.app.add_url_rule(
+            "/api/spm/get-results", "get_spm_results", self.get_spm_results, methods=["GET"]
+        )
 
         # Маршруты для анализа изображений
-        self.app.add_url_rule('/api/image/process', 'process_image', self.process_image, methods=['POST'])
-        self.app.add_url_rule('/api/image/analyze', 'analyze_image', self.analyze_image, methods=['POST'])
-        self.app.add_url_rule('/api/image/get-results', 'get_image_results', self.get_image_results, methods=['GET'])
+        self.app.add_url_rule(
+            "/api/image/process", "process_image", self.process_image, methods=["POST"]
+        )
+        self.app.add_url_rule(
+            "/api/image/analyze", "analyze_image", self.analyze_image, methods=["POST"]
+        )
+        self.app.add_url_rule(
+            "/api/image/get-results", "get_image_results", self.get_image_results, methods=["GET"]
+        )
 
         # Маршруты для SSTV
-        self.app.add_url_rule('/api/sstv/decode', 'decode_sstv', self.decode_sstv, methods=['POST'])
-        self.app.add_url_rule('/api/sstv/get-results', 'get_sstv_results', self.get_sstv_results, methods=['GET'])
+        self.app.add_url_rule("/api/sstv/decode", "decode_sstv", self.decode_sstv, methods=["POST"])
+        self.app.add_url_rule(
+            "/api/sstv/get-results", "get_sstv_results", self.get_sstv_results, methods=["GET"]
+        )
 
         # Маршруты для управления симуляцией
-        self.app.add_url_rule('/api/simulation/start', 'start_simulation', self.start_simulation, methods=['POST'])
-        self.app.add_url_rule('/api/simulation/status/<simulation_id>', 'get_simulation_status', self.get_simulation_status, methods=['GET'])
-        self.app.add_url_rule('/api/simulation/stop/<simulation_id>', 'stop_simulation', self.stop_simulation, methods=['POST'])
-        self.app.add_url_rule('/api/simulation/results/<simulation_id>', 'get_simulation_results', self.get_simulation_results, methods=['GET'])
+        self.app.add_url_rule(
+            "/api/simulation/start", "start_simulation", self.start_simulation, methods=["POST"]
+        )
+        self.app.add_url_rule(
+            "/api/simulation/status/<simulation_id>",
+            "get_simulation_status",
+            self.get_simulation_status,
+            methods=["GET"],
+        )
+        self.app.add_url_rule(
+            "/api/simulation/stop/<simulation_id>",
+            "stop_simulation",
+            self.stop_simulation,
+            methods=["POST"],
+        )
+        self.app.add_url_rule(
+            "/api/simulation/results/<simulation_id>",
+            "get_simulation_results",
+            self.get_simulation_results,
+            methods=["GET"],
+        )
 
         # Маршруты для данных
-        self.app.add_url_rule('/api/data/upload', 'upload_data', self.upload_data, methods=['POST'])
-        self.app.add_url_rule('/api/data/download/<filename>', 'download_data', self.download_data, methods=['GET'])
-        self.app.add_url_rule('/api/data/list', 'list_data', self.list_data, methods=['GET'])
+        self.app.add_url_rule("/api/data/upload", "upload_data", self.upload_data, methods=["POST"])
+        self.app.add_url_rule(
+            "/api/data/download/<filename>", "download_data", self.download_data, methods=["GET"]
+        )
+        self.app.add_url_rule("/api/data/list", "list_data", self.list_data, methods=["GET"])
 
         # Маршрут для получения информации о системе
-        self.app.add_url_rule('/api/system/info', 'get_system_info', self.get_system_info, methods=['GET'])
-        self.app.add_url_rule('/api/system/status', 'get_system_status', self.get_system_status, methods=['GET'])
+        self.app.add_url_rule(
+            "/api/system/info", "get_system_info", self.get_system_info, methods=["GET"]
+        )
+        self.app.add_url_rule(
+            "/api/system/status", "get_system_status", self.get_system_status, methods=["GET"]
+        )
 
     def create_surface(self) -> Tuple[Response, int]:
         """
@@ -99,28 +136,38 @@ class NanoprobeAPI:
             is_valid, error_message = DataValidator.validate_surface_params(data)
             if not is_valid:
                 self.logger_manager.log_spm_event(f"Ошибка валидации: {error_message}", "WARNING")
-                return jsonify(ResponseBuilder.validation_error("surface_params", error_message)), 400
+                return (
+                    jsonify(ResponseBuilder.validation_error("surface_params", error_message)),
+                    400,
+                )
 
-            width = data.get('width', 50)
-            height = data.get('height', 50)
-            surface_type = data.get('type', 'random')
+            width = data.get("width", 50)
+            height = data.get("height", 50)
+            surface_type = data.get("type", "random")
 
             # Создаем поверхность
             surface = SurfaceModel(width, height)
 
             # Сохраняем результат
-            timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             filename = f"surface_{timestamp}.txt"
             surface.saveToFile(filename)
 
             # Логируем действие
-            self.logger_manager.log_spm_event(f"Создана поверхность {filename}, размер: {width}x{height}", "INFO")
+            self.logger_manager.log_spm_event(
+                f"Создана поверхность {filename}, размер: {width}x{height}", "INFO"
+            )
 
-            return jsonify(ResponseBuilder.success({
-                'surface_id': filename,
-                'dimensions': {'width': width, 'height': height},
-                'type': surface_type
-            }, f"Поверхность {width}x{height} создана"))
+            return jsonify(
+                ResponseBuilder.success(
+                    {
+                        "surface_id": filename,
+                        "dimensions": {"width": width, "height": height},
+                        "type": surface_type,
+                    },
+                    f"Поверхность {width}x{height} создана",
+                )
+            )
 
         except ValidationError as e:
             self.logger_manager.log_spm_event(f"Ошибка валидации: {e.message}", "ERROR")
@@ -144,8 +191,8 @@ class NanoprobeAPI:
             if not is_valid:
                 return jsonify(ResponseBuilder.validation_error("scan_params", error_message)), 400
 
-            surface_id = data.get('surface_id')
-            scan_speed = data.get('scan_speed', 1.0)
+            surface_id = data.get("surface_id")
+            scan_speed = data.get("scan_speed", 1.0)
 
             # Загружаем поверхность (в реальной реализации)
             # surface = load_surface(surface_id)
@@ -159,25 +206,36 @@ class NanoprobeAPI:
             scan_results = np.random.rand(height, width).tolist()
 
             # Сохраняем результаты
-            timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             results_filename = f"scan_results_{timestamp}.json"
 
-            with open(results_filename, 'w', encoding='utf-8') as f:
-                json.dump({
-                    'scan_results': scan_results,
-                    'surface_id': surface_id,
-                    'scan_speed': scan_speed,
-                    'timestamp': timestamp
-                }, f, ensure_ascii=False)
+            with open(results_filename, "w", encoding="utf-8") as f:
+                json.dump(
+                    {
+                        "scan_results": scan_results,
+                        "surface_id": surface_id,
+                        "scan_speed": scan_speed,
+                        "timestamp": timestamp,
+                    },
+                    f,
+                    ensure_ascii=False,
+                )
 
             # Логируем действие
-            self.logger_manager.log_spm_event(f"Выполнено сканирование поверхности {surface_id}", "INFO")
+            self.logger_manager.log_spm_event(
+                f"Выполнено сканирование поверхности {surface_id}", "INFO"
+            )
 
-            return jsonify(ResponseBuilder.success({
-                'results_file': results_filename,
-                'surface_id': surface_id,
-                'scan_speed': scan_speed
-            }, f"Сканирование {surface_id} завершено"))
+            return jsonify(
+                ResponseBuilder.success(
+                    {
+                        "results_file": results_filename,
+                        "surface_id": surface_id,
+                        "scan_speed": scan_speed,
+                    },
+                    f"Сканирование {surface_id} завершено",
+                )
+            )
 
         except ValidationError as e:
             return jsonify(ResponseBuilder.validation_error(e.field, e.message)), 400
@@ -209,29 +267,39 @@ class NanoprobeAPI:
             # Для демонстрации возвращаем фиктивный результат
             processed_data = np.random.rand(100, 100).tolist()
 
-            timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             results_filename = f"processed_image_{timestamp}.json"
-            filter_type = data.get('filter', 'gaussian')
+            filter_type = data.get("filter", "gaussian")
 
-            with open(results_filename, 'w', encoding='utf-8') as f:
-                json.dump({
-                    'processed_image': processed_data,
-                    'filter_type': filter_type,
-                    'timestamp': timestamp
-                }, f, ensure_ascii=False)
+            with open(results_filename, "w", encoding="utf-8") as f:
+                json.dump(
+                    {
+                        "processed_image": processed_data,
+                        "filter_type": filter_type,
+                        "timestamp": timestamp,
+                    },
+                    f,
+                    ensure_ascii=False,
+                )
 
             # Логируем действие
-            self.logger_manager.log_analyzer_event(f"Обработано изображение с фильтром {filter_type}", "INFO")
+            self.logger_manager.log_analyzer_event(
+                f"Обработано изображение с фильтром {filter_type}", "INFO"
+            )
 
-            return jsonify(ResponseBuilder.success({
-                'results_file': results_filename,
-                'filter_type': filter_type
-            }, f"Изображение обработано фильтром {filter_type}"))
+            return jsonify(
+                ResponseBuilder.success(
+                    {"results_file": results_filename, "filter_type": filter_type},
+                    f"Изображение обработано фильтром {filter_type}",
+                )
+            )
 
         except ValidationError as e:
             return jsonify(ResponseBuilder.validation_error(e.field, e.message)), 400
         except Exception as e:
-            self.logger_manager.log_analyzer_event(f"Ошибка обработки изображения: {str(e)}", "ERROR")
+            self.logger_manager.log_analyzer_event(
+                f"Ошибка обработки изображения: {str(e)}", "ERROR"
+            )
             return jsonify(ResponseBuilder.error(str(e), "IMAGE_PROCESSING_ERROR")), 500
 
     def decode_sstv(self) -> Tuple[Response, int]:
@@ -258,29 +326,27 @@ class NanoprobeAPI:
             # Для демонстрации возвращаем фиктивное изображение
             decoded_image_data = np.random.rand(320, 240, 3).tolist()
 
-            timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             results_filename = f"sstv_decoded_{timestamp}.json"
-            mode = data.get('mode', 'MartinM1')
+            mode = data.get("mode", "MartinM1")
 
-            with open(results_filename, 'w', encoding='utf-8') as f:
-                json.dump({
-                    'decoded_image': decoded_image_data,
-                    'mode': mode,
-                    'timestamp': timestamp
-                }, f, ensure_ascii=False)
+            with open(results_filename, "w", encoding="utf-8") as f:
+                json.dump(
+                    {"decoded_image": decoded_image_data, "mode": mode, "timestamp": timestamp},
+                    f,
+                    ensure_ascii=False,
+                )
 
             # Логируем действие
             self.logger_manager.log_sstv_event(f"Декодирован SSTV сигнал в режиме {mode}", "INFO")
 
-            return jsonify({
-                'status': 'success',
-                'results_file': results_filename,
-                'timestamp': timestamp
-            })
+            return jsonify(
+                {"status": "success", "results_file": results_filename, "timestamp": timestamp}
+            )
 
         except Exception as e:
             self.logger_manager.log_sstv_event(f"Ошибка декодирования SSTV: {e}", "ERROR")
-            return jsonify({'status': 'error', 'message': str(e)}), 500
+            return jsonify({"status": "error", "message": str(e)}), 500
 
     def start_simulation(self) -> Tuple[Response, int]:
         """
@@ -293,40 +359,45 @@ class NanoprobeAPI:
             data = request.get_json()
 
             simulation_id = str(uuid.uuid4())
-            simulation_type = data.get('type', 'spm')
-            parameters = data.get('parameters', {})
+            simulation_type = data.get("type", "spm")
+            parameters = data.get("parameters", {})
 
             # Создаем запись о симуляции
             self.active_simulations[simulation_id] = {
-                'type': simulation_type,
-                'parameters': parameters,
-                'status': 'running',
-                'start_time': datetime.now(timezone.utc).isoformat(),
-                'progress': 0
+                "type": simulation_type,
+                "parameters": parameters,
+                "status": "running",
+                "start_time": datetime.now(timezone.utc).isoformat(),
+                "progress": 0,
             }
 
             # Логируем начало симуляции
-            self.logger_manager.log_simulation_event(f"Начата симуляция {simulation_id}, тип: {simulation_type}", "INFO")
+            self.logger_manager.log_simulation_event(
+                f"Начата симуляция {simulation_id}, тип: {simulation_type}", "INFO"
+            )
 
             # Запускаем симуляцию в отдельном потоке
             thread = threading.Thread(
-                target=self._run_simulation,
-                args=(simulation_id, simulation_type, parameters)
+                target=self._run_simulation, args=(simulation_id, simulation_type, parameters)
             )
             thread.daemon = True
             thread.start()
 
-            return jsonify({
-                'status': 'success',
-                'simulation_id': simulation_id,
-                'message': f'Simulation {simulation_type} started'
-            })
+            return jsonify(
+                {
+                    "status": "success",
+                    "simulation_id": simulation_id,
+                    "message": f"Simulation {simulation_type} started",
+                }
+            )
 
         except Exception as e:
             self.logger_manager.log_simulation_event(f"Ошибка запуска симуляции: {e}", "ERROR")
-            return jsonify({'status': 'error', 'message': str(e)}), 500
+            return jsonify({"status": "error", "message": str(e)}), 500
 
-    def _run_simulation(self, simulation_id: str, simulation_type: str, parameters: Dict[str, Any]) -> None:
+    def _run_simulation(
+        self, simulation_id: str, simulation_type: str, parameters: Dict[str, Any]
+    ) -> None:
         """
         Выполняет симуляцию в отдельном потоке
 
@@ -337,42 +408,49 @@ class NanoprobeAPI:
         """
         try:
             # Обновляем статус
-            self.active_simulations[simulation_id]['progress'] = 10
+            self.active_simulations[simulation_id]["progress"] = 10
 
             # Симуляция выполнения (неблокирующая версия)
             # Используем threading для избежания блокировки основного потока
             import time
+
             for i in range(10):
                 time.sleep(0.05)  # Уменьшено с 0.5 до 0.05 для минимизации блокировки
                 progress = int(((i + 1) / 10) * 80) + 10
-                self.active_simulations[simulation_id]['progress'] = progress
+                self.active_simulations[simulation_id]["progress"] = progress
 
             # Генерируем результаты
             results = {
-                'simulation_id': simulation_id,
-                'type': simulation_type,
-                'parameters': parameters,
-                'results': self._generate_simulation_results(simulation_type, parameters),
-                'end_time': datetime.now(timezone.utc).isoformat()
+                "simulation_id": simulation_id,
+                "type": simulation_type,
+                "parameters": parameters,
+                "results": self._generate_simulation_results(simulation_type, parameters),
+                "end_time": datetime.now(timezone.utc).isoformat(),
             }
 
             # Сохраняем результаты
             self.results_cache[simulation_id] = results
 
             # Обновляем статус
-            self.active_simulations[simulation_id]['status'] = 'completed'
-            self.active_simulations[simulation_id]['progress'] = 100
-            self.active_simulations[simulation_id]['end_time'] = datetime.now(timezone.utc).isoformat()
+            self.active_simulations[simulation_id]["status"] = "completed"
+            self.active_simulations[simulation_id]["progress"] = 100
+            self.active_simulations[simulation_id]["end_time"] = datetime.now(
+                timezone.utc
+            ).isoformat()
 
             # Логируем завершение
             self.logger_manager.log_simulation_event(f"Симуляция {simulation_id} завершена", "INFO")
 
         except Exception as e:
-            self.logger_manager.log_simulation_event(f"Ошибка в симуляции {simulation_id}: {e}", "ERROR")
-            self.active_simulations[simulation_id]['status'] = 'error'
-            self.active_simulations[simulation_id]['error'] = str(e)
+            self.logger_manager.log_simulation_event(
+                f"Ошибка в симуляции {simulation_id}: {e}", "ERROR"
+            )
+            self.active_simulations[simulation_id]["status"] = "error"
+            self.active_simulations[simulation_id]["error"] = str(e)
 
-    def _generate_simulation_results(self, simulation_type: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def _generate_simulation_results(
+        self, simulation_type: str, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Генерирует результаты симуляции
 
@@ -383,26 +461,23 @@ class NanoprobeAPI:
         Returns:
             Словарь с результатами
         """
-        if simulation_type == 'spm':
+        if simulation_type == "spm":
             return {
-                'surface_analysis': {
-                    'roughness': np.random.uniform(0.1, 0.5),
-                    'features_detected': np.random.randint(5, 20)
+                "surface_analysis": {
+                    "roughness": np.random.uniform(0.1, 0.5),
+                    "features_detected": np.random.randint(5, 20),
                 },
-                'scan_quality': np.random.uniform(0.8, 1.0)
+                "scan_quality": np.random.uniform(0.8, 1.0),
             }
-        elif simulation_type == 'image_analysis':
+        elif simulation_type == "image_analysis":
             return {
-                'image_quality': np.random.uniform(0.7, 1.0),
-                'defects_found': np.random.randint(0, 10)
+                "image_quality": np.random.uniform(0.7, 1.0),
+                "defects_found": np.random.randint(0, 10),
             }
-        elif simulation_type == 'sstv':
-            return {
-                'signal_quality': np.random.uniform(0.6, 1.0),
-                'decoding_success': True
-            }
+        elif simulation_type == "sstv":
+            return {"signal_quality": np.random.uniform(0.6, 1.0), "decoding_success": True}
         else:
-            return {'general_results': 'Simulation completed successfully'}
+            return {"general_results": "Simulation completed successfully"}
 
     def get_simulation_status(self, simulation_id: str) -> Tuple[Response, int]:
         """
@@ -415,7 +490,7 @@ class NanoprobeAPI:
             JSON ответ со статусом симуляции
         """
         if simulation_id not in self.active_simulations:
-            return jsonify({'status': 'error', 'message': 'Simulation not found'}), 404
+            return jsonify({"status": "error", "message": "Simulation not found"}), 404
 
         return jsonify(self.active_simulations[simulation_id])
 
@@ -434,13 +509,13 @@ class NanoprobeAPI:
         else:
             # Проверяем, завершена ли симуляция
             if simulation_id in self.active_simulations:
-                status = self.active_simulations[simulation_id]['status']
-                if status == 'completed':
-                    return jsonify({'status': 'pending', 'message': 'Results not yet available'})
+                status = self.active_simulations[simulation_id]["status"]
+                if status == "completed":
+                    return jsonify({"status": "pending", "message": "Results not yet available"})
                 else:
-                    return jsonify({'status': status, 'message': f'Simulation is {status}'})
+                    return jsonify({"status": status, "message": f"Simulation is {status}"})
             else:
-                return jsonify({'status': 'error', 'message': 'Simulation not found'}), 404
+                return jsonify({"status": "error", "message": "Simulation not found"}), 404
 
     def upload_data(self) -> Tuple[Response, int]:
         """
@@ -450,30 +525,28 @@ class NanoprobeAPI:
             JSON ответ с результатом загрузки
         """
         try:
-            if 'file' not in request.files:
-                return jsonify({'status': 'error', 'message': 'No file provided'}), 400
+            if "file" not in request.files:
+                return jsonify({"status": "error", "message": "No file provided"}), 400
 
-            file = request.files['file']
-            if file.filename == '':
-                return jsonify({'status': 'error', 'message': 'No file selected'}), 400
+            file = request.files["file"]
+            if file.filename == "":
+                return jsonify({"status": "error", "message": "No file selected"}), 400
 
             # Сохраняем файл
-            upload_path = Path('uploads') / file.filename
+            upload_path = Path("uploads") / file.filename
             upload_path.parent.mkdir(exist_ok=True)
             file.save(str(upload_path))
 
             # Логируем загрузку
             self.logger_manager.log_system_event(f"Загружен файл: {file.filename}", "INFO")
 
-            return jsonify({
-                'status': 'success',
-                'filename': file.filename,
-                'path': str(upload_path)
-            })
+            return jsonify(
+                {"status": "success", "filename": file.filename, "path": str(upload_path)}
+            )
 
         except Exception as e:
             self.logger_manager.log_system_event(f"Ошибка загрузки данных: {e}", "ERROR")
-            return jsonify({'status': 'error', 'message': str(e)}), 500
+            return jsonify({"status": "error", "message": str(e)}), 500
 
     def list_data(self) -> Tuple[Response, int]:
         """
@@ -484,30 +557,30 @@ class NanoprobeAPI:
         """
         try:
             # Собираем список файлов из различных директорий
-            data_dirs = ['data', 'output', 'uploads']
+            data_dirs = ["data", "output", "uploads"]
             file_list = []
 
             for dir_name in data_dirs:
                 dir_path = Path(dir_name)
                 if dir_path.exists():
-                    for file_path in dir_path.rglob('*'):
+                    for file_path in dir_path.rglob("*"):
                         if file_path.is_file():
-                            file_list.append({
-                                'name': file_path.name,
-                                'path': str(file_path),
-                                'size': file_path.stat().st_size,
-                                'modified': datetime.fromtimestamp(file_path.stat().st_mtime).isoformat()
-                            })
+                            file_list.append(
+                                {
+                                    "name": file_path.name,
+                                    "path": str(file_path),
+                                    "size": file_path.stat().st_size,
+                                    "modified": datetime.fromtimestamp(
+                                        file_path.stat().st_mtime
+                                    ).isoformat(),
+                                }
+                            )
 
-            return jsonify({
-                'status': 'success',
-                'files': file_list,
-                'total_count': len(file_list)
-            })
+            return jsonify({"status": "success", "files": file_list, "total_count": len(file_list)})
 
         except Exception as e:
             self.logger_manager.log_system_event(f"Ошибка получения списка данных: {e}", "ERROR")
-            return jsonify({'status': 'error', 'message': str(e)}), 500
+            return jsonify({"status": "error", "message": str(e)}), 500
 
     def get_system_info(self) -> Response:
         """
@@ -521,27 +594,29 @@ class NanoprobeAPI:
         import psutil
 
         info = {
-            'system': {
-                'platform': platform.system(),
-                'release': platform.release(),
-                'version': platform.version(),
-                'architecture': platform.architecture()[0],
-                'processor': platform.processor()
+            "system": {
+                "platform": platform.system(),
+                "release": platform.release(),
+                "version": platform.version(),
+                "architecture": platform.architecture()[0],
+                "processor": platform.processor(),
             },
-            'hardware': {
-                'cpu_count': psutil.cpu_count(),
-                'cpu_percent': psutil.cpu_percent(),
-                'memory_total': psutil.virtual_memory().total,
-                'memory_available': psutil.virtual_memory().available,
-                'memory_percent': psutil.virtual_memory().percent,
-                'disk_usage': get_system_disk_usage().percent if hasattr(psutil, 'disk_usage') else 0
+            "hardware": {
+                "cpu_count": psutil.cpu_count(),
+                "cpu_percent": psutil.cpu_percent(),
+                "memory_total": psutil.virtual_memory().total,
+                "memory_available": psutil.virtual_memory().available,
+                "memory_percent": psutil.virtual_memory().percent,
+                "disk_usage": (
+                    get_system_disk_usage().percent if hasattr(psutil, "disk_usage") else 0
+                ),
             },
-            'software': {
-                'python_version': platform.python_version(),
-                'nanoprobe_api_version': '1.0.0'
+            "software": {
+                "python_version": platform.python_version(),
+                "nanoprobe_api_version": "1.0.0",
             },
-            'status': 'operational',
-            'uptime': time.time()  # Время работы с момента запуска
+            "status": "operational",
+            "uptime": time.time(),  # Время работы с момента запуска
         }
 
         return jsonify(info)
@@ -553,23 +628,25 @@ class NanoprobeAPI:
         Returns:
             JSON ответ со статусом системы
         """
-        active_count = len([s for s in self.active_simulations.values() if s['status'] == 'running'])
+        active_count = len(
+            [s for s in self.active_simulations.values() if s["status"] == "running"]
+        )
 
         status = {
-            'overall_status': 'operational',
-            'active_simulations': active_count,
-            'total_simulations': len(self.active_simulations),
-            'cached_results': len(self.results_cache),
-            'components': {
-                'spm_controller': 'ready',
-                'image_processor': 'ready',
-                'sstv_decoder': 'ready'
-            }
+            "overall_status": "operational",
+            "active_simulations": active_count,
+            "total_simulations": len(self.active_simulations),
+            "cached_results": len(self.results_cache),
+            "components": {
+                "spm_controller": "ready",
+                "image_processor": "ready",
+                "sstv_decoder": "ready",
+            },
         }
 
         return jsonify(status)
 
-    def run(self, host: str = 'localhost', port: int = 5000, debug: bool = False) -> None:
+    def run(self, host: str = "localhost", port: int = 5000, debug: bool = False) -> None:
         """
         Запускает API сервер
 
@@ -586,7 +663,7 @@ def main():
     """Главная функция для запуска API сервера"""
     # Создаем API интерфейс
     api = NanoprobeAPI()
-    logger = api.logger_manager.get_logger('api')
+    logger = api.logger_manager.get_logger("api")
 
     logger.info("=== API ИНТЕРФЕЙС ПРОЕКТА ===")
     logger.info("API интерфейс инициализирован")

@@ -31,6 +31,7 @@ ERROR_REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
 class ErrorSeverity(str, Enum):
     """Уровни важности ошибок"""
+
     DEBUG = "debug"
     INFO = "info"
     WARNING = "warning"
@@ -47,7 +48,7 @@ class APIError(Exception):
         status_code: int = 500,
         severity: ErrorSeverity = ErrorSeverity.ERROR,
         error_code: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         self.message = message
         self.status_code = status_code
@@ -66,7 +67,7 @@ class ValidationError(APIError):
             status_code=422,
             severity=ErrorSeverity.WARNING,
             error_code="ERR_VALIDATION",
-            details=details
+            details=details,
         )
 
 
@@ -79,7 +80,7 @@ class NotFoundError(APIError):
             status_code=404,
             severity=ErrorSeverity.WARNING,
             error_code="ERR_NOT_FOUND",
-            details={"resource_type": resource_type} if resource_type else {}
+            details={"resource_type": resource_type} if resource_type else {},
         )
 
 
@@ -92,7 +93,7 @@ class AuthenticationError(APIError):
             status_code=401,
             severity=ErrorSeverity.WARNING,
             error_code="ERR_AUTH",
-            details={}
+            details={},
         )
 
 
@@ -105,7 +106,7 @@ class AuthorizationError(APIError):
             status_code=403,
             severity=ErrorSeverity.WARNING,
             error_code="ERR_FORBIDDEN",
-            details={}
+            details={},
         )
 
 
@@ -118,7 +119,7 @@ class RateLimitError(APIError):
             status_code=429,
             severity=ErrorSeverity.WARNING,
             error_code="ERR_RATE_LIMIT",
-            details={"retry_after": retry_after}
+            details={"retry_after": retry_after},
         )
 
 
@@ -131,7 +132,7 @@ class DatabaseError(APIError):
             status_code=503,
             severity=ErrorSeverity.CRITICAL,
             error_code="ERR_DATABASE",
-            details=details
+            details=details,
         )
 
 
@@ -144,7 +145,7 @@ class ExternalServiceError(APIError):
             status_code=503,
             severity=ErrorSeverity.ERROR,
             error_code="ERR_EXTERNAL_SERVICE",
-            details={"service_name": service_name}
+            details={"service_name": service_name},
         )
 
 
@@ -157,7 +158,7 @@ class ServiceUnavailableError(APIError):
             status_code=503,
             severity=ErrorSeverity.ERROR,
             error_code="ERR_SERVICE_UNAVAILABLE",
-            details=details
+            details=details,
         )
 
 
@@ -165,7 +166,7 @@ def create_error_response(
     error: Exception,
     status_code: int,
     request: Request,
-    severity: ErrorSeverity = ErrorSeverity.ERROR
+    severity: ErrorSeverity = ErrorSeverity.ERROR,
 ) -> JSONResponse:
     """Создание унифицированного ответа об ошибке"""
 
@@ -177,8 +178,8 @@ def create_error_response(
             "error_id": error_id,
             "path": str(request.url.path),
             "method": request.method,
-            "client_ip": request.client.host if request.client else "unknown"
-        }
+            "client_ip": request.client.host if request.client else "unknown",
+        },
     )
 
     return JSONResponse(
@@ -192,8 +193,8 @@ def create_error_response(
             "severity": severity.value,
             "path": str(request.url.path),
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            **getattr(error, "details", {})
-        }
+            **getattr(error, "details", {}),
+        },
     )
 
 
@@ -202,10 +203,7 @@ async def api_error_handler(request: Request, exc: HTTPException) -> JSONRespons
     severity = ErrorSeverity.WARNING if exc.status_code < 500 else ErrorSeverity.ERROR
 
     return create_error_response(
-        error=exc,
-        status_code=exc.status_code,
-        request=request,
-        severity=severity
+        error=exc, status_code=exc.status_code, request=request, severity=severity
     )
 
 
@@ -221,30 +219,26 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
             "severity": severity.value,
             "path": str(request.url.path),
             "timestamp": datetime.now(timezone.utc).isoformat(),
-        }
+        },
     )
 
 
-async def validation_error_handler(
-    request: Request,
-    exc: RequestValidationError
-) -> JSONResponse:
+async def validation_error_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
     """Обработчик ошибок валидации"""
 
     errors = []
     for error in exc.errors():
-        errors.append({
-            "field": ".".join(str(x) for x in error.get("loc", [])),
-            "message": error.get("msg", ""),
-            "type": error.get("type", "")
-        })
+        errors.append(
+            {
+                "field": ".".join(str(x) for x in error.get("loc", [])),
+                "message": error.get("msg", ""),
+                "type": error.get("type", ""),
+            }
+        )
 
     logger.warning(
         f"Validation error: {errors}",
-        extra={
-            "path": str(request.url.path),
-            "method": request.method
-        }
+        extra={"path": str(request.url.path), "method": request.method},
     )
 
     return JSONResponse(
@@ -255,8 +249,8 @@ async def validation_error_handler(
             "message": "Ошибка валидации данных",
             "status_code": 422,
             "errors": errors,
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        },
     )
 
 
@@ -272,8 +266,8 @@ async def general_error_handler(request: Request, exc: Exception) -> JSONRespons
             "error_id": error_id,
             "path": str(request.url.path),
             "method": request.method,
-            "client_ip": request.client.host if request.client else "unknown"
-        }
+            "client_ip": request.client.host if request.client else "unknown",
+        },
     )
 
     # В production не показываем детали ошибки клиенту
@@ -290,18 +284,15 @@ async def general_error_handler(request: Request, exc: Exception) -> JSONRespons
             "severity": "critical",
             "path": str(request.url.path),
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            **({"traceback": error_trace} if show_details else {})
-        }
+            **({"traceback": error_trace} if show_details else {}),
+        },
     )
 
 
 async def api_error_handler_wrapper(request: Request, exc: APIError) -> JSONResponse:
     """Обработчик кастомных API ошибок"""
     return create_error_response(
-        error=exc,
-        status_code=exc.status_code,
-        request=request,
-        severity=exc.severity
+        error=exc, status_code=exc.status_code, request=request, severity=exc.severity
     )
 
 
@@ -325,10 +316,13 @@ def register_error_handlers(app):
 
 # ==================== Error Reporting ====================
 
-def save_error_report(error_type: str, message: str, traceback_str: str, context: Optional[Dict] = None):
+
+def save_error_report(
+    error_type: str, message: str, traceback_str: str, context: Optional[Dict] = None
+):
     """
     Сохранение отчёта об ошибке в reports/errors/
-    
+
     Args:
         error_type: Тип ошибки
         message: Сообщение
@@ -338,18 +332,18 @@ def save_error_report(error_type: str, message: str, traceback_str: str, context
     timestamp = datetime.now(timezone.utc)
     filename = f"error_report_{timestamp.strftime('%Y%m%d_%H%M%S')}.json"
     filepath = ERROR_REPORTS_DIR / filename
-    
+
     report = {
         "timestamp": timestamp.isoformat(),
         "error_type": error_type,
         "message": message,
         "traceback": traceback_str,
         "context": context or {},
-        "resolved": False
+        "resolved": False,
     }
-    
+
     try:
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             json.dump(report, f, ensure_ascii=False, indent=2)
         logger.debug(f"Error report saved: {filepath}")
     except Exception as e:
@@ -359,25 +353,25 @@ def save_error_report(error_type: str, message: str, traceback_str: str, context
 def cleanup_old_error_reports(days: int = 30):
     """
     Очистка старых отчётов об ошибках
-    
+
     Args:
         days: Удалять отчеты старше N дней
     """
     from datetime import timedelta
-    
+
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
     deleted = 0
-    
+
     for file in ERROR_REPORTS_DIR.glob("error_report_*.json"):
         mtime = datetime.fromtimestamp(file.stat().st_mtime)
         if mtime < cutoff:
             file.unlink()
             deleted += 1
             logger.debug(f"Deleted old error report: {file}")
-    
+
     if deleted > 0:
         logger.info(f"Cleaned up {deleted} old error reports")
-    
+
     return deleted
 
 
