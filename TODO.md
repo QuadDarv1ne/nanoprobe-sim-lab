@@ -1,6 +1,13 @@
 # Nanoprobe Sim Lab — TODO
 
-**Последнее обновление:** 2026-04-10 17:30
+**Последнее обновление:** 2026-04-10 18:00
+
+## Статус проекта
+
+- **Ветка:** `dev` (активная разработка) → `main` (стабильная)
+- **Тесты:** 66/66 core passing (100%) ✅
+- **Качество кода:** 240+ исправлений, pre-commit hooks проходят
+- **RTL-SDR V4:** подключён и работает
 
 ## Последние улучшения (2026-04-10)
 
@@ -40,6 +47,8 @@
   - **Влияние:** Нельзя декодировать изображения из WAV файлов
   - **Решение:** Нужен отдельный декодер (wxtoimg для NOAA, MMSSTV/QSSTV для SSTV)
 - ⚠️ **~94 E501 остались** — HTML/CSS inline строки и config dicts, требуют ручного рефакторинга
+  - **Влияние:** pre-commit warning на длинных строках в шаблонах
+  - **Приоритет:** Low (не критично для функциональности)
 
 ---
 
@@ -119,3 +128,27 @@
 
 - [ ] `deployment/docker-compose.prod.yml` — PostgreSQL сервис есть, но API использует SQLite. Либо добавить миграцию на PostgreSQL, либо убрать PostgreSQL из prod compose.
 - [x] `.env` — `ENVIRONMENT=development` для локальной разработки (2026-04-09)
+
+---
+
+## Структура проекта (актуально на 2026-04-10)
+
+### API Routes (24 endpoints)
+admin, adsb, alerting, analysis, auth, batch, comparison, dashboard, external_services, fm_radio, graphql, ml_analysis, monitoring, nasa, reports, rtl433, scans, simulations, sstv, sstv_advanced, sync_manager, system_export, weather
+
+### RTL-SDR Tools (28 файлов)
+adsb_capture, adsb_receiver, adsb_tracker, am_airband, capture_sstv_mmsstv, fm_capture_simple, fm_multi_capture, fm_radio, fm_radio_capture, fm_radio_scanner, fm_radio_unified, fm_stereo_decoder, iss_tracker, listen_adsb.bat, listen_airband, listen_fm_radio, listen_rtl433.bat, pocsag_decoder, quick_scan_airband, raw_to_wav, rtl433_multi_scanner, rtl433_scanner, rtlsdr_control_panel, rtl_sdr_noaa_capture, rtl_sdr_sstv_capture, rtl_sdr_visualizer, sstv_ground_station
+
+### Utils (модули)
+ai, analytics, api, backup_manager, batch_processor, caching, config, core, data, database, deployment, dev, logger, monitoring, performance, reporting, security, simulator, spm_realtime_visualizer, structured_logger, surface_comparator, testing, test_framework, visualization, visualizer
+
+### Тесты (50+ файлов)
+- Core: test_api.py, test_database.py, test_integration_db.py, test_auth.py (66 тестов, 100% pass)
+- RTL-SDR: test_rtl_sdr_tools.py, test_rtl_sdr_recording.py, test_integration_rtlsdr.py
+- API Routes: test_api_routes.py, test_sstv_api.py, test_external_routes.py
+- Security: test_auth.py, test_security_headers.py, test_security_improvements.py, test_two_factor_auth.py
+- Performance: test_cache_manager.py, test_redis_cache.py, test_rate_limiter.py, test_rate_limiting.py, test_circuit_breaker.py
+- Utils: test_utils_modules.py, test_logger.py, test_error_handler.py
+
+### Документация (30+ файлов)
+API reference, startup guide, security testing, load testing, CI/CD, deployment guides, ADR, onboarding
