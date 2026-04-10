@@ -51,6 +51,7 @@
 - [ ] Merge dev → main после стабилизации
 
 ### Коммиты (pushed to origin/dev)
+- ✅ `15362c2` fix: resolve E501 line too long errors in utils modules (12 lines fixed)
 - ✅ `1c6d3fb` chore: update RTL-SDR tools (adsb_receiver, fm_radio_unified, rtl_sdr_noaa_capture)
 - ✅ `05e5c32` fix: resolve 13 E501 line too long errors in core API files
 - ✅ `77d8f48` docs: update TODO.md with cleanup status and fix broken references
