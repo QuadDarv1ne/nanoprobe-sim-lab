@@ -271,8 +271,10 @@ class SurfaceComparator:
         if save_difference_map and MATPLOTLIB_AVAILABLE:
             fig_diff, ax_diff = plt.subplots(figsize=(10, 8))
             im_diff = ax_diff.imshow(abs_diff, cmap="hot", aspect="equal")
+            max_d = metrics["max_diff"]
+            mean_d = metrics["mean_diff"]
             ax_diff.set_title(
-                f"Absolute Difference Map\nMax: {metrics['max_diff']:.4f}, Mean: {metrics['mean_diff']:.4f}",
+                f"Absolute Difference Map\n" f"Max: {max_d:.4f}, Mean: {mean_d:.4f}",
                 fontsize=12,
                 fontweight="bold",
             )

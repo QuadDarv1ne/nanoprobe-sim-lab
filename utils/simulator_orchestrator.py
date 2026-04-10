@@ -253,10 +253,12 @@ class SimulationOrchestrator:
         try:
             # Для демонстрации используем случайные данные
             sample_surface_data = np.random.rand(surface_size[1], surface_size[0])
+            ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+            filename = f"output/comprehensive_simulation_{ts}.png"
             self.visualizer.surface_viz.plot_surface_2d(
                 sample_surface_data,
                 "Результаты комплексной симуляции",
-                f"output/comprehensive_simulation_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.png",
+                filename,
             )
         except Exception as e:
             self.logger_manager.log_system_event(f"Ошибка визуализации: {e}", "WARNING")
