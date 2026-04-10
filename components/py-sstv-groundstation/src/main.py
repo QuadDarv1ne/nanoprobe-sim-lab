@@ -4,6 +4,7 @@ import argparse
 import os
 import sys
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -68,7 +69,7 @@ def mode_receive_sdr(args):
         sample_rate=args.sample_rate,
         gain=args.gain,
         bias_tee=args.bias_tee,
-        agc=args.agc
+        agc=args.agc,
     )
     if not sdr:
         print("Ошибка инициализации SDR")
@@ -95,8 +96,9 @@ def mode_receive_sdr(args):
             decoder = SSTVDecoder()
 
             # Пробуем декодировать из сэмплов если есть
-            if hasattr(sdr, 'recorded_samples') and sdr.recorded_samples:
+            if hasattr(sdr, "recorded_samples") and sdr.recorded_samples:
                 import numpy as np
+
                 all_samples = np.concatenate(sdr.recorded_samples)
                 image = decoder.decode_from_samples(all_samples, sample_rate=sdr.sample_rate)
             else:
@@ -135,9 +137,7 @@ def mode_scan(args):
     try:
         scanner = SDRScanner(sdr)
         signals = scanner.scan_frequencies(
-            freq_range=(freq_min, freq_max),
-            step_mhz=step,
-            threshold_db=args.threshold or -80
+            freq_range=(freq_min, freq_max), step_mhz=step, threshold_db=args.threshold or -80
         )
 
         if signals:
@@ -214,8 +214,6 @@ def mode_demo(args):
 
 def mode_waterfall(args):
     """Waterfall дисплей спектра."""
-    from datetime import datetime, timezone
-
     from waterfall_display import WaterfallDisplay, WaterfallRecorder
 
     print(f"\nWATERFALL ДИСПЛЕЙ")
@@ -229,7 +227,7 @@ def mode_waterfall(args):
         sample_rate=args.sample_rate,
         gain=args.gain,
         bias_tee=args.bias_tee,
-        agc=args.agc
+        agc=args.agc,
     )
     if not sdr:
         print("Ошибка инициализации SDR")
@@ -237,10 +235,7 @@ def mode_waterfall(args):
 
     # Инициализация waterfall
     waterfall = WaterfallDisplay(
-        width=512,
-        height=256,
-        sample_rate=sdr.sample_rate,
-        center_freq=sdr.center_freq * 1e6
+        width=512, height=256, sample_rate=sdr.sample_rate, center_freq=sdr.center_freq * 1e6
     )
 
     recorder = WaterfallRecorder() if args.save_waterfall else None
@@ -258,17 +253,14 @@ def mode_waterfall(args):
                 recorder.add_frame(rgb_row)
 
         # Запускаем приём
-        sdr.start_recording(
-            duration_seconds=args.duration,
-            realtime_callback=sample_callback
-        )
+        sdr.start_recording(duration_seconds=args.duration, realtime_callback=sample_callback)
 
         # Ожидаем завершения
         while sdr.is_recording:
             time.sleep(1)
             # Показываем прогресс
             elapsed = args.duration - sum(1 for _ in range(int(sdr.sample_rate / 1024)))
-            print(f"\rОсталось: {max(0, elapsed)}с ", end='', flush=True)
+            print(f"\rОсталось: {max(0, elapsed)}с ", end="", flush=True)
 
         print("\n")
 
@@ -279,7 +271,7 @@ def mode_waterfall(args):
                 print(f"Waterfall сохранён: {output_path}")
 
         # Сохраняем статическое изображение
-        timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         waterfall.save_image(f"output/waterfall/waterfall_{timestamp}.png")
 
         return True
@@ -332,11 +324,11 @@ def mode_satellite_schedule(args):
         return
 
     for pass_info in schedule[:10]:  # Показываем первые 10
-        sat_name = pass_info['satellite']
-        aos = pass_info['aos']
-        los = pass_info['los']
-        max_el = pass_info['max_elevation']
-        freq = pass_info['frequency']
+        sat_name = pass_info["satellite"]
+        aos = pass_info["aos"]
+        los = pass_info["los"]
+        max_el = pass_info["max_elevation"]
+        freq = pass_info["frequency"]
 
         print(f"\n{sat_name}")
         print(f"  Начало: {aos.strftime('%H:%M:%S')} ({aos.strftime('%d.%m.%Y')})")
@@ -367,7 +359,7 @@ def mode_realtime_sstv(args):
         sample_rate=args.sample_rate,
         gain=args.gain,
         bias_tee=args.bias_tee,
-        agc=args.agc
+        agc=args.agc,
     )
     if not sdr:
         print("Ошибка инициализации SDR")
@@ -400,8 +392,6 @@ def mode_realtime_sstv(args):
 
 def mode_auto_record(args):
     """Автоматическая запись при пролёте спутника."""
-    from datetime import datetime
-
     from auto_recorder import AutoRecordingScheduler
 
     print(f"\nАВТОЗАПИСЬ СПУТНИКОВ")
@@ -414,34 +404,34 @@ def mode_auto_record(args):
         ground_station_lat=args.lat,
         ground_station_lon=args.lon,
         pre_pass_minutes=args.pre_pass,
-        post_pass_minutes=args.post_pass
+        post_pass_minutes=args.post_pass,
     )
 
     # Callback для уведомлений
     def recording_callback(event_type: str, data: dict):
         """Обработка событий автоматического рекордера: информирование о статусе записи."""
-        timestamp = datetime.now(timezone.utc).strftime('%H:%M:%S')
+        timestamp = datetime.now(timezone.utc).strftime("%H:%M:%S")
 
-        if event_type == 'schedule_loaded':
+        if event_type == "schedule_loaded":
             print(f"[{timestamp}] Загружено расписание: {data['count']} пролётов")
-            if data['next_pass']:
+            if data["next_pass"]:
                 print(f"[{timestamp}]    Следующий: {data['next_pass']}")
 
-        elif event_type == 'monitoring_started':
+        elif event_type == "monitoring_started":
             print(f"[{timestamp}] Мониторинг запущен")
 
-        elif event_type == 'recording_started':
+        elif event_type == "recording_started":
             print(f"[{timestamp}] ЗАПИСЬ: {data['satellite']} на {data['frequency']} MHz")
             print(f"[{timestamp}]    Путь: {data['output_dir']}")
 
-        elif event_type == 'recording_completed':
+        elif event_type == "recording_completed":
             print(f"[{timestamp}] ЗАПИСЬ ЗАВЕРШЕНА: {data['satellite']}")
             print(f"[{timestamp}]    Путь: {data['output_dir']}")
 
-        elif event_type == 'recording_failed':
+        elif event_type == "recording_failed":
             print(f"[{timestamp}] ОШИБКА: {data['satellite']} - {data['error']}")
 
-        elif event_type == 'monitoring_stopped':
+        elif event_type == "monitoring_stopped":
             print(f"[{timestamp}] Мониторинг остановлен")
 
     scheduler.set_callback(recording_callback)
@@ -471,8 +461,12 @@ def mode_auto_record(args):
             # Показываем статус каждые 60 секунд
             if int(time.time()) % 60 == 0:
                 status = scheduler.get_status()
-                if status['active_recordings'] > 0:
-                    print(f"\rИдёт запись: {status['active_recordings']} спутник(ов)   ", end='', flush=True)
+                if status["active_recordings"] > 0:
+                    print(
+                        f"\rИдёт запись: {status['active_recordings']} спутник(ов)   ",
+                        end="",
+                        flush=True,
+                    )
 
     except KeyboardInterrupt:
         print("\n\nОстановка по пользователю...")
@@ -489,6 +483,7 @@ def mode_check_device(args):
     print("1. Проверка rtlsdr...")
     try:
         from rtlsdr import RtlSdr
+
         print("   ✓ rtlsdr установлен")
     except ImportError:
         print("   ✗ rtlsdr не найден")
@@ -512,9 +507,9 @@ def mode_check_device(args):
     for i in range(num_devices):
         try:
             sdr = RtlSdr(device_index=i)
-            device_name = sdr.get_device_name() if hasattr(sdr, 'get_device_name') else 'Unknown'
-            serial = sdr.get_serial_number() if hasattr(sdr, 'get_serial_number') else 'Unknown'
-            manufacturer = sdr.get_manufacturer() if hasattr(sdr, 'get_manufacturer') else 'Unknown'
+            device_name = sdr.get_device_name() if hasattr(sdr, "get_device_name") else "Unknown"
+            serial = sdr.get_serial_number() if hasattr(sdr, "get_serial_number") else "Unknown"
+            manufacturer = sdr.get_manufacturer() if hasattr(sdr, "get_manufacturer") else "Unknown"
 
             print(f"   Устройство #{i}:")
             print(f"      Название: {device_name}")
@@ -522,7 +517,7 @@ def mode_check_device(args):
             print(f"      Производитель: {manufacturer}")
 
             # Определение V4
-            if 'R828D' in device_name.upper() or 'V4' in device_name.upper():
+            if "R828D" in device_name.upper() or "V4" in device_name.upper():
                 print(f"      ✓ RTL-SDR V4 обнаружен")
 
             sdr.close()
@@ -536,44 +531,62 @@ def mode_check_device(args):
 def main():
     """Основная функция SSTV станции."""
     parser = argparse.ArgumentParser(
-        description="Наземная станция SSTV",
-        formatter_class=argparse.RawDescriptionHelpFormatter
+        description="Наземная станция SSTV", formatter_class=argparse.RawDescriptionHelpFormatter
     )
 
     # Основные опции
     parser.add_argument("--audio", "-a", type=str, help="Путь к аудиофайлу")
     parser.add_argument("--output", "-o", type=str, help="Путь для сохранения изображения")
     parser.add_argument(
-        "--mode", "-m",
+        "--mode",
+        "-m",
         type=str,
         default="auto",
-        help="Режим SSTV (auto, 'Martin 1', 'Scottie 1', etc.)"
+        help="Режим SSTV (auto, 'Martin 1', 'Scottie 1', etc.)",
     )
 
     # SDR опции
     parser.add_argument("--sdr", action="store_true", help="Режим приема с SDR")
     parser.add_argument(
-        "--frequency", "-f",
+        "--frequency",
+        "-f",
         type=str,
         default="iss",
-        help="Частота (МГц) или название (iss, noaa_15, etc.)"
+        help="Частота (МГц) или название (iss, noaa_15, etc.)",
     )
     parser.add_argument("--device", "-d", type=int, default=0, help="Индекс SDR устройства")
-    parser.add_argument("--sample-rate", type=int, default=2400000, help="Частота дискретизации (по умолчанию 2.4 MSPS)")
+    parser.add_argument(
+        "--sample-rate",
+        type=int,
+        default=2400000,
+        help="Частота дискретизации (по умолчанию 2.4 MSPS)",
+    )
     parser.add_argument("--gain", type=int, default=30, help="Усиление в dB (0-50)")
-    parser.add_argument("--bias-tee", action="store_true", help="Включить Bias-T для питания антенны")
-    parser.add_argument("--agc", action="store_true", help="Включить автоматическую регулировку усиления")
+    parser.add_argument(
+        "--bias-tee", action="store_true", help="Включить Bias-T для питания антенны"
+    )
+    parser.add_argument(
+        "--agc", action="store_true", help="Включить автоматическую регулировку усиления"
+    )
     parser.add_argument("--duration", type=int, default=60, help="Длительность записи (с)")
     parser.add_argument("--output-audio", type=str, help="Файл для аудио записи")
     parser.add_argument("--output-image", type=str, help="Файл для изображения")
-    parser.add_argument("--auto-decode", action="store_true", help="Авто декодирование после записи")
+    parser.add_argument(
+        "--auto-decode", action="store_true", help="Авто декодирование после записи"
+    )
     parser.add_argument("--realtime-sstv", action="store_true", help="Real-time декодирование SSTV")
     parser.add_argument("--waterfall", action="store_true", help="Waterfall дисплей спектра")
     parser.add_argument("--save-waterfall", action="store_true", help="Сохранить waterfall")
-    parser.add_argument("--auto-record", action="store_true", help="Автозапись при пролёте спутника")
-    parser.add_argument("--schedule-hours", type=int, default=24, help="На сколько часов загружать расписание")
+    parser.add_argument(
+        "--auto-record", action="store_true", help="Автозапись при пролёте спутника"
+    )
+    parser.add_argument(
+        "--schedule-hours", type=int, default=24, help="На сколько часов загружать расписание"
+    )
     parser.add_argument("--pre-pass", type=int, default=5, help="Начинать за N минут до AOS")
-    parser.add_argument("--post-pass", type=int, default=2, help="Заканчивать через N минут после LOS")
+    parser.add_argument(
+        "--post-pass", type=int, default=2, help="Заканчивать через N минут после LOS"
+    )
 
     # Сканирование
     parser.add_argument("--scan", action="store_true", help="Режим сканирования частот")

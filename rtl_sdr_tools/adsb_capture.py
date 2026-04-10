@@ -129,9 +129,8 @@ def main():
     pulse_widths = [p["width"] / SAMPLE_RATE * 1e6 for p in pulses]
     print(f"\n[*] Pulse Statistics:")
     print(f"    Width: {np.mean(pulse_widths):.2f} ± {np.std(pulse_widths):.2f} µs")
-    print(
-        f"    Amplitude: {np.mean([p['amplitude'] for p in pulses]):.3f} ± {np.std([p['amplitude'] for p in pulses]):.3f}"
-    )
+    amps = [p["amplitude"] for p in pulses]
+    print(f"    Amplitude: {np.mean(amps):.3f} ± {np.std(amps):.3f}")
 
 
 if __name__ == "__main__":

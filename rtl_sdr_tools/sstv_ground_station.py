@@ -134,9 +134,11 @@ def cmd_record(args):
     # Запускаем запись через run_sstv_decoder.py
     decoder_script = Path(__file__).parent / "run_sstv_decoder.py"
     if decoder_script.exists():
-        os.system(
-            f'"{sys.executable}" "{decoder_script}" --frequency {args.frequency} --duration {args.duration}'
+        cmd = (
+            f'"{sys.executable}" "{decoder_script}" '
+            f"--frequency {args.frequency} --duration {args.duration}"
         )
+        os.system(cmd)
     else:
         print("❌ Скрипт run_sstv_decoder.py не найден")
 

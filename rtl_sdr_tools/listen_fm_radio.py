@@ -65,9 +65,11 @@ def test_fm_radio():
         sdr.close()
         print("\n✅ Приём завершён!")
         print("\n📝 Для прослушивания сконвертируй в WAV:")
-        print(
-            f"   rtl_fm -f {FREQUENCY_MHZ}M -M wbfm -s 256k -r 48k -g {GAIN} | ffplay -ar 48000 -f s16le -"
+        cmd = (
+            f"   rtl_fm -f {FREQUENCY_MHZ}M -M wbfm -s 256k "
+            f"-r 48k -g {GAIN} | ffplay -ar 48000 -f s16le -"
         )
+        print(cmd)
 
     except Exception as e:
         print(f"\n❌ Ошибка: {e}")
