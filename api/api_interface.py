@@ -262,7 +262,9 @@ class NanoprobeAPI:
             # image = self.decode_base64_image(data.get('image_data'))
 
             # Применяем фильтр
-            # processed_image = self.image_processor.apply_noise_reduction(data.get('filter', 'gaussian'))
+            # processed_image = self.image_processor.apply_noise_reduction(
+            #     data.get('filter', 'gaussian')
+            # )
 
             # Для демонстрации возвращаем фиктивный результат
             processed_data = np.random.rand(100, 100).tolist()
@@ -321,7 +323,9 @@ class NanoprobeAPI:
             # audio = self.decode_base64_audio(data.get('audio_data'))
 
             # Декодируем SSTV
-            # decoded_image = self.sstv_decoder.decode_from_audio(audio, data.get('mode', 'MartinM1'))
+            # decoded_image = self.sstv_decoder.decode_from_audio(
+            #     audio, data.get('mode', 'MartinM1')
+            # )
 
             # Для демонстрации возвращаем фиктивное изображение
             decoded_image_data = np.random.rand(320, 240, 3).tolist()

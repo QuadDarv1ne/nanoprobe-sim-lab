@@ -324,7 +324,8 @@ async def sstv_websocket_stream(websocket: WebSocket):
 async def _record_sstv_background(session_id: str, receiver, duration: float):
     """Фоновая задача записи SSTV"""
     try:
-        output_file = f"data/sstv/recording_{session_id}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.wav"
+        ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        output_file = f"data/sstv/recording_{session_id}_{ts}.wav"
         Path(output_file).parent.mkdir(parents=True, exist_ok=True)
 
         # Записываем

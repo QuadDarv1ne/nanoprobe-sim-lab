@@ -200,7 +200,9 @@ async def get_dashboard_stats(
             cache.set(f"{CACHE_PREFIX['stats']}:all", result.model_dump(), expire=5)
 
         logger.debug(
-            f"Dashboard stats retrieved: {result.total_scans} scans, {result.total_simulations} simulations"
+            "Dashboard stats: %d scans, %d simulations",
+            result.total_scans,
+            result.total_simulations,
         )
         return result
     except Exception as e:
@@ -241,7 +243,8 @@ async def get_detailed_stats(
 
         # Последние активности
         recent_scans = db.execute_query(
-            "SELECT id, scan_type, surface_type, created_at FROM scan_results ORDER BY created_at DESC LIMIT 5"
+            "SELECT id, scan_type, surface_type, created_at "
+            "FROM scan_results ORDER BY created_at DESC LIMIT 5"
         )
 
         # Статистика по симуляциям

@@ -1,18 +1,20 @@
 # Nanoprobe Sim Lab — TODO
 
-**Последнее обновление:** 2026-04-10 18:30
+**Последнее обновление:** 2026-04-10 19:00
 
 ## Статус проекта
 
 - **Ветка:** `dev` (активная разработка) → `main` (стабильная)
 - **Тесты:** 66/66 core passing (100%) ✅
-- **Качество кода:** 240+ исправлений, pre-commit hooks проходят ✅
+- **Качество кода:** 253+ исправлений, pre-commit hooks проходят ✅
 - **RTL-SDR V4:** подключён и работает ✅
 - **Очистка:** удалено 12 дублирующих файлов (-1133 строк) ✅
+- **E501:** исправлено 13 длинных строк (210 → 197 осталось)
 
 ## Последние улучшения (2026-04-10)
 
 ### Коммиты (pushed to origin/dev)
+- ✅ `77d8f48` docs: update TODO.md with cleanup status and fix broken references
 - ✅ `56a00a4` chore: remove duplicate reports, QWEN.md, active_tests, bat scripts
 - ✅ `99959a8` docs: update todo.md with current project status
 - ✅ `f9b9923` feat: add FM Stereo and POCSAG decoders + update todo.md
@@ -48,9 +50,10 @@
 - ⚠️ **pysstv не декодирует SSTV** — это только генератор (encoder)
   - **Влияние:** Нельзя декодировать изображения из WAV файлов
   - **Решение:** Нужен отдельный декодер (wxtoimg для NOAA, MMSSTV/QSSTV для SSTV)
-- ⚠️ **~94 E501 остались** — HTML/CSS inline строки и config dicts, требуют ручного рефакторинга
-  - **Влияние:** pre-commit warning на длинных строках в шаблонах
+- ⚠️ **~197 E501 остались** — длинные строки в HTML/CSS, SQL, config dicts
+  - **Влияние:** pre-commit warning на длинных строках в шаблонах и config
   - **Приоритет:** Low (не критично для функциональности)
+  - **Исправлено:** 13 строк в api/, api/routes/, admin_cli.py
 
 ---
 

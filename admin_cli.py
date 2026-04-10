@@ -36,6 +36,7 @@ def print_info(text: str):
 
 # ==================== Команды ====================
 
+
 def cmd_status(args):
     """Проверка статуса системы"""
     print_header("Статус системы Nanoprobe Sim Lab")
@@ -76,9 +77,10 @@ def cmd_status(args):
     print_info("\nПорты:")
     try:
         import socket
+
         for port in [5000, 8000]:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            result = sock.connect_ex(('localhost', port))
+            result = sock.connect_ex(("localhost", port))
             if result == 0:
                 print(f"  🔴 Порт {port} занят")
             else:
@@ -230,7 +232,10 @@ def cmd_users(args):
         print("-" * 60)
 
         for username, user_data in USERS_DB.items():
-            print(f"{username:<20} {user_data['role']:<10} {user_data['id']:<5} {user_data['created_at']:<25}")
+            role = user_data["role"]
+            uid = user_data["id"]
+            created = user_data["created_at"]
+            print(f"{username:<20} {role:<10} {uid:<5} {created:<25}")
 
     elif args.action == "create":
         from api.routes.auth import USERS_DB, hash_password
@@ -250,7 +255,9 @@ def cmd_users(args):
         }
 
         print_success(f"Пользователь '{args.username}' создан (ID: {new_id})")
-        print_info("Примечание: Пользователь добавлен только в памяти. Для постоянного хранения используйте БД.")
+        print_info(
+            "Пользователь добавлен только в памяти. " "Для постоянного хранения используйте БД."
+        )
 
     elif args.action == "delete":
         from api.routes.auth import USERS_DB
@@ -287,7 +294,7 @@ def cmd_migrate(args):
 
             # Проверка индексов
             cursor.execute("SELECT name FROM sqlite_master WHERE type='index'")
-            indexes = [row[0] for row in cursor.fetchall() if not row[0].startswith('sqlite_')]
+            indexes = [row[0] for row in cursor.fetchall() if not row[0].startswith("sqlite_")]
 
             print_info(f"Найдено индексов: {len(indexes)}")
 
@@ -323,16 +330,17 @@ def cmd_info(args):
     py_files = list(Path(".").rglob("*.py"))
     print(f"  Python файлов: {len(py_files)}")
 
-    total_lines = sum(1 for f in py_files for _ in open(f, 'r', encoding='utf-8', errors='ignore'))
+    total_lines = sum(1 for f in py_files for _ in open(f, "r", encoding="utf-8", errors="ignore"))
     print(f"  Строк кода: {total_lines:,}")
 
 
 # ==================== Основная функция ====================
 
+
 def main():
     """
     Основная функция CLI утилиты
-    
+
     Парсит аргументы командной строки и выполняет соответствующую команду.
     Доступные команды: status, cleanup, backup, restore, users, logs
     """
@@ -365,7 +373,9 @@ def main():
     # Команда: restore
     parser_restore = subparsers.add_parser("restore", help="Восстановление из бэкапа")
     parser_restore.add_argument("backup", type=str, help="Путь к бэкапу")
-    parser_restore.add_argument("--force", action="store_true", help="Перезаписать существующие файлы")
+    parser_restore.add_argument(
+        "--force", action="store_true", help="Перезаписать существующие файлы"
+    )
     parser_restore.set_defaults(func=cmd_restore)
 
     # Команда: users

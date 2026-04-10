@@ -419,7 +419,13 @@ class AlertManager:
 <tr><td><b>Severity:</b></td><td>{alert['severity'].upper()}</td></tr>
 <tr><td><b>Time:</b></td><td>{alert['timestamp'][:19]}</td></tr>
 <tr><td><b>Description:</b></td><td>{alert['description']}</td></tr>
-{f"<tr><td><b>Resolved at:</b></td><td>{alert.get('resolved_at', 'N/A')[:19]}</td></tr>" if is_recovery else ""}
+"""
+            resolved_row = (
+                f"<tr><td><b>Resolved at:</b></td>"
+                f"<td>{alert.get('resolved_at', 'N/A')[:19]}</td></tr>"
+            )
+            body += resolved_row if is_recovery else ""
+            body += """
 </table>
 
 <h3>Details</h3>

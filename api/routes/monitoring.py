@@ -298,10 +298,11 @@ async def profile_database_query(
             profile_result["execution_time_ms"] = (end_time - start_time) * 1000
 
             if profile_result["execution_time_ms"] > 100:
+                exec_time = profile_result["execution_time_ms"]
                 recommendations.append(
                     {
                         "type": "warning",
-                        "message": f"Slow query detected: {profile_result['execution_time_ms']:.2f}ms",
+                        "message": f"Slow query detected: {exec_time:.2f}ms",
                         "suggestion": "Consider optimizing the query or adding indexes.",
                     }
                 )
@@ -402,7 +403,9 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 @router.get(
     "/health/extended",
     summary="Extended Health Check",
-    description="Полная проверка здоровья всех компонентов (WebSocket, TLE, RTL-SDR, Background Tasks)",
+    description=(
+        "Полная проверка здоровья всех компонентов " "(WebSocket, TLE, RTL-SDR, Background Tasks)"
+    ),
 )
 async def get_extended_health():
     """
