@@ -20,10 +20,10 @@ class ConfigManager:
     для всех компонентов проекта.
     """
 
-    _instance: Optional['ConfigManager'] = None
+    _instance: Optional["ConfigManager"] = None
     _lock = threading.Lock()
 
-    def __new__(cls, config_file: str = "config.json") -> 'ConfigManager':
+    def __new__(cls, config_file: str = "config.json") -> "ConfigManager":
         """Singleton паттерн для ConfigManager"""
         if cls._instance is None:
             cls._instance = super().__new__(cls)
@@ -36,7 +36,7 @@ class ConfigManager:
         Args:
             config_file: Путь к файлу конфигурации.
         """
-        if hasattr(self, '_initialized') and self._initialized:
+        if hasattr(self, "_initialized") and self._initialized:
             return
 
         self.config_file: Path
@@ -82,9 +82,7 @@ class ConfigManager:
         try:
             with open(self.config_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                self._last_modified = datetime.fromtimestamp(
-                    os.path.getmtime(self.config_file)
-                )
+                self._last_modified = datetime.fromtimestamp(os.path.getmtime(self.config_file))
                 return data if isinstance(data, dict) else {}
         except json.JSONDecodeError as e:
             print(f"Ошибка при загрузке конфигурации: {e}")
@@ -122,7 +120,7 @@ class ConfigManager:
             Значение конфигурации или default
         """
         with self._lock:
-            keys = key.split('.')
+            keys = key.split(".")
             value = self.config
             for k in keys:
                 if isinstance(value, dict) and k in value:
@@ -144,7 +142,7 @@ class ConfigManager:
             True если успешно
         """
         with self._lock:
-            keys = key.split('.')
+            keys = key.split(".")
             config = self.config
             for k in keys[:-1]:
                 if k not in config:
@@ -166,7 +164,9 @@ class ConfigManager:
             "project": {
                 "name": "Nanoprobe Simulation Lab",
                 "version": "1.0.0",
-                "description": "Комплекс инструментов для моделирования наноразмерных измерительных систем",
+                "description": (
+                    "Комплекс инструментов для моделирования " "наноразмерных измерительных систем"
+                ),
                 "author": "Школа программирования Maestro7IT",
                 "copyright": "все права защищены",
             },
@@ -221,9 +221,12 @@ class ConfigManager:
                 "type": "All Rights Reserved",
                 "owner": "Школа программирования Maestro7IT",
                 "reserved_rights": [
-                    "Использование материалов проекта возможно только с разрешения владельца",
-                    "Запрещено копирование, распространение и коммерческое использование без разрешения",
-                    "Все права на исходный код принадлежат Школе программирования Maestro7IT",
+                    ("Использование материалов проекта возможно " "только с разрешения владельца"),
+                    (
+                        "Запрещено копирование, распространение и "
+                        "коммерческое использование без разрешения"
+                    ),
+                    ("Все права на исходный код принадлежат " "Школе программирования Maestro7IT"),
                 ],
             },
         }

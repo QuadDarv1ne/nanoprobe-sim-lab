@@ -1,22 +1,23 @@
 """Модуль управления аутентификацией для проекта Лаборатория моделирования нанозонда."""
 
 import hashlib
-import secrets
 import os
-import jwt
-import bcrypt
-from datetime import datetime, timedelta, timezone
-from typing import Dict, Any, Optional, List
+import secrets
 import sqlite3
+from datetime import datetime, timedelta, timezone
 from functools import wraps
-from flask import request, jsonify, g
+from typing import Any, Dict, List, Optional
+
+import bcrypt
+import jwt
+from flask import g, jsonify, request
+
 
 class AuthManager:
     """
     Класс управления аутентификацией
     Обеспечивает аутентификацию пользователей, генерацию токенов и проверку прав доступа к ресурсам.
     """
-
 
     def __init__(self, db_path: str = "auth.db", secret_key: str = None):
         """
@@ -30,14 +31,14 @@ class AuthManager:
         self.secret_key = secret_key or secrets.token_hex(32)
         self.init_database()
 
-
     def init_database(self):
         """Инициализирует базу данных аутентификации"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
         # Создаем таблицу пользователей
-        cursor.execute('''
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT UNIQUE NOT NULL,
@@ -49,10 +50,12 @@ class AuthManager:
                 last_login TIMESTAMP,
                 is_active BOOLEAN DEFAULT 1
             )
-        ''')
+        """
+        )
 
         # Создаем таблицу токенов
-        cursor.execute('''
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS tokens (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
@@ -61,10 +64,12 @@ class AuthManager:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users (id)
             )
-        ''')
+        """
+        )
 
         # Создаем таблицу прав доступа
-        cursor.execute('''
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS permissions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 role TEXT NOT NULL,
@@ -72,14 +77,14 @@ class AuthManager:
                 action TEXT NOT NULL,
                 granted BOOLEAN DEFAULT 1
             )
-        ''')
+        """
+        )
 
         conn.commit()
         conn.close()
 
         # Создаем администратора по умолчанию
         self.create_default_admin()
-
 
     def create_default_admin(self):
         """Создает пользователя администратора по умолчанию"""
@@ -96,10 +101,9 @@ class AuthManager:
                 username="admin",
                 email="admin@nanoprobe-sim-lab.org",
                 password=default_password,
-                role="admin"
+                role="admin",
             )
             print("✅ Создан пользователь администратора по умолчанию")
-
 
     def hash_password(self, password: str, salt: str = None) -> tuple:
         """
@@ -124,7 +128,6 @@ class AuthManager:
 
         return bcrypt_hash.decode(), salt
 
-
     def verify_password(self, password: str, stored_hash: str, salt: str) -> bool:
         """
         Проверяет пароль
@@ -141,7 +144,6 @@ class AuthManager:
         password_hash = hashlib.sha256(password_salt.encode()).hexdigest()
 
         return bcrypt.checkpw(password_hash.encode(), stored_hash.encode())
-
 
     def register_user(self, username: str, email: str, password: str, role: str = "user") -> bool:
         """
@@ -162,10 +164,13 @@ class AuthManager:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
 
-            cursor.execute('''
+            cursor.execute(
+                """
                 INSERT INTO users (username, email, password_hash, salt, role)
                 VALUES (?, ?, ?, ?, ?)
-            ''', (username, email, password_hash, salt, role))
+            """,
+                (username, email, password_hash, salt, role),
+            )
 
             conn.commit()
             conn.close()
@@ -177,7 +182,6 @@ class AuthManager:
         except Exception as e:
             print(f"Ошибка регистрации пользователя: {e}")
             return False
-
 
     def user_exists(self, username: str) -> bool:
         """
@@ -192,12 +196,11 @@ class AuthManager:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
-        cursor.execute('SELECT id FROM users WHERE username = ?', (username,))
+        cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
         result = cursor.fetchone()
 
         conn.close()
         return result is not None
-
 
     def authenticate_user(self, username: str, password: str) -> Optional[Dict[str, Any]]:
         """
@@ -213,10 +216,13 @@ class AuthManager:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
-        cursor.execute('''
+        cursor.execute(
+            """
             SELECT id, username, email, password_hash, salt, role, is_active
             FROM users WHERE username = ?
-        ''', (username,))
+        """,
+            (username,),
+        )
 
         user = cursor.fetchone()
         conn.close()
@@ -226,15 +232,9 @@ class AuthManager:
             if self.verify_password(password, password_hash, salt):
                 # Обновляем время последнего входа
                 self.update_last_login(user_id)
-                return {
-                    'id': user_id,
-                    'username': username,
-                    'email': email,
-                    'role': role
-                }
+                return {"id": user_id, "username": username, "email": email, "role": role}
 
         return None
-
 
     def update_last_login(self, user_id: int):
         """
@@ -246,13 +246,15 @@ class AuthManager:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
-        cursor.execute('''
+        cursor.execute(
+            """
             UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?
-        ''', (user_id,))
+        """,
+            (user_id,),
+        )
 
         conn.commit()
         conn.close()
-
 
     def generate_token(self, user_id: int, expires_in: int = 3600) -> str:
         """
@@ -266,18 +268,17 @@ class AuthManager:
             Строка токена
         """
         payload = {
-            'user_id': user_id,
-            'exp': datetime.now(timezone.utc) + timedelta(seconds=expires_in),
-            'iat': datetime.now(timezone.utc)
+            "user_id": user_id,
+            "exp": datetime.now(timezone.utc) + timedelta(seconds=expires_in),
+            "iat": datetime.now(timezone.utc),
         }
 
-        token = jwt.encode(payload, self.secret_key, algorithm='HS256')
+        token = jwt.encode(payload, self.secret_key, algorithm="HS256")
 
         # Сохраняем токен в базе данных
         self.store_token(user_id, token, expires_in)
 
         return token
-
 
     def store_token(self, user_id: int, token: str, expires_in: int):
         """
@@ -293,14 +294,16 @@ class AuthManager:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
-        cursor.execute('''
+        cursor.execute(
+            """
             INSERT OR REPLACE INTO tokens (user_id, token, expires_at)
             VALUES (?, ?, ?)
-        ''', (user_id, token, expires_at))
+        """,
+            (user_id, token, expires_at),
+        )
 
         conn.commit()
         conn.close()
-
 
     def verify_token(self, token: str) -> Optional[Dict[str, Any]]:
         """
@@ -314,8 +317,8 @@ class AuthManager:
         """
         try:
             # Проверяем токен с помощью JWT
-            payload = jwt.decode(token, self.secret_key, algorithms=['HS256'])
-            user_id = payload['user_id']
+            payload = jwt.decode(token, self.secret_key, algorithms=["HS256"])
+            user_id = payload["user_id"]
 
             # Проверяем, что токен существует в базе данных
             if self.token_exists_in_db(token):
@@ -323,21 +326,19 @@ class AuthManager:
                 conn = sqlite3.connect(self.db_path)
                 cursor = conn.cursor()
 
-                cursor.execute('''
+                cursor.execute(
+                    """
                     SELECT id, username, email, role
                     FROM users WHERE id = ?
-                ''', (user_id,))
+                """,
+                    (user_id,),
+                )
 
                 user = cursor.fetchone()
                 conn.close()
 
                 if user:
-                    return {
-                        'id': user[0],
-                        'username': user[1],
-                        'email': user[2],
-                        'role': user[3]
-                    }
+                    return {"id": user[0], "username": user[1], "email": user[2], "role": user[3]}
 
         except jwt.ExpiredSignatureError:
             # Токен истек
@@ -347,7 +348,6 @@ class AuthManager:
             pass
 
         return None
-
 
     def token_exists_in_db(self, token: str) -> bool:
         """
@@ -362,12 +362,11 @@ class AuthManager:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
-        cursor.execute('SELECT id FROM tokens WHERE token = ?', (token,))
+        cursor.execute("SELECT id FROM tokens WHERE token = ?", (token,))
         result = cursor.fetchone()
 
         conn.close()
         return result is not None
-
 
     def remove_expired_token(self, token: str):
         """
@@ -379,11 +378,10 @@ class AuthManager:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
-        cursor.execute('DELETE FROM tokens WHERE token = ?', (token,))
+        cursor.execute("DELETE FROM tokens WHERE token = ?", (token,))
 
         conn.commit()
         conn.close()
-
 
     def get_user_permissions(self, user_id: int) -> List[Dict[str, str]]:
         """
@@ -399,7 +397,7 @@ class AuthManager:
         cursor = conn.cursor()
 
         # Сначала получаем роль пользователя
-        cursor.execute('SELECT role FROM users WHERE id = ?', (user_id,))
+        cursor.execute("SELECT role FROM users WHERE id = ?", (user_id,))
         role_result = cursor.fetchone()
 
         if not role_result:
@@ -409,17 +407,19 @@ class AuthManager:
         user_role = role_result[0]
 
         # Получаем права доступа для роли
-        cursor.execute('''
+        cursor.execute(
+            """
             SELECT resource, action
             FROM permissions
             WHERE role = ? AND granted = 1
-        ''', (user_role,))
+        """,
+            (user_role,),
+        )
 
-        permissions = [{'resource': row[0], 'action': row[1]} for row in cursor.fetchall()]
+        permissions = [{"resource": row[0], "action": row[1]} for row in cursor.fetchall()]
         conn.close()
 
         return permissions
-
 
     def has_permission(self, user_id: int, resource: str, action: str) -> bool:
         """
@@ -435,10 +435,9 @@ class AuthManager:
         """
         permissions = self.get_user_permissions(user_id)
         for perm in permissions:
-            if perm['resource'] == resource and perm['action'] == action:
+            if perm["resource"] == resource and perm["action"] == action:
                 return True
         return False
-
 
     def require_auth(self, resource: str = None, action: str = None):
         """
@@ -448,34 +447,45 @@ class AuthManager:
             resource: Ресурс для проверки прав
             action: Действие для проверки прав
         """
+
         def decorator(f):
             """Декоратор для проверки прав доступа."""
+
             @wraps(f)
             def decorated_function(*args, **kwargs):
                 """Обёртка для проверки токена аутентификации."""
                 token = None
 
                 # Проверяем токен в заголовке
-                if 'Authorization' in request.headers:
-                    auth_header = request.headers['Authorization']
-                    if auth_header.startswith('Bearer '):
-                        token = auth_header.split(' ')[1]
+                if "Authorization" in request.headers:
+                    auth_header = request.headers["Authorization"]
+                    if auth_header.startswith("Bearer "):
+                        token = auth_header.split(" ")[1]
 
                 # Проверяем токен в параметрах запроса
-                if not token and 'token' in request.args:
-                    token = request.args.get('token')
+                if not token and "token" in request.args:
+                    token = request.args.get("token")
 
                 if not token:
-                    return jsonify({'status': 'error', 'message': 'Токен аутентификации отсутствует'}), 401
+                    return (
+                        jsonify({"status": "error", "message": "Токен аутентификации отсутствует"}),
+                        401,
+                    )
 
                 user_info = self.verify_token(token)
                 if not user_info:
-                    return jsonify({'status': 'error', 'message': 'Неверный или истекший токен'}), 401
+                    return (
+                        jsonify({"status": "error", "message": "Неверный или истекший токен"}),
+                        401,
+                    )
 
                 # Проверяем права доступа если указаны
                 if resource and action:
-                    if not self.has_permission(user_info['id'], resource, action):
-                        return jsonify({'status': 'error', 'message': 'Недостаточно прав доступа'}), 403
+                    if not self.has_permission(user_info["id"], resource, action):
+                        return (
+                            jsonify({"status": "error", "message": "Недостаточно прав доступа"}),
+                            403,
+                        )
 
                 # Сохраняем информацию о пользователе в глобальной переменной
                 g.current_user = user_info
@@ -484,7 +494,9 @@ class AuthManager:
                 return f(*args, **kwargs)
 
             return decorated_function
+
         return decorator
+
 
 def main():
     """Главная функция для демонстрации возможностей аутентификации"""
@@ -499,9 +511,7 @@ def main():
 
     # Тестируем регистрацию пользователя
     success = auth_manager.register_user(
-        username="testuser",
-        email="test@example.com",
-        password="TestPassword123!"
+        username="testuser", email="test@example.com", password="TestPassword123!"
     )
     print(f"✓ Регистрация тестового пользователя: {'Успешна' if success else 'Ошибка'}")
 
@@ -511,7 +521,7 @@ def main():
         print(f"✓ Аутентификация успешна для пользователя: {user_info['username']}")
 
         # Генерируем токен
-        token = auth_manager.generate_token(user_info['id'])
+        token = auth_manager.generate_token(user_info["id"])
         print(f"✓ Токен сгенерирован: {token[:20]}...")
 
         # Проверяем токен
@@ -519,11 +529,11 @@ def main():
         print(f"✓ Проверка токена: {'Успешна' if verified_user else 'Ошибка'}")
 
     # Проверяем права доступа
-    permissions = auth_manager.get_user_permissions(user_info['id']) if user_info else []
+    permissions = auth_manager.get_user_permissions(user_info["id"]) if user_info else []
     print(f"✓ Права доступа пользователя: {permissions}")
 
     print("Менеджер аутентификации успешно протестирован")
 
+
 if __name__ == "__main__":
     main()
-

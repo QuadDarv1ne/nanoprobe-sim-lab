@@ -8,38 +8,42 @@
 
 # Проверка версии Python (требуется 3.11 - 3.14)
 import sys
+
 MIN_PYTHON_VERSION = (3, 11)
 MAX_PYTHON_VERSION = (3, 14)
-if sys.version_info < MIN_PYTHON_VERSION or sys.version_info >= (MAX_PYTHON_VERSION[0], MAX_PYTHON_VERSION[1] + 1):
+if sys.version_info < MIN_PYTHON_VERSION or sys.version_info >= (
+    MAX_PYTHON_VERSION[0],
+    MAX_PYTHON_VERSION[1] + 1,
+):
     print(f"[ERROR] Требуется Python 3.11 - 3.14, текущая версия: {sys.version}")
     print(f"Путь к Python: {sys.executable}")
     print("Установите Python 3.11 - 3.14 с https://www.python.org/downloads/")
     sys.exit(1)
 
-import uvicorn
 import argparse
 import os
 from pathlib import Path
+
+import uvicorn
 
 # Установка UTF-8 кодировки для Windows
 if sys.platform == "win32":
     os.system("chcp 65001 >nul")
     # Перенастройка stdout для UTF-8
     try:
-        sys.stdout.reconfigure(encoding='utf-8')
-        sys.stderr.reconfigure(encoding='utf-8')
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
     except AttributeError:
         # Python < 3.7
         import io
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 
 def main():
     """Основная функция"""
-    parser = argparse.ArgumentParser(
-        description="Запуск FastAPI API для Nanoprobe Sim Lab"
-    )
+    parser = argparse.ArgumentParser(description="Запуск FastAPI API для Nanoprobe Sim Lab")
 
     parser.add_argument(
         "--host",
@@ -98,7 +102,7 @@ def main():
 
     # Автоматическое определение порта
     use_auto_port = args.auto_port and not args.no_auto_port
-    
+
     if args.port is not None:
         # Порт задан явно
         port = args.port
@@ -107,15 +111,15 @@ def main():
         # Автоопределение порта
         try:
             from utils.port_finder import find_port
-            
+
             preferred_port = int(os.getenv("BACKEND_PORT", 8000))
             port = find_port("backend", preferred_port)
-            
+
             if port != preferred_port:
                 print(f"⚠️  Порт {preferred_port} занят, выбран: {port}")
             else:
                 print(f"✅ Порт: {port}")
-            
+
             # Сохраняем выбранный порт в переменную окружения
             os.environ["BACKEND_PORT"] = str(port)
         except Exception as e:

@@ -1,20 +1,23 @@
 """Модуль шифрования данных для проекта Лаборатория моделирования нанозонда."""
 
+import base64
+import json
+import os
+from pathlib import Path
+from typing import Optional, Tuple, Union
+
 from cryptography.fernet import Fernet
+from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from cryptography.hazmat.backends import default_backend
-import base64
-import os
-from typing import Union, Tuple, Optional
-import json
+
 
 class DataEncryption:
     """
-    Класс для шифрования данных
-    Обеспечивает шифрование и дешифрование чувствительных данных проекта с использованием современных криптографических методов.
+    Класс для шифрования данных.
+    Обеспечивает шифрование и дешифрование чувствительных данных
+    проекта с использованием современных криптографических методов.
     """
-
 
     def __init__(self, key: bytes = None):
         """
@@ -30,7 +33,6 @@ class DataEncryption:
 
         self.cipher = Fernet(self.key)
 
-
     def encrypt_string(self, plaintext: str) -> str:
         """
         Шифрует строку
@@ -41,9 +43,8 @@ class DataEncryption:
         Returns:
             Зашифрованная строка в формате base64
         """
-        encrypted_bytes = self.cipher.encrypt(plaintext.encode('utf-8'))
-        return base64.b64encode(encrypted_bytes).decode('utf-8')
-
+        encrypted_bytes = self.cipher.encrypt(plaintext.encode("utf-8"))
+        return base64.b64encode(encrypted_bytes).decode("utf-8")
 
     def decrypt_string(self, encrypted_data: str) -> str:
         """
@@ -55,10 +56,9 @@ class DataEncryption:
         Returns:
             Расшифрованная строка
         """
-        encrypted_bytes = base64.b64decode(encrypted_data.encode('utf-8'))
+        encrypted_bytes = base64.b64decode(encrypted_data.encode("utf-8"))
         decrypted_bytes = self.cipher.decrypt(encrypted_bytes)
-        return decrypted_bytes.decode('utf-8')
-
+        return decrypted_bytes.decode("utf-8")
 
     def encrypt_bytes(self, data: bytes) -> bytes:
         """
@@ -72,7 +72,6 @@ class DataEncryption:
         """
         return self.cipher.encrypt(data)
 
-
     def decrypt_bytes(self, encrypted_data: bytes) -> bytes:
         """
         Дешифрует байты
@@ -84,7 +83,6 @@ class DataEncryption:
             Расшифрованные байты
         """
         return self.cipher.decrypt(encrypted_data)
-
 
     def encrypt_file(self, input_file: str, output_file: str) -> bool:
         """
@@ -98,19 +96,18 @@ class DataEncryption:
             True если шифрование успешно, иначе False
         """
         try:
-            with open(input_file, 'rb') as infile:
+            with open(input_file, "rb") as infile:
                 data = infile.read()
 
             encrypted_data = self.encrypt_bytes(data)
 
-            with open(output_file, 'wb') as outfile:
+            with open(output_file, "wb") as outfile:
                 outfile.write(encrypted_data)
 
             return True
         except Exception as e:
             print(f"Ошибка шифрования файла: {e}")
             return False
-
 
     def decrypt_file(self, input_file: str, output_file: str) -> bool:
         """
@@ -124,19 +121,18 @@ class DataEncryption:
             True если дешифрование успешно, иначе False
         """
         try:
-            with open(input_file, 'rb') as infile:
+            with open(input_file, "rb") as infile:
                 encrypted_data = infile.read()
 
             decrypted_data = self.decrypt_bytes(encrypted_data)
 
-            with open(output_file, 'wb') as outfile:
+            with open(output_file, "wb") as outfile:
                 outfile.write(decrypted_data)
 
             return True
         except Exception as e:
             print(f"Ошибка дешифрования файла: {e}")
             return False
-
 
     def generate_key_from_password(self, password: str, salt: bytes = None) -> Tuple[bytes, bytes]:
         """
@@ -157,11 +153,12 @@ class DataEncryption:
             length=32,
             salt=salt,
             iterations=100000,
-            backend=default_backend()
+            backend=default_backend(),
         )
 
         key = base64.urlsafe_b64encode(kdf.derive(password.encode()))
         return key, salt
+
 
 class SecureDataManager:
     """
@@ -169,7 +166,6 @@ class SecureDataManager:
     Обеспечивает шифрование и безопасное хранение
     конфиденциальных данных проекта.
     """
-
 
     def __init__(self, encryption_key: bytes = None):
         """
@@ -182,8 +178,9 @@ class SecureDataManager:
         self.secure_storage_path = Path("secure_data")
         self.secure_storage_path.mkdir(exist_ok=True)
 
-
-    def store_secure_data(self, key: str, data: Union[str, dict, list], encrypt: bool = True) -> bool:
+    def store_secure_data(
+        self, key: str, data: Union[str, dict, list], encrypt: bool = True
+    ) -> bool:
         """
         Сохраняет защищенные данные
 
@@ -208,7 +205,7 @@ class SecureDataManager:
 
             # Сохраняем в файл
             file_path = self.secure_storage_path / f"{key}.enc"
-            with open(file_path, 'w', encoding='utf-8') as f:
+            with open(file_path, "w", encoding="utf-8") as f:
                 f.write(data_str)
 
             return True
@@ -216,8 +213,9 @@ class SecureDataManager:
             print(f"Ошибка сохранения защищенных данных: {e}")
             return False
 
-
-    def retrieve_secure_data(self, key: str, decrypt: bool = True) -> Optional[Union[str, dict, list]]:
+    def retrieve_secure_data(
+        self, key: str, decrypt: bool = True
+    ) -> Optional[Union[str, dict, list]]:
         """
         Получает защищенные данные
 
@@ -234,7 +232,7 @@ class SecureDataManager:
             if not file_path.exists():
                 return None
 
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 data_str = f.read()
 
             # Дешифруем если необходимо
@@ -251,7 +249,6 @@ class SecureDataManager:
         except Exception as e:
             print(f"Ошибка получения защищенных данных: {e}")
             return None
-
 
     def secure_delete(self, key: str) -> bool:
         """
@@ -271,7 +268,7 @@ class SecureDataManager:
 
             # Перезаписываем файл случайными данными перед удалением
             file_size = file_path.stat().st_size
-            with open(file_path, 'wb') as f:
+            with open(file_path, "wb") as f:
                 f.write(os.urandom(file_size))
 
             # Удаляем файл
@@ -281,7 +278,6 @@ class SecureDataManager:
         except Exception as e:
             print(f"Ошибка безопасного удаления: {e}")
             return False
-
 
     def store_sensitive_config(self, config_data: dict) -> bool:
         """
@@ -295,7 +291,6 @@ class SecureDataManager:
         """
         return self.store_secure_data("sensitive_config", config_data)
 
-
     def get_sensitive_config(self) -> Optional[dict]:
         """
         Получает конфигурацию с чувствительными данными
@@ -307,7 +302,6 @@ class SecureDataManager:
         if isinstance(data, dict):
             return data
         return None
-
 
     def store_encrypted_file(self, filename: str, data: bytes) -> bool:
         """
@@ -324,14 +318,13 @@ class SecureDataManager:
             encrypted_data = self.encryption.encrypt_bytes(data)
             file_path = self.secure_storage_path / f"{filename}.enc"
 
-            with open(file_path, 'wb') as f:
+            with open(file_path, "wb") as f:
                 f.write(encrypted_data)
 
             return True
         except Exception as e:
             print(f"Ошибка сохранения зашифрованного файла: {e}")
             return False
-
 
     def retrieve_encrypted_file(self, filename: str) -> Optional[bytes]:
         """
@@ -349,7 +342,7 @@ class SecureDataManager:
             if not file_path.exists():
                 return None
 
-            with open(file_path, 'rb') as f:
+            with open(file_path, "rb") as f:
                 encrypted_data = f.read()
 
             return self.encryption.decrypt_bytes(encrypted_data)
@@ -357,6 +350,7 @@ class SecureDataManager:
         except Exception as e:
             print(f"Ошибка получения зашифрованного файла: {e}")
             return None
+
 
 class SecurityValidator:
     """
@@ -366,7 +360,6 @@ class SecurityValidator:
     """
 
     @staticmethod
-
     def validate_input(input_data: str, max_length: int = 1000) -> bool:
         """
         Проверяет безопасность входных данных
@@ -383,13 +376,13 @@ class SecurityValidator:
             return False
 
         # Проверяем на потенциальные SQL-инъекции
-        sql_patterns = ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'DROP', 'UNION', '--', ';']
+        sql_patterns = ["SELECT", "INSERT", "UPDATE", "DELETE", "DROP", "UNION", "--", ";"]
         for pattern in sql_patterns:
             if pattern.upper() in input_data.upper():
                 return False
 
         # Проверяем на XSS-атаки
-        xss_patterns = ['<script', 'javascript:', 'onerror=', 'onload=', '<iframe', '<object']
+        xss_patterns = ["<script", "javascript:", "onerror=", "onload=", "<iframe", "<object"]
         for pattern in xss_patterns:
             if pattern.lower() in input_data.lower():
                 return False
@@ -397,7 +390,6 @@ class SecurityValidator:
         return True
 
     @staticmethod
-
     def sanitize_input(input_data: str) -> str:
         """
         Санитизирует входные данные
@@ -409,14 +401,13 @@ class SecurityValidator:
             Очищенные данные
         """
         # Удаляем потенциально опасные символы
-        sanitized = input_data.replace('<', '&lt;').replace('>', '&gt;')
-        sanitized = sanitized.replace('"', '&quot;').replace("'", '&#x27;')
-        sanitized = sanitized.replace('/', '&#x2F;').replace('\\', '&#x5C;')
+        sanitized = input_data.replace("<", "&lt;").replace(">", "&gt;")
+        sanitized = sanitized.replace('"', "&quot;").replace("'", "&#x27;")
+        sanitized = sanitized.replace("/", "&#x2F;").replace("\\", "&#x5C;")
 
         return sanitized
 
     @staticmethod
-
     def validate_file_type(filename: str, allowed_extensions: list) -> bool:
         """
         Проверяет тип файла
@@ -432,7 +423,6 @@ class SecurityValidator:
         return ext in allowed_extensions
 
     @staticmethod
-
     def calculate_checksum(data: Union[str, bytes]) -> str:
         """
         Вычисляет контрольную сумму данных
@@ -444,11 +434,12 @@ class SecurityValidator:
             Контрольная сумма в формате hex
         """
         if isinstance(data, str):
-            data = data.encode('utf-8')
+            data = data.encode("utf-8")
 
         digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
         digest.update(data)
         return digest.finalize().hex()
+
 
 def main():
     """Главная функция для демонстрации возможностей шифрования"""
@@ -472,7 +463,7 @@ def main():
     test_file = "test_data.txt"
     encrypted_file = "test_data.txt.enc"
 
-    with open(test_file, 'w', encoding='utf-8') as f:
+    with open(test_file, "w", encoding="utf-8") as f:
         f.write("Тестовые данные для шифрования")
 
     success_encrypt = encryptor.encrypt_file(test_file, encrypted_file)
@@ -487,7 +478,7 @@ def main():
     test_config = {
         "api_key": "secret123",
         "database_url": "postgresql://user:pass@localhost/db",
-        "encryption_enabled": True
+        "encryption_enabled": True,
     }
 
     config_saved = secure_manager.store_sensitive_config(test_config)
@@ -515,6 +506,6 @@ def main():
 
     print("Модуль шифрования данных успешно протестирован")
 
+
 if __name__ == "__main__":
     main()
-
