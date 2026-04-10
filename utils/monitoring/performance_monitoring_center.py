@@ -166,9 +166,11 @@ class PerformanceMonitoringCenter:
             "resource_efficiency": resource_efficiency,
             "optimization_score": optimization_score,
             "active_processes": len(psutil.pids()),
-            "load_average": getattr(os, "getloadavg", lambda: (0, 0, 0))()[0]
-            if hasattr(os, "getloadavg")
-            else 0,
+            "load_average": (
+                getattr(os, "getloadavg", lambda: (0, 0, 0))()[0]
+                if hasattr(os, "getloadavg")
+                else 0
+            ),
             "network_connections": len(psutil.net_connections()),
             "threads_count": sum(p.num_threads() for p in psutil.process_iter()),
         }
@@ -218,7 +220,10 @@ class PerformanceMonitoringCenter:
                         timestamp=datetime.now(timezone.utc),
                         severity=severity,
                         category=category,
-                        message=f"Метрика {metric_name} превысила порог: {current_value:.2f} > {threshold_value:.2f}",
+                        message=(
+                            f"Метрика {metric_name} превысила порог: "
+                            f"{current_value:.2f} > {threshold_value:.2f}"
+                        ),
                         value=current_value,
                         threshold=threshold_value,
                     )
@@ -416,7 +421,8 @@ class PerformanceMonitoringCenter:
             Путь к созданному отчету
         """
         if output_path is None:
-            filename = f"performance_report_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
+            ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+            filename = f"performance_report_{ts}.json"
             output_path = str(self.output_dir / filename)
 
         summary = self.get_performance_summary()
@@ -438,7 +444,8 @@ class PerformanceMonitoringCenter:
             Путь к созданному отчету
         """
         if output_path is None:
-            filename = f"performance_viz_report_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.png"
+            ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+            filename = f"performance_viz_report_{ts}.png"
             output_path = str(self.output_dir / filename)
 
         # Подготовка данных для визуализации
@@ -626,7 +633,8 @@ class PerformanceMonitoringCenter:
             Путь к созданному файлу
         """
         if output_path is None:
-            filename = f"performance_metrics_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.csv"
+            ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+            filename = f"performance_metrics_{ts}.csv"
             output_path = str(self.output_dir / filename)
 
         # Подготовка данных для CSV

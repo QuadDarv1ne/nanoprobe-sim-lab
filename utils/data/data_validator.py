@@ -554,7 +554,9 @@ class DataValidator:
             # Сравниваем с ожидаемым хешем
             if expected_hash and file_hash != expected_hash:
                 errors.append(
-                    f"Хеш файла не совпадает: ожидается {expected_hash[:8]}..., получено {file_hash[:8]}..."
+                    f"Хеш файла не совпадает: "
+                    f"ожидается {expected_hash[:8]}..., "
+                    f"получено {file_hash[:8]}..."
                 )
 
             return ValidationResult(
@@ -605,7 +607,9 @@ class DataValidator:
                     pass
                 elif expected_type != actual_type:
                     errors.append(
-                        f"Неверный тип по пути {current_path}: ожидается {expected_type}, получено {actual_type}"
+                        f"Неверный тип по пути {current_path}: "
+                        f"ожидается {expected_type}, "
+                        f"получено {actual_type}"
                     )
                     return
 

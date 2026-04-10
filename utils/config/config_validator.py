@@ -409,12 +409,10 @@ class OptimizationAdvisor:
                     "category": "cpu",
                     "severity": "high",
                     "recommendation": (
-                        "Рассмотрите оптимизацию алгоритмов "
-                        "для снижения загрузки CPU"
+                        "Рассмотрите оптимизацию алгоритмов " "для снижения загрузки CPU"
                     ),
                     "details": (
-                        f"Средняя загрузка CPU {avg_cpu}% "
-                        f"превышает рекомендуемый порог 80%"
+                        f"Средняя загрузка CPU {avg_cpu}% " f"превышает рекомендуемый порог 80%"
                     ),
                 }
             )
@@ -424,13 +422,9 @@ class OptimizationAdvisor:
                     "category": "cpu",
                     "severity": "medium",
                     "recommendation": (
-                        "Рассмотрите оптимизацию вычислительно "
-                        "интенсивных операций"
+                        "Рассмотрите оптимизацию вычислительно " "интенсивных операций"
                     ),
-                    "details": (
-                        f"Средняя загрузка CPU {avg_cpu}% "
-                        f"находится в зоне внимания"
-                    ),
+                    "details": (f"Средняя загрузка CPU {avg_cpu}% " f"находится в зоне внимания"),
                 }
             )
 
@@ -441,8 +435,13 @@ class OptimizationAdvisor:
                 {
                     "category": "memory",
                     "severity": "high",
-                    "recommendation": "Рассмотрите оптимизацию использования памяти и управление объектами",
-                    "details": f"Среднее использование памяти {avg_memory}% превышает рекомендуемый порог 80%",
+                    "recommendation": (
+                        "Рассмотрите оптимизацию использования " "памяти и управление объектами"
+                    ),
+                    "details": (
+                        f"Среднее использование памяти {avg_memory}% "
+                        f"превышает рекомендуемый порог 80%"
+                    ),
                 }
             )
         elif avg_memory > 60:
@@ -450,12 +449,9 @@ class OptimizationAdvisor:
                 {
                     "category": "memory",
                     "severity": "medium",
-                    "recommendation": (
-                        "Рассмотрите оптимизацию использования памяти"
-                    ),
+                    "recommendation": ("Рассмотрите оптимизацию использования памяти"),
                     "details": (
-                        f"Среднее использование памяти {avg_memory}% "
-                        f"находится в зоне внимания"
+                        f"Среднее использование памяти {avg_memory}% " f"находится в зоне внимания"
                     ),
                 }
             )
@@ -468,8 +464,7 @@ class OptimizationAdvisor:
                     "category": "performance",
                     "severity": "medium",
                     "recommendation": (
-                        "Рассмотрите возможность параллелизации "
-                        "или оптимизации алгоритмов"
+                        "Рассмотрите возможность параллелизации " "или оптимизации алгоритмов"
                     ),
                     "details": (
                         f"Время выполнения {execution_time} секунд "
@@ -479,18 +474,13 @@ class OptimizationAdvisor:
             )
 
         # Анализ дискового I/O
-        avg_disk_write_rate = performance_metrics.get(
-            "avg_disk_write_rate_bps", 0
-        )
+        avg_disk_write_rate = performance_metrics.get("avg_disk_write_rate_bps", 0)
         if avg_disk_write_rate > 100 * 1024 * 1024:  # Более 100 MB/s
             recommendations.append(
                 {
                     "category": "disk_io",
                     "severity": "medium",
-                    "recommendation": (
-                        "Рассмотрите оптимизацию записи "
-                        "данных и буферизацию"
-                    ),
+                    "recommendation": ("Рассмотрите оптимизацию записи " "данных и буферизацию"),
                     "details": (
                         f"Средняя скорость записи на диск "
                         f"{avg_disk_write_rate / (1024 * 1024):.2f} MB/s "
@@ -565,8 +555,14 @@ class OptimizationAdvisor:
                     {
                         "category": "code_quality",
                         "severity": "medium",
-                        "recommendation": f'Разделите функцию {func["function"]} на более мелкие функции',
-                        "details": f'Функция {func["function"]} занимает {func["lines"]} строк (рекомендуемое максимум 50)',
+                        "recommendation": (
+                            f'Разделите функцию {func["function"]} ' f"на более мелкие функции"
+                        ),
+                        "details": (
+                            f'Функция {func["function"]} занимает '
+                            f'{func["lines"]} строк '
+                            f"(рекомендуемое максимум 50)"
+                        ),
                     }
                 )
 
@@ -593,8 +589,13 @@ class OptimizationAdvisor:
                     {
                         "category": "code_quality",
                         "severity": "medium",
-                        "recommendation": "Рассмотрите рефакторинг для уменьшения глубины вложенности",
-                        "details": f"Найдена глубокая вложенность кода (максимальный отступ {max_indent} символов)",
+                        "recommendation": (
+                            "Рассмотрите рефакторинг для " "уменьшения глубины вложенности"
+                        ),
+                        "details": (
+                            f"Найдена глубокая вложенность кода "
+                            f"(максимальный отступ {max_indent} символов)"
+                        ),
                     }
                 )
 
