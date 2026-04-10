@@ -25,7 +25,7 @@ class ConnectionPool:
     def __init__(self, db_path: str, pool_size: int = 5):
         """
         Инициализация пула соединений.
-        
+
         Args:
             db_path: Путь к файлу базы данных SQLite
             pool_size: Размер пула соединений (по умолчанию 5)
@@ -97,7 +97,7 @@ class AsyncConnectionPool:
     def __init__(self, db_path: str, pool_size: int = 5):
         """
         Инициализация асинхронного пула соединений.
-        
+
         Args:
             db_path: Путь к файлу базы данных SQLite
             pool_size: Размер пула соединений (по умолчанию 5)
@@ -152,7 +152,9 @@ class DatabaseManager:
     _pools: Dict[str, ConnectionPool] = {}
     _pool_lock = threading.Lock()
 
-    def __init__(self, db_path: str = "data/nanoprobe.db", pool_size: int = 5, enable_cache: bool = True):
+    def __init__(
+        self, db_path: str = "data/nanoprobe.db", pool_size: int = 5, enable_cache: bool = True
+    ):
         """
         Инициализирует менеджер базы данных.
 
@@ -194,7 +196,7 @@ class DatabaseManager:
             if db_path_str in self._pools:
                 self._pools[db_path_str].close_all()
                 del self._pools[db_path_str]
-            if hasattr(self, '_pool') and self._pool:
+            if hasattr(self, "_pool") and self._pool:
                 self._pool.close_all()
 
     @contextmanager
@@ -230,13 +232,157 @@ class DatabaseManager:
         """Получение статистики пула соединений"""
         return self._pool.get_stats()
 
+    def optimize_database(self) -> Dict[str, Any]:
+        """
+        Оптимизация базы данных.
+
+        Выполняет:
+        - ANALYZE: обновляет статистику для оптимизатора запросов
+        - VACUUM: переупаковывает БД (удаляет мёртвые строки)
+        - Проверка целостности (integrity check)
+
+        Returns:
+            Dict с результатами операций
+        """
+        results = {}
+
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+
+            # ANALYZE — обновляет статистику индексов
+            try:
+                cursor.execute("ANALYZE")
+                results["analyze"] = "success"
+            except Exception as e:
+                results["analyze"] = f"error: {e}"
+
+            # Integrity check
+            try:
+                cursor.execute("PRAGMA integrity_check")
+                check_result = cursor.fetchone()[0]
+                results["integrity"] = check_result
+            except Exception as e:
+                results["integrity"] = f"error: {e}"
+
+            # Database size before vacuum
+            cursor.execute("PRAGMA page_count")
+            page_count = cursor.fetchone()[0]
+            cursor.execute("PRAGMA page_size")
+            page_size = cursor.fetchone()[0]
+            size_before = page_count * page_size
+            results["size_bytes_before"] = size_before
+
+            # VACUUM — переупаковка БД (может занять время на больших БД)
+            try:
+                cursor.execute("VACUUM")
+                results["vacuum"] = "success"
+            except Exception as e:
+                results["vacuum"] = f"error: {e}"
+
+            # Database size after vacuum
+            cursor.execute("PRAGMA page_count")
+            page_count = cursor.fetchone()[0]
+            size_after = page_count * page_size
+            results["size_bytes_after"] = size_after
+
+            if size_before > 0:
+                saved = size_before - size_after
+                results["space_saved_bytes"] = max(0, saved)
+                results["space_saved_percent"] = (
+                    round((saved / size_before) * 100, 2) if size_before > 0 else 0
+                )
+
+            # Table sizes
+            cursor.execute(
+                """
+                SELECT name FROM sqlite_master
+                WHERE type='table'
+                ORDER BY name
+                """
+            )
+            tables = {}
+            for row in cursor.fetchall():
+                table_name = row[0]
+                try:
+                    cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+                    count = cursor.fetchone()[0]
+                    tables[table_name] = count
+                except Exception:
+                    tables[table_name] = 0
+
+            results["table_row_counts"] = tables
+
+        return results
+
+    def get_database_stats(self) -> Dict[str, Any]:
+        """
+        Получение статистики базы данных.
+
+        Returns:
+            Dict с информацией о таблицах, индексах и размерах
+        """
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+
+            # Tables and row counts
+            cursor.execute(
+                """
+                SELECT name FROM sqlite_master
+                WHERE type='table'
+                ORDER BY name
+            """
+            )
+            tables = {}
+            for row in cursor.fetchall():
+                table_name = row[0]
+                cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+                count = cursor.fetchone()[0]
+                tables[table_name] = count
+
+            # Indexes
+            cursor.execute(
+                """
+                SELECT name, tbl_name FROM sqlite_master
+                WHERE type='index' AND name NOT LIKE 'sqlite_%'
+                ORDER BY tbl_name
+            """
+            )
+            indexes = {}
+            for row in cursor.fetchall():
+                table = row[1]
+                if table not in indexes:
+                    indexes[table] = []
+                indexes[table].append(row[0])
+
+            # Database size
+            cursor.execute("PRAGMA page_count")
+            page_count = cursor.fetchone()[0]
+            cursor.execute("PRAGMA page_size")
+            page_size = cursor.fetchone()[0]
+            total_size = page_count * page_size
+
+            # WAL mode
+            cursor.execute("PRAGMA journal_mode")
+            journal_mode = cursor.fetchone()[0]
+
+            return {
+                "total_size_bytes": total_size,
+                "total_size_mb": round(total_size / (1024 * 1024), 2),
+                "journal_mode": journal_mode,
+                "table_count": len(tables),
+                "table_row_counts": tables,
+                "index_count": sum(len(v) for v in indexes.values()),
+                "indexes_by_table": indexes,
+            }
+
     def _init_database(self):
         """Инициализация схемы базы данных."""
         with self.get_connection() as conn:
             cursor = conn.cursor()
 
             # Таблица результатов сканирований
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS scan_results (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     timestamp TEXT NOT NULL,
@@ -248,10 +394,12 @@ class DatabaseManager:
                     metadata TEXT,
                     created_at TEXT DEFAULT CURRENT_TIMESTAMP
                 )
-            """)
+            """
+            )
 
             # Таблица симуляций
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS simulations (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     simulation_id TEXT UNIQUE NOT NULL,
@@ -264,10 +412,12 @@ class DatabaseManager:
                     results_summary TEXT,
                     created_at TEXT DEFAULT CURRENT_TIMESTAMP
                 )
-            """)
+            """
+            )
 
             # Таблица изображений
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS images (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     image_path TEXT UNIQUE NOT NULL,
@@ -280,10 +430,12 @@ class DatabaseManager:
                     processed INTEGER DEFAULT 0,
                     created_at TEXT DEFAULT CURRENT_TIMESTAMP
                 )
-            """)
+            """
+            )
 
             # Таблица экспорта данных
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS exports (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     export_path TEXT UNIQUE NOT NULL,
@@ -293,42 +445,58 @@ class DatabaseManager:
                     file_size_bytes INTEGER,
                     created_at TEXT DEFAULT CURRENT_TIMESTAMP
                 )
-            """)
+            """
+            )
 
             # Индексы для ускорения поиска
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_scan_timestamp
                 ON scan_results(timestamp)
-            """)
-            cursor.execute("""
+            """
+            )
+            cursor.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_scan_type
                 ON scan_results(scan_type)
-            """)
+            """
+            )
             # Составные индексы для сложных запросов
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_scan_type_timestamp
                 ON scan_results(scan_type, timestamp DESC)
-            """)
-            cursor.execute("""
+            """
+            )
+            cursor.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_simulations_status_created
                 ON simulations(status, created_at DESC)
-            """)
-            cursor.execute("""
+            """
+            )
+            cursor.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_simulation_status
                 ON simulations(status)
-            """)
-            cursor.execute("""
+            """
+            )
+            cursor.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_image_type
                 ON images(image_type)
-            """)
+            """
+            )
             # Индекс для поиска по путям
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_scan_file_path
                 ON scan_results(file_path)
-            """)
+            """
+            )
 
             # Таблица сравнения изображений поверхностей
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS surface_comparisons (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     comparison_id TEXT UNIQUE NOT NULL,
@@ -339,10 +507,12 @@ class DatabaseManager:
                     metrics TEXT,
                     created_at TEXT DEFAULT CURRENT_TIMESTAMP
                 )
-            """)
+            """
+            )
 
             # Таблица AI/ML анализа дефектов
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS defect_analysis (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     analysis_id TEXT UNIQUE NOT NULL,
@@ -354,10 +524,12 @@ class DatabaseManager:
                     processing_time_ms REAL,
                     created_at TEXT DEFAULT CURRENT_TIMESTAMP
                 )
-            """)
+            """
+            )
 
             # Таблица PDF отчётов
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS pdf_reports (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     report_path TEXT UNIQUE NOT NULL,
@@ -368,10 +540,12 @@ class DatabaseManager:
                     pages_count INTEGER,
                     created_at TEXT DEFAULT CURRENT_TIMESTAMP
                 )
-            """)
+            """
+            )
 
             # Таблица пакетной обработки
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS batch_jobs (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     job_id TEXT UNIQUE NOT NULL,
@@ -386,10 +560,12 @@ class DatabaseManager:
                     completed_at TEXT,
                     created_at TEXT DEFAULT CURRENT_TIMESTAMP
                 )
-            """)
+            """
+            )
 
             # Таблица метрик производительности (для real-time визуализации)
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS performance_metrics (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     timestamp TEXT NOT NULL,
@@ -399,10 +575,12 @@ class DatabaseManager:
                     unit TEXT,
                     metadata TEXT
                 )
-            """)
+            """
+            )
 
             # Таблица пользователей (персистентное хранение вместо in-memory)
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     username TEXT UNIQUE NOT NULL,
@@ -411,25 +589,155 @@ class DatabaseManager:
                     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                     last_login TEXT
                 )
-            """)
+            """
+            )
 
             # Индексы для новых таблиц
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_comparison_timestamp
                 ON surface_comparisons(created_at)
-            """)
-            cursor.execute("""
+            """
+            )
+            cursor.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_defect_image
                 ON defect_analysis(image_path)
-            """)
-            cursor.execute("""
+            """
+            )
+            cursor.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_batch_status
                 ON batch_jobs(status)
-            """)
-            cursor.execute("""
+            """
+            )
+            cursor.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_metrics_timestamp
                 ON performance_metrics(timestamp)
-            """)
+            """
+            )
+
+            # Таблицы RTL-SDR (RTL_433, ADS-B, FM Radio)
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS rtl433_readings (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    reading_id TEXT UNIQUE NOT NULL,
+                    model TEXT NOT NULL,
+                    device_id TEXT,
+                    frequency REAL,
+                    temperature REAL,
+                    humidity REAL,
+                    battery_ok INTEGER,
+                    raw_data TEXT,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+            """
+            )
+
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS adsb_sightings (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    sighting_id TEXT UNIQUE NOT NULL,
+                    icao TEXT NOT NULL,
+                    flight TEXT,
+                    altitude_ft INTEGER,
+                    speed_knots REAL,
+                    heading INTEGER,
+                    lat REAL,
+                    lon REAL,
+                    vertical_rate INTEGER,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+            """
+            )
+
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS fm_recordings (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    recording_id TEXT UNIQUE NOT NULL,
+                    frequency_mhz REAL NOT NULL,
+                    station_name TEXT,
+                    file_path TEXT,
+                    duration_sec INTEGER,
+                    file_size_bytes INTEGER,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+            """
+            )
+
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS fm_stations (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    station_id TEXT UNIQUE NOT NULL,
+                    frequency_mhz REAL NOT NULL,
+                    name TEXT,
+                    signal_strength REAL,
+                    location TEXT,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+            """
+            )
+
+            # Индексы для RTL-SDR таблиц
+            cursor.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_rtl433_model
+                ON rtl433_readings(model)
+            """
+            )
+            cursor.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_rtl433_device
+                ON rtl433_readings(device_id)
+            """
+            )
+            cursor.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_rtl433_time
+                ON rtl433_readings(created_at DESC)
+            """
+            )
+            cursor.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_adsb_icao
+                ON adsb_sightings(icao)
+            """
+            )
+            cursor.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_adsb_time
+                ON adsb_sightings(created_at DESC)
+            """
+            )
+            cursor.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_adsb_flight
+                ON adsb_sightings(flight)
+            """
+            )
+            cursor.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_fm_rec_time
+                ON fm_recordings(created_at DESC)
+            """
+            )
+            cursor.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_fm_station_freq
+                ON fm_stations(frequency_mhz)
+            """
+            )
+            cursor.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_fm_station_time
+                ON fm_stations(created_at DESC)
+            """
+            )
 
     def add_scan_result(
         self,
@@ -438,7 +746,7 @@ class DatabaseManager:
         width: int = None,
         height: int = None,
         file_path: str = None,
-        metadata: Dict = None
+        metadata: Dict = None,
     ) -> int:
         """
         Добавляет результат сканирования.
@@ -457,20 +765,23 @@ class DatabaseManager:
         now = datetime.now(timezone.utc).isoformat()
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO scan_results
                 (timestamp, scan_type, surface_type, width, height, file_path, metadata, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                now,
-                scan_type,
-                surface_type,
-                width,
-                height,
-                file_path,
-                json.dumps(metadata) if metadata else None,
-                now  # Устанавливаем created_at явно
-            ))
+            """,
+                (
+                    now,
+                    scan_type,
+                    surface_type,
+                    width,
+                    height,
+                    file_path,
+                    json.dumps(metadata) if metadata else None,
+                    now,  # Устанавливаем created_at явно
+                ),
+            )
             scan_id = cursor.lastrowid
 
         # Инвалидация кэша сканирований
@@ -478,10 +789,7 @@ class DatabaseManager:
 
         return scan_id
 
-    def add_scan_result_batch(
-        self,
-        scan_results: List[Dict]
-    ) -> int:
+    def add_scan_result_batch(self, scan_results: List[Dict]) -> int:
         """
         Добавляет несколько результатов сканирования пакетно.
 
@@ -496,30 +804,32 @@ class DatabaseManager:
             cursor = conn.cursor()
             data = []
             for scan in scan_results:
-                data.append((
-                    now,
-                    scan.get('scan_type'),
-                    scan.get('surface_type'),
-                    scan.get('width'),
-                    scan.get('height'),
-                    scan.get('file_path'),
-                    json.dumps(scan.get('metadata')) if scan.get('metadata') else None,
-                    now  # Устанавливаем created_at явно
-                ))
-            cursor.executemany("""
+                data.append(
+                    (
+                        now,
+                        scan.get("scan_type"),
+                        scan.get("surface_type"),
+                        scan.get("width"),
+                        scan.get("height"),
+                        scan.get("file_path"),
+                        json.dumps(scan.get("metadata")) if scan.get("metadata") else None,
+                        now,  # Устанавливаем created_at явно
+                    )
+                )
+            cursor.executemany(
+                """
                 INSERT INTO scan_results
                 (timestamp, scan_type, surface_type, width, height, file_path, metadata, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """, data)
+            """,
+                data,
+            )
             # Инвалидация кэша после вставки
             self.invalidate_cache("scans:")
             return len(data)
 
     def get_scan_results(
-        self,
-        scan_type: str = None,
-        limit: int = 100,
-        offset: int = 0
+        self, scan_type: str = None, limit: int = 100, offset: int = 0
     ) -> List[Dict]:
         """
         Получает результаты сканирований с кэшированием.
@@ -610,8 +920,7 @@ class DatabaseManager:
             cursor = conn.cursor()
             if scan_type:
                 cursor.execute(
-                    "SELECT COUNT(*) FROM scan_results WHERE scan_type = ?",
-                    (scan_type,)
+                    "SELECT COUNT(*) FROM scan_results WHERE scan_type = ?", (scan_type,)
                 )
             else:
                 cursor.execute("SELECT COUNT(*) FROM scan_results")
@@ -623,10 +932,7 @@ class DatabaseManager:
     # ==================== Async Methods ====================
 
     async def get_scan_results_async(
-        self,
-        scan_type: str = None,
-        limit: int = 100,
-        offset: int = 0
+        self, scan_type: str = None, limit: int = 100, offset: int = 0
     ) -> List[Dict]:
         """Асинхронное получение результатов сканирований"""
         cache_key = self._get_cache_key(f"scans:{scan_type}:{limit}:{offset}")
@@ -682,8 +988,7 @@ class DatabaseManager:
             cursor = conn.cursor()
             if scan_type:
                 cursor.execute(
-                    "SELECT COUNT(*) FROM scan_results WHERE scan_type = ?",
-                    (scan_type,)
+                    "SELECT COUNT(*) FROM scan_results WHERE scan_type = ?", (scan_type,)
                 )
             else:
                 cursor.execute("SELECT COUNT(*) FROM scan_results")
@@ -703,8 +1008,7 @@ class DatabaseManager:
             cursor = conn.cursor()
             if simulation_type:
                 cursor.execute(
-                    "SELECT COUNT(*) FROM simulations WHERE simulation_type = ?",
-                    (simulation_type,)
+                    "SELECT COUNT(*) FROM simulations WHERE simulation_type = ?", (simulation_type,)
                 )
             else:
                 cursor.execute("SELECT COUNT(*) FROM simulations")
@@ -724,8 +1028,7 @@ class DatabaseManager:
             cursor = conn.cursor()
             if simulation_type:
                 cursor.execute(
-                    "SELECT COUNT(*) FROM simulations WHERE simulation_type = ?",
-                    (simulation_type,)
+                    "SELECT COUNT(*) FROM simulations WHERE simulation_type = ?", (simulation_type,)
                 )
             else:
                 cursor.execute("SELECT COUNT(*) FROM simulations")
@@ -735,10 +1038,7 @@ class DatabaseManager:
             return result
 
     def add_simulation(
-        self,
-        simulation_id: str,
-        simulation_type: str,
-        parameters: Dict = None
+        self, simulation_id: str, simulation_type: str, parameters: Dict = None
     ) -> int:
         """
         Добавляет запись о симуляции.
@@ -754,17 +1054,20 @@ class DatabaseManager:
         now = datetime.now(timezone.utc).isoformat()
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO simulations
                 (simulation_id, simulation_type, start_time, status, parameters, created_at)
                 VALUES (?, ?, ?, 'running', ?, ?)
-            """, (
-                simulation_id,
-                simulation_type,
-                now,
-                json.dumps(parameters) if parameters else None,
-                now  # Устанавливаем created_at явно
-            ))
+            """,
+                (
+                    simulation_id,
+                    simulation_type,
+                    now,
+                    json.dumps(parameters) if parameters else None,
+                    now,  # Устанавливаем created_at явно
+                ),
+            )
             sim_id = cursor.lastrowid
 
         # Инвалидация кэша симуляций
@@ -820,26 +1123,26 @@ class DatabaseManager:
             return result
 
     async def add_simulation_async(
-        self,
-        simulation_id: str,
-        simulation_type: str,
-        parameters: Dict = None
+        self, simulation_id: str, simulation_type: str, parameters: Dict = None
     ) -> int:
         """Асинхронное добавление записи о симуляции"""
         now = datetime.now(timezone.utc).isoformat()
         async with self.get_connection_async() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO simulations
                 (simulation_id, simulation_type, start_time, status, parameters, created_at)
                 VALUES (?, ?, ?, 'running', ?, ?)
-            """, (
-                simulation_id,
-                simulation_type,
-                now,
-                json.dumps(parameters) if parameters else None,
-                now  # Устанавливаем created_at явно
-            ))
+            """,
+                (
+                    simulation_id,
+                    simulation_type,
+                    now,
+                    json.dumps(parameters) if parameters else None,
+                    now,  # Устанавливаем created_at явно
+                ),
+            )
             sim_id = cursor.lastrowid
 
         # Инвалидация кэша
@@ -848,10 +1151,7 @@ class DatabaseManager:
         return sim_id
 
     def update_simulation(
-        self,
-        simulation_id: str,
-        status: str = None,
-        results_summary: Dict = None
+        self, simulation_id: str, status: str = None, results_summary: Dict = None
     ):
         """
         Обновляет запись о симуляции.
@@ -875,18 +1175,17 @@ class DatabaseManager:
                 updates.append("results_summary = ?")
                 params.append(json.dumps(results_summary))
 
-            if status in ('completed', 'failed', 'stopped'):
+            if status in ("completed", "failed", "stopped"):
                 updates.append("end_time = ?")
                 params.append(datetime.now(timezone.utc).isoformat())
 
                 # Рассчитываем длительность
                 cursor.execute(
-                    "SELECT start_time FROM simulations WHERE simulation_id = ?",
-                    (simulation_id,)
+                    "SELECT start_time FROM simulations WHERE simulation_id = ?", (simulation_id,)
                 )
                 row = cursor.fetchone()
-                if row and row['start_time']:
-                    start = datetime.fromisoformat(row['start_time'])
+                if row and row["start_time"]:
+                    start = datetime.fromisoformat(row["start_time"])
                     duration = (datetime.now(timezone.utc) - start).total_seconds()
                     updates.append("duration_seconds = ?")
                     params.append(duration)
@@ -899,10 +1198,7 @@ class DatabaseManager:
         self.invalidate_cache("simulations:")
 
     async def update_simulation_async(
-        self,
-        simulation_id: str,
-        status: str = None,
-        results_summary: Dict = None
+        self, simulation_id: str, status: str = None, results_summary: Dict = None
     ):
         """Асинхронное обновление записи о симуляции"""
         async with self.get_connection_async() as conn:
@@ -919,17 +1215,16 @@ class DatabaseManager:
                 updates.append("results_summary = ?")
                 params.append(json.dumps(results_summary))
 
-            if status in ('completed', 'failed', 'stopped'):
+            if status in ("completed", "failed", "stopped"):
                 updates.append("end_time = ?")
                 params.append(datetime.now(timezone.utc).isoformat())
 
                 cursor.execute(
-                    "SELECT start_time FROM simulations WHERE simulation_id = ?",
-                    (simulation_id,)
+                    "SELECT start_time FROM simulations WHERE simulation_id = ?", (simulation_id,)
                 )
                 row = cursor.fetchone()
-                if row and row['start_time']:
-                    start = datetime.fromisoformat(row['start_time'])
+                if row and row["start_time"]:
+                    start = datetime.fromisoformat(row["start_time"])
                     duration = (datetime.now(timezone.utc) - start).total_seconds()
                     updates.append("duration_seconds = ?")
                     params.append(duration)
@@ -941,11 +1236,7 @@ class DatabaseManager:
         # Инвалидация кэша
         self.invalidate_cache("simulations:")
 
-    def get_simulations(
-        self,
-        status: str = None,
-        limit: int = 50
-    ) -> List[Dict]:
+    def get_simulations(self, status: str = None, limit: int = 50) -> List[Dict]:
         """
         Получает список симуляций.
 
@@ -987,7 +1278,7 @@ class DatabaseManager:
         width: int = None,
         height: int = None,
         channels: int = None,
-        metadata: Dict = None
+        metadata: Dict = None,
     ) -> int:
         """
         Добавляет запись об изображении.
@@ -1007,27 +1298,27 @@ class DatabaseManager:
         now = datetime.now(timezone.utc).isoformat()
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO images
                 (image_path, image_type, source, width, height, channels, metadata, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                image_path,
-                image_type,
-                source,
-                width,
-                height,
-                channels,
-                json.dumps(metadata) if metadata else None,
-                now  # Устанавливаем created_at явно
-            ))
+            """,
+                (
+                    image_path,
+                    image_type,
+                    source,
+                    width,
+                    height,
+                    channels,
+                    json.dumps(metadata) if metadata else None,
+                    now,  # Устанавливаем created_at явно
+                ),
+            )
             return cursor.lastrowid
 
     def get_images(
-        self,
-        image_type: str = None,
-        source: str = None,
-        limit: int = 100
+        self, image_type: str = None, source: str = None, limit: int = 100
     ) -> List[Dict]:
         """
         Получает список изображений.
@@ -1044,7 +1335,7 @@ class DatabaseManager:
             cursor = conn.cursor()
 
             query = """
-                SELECT id, image_path, image_type, source, width, height, 
+                SELECT id, image_path, image_type, source, width, height,
                        channels, metadata, created_at
                 FROM images
             """
@@ -1076,7 +1367,7 @@ class DatabaseManager:
         export_format: str,
         source_type: str = None,
         source_id: int = None,
-        file_size_bytes: int = None
+        file_size_bytes: int = None,
     ) -> int:
         """
         Добавляет запись об экспорте.
@@ -1094,18 +1385,21 @@ class DatabaseManager:
         now = datetime.now(timezone.utc).isoformat()
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO exports
                 (export_path, export_format, source_type, source_id, file_size_bytes, created_at)
                 VALUES (?, ?, ?, ?, ?, ?)
-            """, (
-                export_path,
-                export_format,
-                source_type,
-                source_id,
-                file_size_bytes,
-                now  # Устанавливаем created_at явно
-            ))
+            """,
+                (
+                    export_path,
+                    export_format,
+                    source_type,
+                    source_id,
+                    file_size_bytes,
+                    now,  # Устанавливаем created_at явно
+                ),
+            )
             return cursor.lastrowid
 
     def get_statistics(self, use_cache: bool = True) -> Dict[str, Any]:
@@ -1132,59 +1426,58 @@ class DatabaseManager:
 
             # Количество сканирований
             cursor.execute("SELECT COUNT(*) FROM scan_results")
-            stats['total_scans'] = cursor.fetchone()[0]
+            stats["total_scans"] = cursor.fetchone()[0]
 
             # Количество симуляций
             cursor.execute("SELECT COUNT(*) FROM simulations")
-            stats['total_simulations'] = cursor.fetchone()[0]
+            stats["total_simulations"] = cursor.fetchone()[0]
 
             # Активные симуляции
             cursor.execute("SELECT COUNT(*) FROM simulations WHERE status = 'running'")
-            stats['active_simulations'] = cursor.fetchone()[0]
+            stats["active_simulations"] = cursor.fetchone()[0]
 
             # Количество изображений
             cursor.execute("SELECT COUNT(*) FROM images")
-            stats['total_images'] = cursor.fetchone()[0]
+            stats["total_images"] = cursor.fetchone()[0]
 
             # Количество экспортов
             cursor.execute("SELECT COUNT(*) FROM exports")
-            stats['total_exports'] = cursor.fetchone()[0]
+            stats["total_exports"] = cursor.fetchone()[0]
 
             # Сканирования по типам
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT scan_type, COUNT(*) as count
                 FROM scan_results
                 GROUP BY scan_type
-            """)
-            stats['scans_by_type'] = {
-                row['scan_type']: row['count']
-                for row in cursor.fetchall()
-            }
+            """
+            )
+            stats["scans_by_type"] = {row["scan_type"]: row["count"] for row in cursor.fetchall()}
 
             # Новая статистика для расширенных функций
             # Сравнения поверхностей
             cursor.execute("SELECT COUNT(*) FROM surface_comparisons")
-            stats['total_comparisons'] = cursor.fetchone()[0]
+            stats["total_comparisons"] = cursor.fetchone()[0]
 
             # AI анализы дефектов
             cursor.execute("SELECT COUNT(*) FROM defect_analysis")
-            stats['total_defect_analyses'] = cursor.fetchone()[0]
+            stats["total_defect_analyses"] = cursor.fetchone()[0]
 
             # PDF отчёты
             cursor.execute("SELECT COUNT(*) FROM pdf_reports")
-            stats['total_pdf_reports'] = cursor.fetchone()[0]
+            stats["total_pdf_reports"] = cursor.fetchone()[0]
 
             # Пакетные задания
             cursor.execute("SELECT COUNT(*) FROM batch_jobs")
-            stats['total_batch_jobs'] = cursor.fetchone()[0]
+            stats["total_batch_jobs"] = cursor.fetchone()[0]
 
             # Активные пакетные задания
             cursor.execute("SELECT COUNT(*) FROM batch_jobs WHERE status = 'running'")
-            stats['active_batch_jobs'] = cursor.fetchone()[0]
+            stats["active_batch_jobs"] = cursor.fetchone()[0]
 
             # Метрики производительности
             cursor.execute("SELECT COUNT(*) FROM performance_metrics")
-            stats['total_metrics'] = cursor.fetchone()[0]
+            stats["total_metrics"] = cursor.fetchone()[0]
 
             # Кэширование результата (TTL=10 сек)
             if use_cache:
@@ -1225,6 +1518,7 @@ class DatabaseManager:
             def get_expensive_query(...):
                 ...
         """
+
         def decorator(func: Callable) -> Callable:
             @wraps(func)
             def wrapper(*args, **kwargs):
@@ -1238,7 +1532,7 @@ class DatabaseManager:
                 cache_key = hashlib.md5("|".join(cache_key_parts).encode()).hexdigest()
 
                 # Проверка кэша
-                cached = self._get_cached(cache_key)
+                cached = self._get_cached(cache_key)  # noqa: F821
                 if cached is not None:
                     return cached
 
@@ -1246,16 +1540,14 @@ class DatabaseManager:
                 result = func(*args, **kwargs)
 
                 # Кэширование результата
-                self._cache_result(cache_key, result, ttl=ttl)
+                self._cache_result(cache_key, result, ttl=ttl)  # noqa: F821
                 return result
+
             return wrapper
+
         return decorator
 
-    def search_scans(
-        self,
-        query: str,
-        limit: int = 50
-    ) -> List[Dict]:
+    def search_scans(self, query: str, limit: int = 50) -> List[Dict]:
         """
         Поиск по результатам сканирований.
 
@@ -1270,12 +1562,15 @@ class DatabaseManager:
             cursor = conn.cursor()
 
             search_pattern = f"%{query}%"
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT * FROM scan_results
                 WHERE surface_type LIKE ? OR metadata LIKE ?
                 ORDER BY timestamp DESC
                 LIMIT ?
-            """, (search_pattern, search_pattern, limit))
+            """,
+                (search_pattern, search_pattern, limit),
+            )
 
             rows = cursor.fetchall()
             return [self._row_to_dict(row) for row in rows]
@@ -1292,10 +1587,7 @@ class DatabaseManager:
         """
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(
-                "DELETE FROM scan_results WHERE id = ?",
-                (scan_id,)
-            )
+            cursor.execute("DELETE FROM scan_results WHERE id = ?", (scan_id,))
             success = cursor.rowcount > 0
 
         # Инвалидация кэша сканирований
@@ -1310,7 +1602,14 @@ class DatabaseManager:
         result = dict(row)
 
         # Парсим JSON поля
-        for key in ['metadata', 'parameters', 'results_summary', 'metrics', 'defects_data', 'source_ids']:
+        for key in [
+            "metadata",
+            "parameters",
+            "results_summary",
+            "metrics",
+            "defects_data",
+            "source_ids",
+        ]:
             if key in result and result[key]:
                 try:
                     result[key] = json.loads(result[key])
@@ -1345,8 +1644,7 @@ class DatabaseManager:
 
         if len(self._query_cache) >= self._cache_max_size:
             # Удаляем oldest entry
-            oldest_key = min(self._query_cache.keys(),
-                           key=lambda k: self._query_cache[k][1])
+            oldest_key = min(self._query_cache.keys(), key=lambda k: self._query_cache[k][1])
             del self._query_cache[oldest_key]
 
         self._query_cache[key] = (value, datetime.now(timezone.utc))
@@ -1373,16 +1671,16 @@ class DatabaseManager:
         """Получение статистики кэша"""
         now = datetime.now(timezone.utc)
         valid_entries = sum(
-            1 for _, ts in self._query_cache.values()
+            1
+            for _, ts in self._query_cache.values()
             if (now - ts).total_seconds() < self._cache_ttl
         )
         return {
             "total_entries": len(self._query_cache),
             "valid_entries": valid_entries,
             "max_size": self._cache_max_size,
-            "ttl_seconds": self._cache_ttl
+            "ttl_seconds": self._cache_ttl,
         }
-
 
     # Методы для сравнения изображений поверхностей
     def add_surface_comparison(
@@ -1392,7 +1690,7 @@ class DatabaseManager:
         image2_path: str,
         similarity_score: float,
         difference_map_path: str = None,
-        metrics: Dict = None
+        metrics: Dict = None,
     ) -> int:
         """
         Добавляет результат сравнения поверхностей.
@@ -1411,29 +1709,35 @@ class DatabaseManager:
         now = datetime.now(timezone.utc).isoformat()
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO surface_comparisons
                 (comparison_id, image1_path, image2_path, similarity_score, difference_map_path, metrics, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (
-                comparison_id,
-                image1_path,
-                image2_path,
-                similarity_score,
-                difference_map_path,
-                json.dumps(metrics) if metrics else None,
-                now  # Устанавливаем created_at явно
-            ))
+            """,
+                (
+                    comparison_id,
+                    image1_path,
+                    image2_path,
+                    similarity_score,
+                    difference_map_path,
+                    json.dumps(metrics) if metrics else None,
+                    now,  # Устанавливаем created_at явно
+                ),
+            )
             return cursor.lastrowid
 
     def get_surface_comparisons(self, limit: int = 50) -> List[Dict]:
         """Получает историю сравнений поверхностей."""
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT * FROM surface_comparisons
                 ORDER BY created_at DESC LIMIT ?
-            """, (limit,))
+            """,
+                (limit,),
+            )
             return [self._row_to_dict(row) for row in cursor.fetchall()]
 
     # Методы для AI/ML анализа дефектов
@@ -1445,7 +1749,7 @@ class DatabaseManager:
         defects_detected: int,
         defects_data: Dict = None,
         confidence_score: float = None,
-        processing_time_ms: float = None
+        processing_time_ms: float = None,
     ) -> int:
         """
         Добавляет результат AI анализа дефектов.
@@ -1465,20 +1769,23 @@ class DatabaseManager:
         now = datetime.now(timezone.utc).isoformat()
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO defect_analysis
                 (analysis_id, image_path, model_name, defects_detected, defects_data, confidence_score, processing_time_ms, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                analysis_id,
-                image_path,
-                model_name,
-                defects_detected,
-                json.dumps(defects_data) if defects_data else None,
-                confidence_score,
-                processing_time_ms,
-                now  # Устанавливаем created_at явно
-            ))
+            """,
+                (
+                    analysis_id,
+                    image_path,
+                    model_name,
+                    defects_detected,
+                    json.dumps(defects_data) if defects_data else None,
+                    confidence_score,
+                    processing_time_ms,
+                    now,  # Устанавливаем created_at явно
+                ),
+            )
             return cursor.lastrowid
 
     def get_defect_analyses(self, image_path: str = None, limit: int = 50) -> List[Dict]:
@@ -1487,16 +1794,22 @@ class DatabaseManager:
             cursor = conn.cursor()
 
             if image_path:
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT * FROM defect_analysis
                     WHERE image_path = ?
                     ORDER BY created_at DESC LIMIT ?
-                """, (image_path, limit))
+                """,
+                    (image_path, limit),
+                )
             else:
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT * FROM defect_analysis
                     ORDER BY created_at DESC LIMIT ?
-                """, (limit,))
+                """,
+                    (limit,),
+                )
 
             return [self._row_to_dict(row) for row in cursor.fetchall()]
 
@@ -1508,7 +1821,7 @@ class DatabaseManager:
         title: str = None,
         source_ids: List[int] = None,
         file_size_bytes: int = None,
-        pages_count: int = None
+        pages_count: int = None,
     ) -> int:
         """
         Добавляет запись о PDF отчёте.
@@ -1527,19 +1840,22 @@ class DatabaseManager:
         now = datetime.now(timezone.utc).isoformat()
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO pdf_reports
                 (report_path, report_type, title, source_ids, file_size_bytes, pages_count, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (
-                report_path,
-                report_type,
-                title,
-                json.dumps(source_ids) if source_ids else None,
-                file_size_bytes,
-                pages_count,
-                now  # Устанавливаем created_at явно
-            ))
+            """,
+                (
+                    report_path,
+                    report_type,
+                    title,
+                    json.dumps(source_ids) if source_ids else None,
+                    file_size_bytes,
+                    pages_count,
+                    now,  # Устанавливаем created_at явно
+                ),
+            )
             return cursor.lastrowid
 
     def get_pdf_reports(self, report_type: str = None, limit: int = 50) -> List[Dict]:
@@ -1548,26 +1864,28 @@ class DatabaseManager:
             cursor = conn.cursor()
 
             if report_type:
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT * FROM pdf_reports
                     WHERE report_type = ?
                     ORDER BY created_at DESC LIMIT ?
-                """, (report_type, limit))
+                """,
+                    (report_type, limit),
+                )
             else:
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT * FROM pdf_reports
                     ORDER BY created_at DESC LIMIT ?
-                """, (limit,))
+                """,
+                    (limit,),
+                )
 
             return [self._row_to_dict(row) for row in cursor.fetchall()]
 
     # Методы для пакетной обработки
     def add_batch_job(
-        self,
-        job_id: str,
-        job_type: str,
-        total_items: int = 0,
-        parameters: Dict = None
+        self, job_id: str, job_type: str, total_items: int = 0, parameters: Dict = None
     ) -> int:
         """
         Добавляет задание пакетной обработки.
@@ -1584,18 +1902,21 @@ class DatabaseManager:
         now = datetime.now(timezone.utc).isoformat()
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO batch_jobs
                 (job_id, job_type, total_items, started_at, parameters, created_at)
                 VALUES (?, ?, ?, ?, ?, ?)
-            """, (
-                job_id,
-                job_type,
-                total_items,
-                now,
-                json.dumps(parameters) if parameters else None,
-                now  # Устанавливаем created_at явно
-            ))
+            """,
+                (
+                    job_id,
+                    job_type,
+                    total_items,
+                    now,
+                    json.dumps(parameters) if parameters else None,
+                    now,  # Устанавливаем created_at явно
+                ),
+            )
             return cursor.lastrowid
 
     def update_batch_job(
@@ -1604,7 +1925,7 @@ class DatabaseManager:
         status: str = None,
         processed_items: int = None,
         failed_items: int = None,
-        results_summary: Dict = None
+        results_summary: Dict = None,
     ):
         """Обновляет статус задания пакетной обработки."""
         with self.get_connection() as conn:
@@ -1617,7 +1938,7 @@ class DatabaseManager:
                 updates.append("status = ?")
                 params.append(status)
 
-                if status in ('completed', 'failed', 'cancelled'):
+                if status in ("completed", "failed", "cancelled"):
                     updates.append("completed_at = ?")
                     params.append(datetime.now(timezone.utc).isoformat())
 
@@ -1643,16 +1964,22 @@ class DatabaseManager:
             cursor = conn.cursor()
 
             if status:
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT * FROM batch_jobs
                     WHERE status = ?
                     ORDER BY created_at DESC LIMIT ?
-                """, (status, limit))
+                """,
+                    (status, limit),
+                )
             else:
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT * FROM batch_jobs
                     ORDER BY created_at DESC LIMIT ?
-                """, (limit,))
+                """,
+                    (limit,),
+                )
 
             return [self._row_to_dict(row) for row in cursor.fetchall()]
 
@@ -1663,7 +1990,7 @@ class DatabaseManager:
         metric_name: str,
         value: float,
         unit: str = None,
-        metadata: Dict = None
+        metadata: Dict = None,
     ) -> int:
         """
         Добавляет метрику производительности.
@@ -1680,18 +2007,21 @@ class DatabaseManager:
         """
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO performance_metrics
                 (timestamp, metric_type, metric_name, value, unit, metadata)
                 VALUES (?, ?, ?, ?, ?, ?)
-            """, (
-                datetime.now(timezone.utc).isoformat(),
-                metric_type,
-                metric_name,
-                value,
-                unit,
-                json.dumps(metadata) if metadata else None
-            ))
+            """,
+                (
+                    datetime.now(timezone.utc).isoformat(),
+                    metric_type,
+                    metric_name,
+                    value,
+                    unit,
+                    json.dumps(metadata) if metadata else None,
+                ),
+            )
             return cursor.lastrowid
 
     def get_performance_metrics(
@@ -1700,7 +2030,7 @@ class DatabaseManager:
         metric_name: str = None,
         start_time: str = None,
         end_time: str = None,
-        limit: int = 1000
+        limit: int = 1000,
     ) -> List[Dict]:
         """Получает метрики производительности."""
         with self.get_connection() as conn:
@@ -1746,8 +2076,7 @@ class DatabaseManager:
             cutoff = datetime.now(timezone.utc)
             cutoff = cutoff.replace(day=cutoff.day - days)
             cursor.execute(
-                "DELETE FROM performance_metrics WHERE timestamp < ?",
-                (cutoff.isoformat(),)
+                "DELETE FROM performance_metrics WHERE timestamp < ?", (cutoff.isoformat(),)
             )
             return cursor.rowcount
 
@@ -1765,97 +2094,38 @@ class DatabaseManager:
             cursor = conn.cursor()
 
             data = {
-                'export_timestamp': datetime.now(timezone.utc).isoformat(),
-                'scan_results': [],
-                'simulations': [],
-                'images': [],
-                'exports': []
+                "export_timestamp": datetime.now(timezone.utc).isoformat(),
+                "scan_results": [],
+                "simulations": [],
+                "images": [],
+                "exports": [],
             }
 
             # Экспорт сканирований
             cursor.execute("SELECT * FROM scan_results")
-            data['scan_results'] = [self._row_to_dict(row) for row in cursor.fetchall()]
+            data["scan_results"] = [self._row_to_dict(row) for row in cursor.fetchall()]
 
             # Экспорт симуляций
             cursor.execute("SELECT * FROM simulations")
-            data['simulations'] = [self._row_to_dict(row) for row in cursor.fetchall()]
+            data["simulations"] = [self._row_to_dict(row) for row in cursor.fetchall()]
 
             # Экспорт изображений
             cursor.execute("SELECT * FROM images")
-            data['images'] = [self._row_to_dict(row) for row in cursor.fetchall()]
+            data["images"] = [self._row_to_dict(row) for row in cursor.fetchall()]
 
             # Экспорт экспортов
             cursor.execute("SELECT * FROM exports")
-            data['exports'] = [self._row_to_dict(row) for row in cursor.fetchall()]
+            data["exports"] = [self._row_to_dict(row) for row in cursor.fetchall()]
 
             # Сохранение
             output = Path(output_path)
-            with open(output, 'w', encoding='utf-8') as f:
+            with open(output, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
 
             return output
 
-    def optimize_database(self) -> Dict[str, Any]:
-        """
-        Оптимизирует базу данных (VACUUM, ANALYZE).
-
-        Returns:
-            Статистика оптимизации
-        """
-        stats = {"vacuum": False, "analyze": False, "size_before": 0, "size_after": 0}
-
-        try:
-            stats["size_before"] = self.db_path.stat().st_size if self.db_path.exists() else 0
-
-            with self.get_connection() as conn:
-                # Анализ таблиц для оптимизации запросов
-                conn.execute("ANALYZE")
-                stats["analyze"] = True
-
-                # Очистка и дефрагментация
-                conn.execute("VACUUM")
-                stats["vacuum"] = True
-
-            stats["size_after"] = self.db_path.stat().st_size if self.db_path.exists() else 0
-            stats["space_saved"] = stats["size_before"] - stats["size_after"]
-
-        except Exception as e:
-            stats["error"] = str(e)
-
-        return stats
-
-    def get_database_stats(self) -> Dict[str, Any]:
-        """
-        Получает статистику базы данных.
-
-        Returns:
-            Статистика по таблицам
-        """
-        stats = {"tables": {}, "total_size": 0}
-
-        with self.get_connection() as conn:
-            tables = ["scan_results", "simulations", "images", "exports",
-                     "surface_comparisons", "defect_analysis", "pdf_reports",
-                     "batch_jobs", "performance_metrics"]
-
-            for table in tables:
-                try:
-                    cursor = conn.execute(f"SELECT COUNT(*) FROM {table}")
-                    count = cursor.fetchone()[0]
-                    stats["tables"][table] = count
-                except Exception:
-                    stats["tables"][table] = 0
-
-            stats["total_size"] = self.db_path.stat().st_size if self.db_path.exists() else 0
-            stats["size_mb"] = round(stats["total_size"] / (1024 * 1024), 2)
-
-        return stats
-
     def cleanup_old_records(
-        self,
-        table: str,
-        days: int = 30,
-        date_column: str = "created_at"
+        self, table: str, days: int = 30, date_column: str = "created_at"
     ) -> int:
         """
         Удаляет старые записи из таблицы.
@@ -1872,10 +2142,7 @@ class DatabaseManager:
 
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(
-                f"DELETE FROM {table} WHERE {date_column} < ?",
-                (cutoff_date,)
-            )
+            cursor.execute(f"DELETE FROM {table} WHERE {date_column} < ?", (cutoff_date,))
             return cursor.rowcount
 
     # ==================== User Management ====================
@@ -1886,7 +2153,7 @@ class DatabaseManager:
             cursor = conn.cursor()
             cursor.execute(
                 "SELECT id, username, password_hash, role, created_at, last_login FROM users WHERE username = ?",
-                (username,)
+                (username,),
             )
             row = cursor.fetchone()
             return dict(row) if row else None
@@ -1897,7 +2164,7 @@ class DatabaseManager:
             cursor = conn.cursor()
             cursor.execute(
                 "SELECT id, username, password_hash, role, created_at, last_login FROM users WHERE id = ?",
-                (user_id,)
+                (user_id,),
             )
             row = cursor.fetchone()
             return dict(row) if row else None
@@ -1909,13 +2176,16 @@ class DatabaseManager:
         """
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO users (username, password_hash, role)
                 VALUES (?, ?, ?)
                 ON CONFLICT(username) DO UPDATE SET
                     password_hash = excluded.password_hash,
                     role = excluded.role
-            """, (username, password_hash, role))
+            """,
+                (username, password_hash, role),
+            )
             return cursor.lastrowid
 
     def update_last_login(self, username: str) -> None:
@@ -1924,7 +2194,7 @@ class DatabaseManager:
             cursor = conn.cursor()
             cursor.execute(
                 "UPDATE users SET last_login = ? WHERE username = ?",
-                (datetime.now(timezone.utc).isoformat(), username)
+                (datetime.now(timezone.utc).isoformat(), username),
             )
 
     def update_password_hash(self, username: str, new_hash: str) -> bool:
@@ -1932,8 +2202,7 @@ class DatabaseManager:
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "UPDATE users SET password_hash = ? WHERE username = ?",
-                (new_hash, username)
+                "UPDATE users SET password_hash = ? WHERE username = ?", (new_hash, username)
             )
             return cursor.rowcount > 0
 
