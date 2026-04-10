@@ -235,7 +235,8 @@ class ReportGenerator:
         html_content = self.html_template.render(**template_data)
 
         # Сохранение отчета
-        report_filename = f"simulation_report_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.html"
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        report_filename = f"simulation_report_{timestamp}.html"
         report_path = self.output_dir / report_filename
 
         with open(report_path, "w", encoding="utf-8") as f:
@@ -285,7 +286,8 @@ class ReportGenerator:
         html_content = self.html_template.render(**template_data)
 
         # Сохранение отчета
-        report_filename = f"analytics_report_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.html"
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        report_filename = f"analytics_report_{timestamp}.html"
         report_path = self.output_dir / report_filename
 
         with open(report_path, "w", encoding="utf-8") as f:
@@ -446,7 +448,8 @@ class ReportGenerator:
         html_content = comparison_template.render(**comparison_data)
 
         # Сохранение отчета
-        report_filename = f"comparison_report_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.html"
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        report_filename = f"comparison_report_{timestamp}.html"
         report_path = self.output_dir / report_filename
 
         with open(report_path, "w", encoding="utf-8") as f:
