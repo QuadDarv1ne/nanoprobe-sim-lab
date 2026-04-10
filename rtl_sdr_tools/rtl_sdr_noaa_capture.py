@@ -22,7 +22,6 @@ APT формат:
 
 import argparse
 import os
-import sys
 import time
 import wave
 
@@ -235,7 +234,7 @@ def capture_noaa(frequency, gain=30.0, duration=600.0, satellite_name="NOAA"):
     finally:
         try:
             sdr.close()
-        except:
+        except Exception:
             pass
 
     total_time = time.time() - start

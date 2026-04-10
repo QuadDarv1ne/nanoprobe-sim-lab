@@ -17,9 +17,7 @@ FM Радио — Универсальный модуль (RTL-SDR)
 
 import argparse
 import logging
-import os
 import signal
-import subprocess
 import sys
 import wave
 from datetime import datetime, timezone

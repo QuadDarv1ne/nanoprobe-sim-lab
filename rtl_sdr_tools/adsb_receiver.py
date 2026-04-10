@@ -18,11 +18,8 @@ ADS-B приёмник самолётов через RTL-SDR (1090 МГц)
 import argparse
 import json
 import logging
-import math
 import signal
-import sys
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Dict, List, Optional
 
 import numpy as np
