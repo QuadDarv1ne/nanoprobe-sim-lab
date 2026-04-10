@@ -147,11 +147,10 @@ class ADSBTracker:
         print(f"Capture duration: {duration}s")
 
         # Start dump1090 in background
+        # gvanem/dump1090-win requires config for gain/device settings
         cmd = [
             str(decoder),
             "--config", str(decoder.parent / "adsb_tracking.cfg"),
-            "--device", f"0:{RTLSDR_SERIAL}",
-            "--gain", "40",
             "--net",
             "--interactive",
             "--max-messages", "0",  # unlimited
