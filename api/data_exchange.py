@@ -3,7 +3,7 @@
 import numpy as np
 import logging
 from typing import Dict, Any, List, Tuple
-from datetime import datetime
+from datetime import datetime, timezone
 import base64
 from abc import ABC, abstractmethod
 
@@ -189,7 +189,7 @@ class SurfaceDataConverter(BaseDataConverter):
                 'width': int(surface_array.shape[1]),
                 'height': int(surface_array.shape[0]),
                 'units': 'nm',
-                'created_at': datetime.now().isoformat(),
+                'created_at': datetime.now(timezone.utc).isoformat(),
                 'dtype': str(surface_array.dtype)
             },
             'format_version': DataFormatSpec.FORMAT_SURFACE_DATA
@@ -274,7 +274,7 @@ class ScanResultsConverter(BaseDataConverter):
         return {
             'scan_data': scan_array.tolist(),
             'surface_id': surface_id,
-            'timestamp': datetime.now().isoformat(),
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'scan_parameters': {
                 'resolution': scan_array.shape,
                 'scan_type': 'topography'
@@ -327,7 +327,7 @@ class ImageDataConverter(BaseDataConverter):
             'height': int(image_array.shape[0]),
             'channels': int(image_array.shape[2]) if len(image_array.shape) > 2 else 1,
             'dtype': str(image_array.dtype),
-            'timestamp': datetime.now().isoformat(),
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'format_version': DataFormatSpec.FORMAT_IMAGE_DATA
         }
 
@@ -375,7 +375,7 @@ class SSTVSignalConverter(BaseDataConverter):
             'sample_rate': sample_rate,
             'encoding': 'pcm_f32',
             'length_seconds': len(signal_array) / sample_rate,
-            'timestamp': datetime.now().isoformat(),
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'format_version': DataFormatSpec.FORMAT_SSTV_SIGNAL
         }
 
@@ -422,7 +422,7 @@ class SimulationConfigConverter:
                 'real_time': False,
                 'output_format': 'standard'
             },
-            'timestamp': datetime.now().isoformat(),
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'format_version': DataFormatSpec.FORMAT_SIMULATION_CONFIG
         }
 
@@ -465,7 +465,7 @@ class AnalyticsReportConverter:
         return {
             'metrics': metrics_dict,
             'analysis_type': analysis_type,
-            'timestamp': datetime.now().isoformat(),
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'report_metadata': {
                 'generator': 'nanoprobe-analytics',
                 'version': '1.0'

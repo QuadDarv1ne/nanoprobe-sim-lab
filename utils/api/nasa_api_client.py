@@ -14,7 +14,7 @@ NASA API Client
 
 import aiohttp
 from typing import Optional, List, Dict, Any
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import logging
 import os
 
@@ -235,9 +235,9 @@ class NASAAPIClient:
             Список NEO с орбитальными данными
         """
         if not start_date:
-            start_date = datetime.now().strftime("%Y-%m-%d")
+            start_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         if not end_date:
-            end_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
+            end_date = (datetime.now(timezone.utc) + timedelta(days=7)).strftime("%Y-%m-%d")
         
         params = {
             "start_date": start_date,

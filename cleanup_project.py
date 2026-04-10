@@ -2,7 +2,7 @@
 
 import shutil
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict
 
@@ -18,7 +18,7 @@ class ProjectCleaner:
 
     def log_message(self, message: str, level: str = "INFO"):
         """Логирование сообщений"""
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
         log_entry = {
             "timestamp": timestamp,
             "level": level,
@@ -348,14 +348,14 @@ class ProjectCleaner:
 
     def save_cleanup_report(self):
         """Сохранение отчета об очистке"""
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         report_path = self.project_root / "reports" / "logs" / f"cleanup_report_{timestamp}.json"
 
         # Создаем папку отчетов если не существует
         report_path.parent.mkdir(parents=True, exist_ok=True)
 
         report_data = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "project_name": "Nanoprobe Simulation Lab",
             "cleanup_operation": "Comprehensive project cleanup and organization",
             "cleanup_log": self.log_messages,

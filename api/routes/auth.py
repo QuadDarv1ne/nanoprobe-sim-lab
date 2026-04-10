@@ -419,7 +419,7 @@ async def login(request: Request, login_data: LoginRequest):
         raise AuthenticationError("Неверное имя пользователя или пароль")
 
     # Обновление last_login в памяти и в БД
-    now_iso = datetime.now().isoformat()
+    now_iso = datetime.now(timezone.utc).isoformat()
     user["last_login"] = now_iso
     try:
         from utils.database import get_database

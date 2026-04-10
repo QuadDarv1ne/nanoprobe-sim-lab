@@ -15,7 +15,7 @@ import threading
 import psutil
 from pathlib import Path
 from typing import Dict, Any, Callable, List
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import matplotlib.pyplot as plt
 from dataclasses import dataclass
@@ -117,7 +117,7 @@ class PerformanceProfiler:
                     net_recv = net_io.bytes_recv if net_io else 0
 
                     # Добавляем данные
-                    self.monitoring_data["timestamps"].append(datetime.now())
+                    self.monitoring_data["timestamps"].append(datetime.now(timezone.utc))
                     self.monitoring_data["cpu_percent"].append(cpu_percent)
                     self.monitoring_data["memory_percent"].append(memory_info.percent)
                     self.monitoring_data["memory_mb"].append(memory_info.used / (1024 * 1024))
@@ -135,7 +135,7 @@ class PerformanceProfiler:
                         disk_io_write=disk_write,
                         network_sent=net_sent,
                         network_recv=net_recv,
-                        timestamp=datetime.now(),
+                        timestamp=datetime.now(timezone.utc),
                     )
                     self.resource_usage_history.append(resource_usage)
 
@@ -193,7 +193,7 @@ class PerformanceProfiler:
                     name=f"{func.__name__}_execution_time",
                     value=execution_time,
                     unit="seconds",
-                    timestamp=datetime.now(),
+                    timestamp=datetime.now(timezone.utc),
                     context=f"Function: {func.__name__}",
                 )
                 self.metrics.append(metric)
@@ -202,7 +202,7 @@ class PerformanceProfiler:
                     name=f"{func.__name__}_memory_used",
                     value=memory_used,
                     unit="MB",
-                    timestamp=datetime.now(),
+                    timestamp=datetime.now(timezone.utc),
                     context=f"Function: {func.__name__}",
                 )
                 self.metrics.append(metric)
@@ -293,7 +293,7 @@ class PerformanceProfiler:
 
         # Сохраняем в файл
         profile_file = (
-            self.output_dir / f"profile_{name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+            self.output_dir / f"profile_{name}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.txt"
         )
         with open(profile_file, "w", encoding="utf-8") as f:
             f.write(s.getvalue())
@@ -305,7 +305,7 @@ class PerformanceProfiler:
             name=f"{name}_execution_time",
             value=execution_time,
             unit="seconds",
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             context=f"Code block: {name}",
         )
         self.metrics.append(metric)
@@ -353,7 +353,7 @@ class PerformanceProfiler:
                 name=f"{func.__name__}_avg_memory",
                 value=avg_memory,
                 unit="MB",
-                timestamp=datetime.now(),
+                timestamp=datetime.now(timezone.utc),
                 context=f"Function: {func.__name__}",
             )
             self.metrics.append(metric)
@@ -362,7 +362,7 @@ class PerformanceProfiler:
                 name=f"{func.__name__}_peak_memory",
                 value=peak_memory,
                 unit="MB",
-                timestamp=datetime.now(),
+                timestamp=datetime.now(timezone.utc),
                 context=f"Function: {func.__name__}",
             )
             self.metrics.append(metric)
@@ -425,7 +425,7 @@ class PerformanceProfiler:
             name=f"{func.__name__}_avg_execution_time",
             value=avg_time,
             unit="seconds",
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             context=f"Benchmark: {func.__name__}",
         )
         self.metrics.append(metric)
@@ -452,12 +452,12 @@ class PerformanceProfiler:
         if output_path is None:
             output_path = str(
                 self.output_dir
-                / f"performance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+                / f"performance_report_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
             )
 
         # Подготавливаем данные для отчета
         report_data = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "total_metrics": len(self.metrics),
             "total_resource_samples": len(self.resource_usage_history),
             "benchmark_results": self.benchmark_results,
@@ -531,7 +531,7 @@ class PerformanceProfiler:
         if output_path is None:
             output_path = str(
                 self.output_dir
-                / f"performance_visualization_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+                / f"performance_visualization_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.png"
             )
 
         if not self.monitoring_data["timestamps"]:

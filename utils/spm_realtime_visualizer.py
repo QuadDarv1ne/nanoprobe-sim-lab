@@ -5,7 +5,7 @@
 
 import numpy as np
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional, Tuple, Callable
 from threading import Lock
 import json
@@ -242,7 +242,7 @@ class RealTimeSPMVisualizer:
             # Сохранение в историю
             self.data_history.append({
                 'data': new_data.copy(),
-                'timestamp': datetime.now(),
+                'timestamp': datetime.now(timezone.utc),
                 'metadata': metadata or {}
             })
 
@@ -283,7 +283,7 @@ class RealTimeSPMVisualizer:
 
         # Обновление метрик
         self.runtime_metrics['frames_displayed'] += 1
-        self.runtime_metrics['last_update'] = datetime.now()
+        self.runtime_metrics['last_update'] = datetime.now(timezone.utc)
 
         return [self.im, self.profile_line, self.stats_text]
 
@@ -369,7 +369,7 @@ class RealTimeSPMVisualizer:
             Путь сохранённого файла
         """
         if filepath is None:
-            filepath = f"output/spm_snapshot_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+            filepath = f"output/spm_snapshot_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.png"
 
         if self.fig:
             self.fig.savefig(filepath, dpi=150, bbox_inches='tight')
@@ -387,7 +387,7 @@ class RealTimeSPMVisualizer:
             Путь сохранённого файла
         """
         if filepath is None:
-            filepath = f"output/spm_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.npy"
+            filepath = f"output/spm_data_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.npy"
 
         with self.data_lock:
             if self.current_data is not None:
@@ -397,7 +397,7 @@ class RealTimeSPMVisualizer:
                 meta_path = filepath.replace('.npy', '_meta.json')
                 with open(meta_path, 'w', encoding='utf-8') as f:
                     json.dump({
-                        'timestamp': datetime.now().isoformat(),
+                        'timestamp': datetime.now(timezone.utc).isoformat(),
                         'scan_params': self.scan_params,
                         'shape': self.current_data.shape,
                     }, f, indent=2)
@@ -552,7 +552,7 @@ class WebSocketVisualizer:
             'std': float(np.std(data)),
             'min': float(np.min(data)),
             'max': float(np.max(data)),
-            'timestamp': datetime.now().isoformat(),
+            'timestamp': datetime.now(timezone.utc).isoformat(),
         }
 
         # Отправка

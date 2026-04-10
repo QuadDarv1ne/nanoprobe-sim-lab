@@ -7,7 +7,7 @@ import time
 import os
 import sys
 from typing import Dict, Any, List
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 from dataclasses import dataclass
 
@@ -139,7 +139,7 @@ class ResourceManager:
                     original_value=current_cpu,
                     optimized_value=new_cpu,
                     improvement_percent=improvement,
-                    timestamp=datetime.now(),
+                    timestamp=datetime.now(timezone.utc),
                     status="success" if new_cpu < current_cpu else "no_improvement",
                 )
 
@@ -153,7 +153,7 @@ class ResourceManager:
                     original_value=current_cpu,
                     optimized_value=current_cpu,
                     improvement_percent=0,
-                    timestamp=datetime.now(),
+                    timestamp=datetime.now(timezone.utc),
                     status="error",
                 )
                 self.optimization_results.append(result)
@@ -165,7 +165,7 @@ class ResourceManager:
             original_value=current_cpu,
             optimized_value=current_cpu,
             improvement_percent=0,
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             status="normal",
         )
         self.optimization_results.append(result)
@@ -202,7 +202,7 @@ class ResourceManager:
                 original_value=original_memory,
                 optimized_value=new_memory,
                 improvement_percent=improvement,
-                timestamp=datetime.now(),
+                timestamp=datetime.now(timezone.utc),
                 status="success" if new_memory < original_memory else "partial_success",
             )
 
@@ -215,7 +215,7 @@ class ResourceManager:
             original_value=current_memory,
             optimized_value=current_memory,
             improvement_percent=0,
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             status="normal",
         )
         self.optimization_results.append(result)
@@ -245,7 +245,7 @@ class ResourceManager:
             original_value=original_write_bytes + original_read_bytes,
             optimized_value=original_write_bytes + original_read_bytes,
             improvement_percent=0,
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             status="monitored",
         )
 
@@ -292,7 +292,7 @@ class ResourceManager:
                         memory_mb=resources.get("memory_rss_mb", 0),
                         disk_io_priority=self.resource_limits["disk_io_priority"],
                         network_priority=self.resource_limits["network_priority"],
-                        timestamp=datetime.now(),
+                        timestamp=datetime.now(timezone.utc),
                     )
 
                     self.resource_allocations.append(allocation)
@@ -385,7 +385,7 @@ class ResourceManager:
         current_resources = self.get_current_resources()
 
         return {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "current_resources": current_resources,
             "limits": self.resource_limits,
             "efficiency_score": self.get_resource_efficiency_score(),
@@ -416,7 +416,7 @@ class ResourceManager:
             Путь к сохраненному отчету
         """
         if output_path is None:
-            output_path = f"resource_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            output_path = f"resource_report_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
 
         report = self.get_resource_report()
 
@@ -542,7 +542,7 @@ class AdaptiveResourceOptimizer:
         optimization_results = self.resource_manager.optimize_all_resources()
 
         adaptation_record = {
-            "timestamp": datetime.now(),
+            "timestamp": datetime.now(timezone.utc),
             "strategy": strategy,
             "strategy_config": strategy_config,
             "optimization_results": {

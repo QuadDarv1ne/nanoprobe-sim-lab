@@ -9,7 +9,7 @@ import asyncio
 import logging
 import threading
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Any, Callable, Optional, Union
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
 from queue import Queue, Empty
@@ -197,7 +197,7 @@ class BatchProcessor:
         Returns:
             ID созданного задания
         """
-        job_id = f"batch_{job_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        job_id = f"batch_{job_type}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
 
         job = BatchJob(job_id, job_type, items, processor, parameters, priority, callback)
 
@@ -254,7 +254,7 @@ class BatchProcessor:
 
                 if image:
                     Path(output_dir).mkdir(parents=True, exist_ok=True)
-                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
                     output_path = f"{output_dir}/sstv_{Path(path).stem}_{timestamp}.png"
                     image.save(output_path)
 
@@ -506,7 +506,7 @@ class BatchProcessor:
                 return {'error': 'Задание уже выполняется'}
 
             job.status = 'running'
-            job.started_at = datetime.now()
+            job.started_at = datetime.now(timezone.utc)
             self.active_jobs.add(job_id)
 
         # Обновление в БД
@@ -521,7 +521,7 @@ class BatchProcessor:
 
             job.results = results
             job.status = 'completed'
-            job.completed_at = datetime.now()
+            job.completed_at = datetime.now(timezone.utc)
 
             self.total_jobs_completed += 1
             self.total_items_processed += job.processed_items
@@ -542,7 +542,7 @@ class BatchProcessor:
         except Exception as e:
             logger.error(f"Batch job {job_id} failed: {e}")
             job.status = 'failed'
-            job.completed_at = datetime.now()
+            job.completed_at = datetime.now(timezone.utc)
             job.errors.append(str(e))
 
             if self.db_manager:
@@ -729,7 +729,7 @@ class BatchProcessor:
             job = self.jobs[job_id]
             duration = None
             if job.started_at:
-                end = job.completed_at or datetime.now()
+                end = job.completed_at or datetime.now(timezone.utc)
                 duration = (end - job.started_at).total_seconds()
             return BatchJobStats(
                 job_id=job.job_id,
@@ -769,7 +769,7 @@ class BatchProcessor:
                 return False
 
             job.status = 'cancelled'
-            job.completed_at = datetime.now()
+            job.completed_at = datetime.now(timezone.utc)
 
             if self.db_manager:
                 self.db_manager.update_batch_job(job_id, status='cancelled')

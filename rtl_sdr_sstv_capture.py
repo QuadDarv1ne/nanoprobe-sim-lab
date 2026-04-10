@@ -15,7 +15,7 @@ import time
 import wave
 import argparse
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 import numpy as np
 
@@ -119,7 +119,7 @@ def record_sstv(
     """Запись SSTV с МКС."""
 
     if output_wav is None:
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
         output_wav = f"data/sstv/iss_{timestamp}.wav"
 
     output_image = output_wav.replace('.wav', '.png')

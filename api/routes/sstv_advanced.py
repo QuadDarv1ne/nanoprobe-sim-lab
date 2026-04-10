@@ -6,7 +6,7 @@ import asyncio
 import logging
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 
@@ -82,7 +82,7 @@ class SSTVSessionManager:
             'duration': duration,
             'gain': gain,
             'status': 'recording',
-            'started_at': datetime.now().isoformat(),
+            'started_at': datetime.now(timezone.utc).isoformat(),
             'samples_received': 0,
             'file_path': None,
         }
@@ -96,7 +96,7 @@ class SSTVSessionManager:
             session = self.recording_sessions[session_id]
             session['status'] = 'completed'
             session['file_path'] = file_path
-            session['completed_at'] = datetime.now().isoformat()
+            session['completed_at'] = datetime.now(timezone.utc).isoformat()
     
     def get_stats(self) -> dict:
         """Получить статистику"""
@@ -239,7 +239,7 @@ async def get_sstv_spectrum(
         'points': len(freqs),
         'frequencies': freqs.tolist(),
         'power_db': power.tolist(),
-        'timestamp': datetime.now().isoformat(),
+        'timestamp': datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -259,7 +259,7 @@ async def get_signal_strength():
     return {
         'strength_percent': strength,
         'frequency_mhz': receiver.frequency,
-        'timestamp': datetime.now().isoformat(),
+        'timestamp': datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -287,7 +287,7 @@ async def sstv_websocket_stream(websocket: WebSocket):
                         'type': 'spectrum',
                         'frequencies': freqs.tolist()[-100:],  # Последние 100 точек
                         'power_db': power.tolist()[-100:],
-                        'timestamp': datetime.now().isoformat(),
+                        'timestamp': datetime.now(timezone.utc).isoformat(),
                     })
 
                 # Отправляем силу сигнала
@@ -295,7 +295,7 @@ async def sstv_websocket_stream(websocket: WebSocket):
                 await websocket.send_json({
                     'type': 'signal_strength',
                     'strength': strength,
-                    'timestamp': datetime.now().isoformat(),
+                    'timestamp': datetime.now(timezone.utc).isoformat(),
                 })
 
             await asyncio.sleep(1.0)  # Обновление каждую секунду
@@ -315,7 +315,7 @@ async def sstv_websocket_stream(websocket: WebSocket):
 async def _record_sstv_background(session_id: str, receiver, duration: float):
     """Фоновая задача записи SSTV"""
     try:
-        output_file = f"data/sstv/recording_{session_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.wav"
+        output_file = f"data/sstv/recording_{session_id}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.wav"
         Path(output_file).parent.mkdir(parents=True, exist_ok=True)
         
         # Записываем

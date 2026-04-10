@@ -4,7 +4,7 @@ import sys
 import os
 import argparse
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
@@ -112,7 +112,7 @@ def main():
                     'stats': stats,
                     'roughness': roughness,
                     'filter': args.filter,
-                    'processed_at': datetime.now().isoformat()
+                    'processed_at': datetime.now(timezone.utc).isoformat()
                 }
 
                 scan_id = db.add_scan_result(

@@ -14,7 +14,7 @@ import json
 import queue
 import logging
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from dataclasses import dataclass
 from typing import Dict, Any, List, Optional, Callable
 
@@ -170,7 +170,7 @@ class AutomatedOptimizationScheduler:
         Returns:
             Созданное задание на оптимизацию
         """
-        job_id = f"job_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{len(self.scheduled_jobs)}"
+        job_id = f"job_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{len(self.scheduled_jobs)}"
 
         if target_metrics is None:
             target_metrics = []
@@ -178,7 +178,7 @@ class AutomatedOptimizationScheduler:
         job = OptimizationJob(
             id=job_id,
             name=name,
-            scheduled_time=datetime.now(),
+            scheduled_time=datetime.now(timezone.utc),
             optimization_type=optimization_type,
             priority=priority,
             target_metrics=target_metrics,
@@ -200,7 +200,7 @@ class AutomatedOptimizationScheduler:
         self.job_queue.put((priority, job.id, job))
 
         scheduled_item = ScheduledOptimization(
-            job=job, scheduled_at=datetime.now(), status="scheduled"
+            job=job, scheduled_at=datetime.now(timezone.utc), status="scheduled"
         )
 
         self.scheduled_jobs[job.id] = scheduled_item
@@ -222,7 +222,7 @@ class AutomatedOptimizationScheduler:
         """
         self.logger.info(f"Выполнение задания: {job.name} (ID: {job.id})")
 
-        start_time = datetime.now()
+        start_time = datetime.now(timezone.utc)
         result = {}
 
         try:
@@ -250,17 +250,17 @@ class AutomatedOptimizationScheduler:
             # Обновляем статус задания
             if job.id in self.scheduled_jobs:
                 self.scheduled_jobs[job.id].status = "completed"
-                self.scheduled_jobs[job.id].execution_time = datetime.now()
+                self.scheduled_jobs[job.id].execution_time = datetime.now(timezone.utc)
                 self.scheduled_jobs[job.id].result = result
 
             job.executed = True
-            job.execution_time = datetime.now()
+            job.execution_time = datetime.now(timezone.utc)
             job.result = result
 
             self.executed_jobs.append(job)
             self.stats["jobs_executed"] += 1
 
-            execution_time = (datetime.now() - start_time).total_seconds()
+            execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
             self.logger.info(f"Задание {job.name} выполнено за {execution_time:.2f}с")
 
             return {
@@ -292,14 +292,14 @@ class AutomatedOptimizationScheduler:
                 if rule["condition"](current_metrics):
                     if (
                         rule["last_triggered"] is None
-                        or (datetime.now() - rule["last_triggered"]).seconds > 60
+                        or (datetime.now(timezone.utc) - rule["last_triggered"]).seconds > 60
                     ):  # Не чаще раз в минуту
                         self.logger.info(f"Срабатывание автоправила: {rule['name']}")
 
                         # Выполняем оптимизацию
                         result = rule["optimization_func"]()
 
-                        rule["last_triggered"] = datetime.now()
+                        rule["last_triggered"] = datetime.now(timezone.utc)
                         self.stats["auto_triggers_fired"] += 1
 
                         self.logger.info(f"Автоправило {rule['name']} выполнено: {result}")
@@ -450,7 +450,7 @@ class AutomatedOptimizationScheduler:
             "executed_jobs": len(self.executed_jobs),
             "failed_jobs": len(self.failed_jobs),
             "auto_rules_count": len(self.auto_rules),
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     def generate_optimization_report(self, output_path: Optional[str] = None) -> str:
@@ -465,13 +465,13 @@ class AutomatedOptimizationScheduler:
         """
         if output_path is None:
             filename = (
-                f"optimization_schedule_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+                f"optimization_schedule_report_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
             )
             output_path = str(self.output_dir / filename)
 
         report = {
             "metadata": {
-                "generated_at": datetime.now().isoformat(),
+                "generated_at": datetime.now(timezone.utc).isoformat(),
                 "report_type": "optimization_schedule_report",
             },
             "status": self.get_scheduler_status(),

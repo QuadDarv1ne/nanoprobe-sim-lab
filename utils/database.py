@@ -7,7 +7,7 @@ import sqlite3
 import json
 import logging
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Any, Tuple, Callable
 from contextlib import contextmanager, asynccontextmanager
 from queue import Queue
@@ -454,7 +454,7 @@ class DatabaseManager:
         Returns:
             ID записи
         """
-        now = datetime.now().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
@@ -491,7 +491,7 @@ class DatabaseManager:
         Returns:
             Количество добавленных записей
         """
-        now = datetime.now().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         with self.get_connection() as conn:
             cursor = conn.cursor()
             data = []
@@ -751,7 +751,7 @@ class DatabaseManager:
         Returns:
             ID записи
         """
-        now = datetime.now().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
@@ -826,7 +826,7 @@ class DatabaseManager:
         parameters: Dict = None
     ) -> int:
         """Асинхронное добавление записи о симуляции"""
-        now = datetime.now().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         async with self.get_connection_async() as conn:
             cursor = conn.cursor()
             cursor.execute("""
@@ -877,7 +877,7 @@ class DatabaseManager:
 
             if status in ('completed', 'failed', 'stopped'):
                 updates.append("end_time = ?")
-                params.append(datetime.now().isoformat())
+                params.append(datetime.now(timezone.utc).isoformat())
 
                 # Рассчитываем длительность
                 cursor.execute(
@@ -887,7 +887,7 @@ class DatabaseManager:
                 row = cursor.fetchone()
                 if row and row['start_time']:
                     start = datetime.fromisoformat(row['start_time'])
-                    duration = (datetime.now() - start).total_seconds()
+                    duration = (datetime.now(timezone.utc) - start).total_seconds()
                     updates.append("duration_seconds = ?")
                     params.append(duration)
 
@@ -921,7 +921,7 @@ class DatabaseManager:
 
             if status in ('completed', 'failed', 'stopped'):
                 updates.append("end_time = ?")
-                params.append(datetime.now().isoformat())
+                params.append(datetime.now(timezone.utc).isoformat())
 
                 cursor.execute(
                     "SELECT start_time FROM simulations WHERE simulation_id = ?",
@@ -930,7 +930,7 @@ class DatabaseManager:
                 row = cursor.fetchone()
                 if row and row['start_time']:
                     start = datetime.fromisoformat(row['start_time'])
-                    duration = (datetime.now() - start).total_seconds()
+                    duration = (datetime.now(timezone.utc) - start).total_seconds()
                     updates.append("duration_seconds = ?")
                     params.append(duration)
 
@@ -1004,7 +1004,7 @@ class DatabaseManager:
         Returns:
             ID записи
         """
-        now = datetime.now().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
@@ -1091,7 +1091,7 @@ class DatabaseManager:
         Returns:
             ID записи
         """
-        now = datetime.now().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
@@ -1198,7 +1198,7 @@ class DatabaseManager:
             return None
         if key in self._query_cache:
             value, timestamp = self._query_cache[key]
-            if (datetime.now() - timestamp).total_seconds() < self._cache_ttl:
+            if (datetime.now(timezone.utc) - timestamp).total_seconds() < self._cache_ttl:
                 return value
             del self._query_cache[key]
         return None
@@ -1211,7 +1211,7 @@ class DatabaseManager:
             # Очистка старого кэша
             oldest = min(self._query_cache.items(), key=lambda x: x[1][1])
             del self._query_cache[oldest[0]]
-        self._query_cache[key] = (value, datetime.now())
+        self._query_cache[key] = (value, datetime.now(timezone.utc))
 
     def cached_query(ttl: int = 300):
         """
@@ -1332,7 +1332,7 @@ class DatabaseManager:
 
         if key in self._query_cache:
             value, timestamp = self._query_cache[key]
-            if (datetime.now() - timestamp).total_seconds() < self._cache_ttl:
+            if (datetime.now(timezone.utc) - timestamp).total_seconds() < self._cache_ttl:
                 return value
             else:
                 del self._query_cache[key]
@@ -1349,7 +1349,7 @@ class DatabaseManager:
                            key=lambda k: self._query_cache[k][1])
             del self._query_cache[oldest_key]
 
-        self._query_cache[key] = (value, datetime.now())
+        self._query_cache[key] = (value, datetime.now(timezone.utc))
 
     def invalidate_cache(self, pattern: str = None):
         """
@@ -1371,7 +1371,7 @@ class DatabaseManager:
 
     def get_cache_stats(self) -> Dict:
         """Получение статистики кэша"""
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         valid_entries = sum(
             1 for _, ts in self._query_cache.values()
             if (now - ts).total_seconds() < self._cache_ttl
@@ -1408,7 +1408,7 @@ class DatabaseManager:
         Returns:
             ID записи
         """
-        now = datetime.now().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
@@ -1462,7 +1462,7 @@ class DatabaseManager:
         Returns:
             ID записи
         """
-        now = datetime.now().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
@@ -1524,7 +1524,7 @@ class DatabaseManager:
         Returns:
             ID записи
         """
-        now = datetime.now().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
@@ -1581,7 +1581,7 @@ class DatabaseManager:
         Returns:
             ID записи
         """
-        now = datetime.now().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
@@ -1619,7 +1619,7 @@ class DatabaseManager:
 
                 if status in ('completed', 'failed', 'cancelled'):
                     updates.append("completed_at = ?")
-                    params.append(datetime.now().isoformat())
+                    params.append(datetime.now(timezone.utc).isoformat())
 
             if processed_items is not None:
                 updates.append("processed_items = ?")
@@ -1685,7 +1685,7 @@ class DatabaseManager:
                 (timestamp, metric_type, metric_name, value, unit, metadata)
                 VALUES (?, ?, ?, ?, ?, ?)
             """, (
-                datetime.now().isoformat(),
+                datetime.now(timezone.utc).isoformat(),
                 metric_type,
                 metric_name,
                 value,
@@ -1743,7 +1743,7 @@ class DatabaseManager:
         """
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cutoff = datetime.now()
+            cutoff = datetime.now(timezone.utc)
             cutoff = cutoff.replace(day=cutoff.day - days)
             cursor.execute(
                 "DELETE FROM performance_metrics WHERE timestamp < ?",
@@ -1765,7 +1765,7 @@ class DatabaseManager:
             cursor = conn.cursor()
 
             data = {
-                'export_timestamp': datetime.now().isoformat(),
+                'export_timestamp': datetime.now(timezone.utc).isoformat(),
                 'scan_results': [],
                 'simulations': [],
                 'images': [],
@@ -1868,7 +1868,7 @@ class DatabaseManager:
         Returns:
             Количество удалённых записей
         """
-        cutoff_date = (datetime.now() - timedelta(days=days)).isoformat()
+        cutoff_date = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
 
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -1924,7 +1924,7 @@ class DatabaseManager:
             cursor = conn.cursor()
             cursor.execute(
                 "UPDATE users SET last_login = ? WHERE username = ?",
-                (datetime.now().isoformat(), username)
+                (datetime.now(timezone.utc).isoformat(), username)
             )
 
     def update_password_hash(self, username: str, new_hash: str) -> bool:

@@ -8,7 +8,7 @@ import json
 import statistics
 import psutil
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, List, Callable, Optional
 from dataclasses import dataclass
 from collections import defaultdict, deque
@@ -159,7 +159,7 @@ class PerformanceMonitoringCenter:
 
         # Собираем все метрики
         metrics = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "cpu_percent": cpu_percent,
             "memory_percent": memory.percent,
             "disk_usage": disk_usage,
@@ -215,7 +215,7 @@ class PerformanceMonitoringCenter:
                         category = "optimization"
 
                     alert = PerformanceAlert(
-                        timestamp=datetime.now(),
+                        timestamp=datetime.now(timezone.utc),
                         severity=severity,
                         category=category,
                         message=f"Метрика {metric_name} превысила порог: {current_value:.2f} > {threshold_value:.2f}",
@@ -400,7 +400,7 @@ class PerformanceMonitoringCenter:
             "recent_alerts": recent_alerts,
             "health_status": self.health_monitor.get_current_health_status(),
             "optimization_status": self.analytics_dashboard.get_performance_summary(),
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         return summary
@@ -416,7 +416,7 @@ class PerformanceMonitoringCenter:
             Путь к созданному отчету
         """
         if output_path is None:
-            filename = f"performance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            filename = f"performance_report_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
             output_path = str(self.output_dir / filename)
 
         summary = self.get_performance_summary()
@@ -438,7 +438,7 @@ class PerformanceMonitoringCenter:
             Путь к созданному отчету
         """
         if output_path is None:
-            filename = f"performance_viz_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+            filename = f"performance_viz_report_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.png"
             output_path = str(self.output_dir / filename)
 
         # Подготовка данных для визуализации
@@ -626,7 +626,7 @@ class PerformanceMonitoringCenter:
             Путь к созданному файлу
         """
         if output_path is None:
-            filename = f"performance_metrics_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            filename = f"performance_metrics_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.csv"
             output_path = str(self.output_dir / filename)
 
         # Подготовка данных для CSV

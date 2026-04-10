@@ -4,7 +4,7 @@ from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 import json
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 import numpy as np
 from typing import Dict, Any, Tuple
@@ -107,7 +107,7 @@ class NanoprobeAPI:
             surface = SurfaceModel(width, height)
 
             # Сохраняем результат
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
             filename = f"surface_{timestamp}.txt"
             surface.saveToFile(filename)
 
@@ -157,7 +157,7 @@ class NanoprobeAPI:
             scan_results = np.random.rand(height, width).tolist()
 
             # Сохраняем результаты
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
             results_filename = f"scan_results_{timestamp}.json"
 
             with open(results_filename, 'w', encoding='utf-8') as f:
@@ -207,7 +207,7 @@ class NanoprobeAPI:
             # Для демонстрации возвращаем фиктивный результат
             processed_data = np.random.rand(100, 100).tolist()
 
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
             results_filename = f"processed_image_{timestamp}.json"
             filter_type = data.get('filter', 'gaussian')
 
@@ -256,7 +256,7 @@ class NanoprobeAPI:
             # Для демонстрации возвращаем фиктивное изображение
             decoded_image_data = np.random.rand(320, 240, 3).tolist()
 
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
             results_filename = f"sstv_decoded_{timestamp}.json"
             mode = data.get('mode', 'MartinM1')
 
@@ -299,7 +299,7 @@ class NanoprobeAPI:
                 'type': simulation_type,
                 'parameters': parameters,
                 'status': 'running',
-                'start_time': datetime.now().isoformat(),
+                'start_time': datetime.now(timezone.utc).isoformat(),
                 'progress': 0
             }
 
@@ -351,7 +351,7 @@ class NanoprobeAPI:
                 'type': simulation_type,
                 'parameters': parameters,
                 'results': self._generate_simulation_results(simulation_type, parameters),
-                'end_time': datetime.now().isoformat()
+                'end_time': datetime.now(timezone.utc).isoformat()
             }
 
             # Сохраняем результаты
@@ -360,7 +360,7 @@ class NanoprobeAPI:
             # Обновляем статус
             self.active_simulations[simulation_id]['status'] = 'completed'
             self.active_simulations[simulation_id]['progress'] = 100
-            self.active_simulations[simulation_id]['end_time'] = datetime.now().isoformat()
+            self.active_simulations[simulation_id]['end_time'] = datetime.now(timezone.utc).isoformat()
 
             # Логируем завершение
             self.logger_manager.log_simulation_event(f"Симуляция {simulation_id} завершена", "INFO")

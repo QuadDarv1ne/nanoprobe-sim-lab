@@ -3,7 +3,7 @@ API роуты для сравнения поверхностей
 """
 
 from fastapi import APIRouter, Depends
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 from pathlib import Path
 import logging
@@ -95,7 +95,7 @@ async def compare_surfaces(
                 pearson=result.get('pearson', 0),
             ),
             difference_map_path=result.get('difference_map_path'),
-            created_at=datetime.now().isoformat(),
+            created_at=datetime.now(timezone.utc).isoformat(),
         )
 
     except ValidationError:

@@ -7,7 +7,7 @@ System Monitor Widget
 import os
 import platform
 import psutil
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict
 from .base import Widget, WidgetData, WidgetPriority
 
@@ -50,14 +50,14 @@ class SystemMonitorWidget(Widget):
         }
 
         # Сохраняем историю (последние 60 значений)
-        self._history.append((datetime.now(), metrics))
+        self._history.append((datetime.now(timezone.utc), metrics))
         if len(self._history) > 60:
             self._history.pop(0)
 
         return WidgetData(
             title=self.title,
             content=metrics,
-            timestamp=datetime.now()
+            timestamp=datetime.now(timezone.utc)
         )
 
     def render(self, width: int = 60) -> str:

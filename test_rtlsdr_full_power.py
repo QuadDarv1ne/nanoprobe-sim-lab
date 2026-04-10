@@ -8,11 +8,11 @@ import sys
 import time
 import numpy as np
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 print("=" * 70)
 print("  🚀 RTL-SDR V4 FULL POWER TEST")
-print(f"  Время: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+print(f"  Время: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}")
 print("=" * 70)
 
 # Тест 1: Проверка pyrtlsdr

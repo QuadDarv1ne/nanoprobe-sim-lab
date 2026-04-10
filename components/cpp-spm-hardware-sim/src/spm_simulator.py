@@ -8,7 +8,7 @@ from typing import Tuple, Dict, Any, Optional
 import random
 import json
 from multiprocessing import Pool, cpu_count
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Import database for storing results
@@ -347,7 +347,7 @@ class SPMController:
                         file_path=filename,
                         metadata={
                             'scan_speed': self.probe.scan_speed,
-                            'timestamp': datetime.now().isoformat()
+                            'timestamp': datetime.now(timezone.utc).isoformat()
                         }
                     )
                     print("Результаты также сохранены в базу данных")

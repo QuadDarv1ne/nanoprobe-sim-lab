@@ -4,7 +4,7 @@ API роуты для генерации PDF отчётов
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 import logging
 from pathlib import Path
@@ -112,7 +112,7 @@ async def generate_pdf_report(
             title=request.title,
             file_size_bytes=file_size,
             pages_count=None,  # Можно добавить подсчёт страниц
-            created_at=datetime.now().isoformat(),
+            created_at=datetime.now(timezone.utc).isoformat(),
         )
 
     except HTTPException:

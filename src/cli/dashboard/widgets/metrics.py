@@ -4,7 +4,7 @@ Metrics Widget
 Метрики API: запросы, время ответа, кэш.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Optional
 from .base import Widget, WidgetData, WidgetPriority
 
@@ -62,7 +62,7 @@ class MetricsWidget(Widget):
         return WidgetData(
             title=self.title,
             content=metrics,
-            timestamp=datetime.now()
+            timestamp=datetime.now(timezone.utc)
         )
 
     def render(self, width: int = 50) -> str:

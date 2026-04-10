@@ -6,7 +6,7 @@ import json
 import subprocess
 import io
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Any, Tuple
 import importlib.util
 
@@ -30,7 +30,7 @@ class ProjectValidator:
 
     def log_message(self, message: str, level: str = "INFO"):
         """Логирование сообщений"""
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
         log_entry = {
             "timestamp": timestamp,
             "level": level,
@@ -366,7 +366,7 @@ class ProjectValidator:
 
         # Сохраняем результаты
         validation_data = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "project_name": "Nanoprobe Simulation Lab",
             "validation_results": {
                 "structure": structure_result,
@@ -391,7 +391,7 @@ class ProjectValidator:
 
     def save_validation_report(self, validation_data: Dict[str, Any]):
         """Сохранение отчета о валидации"""
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         report_path = self.project_root / "reports" / "logs" / f"validation_report_{timestamp}.json"
 
         # Создаем папку отчетов если не существует

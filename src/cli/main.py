@@ -5,7 +5,7 @@
 import sys
 import atexit
 import subprocess
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Add project root to Python path
@@ -25,7 +25,7 @@ def show_header():
     print("           ЛАБОРАТОРИЯ МОДЕЛИРОВАНИЯ НАНОЗОНДА")
     print("        Nanoprobe Simulation Lab - Main Console")
     print("=" * 80)
-    print(f"Время запуска: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Время запуска: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}")
     print()
 
 

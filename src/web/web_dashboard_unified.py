@@ -30,7 +30,7 @@ import os
 import time
 import threading
 import webbrowser
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List
 from pathlib import Path
 
@@ -161,7 +161,7 @@ class UnifiedWebDashboard:
         self.database = DatabaseManager(db_path="data/nanoprobe.db")
 
         # Время запуска
-        self._start_time = datetime.now()
+        self._start_time = datetime.now(timezone.utc)
 
         # WebSocket подключения
         self.active_websockets: List = []
@@ -336,7 +336,7 @@ class UnifiedWebDashboard:
                     'analysis_count': db.count_analysis_results() if db else 0,
                     'comparisons_count': db.count_comparisons() if db else 0,
                     'reports_count': db.count_reports() if db else 0,
-                    'uptime': str(datetime.now() - self._start_time)
+                    'uptime': str(datetime.now(timezone.utc) - self._start_time)
                 }
                 return jsonify(stats)
 
@@ -352,7 +352,7 @@ class UnifiedWebDashboard:
                 'fastapi': 'unknown',
                 'database': 'unknown',
                 'sync_manager': 'unknown',
-                'timestamp': datetime.now().isoformat()
+                'timestamp': datetime.now(timezone.utc).isoformat()
             }
 
             # Проверка FastAPI

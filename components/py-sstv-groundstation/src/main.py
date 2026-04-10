@@ -215,7 +215,7 @@ def mode_demo(args):
 def mode_waterfall(args):
     """Waterfall дисплей спектра."""
     from waterfall_display import WaterfallDisplay, WaterfallRecorder
-    from datetime import datetime
+    from datetime import datetime, timezone
 
     print(f"\nWATERFALL ДИСПЛЕЙ")
     print(f"Частота: {args.frequency} МГц")
@@ -278,7 +278,7 @@ def mode_waterfall(args):
                 print(f"Waterfall сохранён: {output_path}")
 
         # Сохраняем статическое изображение
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
         waterfall.save_image(f"output/waterfall/waterfall_{timestamp}.png")
 
         return True
@@ -418,7 +418,7 @@ def mode_auto_record(args):
     # Callback для уведомлений
     def recording_callback(event_type: str, data: dict):
         """Обработка событий автоматического рекордера: информирование о статусе записи."""
-        timestamp = datetime.now().strftime('%H:%M:%S')
+        timestamp = datetime.now(timezone.utc).strftime('%H:%M:%S')
 
         if event_type == 'schedule_loaded':
             print(f"[{timestamp}] Загружено расписание: {data['count']} пролётов")

@@ -1,4 +1,4 @@
-"""Testing frameworks"""
-from .test_framework import *
+"""Testing utilities"""
+from .test_framework import TestFramework, TestResult
 
-__all__ = ['test_framework']
+__all__ = ['TestFramework', 'TestResult']

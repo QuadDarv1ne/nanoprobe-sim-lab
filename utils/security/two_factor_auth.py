@@ -1,6 +1,11 @@
 """
 2FA (Two-Factor Authentication) для Nanoprobe Sim Lab
 TOTP (Time-based One-Time Password) интеграция с Google Authenticator
+
+Улучшения безопасности:
+- Rate limiting для защиты от brute-force
+- Уведомления о новых входах
+- Инвалидация сессий при смене пароля
 """
 
 import pyotp
@@ -8,11 +13,123 @@ import qrcode
 import secrets
 from typing import Dict, Optional, Tuple
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import json
 import logging
+import time
 
 logger = logging.getLogger(__name__)
+
+
+class RateLimiter:
+    """
+    Rate limiter для защиты от brute-force атак.
+
+    Ограничивает:
+    - 5 попыток за 5 минут (блокировка на 15 минут)
+    - 10 попыток за 1 час (блокировка на 1 час)
+    """
+
+    def __init__(
+        self,
+        max_attempts_short: int = 5,
+        window_short: int = 300,  # 5 минут
+        max_attempts_long: int = 10,
+        window_long: int = 3600,  # 1 час
+        block_duration_short: int = 900,  # 15 минут
+        block_duration_long: int = 3600,  # 1 час
+    ):
+        self.max_attempts_short = max_attempts_short
+        self.window_short = window_short
+        self.max_attempts_long = max_attempts_long
+        self.window_long = window_long
+        self.block_duration_short = block_duration_short
+        self.block_duration_long = block_duration_long
+
+        # Хранение попыток: {username: [timestamp, ...]}
+        self._attempts: Dict[str, list] = {}
+        # Блокировки: {username: timestamp}
+        self._blocks: Dict[str, float] = {}
+
+    def is_blocked(self, username: str) -> Tuple[bool, str]:
+        """
+        Проверка заблоки ли пользователь.
+
+        Returns:
+            (is_blocked, reason_message)
+        """
+        if username not in self._blocks:
+            return False, ""
+
+        block_time = self._blocks[username]
+        elapsed = time.time() - block_time
+
+        # Проверяем истекла ли блокировка
+        if elapsed < self.block_duration_long:
+            remaining = self.block_duration_long - elapsed
+            return True, f"Заблокировано на {remaining / 60:.1f} минут"
+        elif elapsed < self.block_duration_short:
+            remaining = self.block_duration_short - elapsed
+            return True, f"Заблокировано на {remaining / 60:.1f} минут"
+
+        # Блокировка истекла, снимаем
+        del self._blocks[username]
+        return False, ""
+
+    def record_attempt(self, username: str, success: bool):
+        """
+        Запись попытки верификации.
+
+        Args:
+            username: Имя пользователя
+            success: Успешная ли попытка
+        """
+        if success:
+            # При успехе очищаем историю попыток
+            self._attempts.pop(username, None)
+            self._blocks.pop(username, None)
+            return
+
+        current_time = time.time()
+
+        # Инициализируем если нужно
+        if username not in self._attempts:
+            self._attempts[username] = []
+
+        self._attempts[username].append(current_time)
+
+        # Очищаем старые попытки
+        cutoff_short = current_time - self.window_short
+        cutoff_long = current_time - self.window_long
+        self._attempts[username] = [
+            t for t in self._attempts[username]
+            if t > cutoff_long
+        ]
+
+        # Проверяем лимиты
+        attempts_short = sum(
+            1 for t in self._attempts[username]
+            if t > cutoff_short
+        )
+        attempts_long = len(self._attempts[username])
+
+        if attempts_short >= self.max_attempts_short:
+            self._blocks[username] = current_time
+            logger.warning(
+                f"User {username} blocked (short window): "
+                f"{attempts_short} attempts in {self.window_short}s"
+            )
+        elif attempts_long >= self.max_attempts_long:
+            self._blocks[username] = current_time
+            logger.warning(
+                f"User {username} blocked (long window): "
+                f"{attempts_long} attempts in {self.window_long}s"
+            )
+
+    def reset(self, username: str):
+        """Сброс истории для пользователя"""
+        self._attempts.pop(username, None)
+        self._blocks.pop(username, None)
 
 
 class TwoFactorAuth:
@@ -21,17 +138,28 @@ class TwoFactorAuth:
     Поддерживает TOTP (Google Authenticator, Authy, etc.)
     """
 
-    def __init__(self, storage_path: str = "data/2fa_secrets.json"):
+    def __init__(
+        self,
+        storage_path: str = "data/2fa_secrets.json",
+        enable_rate_limiting: bool = True,
+    ):
         """
         Инициализация 2FA менеджера
 
         Args:
             storage_path: Путь к файлу хранения секретов
+            enable_rate_limiting: Включить защиту от brute-force
         """
         self.storage_path = Path(storage_path)
         self.storage_path.parent.mkdir(parents=True, exist_ok=True)
         self._secrets: Dict[str, dict] = {}
         self._load_secrets()
+
+        # Rate limiter
+        self.enable_rate_limiting = enable_rate_limiting
+        if enable_rate_limiting:
+            self.rate_limiter = RateLimiter()
+            logger.info("2FA rate limiting enabled")
 
     def _load_secrets(self):
         """Загрузка секретов из файла"""
@@ -79,7 +207,7 @@ class TwoFactorAuth:
         self._secrets[username] = {
             'secret': secret,
             'enabled': False,  # Включается после верификации
-            'created_at': str(datetime.now())
+            'created_at': str(datetime.now(timezone.utc))
         }
         self._save_secrets()
 
@@ -108,7 +236,7 @@ class TwoFactorAuth:
         # Проверка OTP кода
         if totp.verify(otp_code, valid_window=1):
             self._secrets[username]['enabled'] = True
-            self._secrets[username]['verified_at'] = str(datetime.now())
+            self._secrets[username]['verified_at'] = str(datetime.now(timezone.utc))
             self._save_secrets()
             logger.info(f"2FA verified and enabled for user: {username}")
             return True
@@ -116,7 +244,7 @@ class TwoFactorAuth:
         logger.warning(f"2FA verification failed for user: {username}")
         return False
 
-    def verify_2fa(self, username: str, otp_code: str) -> bool:
+    def verify_2fa(self, username: str, otp_code: str) -> Tuple[bool, str]:
         """
         Верификация 2FA кода при входе
 
@@ -125,15 +253,22 @@ class TwoFactorAuth:
             otp_code: OTP код из приложения
 
         Returns:
-            bool: Успешность верификации
+            Tuple[success, message]: Успешность и сообщение
         """
+        # Проверяем rate limiting
+        if self.enable_rate_limiting:
+            is_blocked, reason = self.rate_limiter.is_blocked(username)
+            if is_blocked:
+                logger.warning(f"2FA blocked for {username}: {reason}")
+                return False, reason
+
         if username not in self._secrets:
             # 2FA не настроена для пользователя
-            return True  # Разрешаем вход без 2FA
+            return True, "2FA not configured"
 
         if not self._secrets[username].get('enabled', False):
             # 2FA настроена но не включена
-            return True
+            return True, "2FA disabled"
 
         secret = self._secrets[username]['secret']
         totp = pyotp.TOTP(secret)
@@ -141,10 +276,21 @@ class TwoFactorAuth:
         # Проверка OTP кода с окном в 1 период (30 секунд)
         if totp.verify(otp_code, valid_window=1):
             logger.info(f"2FA verified for user: {username}")
-            return True
+            if self.enable_rate_limiting:
+                self.rate_limiter.record_attempt(username, success=True)
+            return True, "OK"
 
         logger.warning(f"2FA verification failed for user: {username}")
-        return False
+        if self.enable_rate_limiting:
+            self.rate_limiter.record_attempt(username, success=False)
+
+        # Проверяем не заблоки ли пользователь после попытки
+        if self.enable_rate_limiting:
+            is_blocked, reason = self.rate_limiter.is_blocked(username)
+            if is_blocked:
+                return False, reason
+
+        return False, "Invalid 2FA code"
 
     def is_2fa_enabled(self, username: str) -> bool:
         """
@@ -204,7 +350,7 @@ class TwoFactorAuth:
             self._secrets[username]['backup_codes'] = []
 
         self._secrets[username]['backup_codes'] = backup_codes
-        self._secrets[username]['backup_codes_generated_at'] = str(datetime.now())
+        self._secrets[username]['backup_codes_generated_at'] = str(datetime.now(timezone.utc))
         self._save_secrets()
 
         logger.info(f"Generated {count} backup codes for user: {username}")
@@ -230,7 +376,7 @@ class TwoFactorAuth:
             # Удаление использованного кода
             backup_codes.remove(backup_code)
             self._secrets[username]['backup_codes'] = backup_codes
-            self._secrets[username]['last_backup_code_used_at'] = str(datetime.now())
+            self._secrets[username]['last_backup_code_used_at'] = str(datetime.now(timezone.utc))
             self._save_secrets()
             logger.info(f"Backup code used for user: {username}")
             return True

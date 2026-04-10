@@ -10,7 +10,7 @@ import logging
 import traceback
 import json
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, Optional, Callable, List
 from functools import wraps
 import threading
@@ -64,7 +64,7 @@ class ErrorInfo:
     def from_dict(cls, data: Dict[str, Any]) -> "ErrorInfo":
         """Создание из словаря"""
         return cls(
-            timestamp=datetime.fromisoformat(data["timestamp"]) if data.get("timestamp") else datetime.now(),
+            timestamp=datetime.fromisoformat(data["timestamp"]) if data.get("timestamp") else datetime.now(timezone.utc),
             severity=ErrorSeverity(data.get("severity", 40)),
             message=data.get("message", ""),
             exception_type=data.get("exception_type", ""),
@@ -114,7 +114,7 @@ class ErrorHandler:
         self.error_history: List[ErrorInfo] = []
         self.lock = threading.Lock()
         self._error_counts: Dict[str, int] = {}
-        self._last_cleanup = datetime.now()
+        self._last_cleanup = datetime.now(timezone.utc)
         self._cleanup_interval = timedelta(hours=1)
 
         # Создаем файл лога если не существует
@@ -156,7 +156,7 @@ class ErrorHandler:
 
     def _maybe_cleanup(self):
         """Периодическая очистка старых ошибок"""
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         if now - self._last_cleanup > self._cleanup_interval:
             self.cleanup_old_errors(max_age_days=30)
             self._last_cleanup = now
@@ -182,7 +182,7 @@ class ErrorHandler:
         Returns:
             Объект информации об ошибке
         """
-        timestamp = datetime.now()
+        timestamp = datetime.now(timezone.utc)
         error_id = f"{timestamp.strftime('%Y%m%d%H%M%S')}_{component}_{len(self.error_history)}"
 
         if exception:
@@ -232,7 +232,7 @@ class ErrorHandler:
             by_component = {}
             recent_24h = 0
 
-            now = datetime.now()
+            now = datetime.now(timezone.utc)
             for error in self.error_history:
                 # By severity
                 sev_name = error.severity.name
@@ -329,7 +329,7 @@ class ErrorHandler:
     def cleanup_old_errors(self, max_age_days: int = 30):
         """Очистка старых ошибок"""
         with self.lock:
-            cutoff = datetime.now() - timedelta(days=max_age_days)
+            cutoff = datetime.now(timezone.utc) - timedelta(days=max_age_days)
             original_count = len(self.error_history)
 
             self.error_history = [
@@ -345,7 +345,7 @@ class ErrorHandler:
 
     def get_recent_errors(self, hours: int = 24) -> List[ErrorInfo]:
         """Получение недавних ошибок"""
-        cutoff = datetime.now() - timedelta(hours=hours)
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
         return [
             error for error in self.error_history
             if error.timestamp > cutoff
@@ -372,11 +372,11 @@ class ErrorHandler:
             Путь к экспортированному отчету
         """
         if output_path is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             output_path = f"error_report_{timestamp}.json"
 
         report = {
-            "export_timestamp": datetime.now().isoformat(),
+            "export_timestamp": datetime.now(timezone.utc).isoformat(),
             "total_errors": len(self.error_history),
             "errors": [],
         }
@@ -430,7 +430,7 @@ class RecoveryManager:
             state_data: Данные состояния
         """
         with self.lock:
-            self.state_backups[state_id] = {"timestamp": datetime.now(), "data": state_data}
+            self.state_backups[state_id] = {"timestamp": datetime.now(timezone.utc), "data": state_data}
 
     def restore_state(self, state_id: str) -> Optional[Any]:
         """
@@ -491,7 +491,7 @@ class RecoveryManager:
             retention_hours: Время хранения в часах
         """
         with self.lock:
-            cutoff_time = datetime.now().timestamp() - (retention_hours * 3600)
+            cutoff_time = datetime.now(timezone.utc).timestamp() - (retention_hours * 3600)
             old_backups = []
 
             for state_id, backup in self.state_backups.items():

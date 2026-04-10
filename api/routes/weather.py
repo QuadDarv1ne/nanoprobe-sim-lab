@@ -5,7 +5,7 @@ Provides weather forecasts for any location using Open-Meteo (free, no API key).
 
 import httpx
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Dict, Any, List
 
 from fastapi import APIRouter, Query
@@ -111,7 +111,7 @@ async def get_weather(
         "pressure": current.get("pressure_msl"),
         "weather_code": current.get("weathercode"),
         "weather_description": _get_weather_desc(current.get("weathercode", -1)),
-        "timestamp": current.get("time", datetime.now().isoformat()),
+        "timestamp": current.get("time", datetime.now(timezone.utc).isoformat()),
     }
 
     # Daily forecasts
@@ -156,5 +156,5 @@ async def get_weather(
         "forecast_days": days,
         "daily": forecasts,
         "hourly": hourly_data[:24],
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }

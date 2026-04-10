@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Union
-from datetime import datetime
+from datetime import datetime, timezone
 import numpy as np
 
 try:
@@ -167,7 +167,7 @@ class DataExporter:
             Path: Путь к файлу
         """
         if filename is None:
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
             filename = f"surface_{timestamp}"
 
         export_data = {
@@ -175,7 +175,7 @@ class DataExporter:
             'metadata': metadata or {
                 'width': surface_data.shape[1],
                 'height': surface_data.shape[0],
-                'timestamp': datetime.now().isoformat()
+                'timestamp': datetime.now(timezone.utc).isoformat()
             }
         }
 
@@ -201,7 +201,7 @@ class DataExporter:
             Path: Путь к файлу
         """
         if filename is None:
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
             filename = f"scan_results_{timestamp}"
 
         if fmt == 'csv':

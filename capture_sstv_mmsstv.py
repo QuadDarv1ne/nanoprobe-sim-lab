@@ -5,7 +5,7 @@
 import subprocess
 import time
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 FREQUENCY = 145.800  # МКС SSTV
 DURATION = 60  # секунд (SSTV передача обычно 60-120 сек)
@@ -15,7 +15,7 @@ SAMPLE_RATE = 22050  # Hz (стандарт для SSTV)
 OUTPUT_DIR = Path("data/sstv")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
 output_wav = OUTPUT_DIR / f"iss_sstv_{timestamp}.wav"
 
 print("=" * 60)

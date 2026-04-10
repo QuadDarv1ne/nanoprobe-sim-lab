@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 from typing import Optional, Dict, Any, Tuple
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class ImageProcessor:
@@ -41,7 +41,7 @@ class ImageProcessor:
             if self.image is not None:
                 self.image_path = filepath
                 self.metadata['filepath'] = filepath
-                self.metadata['loaded_at'] = datetime.now().isoformat()
+                self.metadata['loaded_at'] = datetime.now(timezone.utc).isoformat()
                 self.metadata['original_shape'] = self.image.shape
                 return True
             else:

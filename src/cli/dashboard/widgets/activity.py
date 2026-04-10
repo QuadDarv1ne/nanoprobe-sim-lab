@@ -4,7 +4,7 @@ Activity Widget
 Timeline активности проекта.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict
 from .base import Widget, WidgetData, WidgetPriority
 
@@ -45,19 +45,19 @@ class ActivityWidget(Widget):
                 {
                     'type': 'simulation',
                     'description': 'SPM simulation completed',
-                    'timestamp': datetime.now().isoformat(),
+                    'timestamp': datetime.now(timezone.utc).isoformat(),
                     'status': 'success'
                 },
                 {
                     'type': 'scan',
                     'description': 'AFM image analyzed',
-                    'timestamp': (datetime.now() - timedelta(minutes=5)).isoformat(),
+                    'timestamp': (datetime.now(timezone.utc) - timedelta(minutes=5)).isoformat(),
                     'status': 'success'
                 },
                 {
                     'type': 'system',
                     'description': 'System health check passed',
-                    'timestamp': (datetime.now() - timedelta(minutes=10)).isoformat(),
+                    'timestamp': (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat(),
                     'status': 'info'
                 },
             ]
@@ -67,7 +67,7 @@ class ActivityWidget(Widget):
         return WidgetData(
             title=self.title,
             content=self._activities,
-            timestamp=datetime.now()
+            timestamp=datetime.now(timezone.utc)
         )
 
     def render(self, width: int = 60) -> str:
@@ -118,7 +118,7 @@ class ActivityWidget(Widget):
 
         try:
             dt = datetime.fromisoformat(timestamp)
-            now = datetime.now()
+            now = datetime.now(timezone.utc)
             diff = now - dt
 
             if diff.total_seconds() < 60:

@@ -3,7 +3,7 @@
 import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox, filedialog
 import threading
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 import matplotlib.pyplot as plt
@@ -180,10 +180,10 @@ class NanoprobeDashboard:
         status_info = (
             "ИНФОРМАЦИЯ О СОСТОЯНИИ ПРОЕКТА\n"
             f"{'=' * 40}\n"
-            f"Время: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+            f"Время: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}\n"
             f"Симуляция запущена: {'Да' if self.simulation_running else 'Нет'}\n"
             "Компоненты инициализированы: Да\n"
-            f"Последнее обновление: {datetime.now().strftime('%H:%M:%S')}\n\n"
+            f"Последнее обновление: {datetime.now(timezone.utc).strftime('%H:%M:%S')}\n\n"
             "КОМПОНЕНТЫ ПРОЕКТА:\n"
             f"- СЗМ симулятор: "
             f"{'Инициализирован' if self.orchestrator.spm_controller else 'Не инициализирован'}\n"
@@ -407,7 +407,7 @@ class NanoprobeDashboard:
         self.logs_text.delete(1.0, tk.END)
         self.logs_text.insert(tk.END, "Логи обновляются...\n")
         self.logs_text.insert(
-            tk.END, f"Время обновления: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+            tk.END, f"Время обновления: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}\n"
         )
 
     def save_settings(self) -> None:

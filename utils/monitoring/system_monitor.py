@@ -6,7 +6,7 @@ import threading
 import json
 import tkinter as tk
 from tkinter import ttk
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Any
 from collections import deque
@@ -53,7 +53,7 @@ class SystemMonitor:
             return
 
         self.monitoring = True
-        self.start_time = datetime.now()
+        self.start_time = datetime.now(timezone.utc)
         self.monitoring_thread = threading.Thread(target=self._monitor_loop, daemon=True)
         self.monitoring_thread.start()
 
@@ -68,7 +68,7 @@ class SystemMonitor:
         while self.monitoring:
             try:
                 # Сбор метрик
-                timestamp = datetime.now()
+                timestamp = datetime.now(timezone.utc)
 
                 cpu_percent = psutil.cpu_percent(interval=None)
                 memory_percent = psutil.virtual_memory().percent
@@ -96,7 +96,7 @@ class SystemMonitor:
                     ),
                     "disk_usage_percent": disk_usage,
                     "process_count": len(psutil.pids()),
-                    "uptime": (datetime.now() - self.start_time).total_seconds()
+                    "uptime": (datetime.now(timezone.utc) - self.start_time).total_seconds()
                     if self.start_time
                     else 0,
                 }
@@ -163,7 +163,7 @@ class SystemMonitor:
             "health_score": max(0, health_score),
             "health_level": health_level,
             "issues": issues,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     def get_resource_usage_trend(self) -> Dict[str, List[float]]:
@@ -191,16 +191,16 @@ class SystemMonitor:
             Путь к созданному отчету
         """
         if output_path is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             output_path = f"system_monitor_report_{timestamp}.json"
 
         report = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "report_type": "system_monitor",
             "current_metrics": self.get_current_metrics(),
             "system_health": self.get_system_health(),
             "resource_trends": self.get_resource_usage_trend(),
-            "monitoring_duration": (datetime.now() - self.start_time).total_seconds()
+            "monitoring_duration": (datetime.now(timezone.utc) - self.start_time).total_seconds()
             if self.start_time
             else 0,
         }
@@ -477,7 +477,7 @@ class HealthCheckManager:
             Словарь с результатами проверки
         """
         results = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "checks": {},
             "overall_health": "unknown",
             "issues_found": 0,
@@ -615,13 +615,13 @@ class HealthCheckManager:
             Путь к созданному отчету
         """
         if output_path is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             output_path = f"system_health_report_{timestamp}.json"
 
         health_check_results = self.run_comprehensive_health_check()
 
         report = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "report_type": "system_health",
             "health_check_results": health_check_results,
         }

@@ -5,7 +5,7 @@ Schema и резолверы для GraphQL endpoint
 
 import strawberry
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from utils.database import DatabaseManager
 
 
@@ -213,13 +213,13 @@ class Mutation:
 
         return Scan(
             id=scan_id,
-            timestamp=datetime.now().isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
             scan_type=scan_type,
             surface_type=surface_type,
             width=width,
             height=height,
             file_path=None,
-            created_at=datetime.now().isoformat()
+            created_at=datetime.now(timezone.utc).isoformat()
         )
 
 

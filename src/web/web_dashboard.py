@@ -24,7 +24,7 @@ import time
 import threading
 import webbrowser
 import subprocess
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any
 from pathlib import Path
 
@@ -118,7 +118,7 @@ class WebDashboard:
         self.database = DatabaseManager(db_path="data/nanoprobe.db")
 
         # Время запуска
-        self._start_time = datetime.now()
+        self._start_time = datetime.now(timezone.utc)
 
         # Регистрация маршрутов
         self._register_routes()
@@ -173,7 +173,7 @@ class WebDashboard:
             try:
                 return jsonify({
                     "status": "healthy",
-                    "timestamp": datetime.now().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                     "uptime": self._get_uptime(),
                     "components": {
                         "database": "ok",
@@ -444,7 +444,7 @@ class WebDashboard:
                         "disk_free_gb": disk.free // (1024 * 1024 * 1024)
                     },
                     "uptime": self._get_uptime(),
-                    "timestamp": datetime.now().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 })
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка получения статистики: {e}")
@@ -951,7 +951,7 @@ class WebDashboard:
 
                 db = get_database()
                 output_dir = request.json.get('output_dir', 'output')
-                output_path = Path(output_dir) / f"db_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+                output_path = Path(output_dir) / f"db_export_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
 
                 result_path = db.export_to_json(str(output_path))
 
@@ -1077,7 +1077,7 @@ class WebDashboard:
             emit("system_status", {
                 "status": "online",
                 "uptime": self._get_uptime(),
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             })
 
         @self.socketio.on("disconnect")
@@ -1108,7 +1108,7 @@ class WebDashboard:
                         "cpu_percent": cpu_percent,
                         "memory_percent": memory.percent
                     },
-                    "timestamp": datetime.now().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 })
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка обновления статуса: {e}")
@@ -1191,7 +1191,7 @@ class WebDashboard:
                             "disk_percent": disk.percent,
                             "disk_free_gb": disk.free // (1024 * 1024 * 1024)
                         },
-                        "timestamp": datetime.now().isoformat()
+                        "timestamp": datetime.now(timezone.utc).isoformat()
                     })
                 except Exception as e:
                     self.error_handler.log_error(f"Ошибка фоновой статистики: {e}")
@@ -1209,7 +1209,7 @@ class WebDashboard:
                     'cpu_percent': psutil.cpu_percent(interval=1),
                     'memory_percent': psutil.virtual_memory().percent,
                     'disk_usage': _get_disk_usage().percent,
-                    'timestamp': datetime.now().isoformat()
+                    'timestamp': datetime.now(timezone.utc).isoformat()
                 }
                 emit('metrics', metrics)
             except Exception as e:
@@ -1292,8 +1292,8 @@ class WebDashboard:
     def _get_uptime(self) -> str:
         """Получение времени работы системы"""
         # В реальной реализации это будет вычисляться с момента запуска
-        start_time = getattr(self, "_start_time", datetime.now())
-        uptime = datetime.now() - start_time
+        start_time = getattr(self, "_start_time", datetime.now(timezone.utc))
+        uptime = datetime.now(timezone.utc) - start_time
         return str(uptime).split(".")[0]  # Убираем микросекунды
 
     def _execute_start_simulation(self, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -1468,7 +1468,7 @@ class WebDashboard:
         """
         import socket
 
-        self._start_time = datetime.now()
+        self._start_time = datetime.now(timezone.utc)
 
         # Проверяем доступность порта
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

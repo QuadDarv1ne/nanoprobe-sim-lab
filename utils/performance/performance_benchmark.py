@@ -5,7 +5,7 @@ import statistics
 import threading
 from pathlib import Path
 from typing import Dict, List, Any, Callable
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -119,7 +119,7 @@ class PerformanceBenchmarkSuite:
                 memory_used_mb=memory_used,
                 cpu_percent=cpu_after,
                 iterations=1,
-                timestamp=datetime.now(),
+                timestamp=datetime.now(timezone.utc),
                 parameters={"iteration": i, "args_count": len(args), "kwargs_count": len(kwargs)},
                 result_value=result_value,
             )
@@ -206,7 +206,7 @@ class PerformanceBenchmarkSuite:
             },
             "cpu_stats": {"avg_percent": avg_cpu, "measurements_count": len(cpu_usages)},
             "throughput_ops_per_second": 1 / avg_time if avg_time > 0 else 0,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         # Сохраняем как BenchmarkResult для внутреннего использования
@@ -216,7 +216,7 @@ class PerformanceBenchmarkSuite:
             memory_used_mb=avg_memory,
             cpu_percent=avg_cpu,
             iterations=iterations,
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             parameters={"function": func.__name__, "iterations": iterations, "warmup": warmup},
         )
         self.results.append(benchmark_result)
@@ -280,7 +280,7 @@ class PerformanceBenchmarkSuite:
             "results": results,
             "thread_counts": thread_counts,
             "iterations_per_thread": iterations_per_thread,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         return parallel_result
@@ -313,7 +313,7 @@ class PerformanceBenchmarkSuite:
             "function": func.__name__,
             "current_memory_mb": current / (1024 * 1024),
             "peak_memory_mb": peak / (1024 * 1024),
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         return memory_result
@@ -366,7 +366,7 @@ class PerformanceBenchmarkSuite:
                         memory_used_mb=base_result["memory_stats"]["avg_mb"],
                         cpu_percent=base_result["cpu_stats"]["avg_percent"],
                         iterations=iterations,
-                        timestamp=datetime.now(),
+                        timestamp=datetime.now(timezone.utc),
                         parameters={},
                     ),
                     comparison_result=BenchmarkResult(
@@ -375,7 +375,7 @@ class PerformanceBenchmarkSuite:
                         memory_used_mb=result["memory_stats"]["avg_mb"],
                         cpu_percent=result["cpu_stats"]["avg_percent"],
                         iterations=iterations,
-                        timestamp=datetime.now(),
+                        timestamp=datetime.now(timezone.utc),
                         parameters={},
                     ),
                     improvement_percent=improvement,
@@ -406,7 +406,7 @@ class PerformanceBenchmarkSuite:
                     cpu_percent = psutil.cpu_percent()
                     memory_info = psutil.virtual_memory()
 
-                    self.monitoring_data["timestamps"].append(datetime.now())
+                    self.monitoring_data["timestamps"].append(datetime.now(timezone.utc))
                     self.monitoring_data["cpu_percent"].append(cpu_percent)
                     self.monitoring_data["memory_mb"].append(memory_info.used / (1024 * 1024))
 
@@ -438,12 +438,12 @@ class PerformanceBenchmarkSuite:
         if output_path is None:
             output_path = str(
                 self.output_dir
-                / f"performance_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+                / f"performance_report_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
             )
 
         # Подготавливаем данные для отчета
         report_data = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "total_benchmarks": len(self.results),
             "total_comparisons": len(self.comparisons),
             "benchmark_results": [
@@ -542,7 +542,7 @@ class PerformanceBenchmarkSuite:
         if output_path is None:
             output_path = str(
                 self.output_dir
-                / f"benchmark_visualization_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+                / f"benchmark_visualization_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.png"
             )
 
         # Подготовка данных

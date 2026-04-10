@@ -1,7 +1,7 @@
 """Модуль валидации данных для API проекта Nanoprobe Simulation Lab."""
 
 from typing import Dict, Any, Optional, Tuple
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class ValidationError(Exception):
@@ -129,7 +129,7 @@ class ResponseBuilder:
         """Создает успешный ответ."""
         response = {
             'status': 'success',
-            'timestamp': datetime.now().isoformat()
+            'timestamp': datetime.now(timezone.utc).isoformat()
         }
         if data:
             response['data'] = data
@@ -143,7 +143,7 @@ class ResponseBuilder:
         response = {
             'status': 'error',
             'message': message,
-            'timestamp': datetime.now().isoformat()
+            'timestamp': datetime.now(timezone.utc).isoformat()
         }
         if error_code:
             response['error_code'] = error_code

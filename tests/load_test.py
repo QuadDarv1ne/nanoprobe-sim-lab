@@ -23,7 +23,7 @@ import time
 import json
 import statistics
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -249,7 +249,7 @@ class LoadTester:
         print("=" * 70)
         print(f"Base URL: {self.base_url}")
         print(f"Users: {self.users}, Duration: {self.duration}с")
-        print(f"Start Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"Start Time: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}")
         print("=" * 70)
         
         # Health check перед тестом
@@ -389,7 +389,7 @@ def main():
     if results:
         output_file = Path(__file__).parent / "load_test_results.json"
         output_data = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "config": {
                 "base_url": args.url,
                 "users": args.users,

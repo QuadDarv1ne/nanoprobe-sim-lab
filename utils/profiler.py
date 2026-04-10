@@ -9,7 +9,7 @@ import psutil
 import os
 from pathlib import Path
 from typing import Dict, Any, Callable
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import matplotlib.pyplot as plt
 from dataclasses import dataclass
@@ -69,7 +69,7 @@ class Profiler:
         def monitor():
             """Мониторит CPU и память в фоновом режиме"""
             while self.cpu_monitoring:
-                self.monitoring_data["timestamps"].append(datetime.now())
+                self.monitoring_data["timestamps"].append(datetime.now(timezone.utc))
                 self.monitoring_data["cpu_percent"].append(psutil.cpu_percent())
                 self.monitoring_data["memory_percent"].append(psutil.virtual_memory().percent)
                 self.monitoring_data["memory_mb"].append(
@@ -257,7 +257,7 @@ class Profiler:
             "process_cpu_percent": process.cpu_percent(),
             "num_threads": process.num_threads(),
             "num_fds": process.num_fds() if os.name != "nt" else "N/A",
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         return system_info
@@ -276,11 +276,11 @@ class Profiler:
             Путь к созданному отчету
         """
         if output_path is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             output_path = self.output_dir / f"performance_report_{timestamp}.json"
 
         report = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "profile_data": profile_data,
             "system_info": self.analyze_system_resources(),
             "summary": self._generate_summary(profile_data),
@@ -333,7 +333,7 @@ class Profiler:
             Путь к созданному графику
         """
         if output_path is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             output_path = self.output_dir / f"performance_chart_{timestamp}.png"
 
         plt.figure(figsize=(12, 8))
@@ -491,7 +491,7 @@ def performance_monitor(name: str = "Operation"):
             name=f"{name}_execution_time",
             value=execution_time,
             unit="seconds",
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             context=name,
         )
 

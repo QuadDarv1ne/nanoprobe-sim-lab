@@ -12,7 +12,7 @@ from functools import wraps
 from fastapi import HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 from enum import Enum
 import logging
@@ -168,7 +168,7 @@ def create_error_response(
 ) -> JSONResponse:
     """Создание унифицированного ответа об ошибке"""
 
-    error_id = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+    error_id = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
 
     logger.error(
         f"[{severity.value.upper()}] {error_id} - {type(error).__name__}: {str(error)}",
@@ -190,7 +190,7 @@ def create_error_response(
             "message": str(error),
             "severity": severity.value,
             "path": str(request.url.path),
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             **getattr(error, "details", {})
         }
     )
@@ -219,7 +219,7 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
             "error_code": f"ERR_{exc.status_code}",
             "severity": severity.value,
             "path": str(request.url.path),
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
     )
 
@@ -254,7 +254,7 @@ async def validation_error_handler(
             "message": "Ошибка валидации данных",
             "status_code": 422,
             "errors": errors,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
     )
 
@@ -263,7 +263,7 @@ async def general_error_handler(request: Request, exc: Exception) -> JSONRespons
     """Обработчик общих исключений"""
 
     error_trace = traceback.format_exc()
-    error_id = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+    error_id = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
 
     logger.error(
         f"[CRITICAL] {error_id} - {type(exc).__name__}: {str(exc)}\n{error_trace}",
@@ -288,7 +288,7 @@ async def general_error_handler(request: Request, exc: Exception) -> JSONRespons
             "status_code": 500,
             "severity": "critical",
             "path": str(request.url.path),
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             **({"traceback": error_trace} if show_details else {})
         }
     )
@@ -334,7 +334,7 @@ def save_error_report(error_type: str, message: str, traceback_str: str, context
         traceback_str: Трассировка
         context: Дополнительный контекст
     """
-    timestamp = datetime.now()
+    timestamp = datetime.now(timezone.utc)
     filename = f"error_report_{timestamp.strftime('%Y%m%d_%H%M%S')}.json"
     filepath = ERROR_REPORTS_DIR / filename
     
@@ -364,7 +364,7 @@ def cleanup_old_error_reports(days: int = 30):
     """
     from datetime import timedelta
     
-    cutoff = datetime.now() - timedelta(days=days)
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
     deleted = 0
     
     for file in ERROR_REPORTS_DIR.glob("error_report_*.json"):

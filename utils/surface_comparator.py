@@ -2,7 +2,7 @@
 
 import numpy as np
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any, Optional, Tuple, List
 import json
 
@@ -135,7 +135,7 @@ class SurfaceComparator:
 
         metrics = self.compare_surfaces(arr1, arr2)
 
-        cid = f"comp_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        cid = f"comp_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
         results = {"id": cid, "path1": path1, "path2": path2, **metrics}
 
         if save:

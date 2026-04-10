@@ -10,7 +10,7 @@ import asyncio
 import logging
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Callable, Any
 from pathlib import Path
 import json
@@ -121,7 +121,7 @@ class AlertManager:
 
     def _check_rate_limit(self, alert_name: str) -> bool:
         """Проверка rate limiting"""
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         if alert_name not in self._rate_limits:
             self._rate_limits[alert_name] = []
 
@@ -201,7 +201,7 @@ class AlertManager:
 
         alert = Alert(
             alert_id=alert_id,
-            timestamp=datetime.now().isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
             alert_name=alert_name,
             severity=severity,
             description=description,
@@ -269,7 +269,7 @@ class AlertManager:
 
         alert = self.alerts[alert_id]
         alert.status = AlertStatus.RESOLVED.value
-        alert.resolved_at = datetime.now().isoformat()
+        alert.resolved_at = datetime.now(timezone.utc).isoformat()
 
         self.alert_history.append(asdict(alert))
         return True
@@ -294,7 +294,7 @@ class AlertManager:
 
     def get_alert_statistics(self) -> Dict[str, Any]:
         """Получение статистики алертов"""
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         last_hour = now - timedelta(hours=1)
         last_24h = now - timedelta(hours=24)
 
@@ -343,7 +343,7 @@ class AlertManager:
         for alert in reversed(self.alert_history):
             if alert['alert_name'] == alert_name and alert['status'] == 'firing':
                 alert['status'] = 'resolved'
-                alert['resolved_at'] = datetime.now().isoformat()
+                alert['resolved_at'] = datetime.now(timezone.utc).isoformat()
                 self._log_alert(alert, event='resolved')
 
                 if channels is None:
@@ -502,7 +502,7 @@ class AlertManager:
     def _log_alert(self, alert: Dict, event: str = 'firing'):
         """Логирование алерта"""
         log_entry = {
-            'timestamp': datetime.now().isoformat(),
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'event': event,
             'alert': alert,
         }
@@ -513,7 +513,7 @@ class AlertManager:
     def _log_error(self, message: str):
         """Логирование ошибки"""
         with open(self.alert_log_path, 'a', encoding='utf-8') as f:
-            f.write(f"[ERROR] {datetime.now().isoformat()}: {message}\n")
+            f.write(f"[ERROR] {datetime.now(timezone.utc).isoformat()}: {message}\n")
 
     def get_alert_history(self, limit: int = 100) -> List[Dict]:
         """Получение истории алертов"""

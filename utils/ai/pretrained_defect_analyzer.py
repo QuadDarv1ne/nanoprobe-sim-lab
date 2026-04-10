@@ -6,7 +6,7 @@ Pre-trained модели и transfer learning
 import numpy as np
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 
 logger = logging.getLogger(__name__)
@@ -228,7 +228,7 @@ class PretrainedDefectAnalyzer:
                 'confidence': confidence,
                 'all_probabilities': all_probabilities,
                 'image_path': str(image_path),
-                'timestamp': datetime.now().isoformat(),
+                'timestamp': datetime.now(timezone.utc).isoformat(),
                 'model_type': self.model_type,
             }
 

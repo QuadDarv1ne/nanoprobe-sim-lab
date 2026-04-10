@@ -7,7 +7,7 @@ import os
 import subprocess
 from pathlib import Path
 from typing import Dict, List, Any, Callable
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 from concurrent.futures import ThreadPoolExecutor
 
@@ -454,11 +454,11 @@ class TestFramework:
             Путь к созданному отчету
         """
         if output_path is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             output_path = f"test_report_{timestamp}.json"
 
         report = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "report_type": "comprehensive_test_report",
             "project_root": str(self.project_root),
             "unittest_results": self.run_unittests(),
@@ -510,7 +510,7 @@ class TestFramework:
         start_time = time.time()
 
         results = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "pipeline_started": start_time,
             "steps": {},
             "overall_success": True,
@@ -717,11 +717,11 @@ class QualityAssurance:
             Путь к созданному отчету
         """
         if output_path is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             output_path = f"quality_report_{timestamp}.json"
 
         report = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "report_type": "code_quality_report",
             "project_root": str(self.project_root),
             "pylint_analysis": self.run_pylint_analysis(),

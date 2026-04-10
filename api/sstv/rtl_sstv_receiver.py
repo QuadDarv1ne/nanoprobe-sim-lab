@@ -8,7 +8,7 @@ import os
 import time
 import wave
 import tempfile
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Dict, Any, Callable
 import numpy as np
@@ -520,7 +520,7 @@ class SSTVDecoder:
 
     def _record_success(self, img):
         self.stats['successes'] += 1
-        self.stats['last_time'] = datetime.now().isoformat()
+        self.stats['last_time'] = datetime.now(timezone.utc).isoformat()
         self.stats['last_size'] = getattr(img, 'size', None)
         self.last_image = img
 

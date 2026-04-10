@@ -6,7 +6,7 @@ import subprocess
 import shutil
 from pathlib import Path
 from typing import Dict, List, Any
-from datetime import datetime
+from datetime import datetime, timezone
 from dataclasses import dataclass
 
 # Опциональный импорт Docker
@@ -370,7 +370,7 @@ WantedBy=multi-user.target
             Путь к созданному пакету
         """
         if package_name is None:
-            package_name = f"nanoprobe-lab-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+            package_name = f"nanoprobe-lab-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}"
 
         package_dir = self.deployment_dir / package_name
         package_dir.mkdir(exist_ok=True)

@@ -6,7 +6,7 @@ import time
 import threading
 import pickle
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, List, Tuple, Optional
 from dataclasses import dataclass
 
@@ -115,7 +115,7 @@ class PredictiveAnalyticsEngine:
             timestamp: Временная метка (опционально)
         """
         if timestamp is None:
-            timestamp = datetime.now()
+            timestamp = datetime.now(timezone.utc)
 
         if metric_name not in self.data_history:
             self.data_history[metric_name] = []
@@ -145,7 +145,7 @@ class PredictiveAnalyticsEngine:
         if metric_name not in self.data_history:
             return []
 
-        cutoff_time = datetime.now() - timedelta(minutes=minutes)
+        cutoff_time = datetime.now(timezone.utc) - timedelta(minutes=minutes)
         recent_data = [(t, v) for t, v in self.data_history[metric_name] if t >= cutoff_time]
 
         return sorted(recent_data, key=lambda x: x[0])  # Сортируем по времени
@@ -376,7 +376,7 @@ class PredictiveAnalyticsEngine:
             "trends": {},
             "recommendations": [],
             "confidence_levels": {},
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         # Метрики для прогнозирования
@@ -533,7 +533,7 @@ class PredictiveAnalyticsEngine:
         return {
             "applied_actions": applied_actions,
             "total_actions": len(applied_actions),
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     def start_predictive_monitoring(
@@ -616,14 +616,14 @@ class PredictiveAnalyticsEngine:
         if filepath is None:
             filepath = str(
                 self.output_dir
-                / f"predictive_models_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pkl"
+                / f"predictive_models_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.pkl"
             )
 
         models_data = {
             "models": self.models,
             "data_history": self.data_history,
             "stats": self.stats,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         with open(filepath, "wb") as f:
@@ -664,7 +664,7 @@ class PredictiveAnalyticsEngine:
             "prediction_accuracy": {
                 metric: model["r_squared"] for metric, model in self.models.items()
             },
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         return summary
@@ -682,7 +682,7 @@ def main():
 
     # Добавляем немного тестовых данных для начала обучения
     print("📊 Добавление начальных данных для обучения...")
-    base_time = datetime.now()
+    base_time = datetime.now(timezone.utc)
     for i in range(20):
         offset_time = base_time - timedelta(minutes=i * 5)
         engine.add_data_point("cpu_percent", 30 + np.random.normal(0, 5), offset_time)

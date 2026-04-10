@@ -48,6 +48,20 @@ data/.jwt_secret
 data/.admin_password
 data/.user_password
 data/.password_hashes.json
+data/2fa_secrets.json
+
+# Временные файлы разработки
+adsb_capture.py
+adsb_output.txt
+adsb_samples_*.npy
+fm_*.raw
+fm_*.wav
+fm_radio_capture.py
+fm_radio_scanner.py
+tools/
+output/test_export/
+docs/cyclic_imports_report.txt
+config/device_calibration.json
 data/noaa/*.wav
 data/sstv/*.wav
 *.whl

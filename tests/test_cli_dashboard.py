@@ -3,7 +3,7 @@
 """
 
 import pytest
-from datetime import datetime
+from datetime import datetime, timezone
 
 from src.cli.dashboard.widgets.base import Widget, WidgetPriority, WidgetMode, WidgetData
 from src.cli.dashboard.widgets.system_monitor import SystemMonitorWidget
@@ -187,7 +187,7 @@ class TestLogViewerWidget:
                 "WARNING: Low memory",
                 "INFO: User logged in",
             ],
-            timestamp=datetime.now()
+            timestamp=datetime.now(timezone.utc)
         )
 
         # Фильтр по INFO
@@ -209,7 +209,7 @@ class TestLogViewerWidget:
                 "ERROR: Database error",
                 "CRITICAL: System crash",
             ],
-            timestamp=datetime.now()
+            timestamp=datetime.now(timezone.utc)
         )
 
         error_count = widget.get_error_count()

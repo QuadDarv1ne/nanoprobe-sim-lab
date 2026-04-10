@@ -183,9 +183,9 @@ async def get_asteroids(
     
     # Даты по умолчанию - сегодня + 7 дней
     if not start_date:
-        start_date = datetime.now().strftime("%Y-%m-%d")
+        start_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     if not end_date:
-        end_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
+        end_date = (datetime.now(timezone.utc) + timedelta(days=7)).strftime("%Y-%m-%d")
     
     cache_key = f"nasa:asteroids:{start_date}:{end_date}:{page}:{per_page}"
     cached = cache.get(cache_key)

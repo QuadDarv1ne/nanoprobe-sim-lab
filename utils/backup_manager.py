@@ -4,7 +4,7 @@ import os
 import shutil
 import zipfile
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 import tempfile
@@ -91,7 +91,7 @@ class BackupManager:
         try:
             # Генерируем имя резервной копии
             if backup_name is None:
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
                 backup_name = f"nanoprobe_backup_{timestamp}"
 
             # Создаем временный каталог для резервной копии
@@ -130,7 +130,7 @@ class BackupManager:
             index_file = temp_dir / "backup_index.json"
             backup_info = {
                 "name": backup_name,
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "includes_outputs": include_outputs,
                 "compressed": compress,
                 "encrypted": encrypt,
@@ -484,7 +484,7 @@ class BackupManager:
 
             # Удаляем лишние копии
             deleted_count = 0
-            cutoff_date = datetime.now().timestamp() - (keep_days * 24 * 60 * 60)
+            cutoff_date = datetime.now(timezone.utc).timestamp() - (keep_days * 24 * 60 * 60)
 
             for i, backup in enumerate(backups):
                 if i >= keep_count:  # Сохраняем не менее keep_count копий
@@ -517,7 +517,7 @@ class BackupManager:
         Returns:
             Путь к созданной копии или None
         """
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
 
         if strategy == "daily":
             backup_name = f"backup_daily_{timestamp}"

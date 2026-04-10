@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "components", "py-sst
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "components", "py-sstv-groundstation"))
 
 import argparse
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 def cmd_check(args):
@@ -116,7 +116,7 @@ def cmd_record(args):
     output_dir = Path(__file__).parent / "sstv_recordings"
     output_dir.mkdir(exist_ok=True)
     
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     wav_file = output_dir / f"sstv_{timestamp}.wav"
     
     print(f"\n📡 Запись {args.duration} секунд на частоте {args.frequency:.3f} MHz")
@@ -192,7 +192,7 @@ def cmd_auto_record(args):
                 
                 # Запускаем запись
                 from datetime import datetime
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
                 output_dir = Path(__file__).parent / "sstv_recordings"
                 output_dir.mkdir(exist_ok=True)
                 

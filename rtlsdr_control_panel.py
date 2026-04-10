@@ -8,12 +8,12 @@ import sys
 import time
 import numpy as np
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 def print_header():
     print("=" * 70)
     print("  🚀 RTL-SDR V4 CONTROL PANEL")
-    print(f"  {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"  {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 70)
 
 def print_menu():
@@ -118,7 +118,7 @@ def record_signal():
         samples = receiver.record_audio(duration=duration, sample_rate=48000)
         
         if samples is not None:
-            filename = f"recording_{datetime.now().strftime('%Y%m%d_%H%M%S')}.wav"
+            filename = f"recording_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.wav"
             receiver._save_wav(samples, filename, 48000)
             print(f"\n✅ Запись сохранена: {filename}")
             print(f"   Длительность: {len(samples)/48000:.2f} сек")
@@ -159,7 +159,7 @@ def receive_sstv():
             image = decoder.decode_audio(samples, sample_rate=48000)
             
             if image:
-                filename = f"sstv_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+                filename = f"sstv_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.png"
                 image.save(filename)
                 print(f"\n✅ SSTV изображение сохранено: {filename}")
                 print(f"   Размер: {image.size}")
@@ -276,7 +276,7 @@ def signal_monitor():
             while time.time() - start_time < duration:
                 strength = receiver.get_signal_strength()
                 bar_len = int(strength / 2)
-                timestamp = datetime.now().strftime('%H:%M:%S')
+                timestamp = datetime.now(timezone.utc).strftime('%H:%M:%S')
                 
                 print(f"   [{timestamp}] {'█' * bar_len} {strength:.1f}%")
                 

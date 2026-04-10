@@ -7,7 +7,7 @@ import logging
 import os
 import requests
 from typing import Optional, Dict, Any, List
-from datetime import datetime
+from datetime import datetime, timezone
 import jwt
 import json
 
@@ -73,7 +73,7 @@ class FlaskFastAPIIntegration:
                     )
                     self._token_expiry = datetime.fromtimestamp(payload.get("exp", 0))
                 except (jwt.PyJWTError, KeyError, TypeError, ValueError):
-                    self._token_expiry = datetime.now()
+                    self._token_expiry = datetime.now(timezone.utc)
 
                 return tokens
             return None
@@ -84,7 +84,7 @@ class FlaskFastAPIIntegration:
     def get_token(self) -> Optional[str]:
         """Получение текущего access токена"""
         if self._token_cache and self._token_expiry:
-            if datetime.now() < self._token_expiry:
+            if datetime.now(timezone.utc) < self._token_expiry:
                 return self._token_cache
         return None
 
@@ -385,14 +385,14 @@ class FlaskFastAPIIntegration:
         result = {
             "fastapi": {"status": "unknown", "response_time_ms": None},
             "flask": {"status": "unknown", "response_time_ms": None},
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
 
         # Проверка FastAPI
         try:
-            start = datetime.now()
+            start = datetime.now(timezone.utc)
             response = requests.get(f"{self.fastapi_url}/health", timeout=5)
-            elapsed = (datetime.now() - start).total_seconds() * 1000
+            elapsed = (datetime.now(timezone.utc) - start).total_seconds() * 1000
 
             if response.status_code == 200:
                 result["fastapi"] = {"status": "healthy", "response_time_ms": round(elapsed, 2)}
@@ -403,9 +403,9 @@ class FlaskFastAPIIntegration:
 
         # Проверка Flask (через системную информацию)
         try:
-            start = datetime.now()
+            start = datetime.now(timezone.utc)
             response = requests.get(f"{self.flask_url}/api/system_info", timeout=5)
-            elapsed = (datetime.now() - start).total_seconds() * 1000
+            elapsed = (datetime.now(timezone.utc) - start).total_seconds() * 1000
 
             if response.status_code == 200:
                 result["flask"] = {"status": "healthy", "response_time_ms": round(elapsed, 2)}
@@ -429,7 +429,7 @@ class FlaskFastAPIIntegration:
         result = {
             "synced": [],
             "errors": [],
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
 
         # Оба приложения используют одну БД, поэтому синхронизация не требуется

@@ -3,7 +3,7 @@
 import os
 import re
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 # External formatting tools are optional, we'll use built-in methods
 # import black  # type: ignore
 # import autopep8  # type: ignore
@@ -20,7 +20,7 @@ class CodeFormatter:
 
     def log_message(self, message: str, level: str = "INFO"):
         """Логирование сообщений"""
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
         log_entry = {
             "timestamp": timestamp,
             "level": level,
@@ -342,7 +342,7 @@ class CodeFormatter:
 
     def save_formatting_report(self):
         """Сохранение отчета о форматировании"""
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         report_path = self.project_root / "reports" / "logs" / f"formatting_report_{timestamp}.json"
 
         # Создаем папку отчетов если не существует
@@ -352,7 +352,7 @@ class CodeFormatter:
         import json
 
         report_data = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "project_name": "Nanoprobe Simulation Lab",
             "operation": "Code formatting and style fixes",
             "formatting_log": self.log_messages,

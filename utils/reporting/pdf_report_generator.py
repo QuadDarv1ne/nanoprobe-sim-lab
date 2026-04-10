@@ -3,7 +3,7 @@
 Поддержка профессиональных отчётов для научных публикаций
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Any
 from reportlab.lib import colors
@@ -118,7 +118,7 @@ class ScientificPDFReport:
         Returns:
             Путь к созданному PDF файлу
         """
-        filename = f"surface_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        filename = f"surface_analysis_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.pdf"
         filepath = self.output_dir / filename
 
         doc = SimpleDocTemplate(
@@ -173,7 +173,7 @@ class ScientificPDFReport:
         # Дата и подпись
         content.append(Spacer(1, 1*inch))
         content.append(Paragraph(
-            f"<i>Отчёт сгенерирован: {datetime.now().strftime('%d.%m.%Y %H:%M')}</i>",
+            f"<i>Отчёт сгенерирован: {datetime.now(timezone.utc).strftime('%d.%m.%Y %H:%M')}</i>",
             self.styles['BodyText']
         ))
 
@@ -203,7 +203,7 @@ class ScientificPDFReport:
 
         # Дата
         content.append(Paragraph(
-            f"<b>Дата:</b> {datetime.now().strftime('%d.%m.%Y')}",
+            f"<b>Дата:</b> {datetime.now(timezone.utc).strftime('%d.%m.%Y')}",
             self.styles['BodyText']
         ))
 
@@ -228,7 +228,7 @@ class ScientificPDFReport:
             'Тип поверхности': data.get('surface_type', 'Не указано'),
             'Размер области (нм)': data.get('scan_size', 'Не указано'),
             'Разрешение (пиксели)': data.get('resolution', 'Не указано'),
-            'Дата сканирования': data.get('scan_date', datetime.now().strftime('%d.%m.%Y')),
+            'Дата сканирования': data.get('scan_date', datetime.now(timezone.utc).strftime('%d.%m.%Y')),
             'Метод': data.get('method', 'СЗМ'),
         }
 
@@ -380,7 +380,7 @@ class ScientificPDFReport:
         Returns:
             Путь к PDF файлу
         """
-        filename = f"defect_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        filename = f"defect_analysis_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.pdf"
         filepath = self.output_dir / filename
 
         doc = SimpleDocTemplate(
@@ -482,7 +482,7 @@ class ScientificPDFReport:
 
         content.append(Spacer(1, 0.5*inch))
         content.append(Paragraph(
-            f"<i>Отчёт сгенерирован: {datetime.now().strftime('%d.%m.%Y %H:%M')}</i>",
+            f"<i>Отчёт сгенерирован: {datetime.now(timezone.utc).strftime('%d.%m.%Y %H:%M')}</i>",
             self.styles['BodyText']
         ))
 
@@ -497,7 +497,7 @@ class ScientificPDFReport:
         author: str = "Nanoprobe Simulation Lab"
     ) -> str:
         """Генерация отчёта о сравнении поверхностей"""
-        filename = f"comparison_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        filename = f"comparison_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.pdf"
         filepath = self.output_dir / filename
 
         doc = SimpleDocTemplate(str(filepath), pagesize=A4, rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
@@ -533,7 +533,7 @@ class ScientificPDFReport:
         author: str = "Nanoprobe Simulation Lab"
     ) -> str:
         """Генерация отчёта о симуляции СЗМ"""
-        filename = f"simulation_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        filename = f"simulation_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.pdf"
         filepath = self.output_dir / filename
 
         doc = SimpleDocTemplate(str(filepath), pagesize=A4, rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
@@ -567,7 +567,7 @@ class ScientificPDFReport:
         title: str = "Отчёт о пакетной обработке"
     ) -> str:
         """Генерация сводного отчёта о пакетной обработке"""
-        filename = f"batch_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        filename = f"batch_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.pdf"
         filepath = self.output_dir / filename
 
         doc = SimpleDocTemplate(str(filepath), pagesize=A4, rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)

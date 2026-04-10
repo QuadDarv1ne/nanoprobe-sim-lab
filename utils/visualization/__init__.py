@@ -1,7 +1,7 @@
 """Visualization utilities"""
-from .visualizer import *
-from .analytics import *
-from .spm_realtime_visualizer import *
-from .surface_comparator import *
+from .visualizer import Visualizer
+from .analytics import AnalyticsVisualizer
+from .spm_realtime_visualizer import SPMRealtimeVisualizer
+from .surface_comparator import SurfaceComparator
 
-__all__ = ['visualizer', 'analytics', 'spm_realtime_visualizer', 'surface_comparator']
+__all__ = ['Visualizer', 'AnalyticsVisualizer', 'SPMRealtimeVisualizer', 'SurfaceComparator']

@@ -10,10 +10,8 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
+from api.state import get_app_state
 from api.routes.sstv import (
-    _recording_process,
-    _recording_start_time,
-    _recording_metadata,
     start_sstv_recording,
     stop_sstv_recording,
     get_recording_status,
@@ -25,11 +23,16 @@ import asyncio
 def test_recording_init():
     """Тест инициализации переменных записи"""
     print("Тест инициализации переменных записи...")
+
+    # Переменные должны быть инициализированы через app_state
+    recording_process = get_app_state("recording_process")
+    assert recording_process is None or hasattr(recording_process, 'pid')
     
-    # Переменные должны быть инициализированы
-    assert _recording_process is None or hasattr(_recording_process, 'pid')
-    assert _recording_start_time is None or isinstance(_recording_start_time, object)
-    assert isinstance(_recording_metadata, dict)
+    recording_start_time = get_app_state("recording_start_time")
+    assert recording_start_time is None or isinstance(recording_start_time, object)
+    
+    recording_metadata = get_app_state("recording_metadata", {})
+    assert isinstance(recording_metadata, dict)
     
     print("[PASS] Инициализация переменных записи")
 

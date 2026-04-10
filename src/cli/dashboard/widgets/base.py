@@ -8,7 +8,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Optional, Any, Dict
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 
 logger = logging.getLogger(__name__)
@@ -133,7 +133,7 @@ class Widget(ABC):
         """Безопасное обновление с обработкой ошибок"""
         try:
             self.data = await self.refresh()
-            self.last_update = datetime.now()
+            self.last_update = datetime.now(timezone.utc)
             self.error = None
             return self.data
         except Exception as e:

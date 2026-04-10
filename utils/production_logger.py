@@ -231,7 +231,7 @@ class HTTPLoggingMiddleware:
         # Начало запроса
         method = scope['method']
         path = scope['path']
-        start_time = datetime.now()
+        start_time = datetime.now(timezone.utc)
 
         self.logger.info(f"→ {method} {path}")
 
@@ -239,7 +239,7 @@ class HTTPLoggingMiddleware:
         try:
             await self.app(scope, receive, send)
         except Exception as e:
-            duration = (datetime.now() - start_time).total_seconds() * 1000
+            duration = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
             self.logger.error(f"✗ {method} {path} - {duration:.2f}ms - {str(e)}")
             raise
 
@@ -262,12 +262,12 @@ class LogExecutionTime:
         self.start_time = None
 
     def __enter__(self):
-        self.start_time = datetime.now()
+        self.start_time = datetime.now(timezone.utc)
         self.logger.debug(f"Начало: {self.operation}")
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        duration = (datetime.now() - self.start_time).total_seconds()
+        duration = (datetime.now(timezone.utc) - self.start_time).total_seconds()
 
         if exc_type:
             self.logger.error(
@@ -297,14 +297,14 @@ def log_function_call(logger: logging.Logger = None):
             log = logger or get_logger().get_logger()
             log.debug(f"Вызов {func.__name__} с args={args}, kwargs={kwargs}")
 
-            start = datetime.now()
+            start = datetime.now(timezone.utc)
             try:
                 result = func(*args, **kwargs)
-                duration = (datetime.now() - start).total_seconds() * 1000
+                duration = (datetime.now(timezone.utc) - start).total_seconds() * 1000
                 log.debug(f"{func.__name__} завершён за {duration:.2f}ms")
                 return result
             except Exception as e:
-                duration = (datetime.now() - start).total_seconds() * 1000
+                duration = (datetime.now(timezone.utc) - start).total_seconds() * 1000
                 log.error(f"{func.__name__} ошибка через {duration:.2f}ms: {e}", exc_info=True)
                 raise
 

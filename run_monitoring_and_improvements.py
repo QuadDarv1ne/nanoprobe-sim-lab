@@ -4,7 +4,7 @@ import os
 import sys
 import time
 import subprocess
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Добавляем путь к проекту
@@ -97,7 +97,7 @@ def generate_final_report(monitor_results, improvement_results, tests_passed, pr
     print("ФИНАЛЬНЫЙ ОТЧЕТ")
     print("="*70)
 
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
     print(f"Время завершения: {timestamp}")
 
     print(f"\nМониторинг:")
@@ -113,7 +113,7 @@ def generate_final_report(monitor_results, improvement_results, tests_passed, pr
     print(f"Запуск проекта: {'✅ Успешно' if project_run_success else '❌ Ошибка'}")
 
     # Сохраняем финальный отчет
-    report_path = project_root / "reports" / f"final_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    report_path = project_root / "reports" / f"final_report_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
     report_path.parent.mkdir(exist_ok=True)
 
     final_report = {
@@ -142,7 +142,7 @@ def generate_final_report(monitor_results, improvement_results, tests_passed, pr
 def main():
     """Основная функция запуска всего процесса"""
     print("🚀 Запуск комплексного мониторинга и улучшения проекта...")
-    print(f"Дата и время начала: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Дата и время начала: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"Рабочая директория: {project_root}")
 
     # 1. Запускаем мониторинг проекта

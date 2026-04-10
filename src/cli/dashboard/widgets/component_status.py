@@ -6,7 +6,7 @@ Component Status Widget
 
 import asyncio
 import socket
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List
 from .base import Widget, WidgetData, WidgetPriority
 
@@ -76,7 +76,7 @@ class ComponentStatusWidget(Widget):
         return WidgetData(
             title=self.title,
             content=statuses,
-            timestamp=datetime.now()
+            timestamp=datetime.now(timezone.utc)
         )
 
     def render(self, width: int = 40) -> str:

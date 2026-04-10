@@ -8,7 +8,7 @@ Unified CLI Dashboard Core
 import asyncio
 import sys
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Type
 from enum import Enum
 
@@ -141,7 +141,7 @@ class UnifiedDashboard:
 
     def _render_header(self) -> str:
         """Отрисовка заголовка"""
-        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
         mode_str = f"{self.mode.value:10}"
 
         # Цвета для темы

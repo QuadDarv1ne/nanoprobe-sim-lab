@@ -5,7 +5,7 @@
 
 import sys
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
@@ -17,7 +17,7 @@ def test_error_info_serialization():
     print("Тест сериализации ErrorInfo...")
 
     error = ErrorInfo(
-        timestamp=datetime.now(),
+        timestamp=datetime.now(timezone.utc),
         severity=ErrorSeverity.WARNING,
         message="Test message",
         exception_type="TestException",

@@ -5,7 +5,7 @@ ISS/MKS Tracker - Расчёт пролётов МКС над Москвой
 """
 import sys
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Добавляем путь к модулям
 sys.path.insert(0, str(Path(__file__).parent / "components" / "py-sstv-groundstation" / "src"))
@@ -21,7 +21,7 @@ def main():
     print("МКС TRACKER - Пролёты над Москвой")
     print("=" * 70)
     print(f"Koordinaty: {MOSCOW_LAT}°N, {MOSCOW_LON}°E")
-    print(f"Vremya: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Vremya: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 70)
     print()
     

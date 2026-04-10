@@ -12,7 +12,7 @@ import time
 import threading
 import pickle
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from dataclasses import dataclass
 from collections import deque
 from typing import Dict, Any, List, Optional, Tuple
@@ -160,7 +160,7 @@ class AIResourceOptimizer:
             active_processes=active_processes,
             threads_count=threads_count,
             load_average=load_average,
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
         )
 
         return state
@@ -539,7 +539,7 @@ class AIResourceOptimizer:
 
         # Сохраняем в историю
         self.optimization_history.append(
-            {"recommendation": recommendation, "result": result, "timestamp": datetime.now()}
+            {"recommendation": recommendation, "result": result, "timestamp": datetime.now(timezone.utc)}
         )
 
         return result
@@ -665,7 +665,7 @@ class AIResourceOptimizer:
                     self.learn_from_optimization(state_before, state_after, rec, result)
 
                     results.append(
-                        {"recommendation": rec, "result": result, "timestamp": datetime.now()}
+                        {"recommendation": rec, "result": result, "timestamp": datetime.now(timezone.utc)}
                     )
 
                     # Небольшая пауза между оптимизациями
@@ -745,7 +745,7 @@ class AIResourceOptimizer:
             "model_accuracy": self.ml_model["accuracy"],
             "recommendations_count": len(self.optimization_history),
             "state_history_length": len(self.state_history),
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     def save_ai_model(self, filepath: Optional[str] = None):
@@ -757,7 +757,7 @@ class AIResourceOptimizer:
         """
         if filepath is None:
             filepath = str(
-                self.output_dir / f"ai_model_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pkl"
+                self.output_dir / f"ai_model_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.pkl"
             )
 
         model_data = {
@@ -765,7 +765,7 @@ class AIResourceOptimizer:
             "state_history": list(self.state_history),
             "optimization_history": self.optimization_history,
             "stats": self.stats,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         with open(filepath, "wb") as f:
@@ -802,7 +802,7 @@ class AIResourceOptimizer:
             "performance_trends": {},
             "efficiency_metrics": {},
             "ai_decisions": [],
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         # Анализ истории оптимизаций

@@ -1,4 +1,4 @@
 """Simulator orchestration"""
-from .simulator_orchestrator import *
+from .simulator_orchestrator import SimulatorOrchestrator
 
-__all__ = ['simulator_orchestrator']
+__all__ = ['SimulatorOrchestrator']

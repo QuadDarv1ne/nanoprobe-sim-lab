@@ -5,7 +5,7 @@ External Services API routes с Circuit Breaker
 
 from fastapi import APIRouter, Query
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 import os
 import requests
@@ -81,7 +81,7 @@ async def get_nasa_apod(date: Optional[str] = None):
     data = response.json()
     
     # Кэшируем на 1 час для исторических дат, на 5 минут для сегодняшней
-    now = datetime.now().date()
+    now = datetime.now(timezone.utc).date()
     if date:
         try:
             request_date = datetime.strptime(date, "%Y-%m-%d").date()
@@ -286,4 +286,4 @@ async def check_external_services_health():
             service["status"] = "unhealthy"
             service["error"] = str(e)
 
-    return {"services": services, "timestamp": datetime.now().isoformat()}
+    return {"services": services, "timestamp": datetime.now(timezone.utc).isoformat()}

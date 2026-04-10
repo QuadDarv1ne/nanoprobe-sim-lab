@@ -7,7 +7,7 @@
 import sys
 import time
 import requests
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Добавляем путь к проекту
@@ -228,7 +228,7 @@ def run_all_tests(fastapi_url="http://localhost:8000", flask_url="http://localho
 
     print(f"  FastAPI URL: {fastapi_url}")
     print(f"  Flask URL: {flask_url}")
-    print(f"  Время запуска: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"  Время запуска: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}")
 
     results = {
         "FastAPI Health": test_fastapi_health(fastapi_url),

@@ -13,7 +13,7 @@ import threading
 import time
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Callable
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import matplotlib.pyplot as plt
 from dataclasses import dataclass
@@ -105,7 +105,7 @@ class MemoryTracker:
         dirty_mb = getattr(memory_info, "dirty", 0) / (1024 * 1024)
 
         snapshot = MemorySnapshot(
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             rss_mb=rss_mb,
             vms_mb=vms_mb,
             percent=memory_percent,
@@ -387,7 +387,7 @@ class MemoryTracker:
 
         if output_path is None:
             output_path = str(
-                self.output_dir / f"memory_usage_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+                self.output_dir / f"memory_usage_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.png"
             )
 
         fig, axes = plt.subplots(2, 2, figsize=(15, 10))
@@ -475,13 +475,13 @@ class MemoryTracker:
         """
         if output_path is None:
             output_path = str(
-                self.output_dir / f"memory_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+                self.output_dir / f"memory_report_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
             )
 
         analysis = self.analyze_memory_usage()
 
         report = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "analysis": analysis,
             "snapshots_count": len(self.snapshots),
             "leak_detections_count": len(self.leak_detections),

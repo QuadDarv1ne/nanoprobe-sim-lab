@@ -6,7 +6,7 @@ import shutil
 import json
 import sys
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Добавляем путь к модулям
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -285,7 +285,7 @@ class TestErrorInfo(unittest.TestCase):
     def test_error_info_creation(self):
         """Тестирует создание ErrorInfo"""
         error_info = ErrorInfo(
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             severity=ErrorSeverity.ERROR,
             message="Test message",
             exception_type="ValueError",
@@ -303,7 +303,7 @@ class TestErrorInfo(unittest.TestCase):
         context = {"user_id": 123, "action": "test"}
 
         error_info = ErrorInfo(
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             severity=ErrorSeverity.WARNING,
             message="Warning message",
             exception_type="Warning",

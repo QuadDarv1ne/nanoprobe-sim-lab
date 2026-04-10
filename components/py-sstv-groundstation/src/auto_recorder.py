@@ -9,7 +9,7 @@ import time
 import threading
 import json
 import subprocess
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Callable
 from dataclasses import dataclass, field
@@ -150,7 +150,7 @@ class AutoRecordingScheduler:
         self.monitor_thread = threading.Thread(target=self._monitor_loop, daemon=True)
         self.monitor_thread.start()
 
-        self._notify('monitoring_started', {'time': datetime.now().isoformat()})
+        self._notify('monitoring_started', {'time': datetime.now(timezone.utc).isoformat()})
         print(f"Мониторинг запущен. Запланировано записей: {len(self.recordings)}")
 
     def stop_monitoring(self):
@@ -165,13 +165,13 @@ class AutoRecordingScheduler:
         if self.monitor_thread:
             self.monitor_thread.join(timeout=5)
 
-        self._notify('monitoring_stopped', {'time': datetime.now().isoformat()})
+        self._notify('monitoring_stopped', {'time': datetime.now(timezone.utc).isoformat()})
         print("Мониторинг остановлен")
 
     def _monitor_loop(self):
         """Основной цикл мониторинга."""
         while self.is_running:
-            now = datetime.now()
+            now = datetime.now(timezone.utc)
 
             for recording in self.recordings:
                 if recording.status == 'scheduled':
@@ -227,7 +227,7 @@ class AutoRecordingScheduler:
             record_thread.start()
             recording.recording_process = record_thread  # type: ignore[assignment]
 
-            recording.metadata['start_time'] = datetime.now().isoformat()
+            recording.metadata['start_time'] = datetime.now(timezone.utc).isoformat()
             recording.metadata['output_dir'] = str(output_dir)
             recording.metadata['audio_file'] = str(audio_file)
             recording.metadata['image_file'] = str(image_file)
@@ -261,7 +261,7 @@ class AutoRecordingScheduler:
                 recording.recording_process = None
 
             recording.status = 'completed'
-            recording.metadata['end_time'] = datetime.now().isoformat()
+            recording.metadata['end_time'] = datetime.now(timezone.utc).isoformat()
 
             # Сохраняем метаданные
             self._save_metadata(recording)
@@ -319,7 +319,7 @@ class AutoRecordingScheduler:
 
     def get_next_pass(self) -> Optional[ScheduledRecording]:
         """Получает следующий пролёт для записи."""
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
 
         for recording in self.recordings:
             if recording.status == 'scheduled' and recording.aos > now:

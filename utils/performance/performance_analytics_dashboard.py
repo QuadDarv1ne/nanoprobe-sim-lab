@@ -7,7 +7,7 @@ import threading
 import json
 import statistics
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, List
 from dataclasses import dataclass
 
@@ -119,7 +119,7 @@ class PerformanceAnalyticsDashboard:
         try:
             # Собираем текущие метрики
             current_data = {
-                "timestamp": datetime.now(),
+                "timestamp": datetime.now(timezone.utc),
                 "performance_metrics": self._get_performance_metrics(),
                 "resource_metrics": self._get_resource_metrics(),
                 "memory_metrics": self._get_memory_metrics(),
@@ -131,7 +131,7 @@ class PerformanceAnalyticsDashboard:
             self.performance_history.append(current_data)
 
             # Ограничиваем размер истории (хранить только последние 24 часа)
-            cutoff_time = datetime.now() - timedelta(hours=self.analysis_window_hours)
+            cutoff_time = datetime.now(timezone.utc) - timedelta(hours=self.analysis_window_hours)
             self.performance_history = [
                 data for data in self.performance_history if data["timestamp"] > cutoff_time
             ]
@@ -262,7 +262,7 @@ class PerformanceAnalyticsDashboard:
                     severity="high",
                     value=efficiency,
                     recommendation="Запустите комплексную оптимизацию ресурсов через orchestrator",
-                    timestamp=datetime.now(),
+                    timestamp=datetime.now(timezone.utc),
                 )
             )
         elif efficiency < 80:
@@ -274,7 +274,7 @@ class PerformanceAnalyticsDashboard:
                     severity="medium",
                     value=efficiency,
                     recommendation="Проверьте настройки оптимизации ресурсов",
-                    timestamp=datetime.now(),
+                    timestamp=datetime.now(timezone.utc),
                 )
             )
 
@@ -289,7 +289,7 @@ class PerformanceAnalyticsDashboard:
                     severity="high",
                     value=cpu_usage,
                     recommendation="Оптимизируйте алгоритмы или рассмотрите распараллеливание вычислений",
-                    timestamp=datetime.now(),
+                    timestamp=datetime.now(timezone.utc),
                 )
             )
         elif cpu_usage > 70:
@@ -301,7 +301,7 @@ class PerformanceAnalyticsDashboard:
                     severity="medium",
                     value=cpu_usage,
                     recommendation="Мониторьте использование CPU и оптимизируйте при необходимости",
-                    timestamp=datetime.now(),
+                    timestamp=datetime.now(timezone.utc),
                 )
             )
 
@@ -316,7 +316,7 @@ class PerformanceAnalyticsDashboard:
                     severity="high",
                     value=memory_usage,
                     recommendation="Проверьте утечки памяти и оптимизируйте использование",
-                    timestamp=datetime.now(),
+                    timestamp=datetime.now(timezone.utc),
                 )
             )
         elif memory_usage > 70:
@@ -328,7 +328,7 @@ class PerformanceAnalyticsDashboard:
                     severity="medium",
                     value=memory_usage,
                     recommendation="Мониторьте использование памяти и очищайте кэш при необходимости",
-                    timestamp=datetime.now(),
+                    timestamp=datetime.now(timezone.utc),
                 )
             )
 
@@ -388,7 +388,7 @@ class PerformanceAnalyticsDashboard:
                     }
 
         self.trend_analysis = {
-            "timestamp": datetime.now(),
+            "timestamp": datetime.now(timezone.utc),
             "trends": trends,
             "analysis_period": self.analysis_window_hours,
         }
@@ -490,11 +490,11 @@ class PerformanceAnalyticsDashboard:
         if output_path is None:
             output_path = str(
                 self.output_dir
-                / f"analytics_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+                / f"analytics_report_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
             )
 
         report = {
-            "generation_time": datetime.now().isoformat(),
+            "generation_time": datetime.now(timezone.utc).isoformat(),
             "summary": self.get_performance_summary(),
             "trend_analysis": self.trend_analysis,
             "top_insights": [
@@ -586,7 +586,7 @@ class PerformanceAnalyticsDashboard:
         if output_path is None:
             output_path = str(
                 self.output_dir
-                / f"performance_dashboard_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+                / f"performance_dashboard_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.png"
             )
 
         if not self.performance_history:

@@ -384,3 +384,39 @@ async def get_database_indexes() -> Dict[str, Any]:
 
 # Project root for database path
 PROJECT_ROOT = Path(__file__).parent.parent.parent
+
+
+@router.get(
+    "/health/extended",
+    summary="Extended Health Check",
+    description="Полная проверка здоровья всех компонентов (WebSocket, TLE, RTL-SDR, Background Tasks)",
+)
+async def get_extended_health():
+    """
+    Расширенная проверка здоровья всех компонентов.
+
+    Включает:
+    - Database connection
+    - Redis connection
+    - WebSocket connections
+    - TLE updates freshness
+    - RTL-SDR device status
+    - Background tasks status
+    """
+    try:
+        from utils.monitoring.extended_health_check import get_health_checker
+
+        checker = get_health_checker()
+        health = await checker.full_health_check()
+
+        # Определяем HTTP статус код
+        status_code = 200
+        if health["status"] == "degraded":
+            status_code = 503
+        elif health["status"] == "warning":
+            status_code = 200  # Warning всё ещё OK
+
+        return health
+    except Exception as e:
+        logger.error(f"Extended health check failed: {e}")
+        raise HTTPException(status_code=503, detail=str(e))

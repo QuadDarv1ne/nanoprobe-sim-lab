@@ -8,7 +8,7 @@ import json
 import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Union, Any
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass
 
 import psutil
@@ -173,7 +173,7 @@ class CacheManager:
                         path=cache_dir,
                         size_bytes=size_bytes,
                         file_count=file_count,
-                        last_accessed=oldest_file_time or datetime.now(),
+                        last_accessed=oldest_file_time or datetime.now(timezone.utc),
                         cache_type=self._determine_cache_type(cache_dir),
                     )
                     cache_info_list.append(cache_info)
@@ -228,7 +228,7 @@ class CacheManager:
         if max_size_mb is None:
             max_size_mb = self.cache_config["max_size_mb"]
 
-        cutoff_time = datetime.now() - timedelta(days=max_age_days)
+        cutoff_time = datetime.now(timezone.utc) - timedelta(days=max_age_days)
         max_size_bytes = max_size_mb * 1024 * 1024
 
         deleted_files = []
@@ -317,7 +317,7 @@ class CacheManager:
             else:
                 try:
                     last_cleanup_time = datetime.fromtimestamp(last_cleanup_file.stat().st_mtime)
-                    if datetime.now() - last_cleanup_time > timedelta(days=1):
+                    if datetime.now(timezone.utc) - last_cleanup_time > timedelta(days=1):
                         should_cleanup = True
                 except (OSError, ValueError):
                     should_cleanup = True
@@ -327,7 +327,7 @@ class CacheManager:
             else:
                 try:
                     last_cleanup_time = datetime.fromtimestamp(last_cleanup_file.stat().st_mtime)
-                    if datetime.now() - last_cleanup_time > timedelta(weeks=1):
+                    if datetime.now(timezone.utc) - last_cleanup_time > timedelta(weeks=1):
                         should_cleanup = True
                 except (OSError, ValueError):
                     should_cleanup = True
@@ -368,7 +368,7 @@ class CacheManager:
             "total_files": total_files,
             "cache_directories_count": len(cache_info_list),
             "cache_by_type": cache_by_type,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "auto_cleanup_enabled": self.cache_config.get("auto_cleanup", True),
             "cleanup_schedule": self.cache_config.get("cleanup_schedule", "daily"),
         }
@@ -415,7 +415,7 @@ class CacheManager:
             Путь к созданному отчету
         """
         if output_path is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             output_path = f"cache_cleanup_report_{timestamp}.json"
 
         # Получаем статистику
@@ -428,7 +428,7 @@ class CacheManager:
         memory_result = self.optimize_memory_usage()
 
         report = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "cache_statistics": stats,
             "cleanup_results": cleanup_result,
             "memory_optimization": memory_result,

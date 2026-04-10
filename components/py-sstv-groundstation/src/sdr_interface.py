@@ -3,7 +3,7 @@
 import numpy as np
 from typing import Optional, Tuple, List, Dict, Callable
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 import threading
 import queue
 import time
@@ -556,7 +556,7 @@ class SDRInterface:
             elif event_type == 'image':
                 print(f"SSTV изображение получено: {data.size}")
                 # Сохраняем изображение
-                output_file = f"sstv_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+                output_file = f"sstv_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.png"
                 data.save(output_file)
                 print(f"Изображение сохранено: {output_file}")
 
@@ -678,7 +678,7 @@ class SDRInterface:
                 'center_freq_mhz': self.center_freq,
                 'gain_db': self.gain,
                 'samples_count': len(all_samples),
-                'timestamp': datetime.now().isoformat()
+                'timestamp': datetime.now(timezone.utc).isoformat()
             }
             with open(metadata_file, 'w') as f:
                 json.dump(metadata, f, indent=2)
@@ -737,7 +737,7 @@ class SDRInterface:
                     self.callback({
                         'frequency': current_freq,
                         'signal_strength': signal_strength,
-                        'timestamp': datetime.now().isoformat()
+                        'timestamp': datetime.now(timezone.utc).isoformat()
                     })
 
                 current_freq += step_mhz
@@ -915,7 +915,7 @@ class SDRScanner:
                 signal_info = {
                     'frequency': current_freq,
                     'strength_db': signal_strength,
-                    'timestamp': datetime.now().isoformat()
+                    'timestamp': datetime.now(timezone.utc).isoformat()
                 }
                 self.found_signals.append(signal_info)
                 print(f"  Сигнал найден: {current_freq} МГц, {signal_strength:.1f} dB")

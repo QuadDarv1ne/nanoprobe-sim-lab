@@ -5,7 +5,7 @@ Gunicorn конфигурация для production запуска FastAPI пр�
 
 import multiprocessing
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 # ==================== Server Binding ====================
 
@@ -90,18 +90,18 @@ backlog = int(backlog)
 
 def on_starting(server):
     """Вызывается перед запуском master процесса"""
-    print(f"[{datetime.now().isoformat()}] 🚀 Nanoprobe FastAPI starting...")
+    print(f"[{datetime.now(timezone.utc).isoformat()}] 🚀 Nanoprobe FastAPI starting...")
     print(f"  Workers: {workers}, Bind: {bind}, Log Level: {loglevel}")
 
 
 def on_reload(server):
     """Вызывается при перезагрузке workers"""
-    print(f"[{datetime.now().isoformat()}] 🔄 Workers reloading...")
+    print(f"[{datetime.now(timezone.utc).isoformat()}] 🔄 Workers reloading...")
 
 
 def when_ready(server):
     """Вызывается когда server готов принимать соединения"""
-    print(f"[{datetime.now().isoformat()}] ✅ Server ready on {bind}")
+    print(f"[{datetime.now(timezone.utc).isoformat()}] ✅ Server ready on {bind}")
 
     # Создание директории для логов если не существует
     import os
@@ -119,7 +119,7 @@ def pre_fork(server, worker):
 
 def post_fork(server, worker):
     """Вызывается после fork'а worker'а"""
-    print(f"[{datetime.now().isoformat()}] 👷 Worker spawned: {worker.pid}")
+    print(f"[{datetime.now(timezone.utc).isoformat()}] 👷 Worker spawned: {worker.pid}")
 
 
 def worker_init(worker):
@@ -129,12 +129,12 @@ def worker_init(worker):
 
 def worker_abort(worker):
     """Вызывается при abort worker'а"""
-    print(f"[{datetime.now().isoformat()}] ⚠️ Worker {worker.pid} aborted")
+    print(f"[{datetime.now(timezone.utc).isoformat()}] ⚠️ Worker {worker.pid} aborted")
 
 
 def worker_exit(server, worker):
     """Вызывается при выходе worker'а"""
-    print(f"[{datetime.now().isoformat()}] 🛑 Worker {worker.pid} exited")
+    print(f"[{datetime.now(timezone.utc).isoformat()}] 🛑 Worker {worker.pid} exited")
 
 
 def pre_exec(server):

@@ -4,7 +4,7 @@ import json
 import toml
 from pathlib import Path
 from typing import Dict, Any, List
-from datetime import datetime
+from datetime import datetime, timezone
 import copy
 from dataclasses import dataclass, asdict
 import configparser
@@ -141,7 +141,7 @@ class ConfigOptimizer:
         """
         with self.lock:
             metrics = {
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "cpu_percent": psutil.cpu_percent(interval=1),
                 "memory_percent": psutil.virtual_memory().percent,
                 "memory_available_gb": psutil.virtual_memory().available / (1024**3),
@@ -387,7 +387,7 @@ class ConfigOptimizer:
                 changes[key] = {"original": orig_val, "optimized": opt_val, "changed": False}
 
         report = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "original_config_path": str(self.config_path),
             "changes_made": len([c for c in changes.values() if c["changed"]]),
             "total_parameters": len(changes),
@@ -420,7 +420,7 @@ class ConfigOptimizer:
             return {
                 "success": False,
                 "error": "Failed to apply optimization",
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
     def optimize_multiple_configs(
@@ -452,7 +452,7 @@ class ConfigOptimizer:
                 results[config_path] = {
                     "success": False,
                     "error": str(e),
-                    "timestamp": datetime.now().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                 }
 
         return results
@@ -520,7 +520,7 @@ class AdaptiveConfigManager:
                     # Сохраняем в историю
                     self.adaptation_history.append(
                         {
-                            "timestamp": datetime.now().isoformat(),
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
                             "report": report,
                             "trigger": "adaptive_monitoring",
                         }

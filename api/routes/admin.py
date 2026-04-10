@@ -4,7 +4,7 @@
 """
 
 from fastapi import APIRouter, Depends
-from datetime import datetime
+from datetime import datetime, timezone
 import psutil
 import os
 import logging
@@ -108,7 +108,7 @@ async def get_system_resources(current_user: dict = Depends(get_current_user)):
             "packets_sent": net_io.packets_sent,
             "packets_recv": net_io.packets_recv,
         },
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -261,11 +261,11 @@ async def get_database_health(current_user: dict = Depends(get_current_user)):
             "path": str(db_path),
             "size_bytes": db_path.stat().st_size if db_path.exists() else 0,
             "pool_stats": db.get_pool_stats(),
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
     except Exception as e:
         logger.error(f"Database health check failed: {e}")
-        return {"status": "unhealthy", "error": str(e), "timestamp": datetime.now().isoformat()}
+        return {"status": "unhealthy", "error": str(e), "timestamp": datetime.now(timezone.utc).isoformat()}
 
 
 @router.post(
@@ -281,7 +281,7 @@ async def backup_database(current_user: dict = Depends(get_current_user)):
     backup_dir = Path("data/backups")
     backup_dir.mkdir(parents=True, exist_ok=True)
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     backup_path = backup_dir / f"nanoprobe_{timestamp}.db"
 
     try:
@@ -293,7 +293,7 @@ async def backup_database(current_user: dict = Depends(get_current_user)):
             "status": "success",
             "backup_path": str(backup_path),
             "size_bytes": size,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
     except Exception as e:
         logger.error(f"Database backup failed: {e}")
@@ -342,7 +342,7 @@ async def vacuum_database(current_user: dict = Depends(get_current_user)):
         logger.info("Database VACUUM and ANALYZE completed")
         return {
             "message": "База данных оптимизирована",
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
     except Exception as e:
         logger.error(f"Error optimizing database: {e}")
@@ -424,7 +424,7 @@ async def create_user(
         "username": username,
         "password_hash": pw_hash,
         "role": role,
-        "created_at": datetime.now().isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
         "last_login": None,
     }
 
@@ -513,7 +513,7 @@ async def clear_cache(
     return {
         "message": "Кэш очищен",
         "cleared": cleared,
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
 

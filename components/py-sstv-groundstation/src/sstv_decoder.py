@@ -4,7 +4,7 @@ import numpy as np
 from typing import Optional, Tuple, List, Dict
 from PIL import Image
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class SSTVDecoder:
@@ -60,7 +60,7 @@ class SSTVDecoder:
                             self.decoded_image = image
                             self.decoded_images.append(image)
                             self.metadata['mode'] = mode_name
-                            self.metadata['timestamp'] = datetime.now().isoformat()
+                            self.metadata['timestamp'] = datetime.now(timezone.utc).isoformat()
                             self.metadata['source'] = str(audio_path)
                             print(f"✓ Успешно декодировано в режиме: {mode_name}")
                             return image
@@ -78,7 +78,7 @@ class SSTVDecoder:
                     self.decoded_image = image
                     self.decoded_images.append(image)
                     self.metadata['mode'] = self.mode
-                    self.metadata['timestamp'] = datetime.now().isoformat()
+                    self.metadata['timestamp'] = datetime.now(timezone.utc).isoformat()
                     self.metadata['source'] = str(audio_path)
                     return image
                 return None
@@ -367,7 +367,7 @@ class SSTVDecoder:
 
         saved_paths = []
         for i, img in enumerate(self.decoded_images):
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
             filename = f"{prefix}_{timestamp}_{i:03d}.png"
             filepath = output_path / filename
             img.save(str(filepath), 'png')

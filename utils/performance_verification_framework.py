@@ -8,7 +8,7 @@ import statistics
 import psutil
 import tracemalloc
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any, List
 from dataclasses import dataclass
 
@@ -78,7 +78,7 @@ class PerformanceVerificationFramework:
 
         # Получаем текущие системные метрики
         baseline = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "system_metrics": self._get_system_metrics(),
             "resource_metrics": self.resource_manager.get_current_resources(),
             "memory_snapshot": self._take_memory_snapshot(),
@@ -203,7 +203,7 @@ class PerformanceVerificationFramework:
             optimized_metrics=optimized_metrics,
             improvement_percent=improvement,
             execution_time=execution_time,
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             notes=f"Оптимизация статус: {optimization_result.status}",
         )
 
@@ -230,7 +230,7 @@ class PerformanceVerificationFramework:
             "result": result,
             "cpu_percent": resources.get("cpu_percent", 0),
             "memory_rss_mb": resources.get("memory_rss_mb", 0),
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     def _test_memory_performance(self) -> PerformanceTestResult:
@@ -265,7 +265,7 @@ class PerformanceVerificationFramework:
             optimized_metrics=optimized_metrics,
             improvement_percent=improvement,
             execution_time=execution_time,
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             notes=f"Оптимизация статус: {optimization_result.status}",
         )
 
@@ -291,7 +291,7 @@ class PerformanceVerificationFramework:
             "peak_memory_mb": peak / (1024 * 1024),
             "rss_memory_mb": snapshot.rss_mb if snapshot else 0,
             "result": result,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     def _test_algorithm_performance(self) -> PerformanceTestResult:
@@ -349,7 +349,7 @@ class PerformanceVerificationFramework:
             optimized_metrics=optimized_result,
             improvement_percent=improvement,
             execution_time=execution_time,
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             notes=f"Выполнено {len(comparisons)} сравнений алгоритмов",
         )
 
@@ -381,7 +381,7 @@ class PerformanceVerificationFramework:
             optimized_metrics=optimized_resources,
             improvement_percent=improvement,
             execution_time=execution_time,
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             notes=f"Оптимизировано {len(optimization_results)} типов ресурсов",
         )
 
@@ -415,7 +415,7 @@ class PerformanceVerificationFramework:
             optimized_metrics=optimized_summary,
             improvement_percent=improvement,
             execution_time=execution_time,
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             notes=f"Обработано {len(optimization_results)} модулей",
         )
 
@@ -460,7 +460,7 @@ class PerformanceVerificationFramework:
             if total_tests > 0
             else 0,
             "total_execution_time": sum(r.execution_time for r in self.test_results),
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "recommendations": self._generate_verification_recommendations(),
         }
 
@@ -529,14 +529,14 @@ class PerformanceVerificationFramework:
         if output_path is None:
             output_path = str(
                 self.output_dir
-                / f"verification_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+                / f"verification_report_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
             )
 
         # Выполняем верификацию
         verification_results = self.verify_optimization_effectiveness()
 
         report = {
-            "generation_time": datetime.now().isoformat(),
+            "generation_time": datetime.now(timezone.utc).isoformat(),
             "baseline_metrics": self.baseline_metrics,
             "test_results": [
                 {

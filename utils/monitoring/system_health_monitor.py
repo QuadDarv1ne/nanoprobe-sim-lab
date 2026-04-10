@@ -11,7 +11,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Callable
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import psutil
 import requests
@@ -157,7 +157,7 @@ class SystemHealthMonitor:
                 "process_count": process_count,
                 "network_sent_bytes": network_sent,
                 "network_recv_bytes": network_recv,
-                "timestamp": datetime.now(),
+                "timestamp": datetime.now(timezone.utc),
             }
         except Exception as e:
             print(f"Ошибка получения метрик системы: {e}")
@@ -215,13 +215,13 @@ class SystemHealthMonitor:
                         threshold_val = thresholds["critical"]
 
                     alert = HealthAlert(
-                        alert_id=f"{metric_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                        alert_id=f"{metric_name}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}",
                         metric_name=metric_name,
                         current_value=value,
                         threshold_value=threshold_val,
                         severity=severity,
                         message=f"Метрика {metric_name} превысила порог: {value} > {threshold_val}",
-                        timestamp=datetime.now(),
+                        timestamp=datetime.now(timezone.utc),
                     )
 
                     alerts.append(alert)
@@ -417,7 +417,7 @@ class SystemHealthMonitor:
                                     else "ms"
                                     if "latency" in metric_name
                                     else "unknown",
-                                    timestamp=metrics.get("timestamp", datetime.now()),
+                                    timestamp=metrics.get("timestamp", datetime.now(timezone.utc)),
                                     severity=severity,
                                     source="system_monitor",
                                     threshold_low=thresholds.get("warning"),
@@ -458,7 +458,7 @@ class SystemHealthMonitor:
             Словарь с текущим статусом
         """
         return {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "health_score": self.health_score,
             "current_metrics": self.current_metrics,
             "active_alerts": len([a for a in self.alerts if not a.resolved]),
@@ -493,11 +493,11 @@ class SystemHealthMonitor:
         """
         if output_path is None:
             output_path = str(
-                self.output_dir / f"health_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+                self.output_dir / f"health_report_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
             )
 
         report = {
-            "generation_time": datetime.now().isoformat(),
+            "generation_time": datetime.now(timezone.utc).isoformat(),
             "health_score": self.health_score,
             "metrics_count": len(self.metrics),
             "alerts_count": len(self.alerts),

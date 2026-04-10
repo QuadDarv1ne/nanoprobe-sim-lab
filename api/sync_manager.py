@@ -5,7 +5,7 @@
 
 import asyncio
 import aiohttp
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Set, Optional, Any
 import logging
 
@@ -127,7 +127,7 @@ class BackendFrontendSync:
             ) as resp:
                 if resp.status == 200:
                     stats = await resp.json()
-                    self._last_sync_time = datetime.now()
+                    self._last_sync_time = datetime.now(timezone.utc)
                     logger.info(f"[SYNC] Статистика обновлена: {len(stats)} полей")
                     return stats
                 else:
@@ -180,7 +180,7 @@ class BackendFrontendSync:
             payload = {
                 "event": event,
                 "data": data,
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
             # Отправка через Flask-SocketIO HTTP endpoint
@@ -226,7 +226,7 @@ class BackendFrontendSync:
                     if metrics:
                         await self.broadcast_to_frontend("metrics_update", metrics)
 
-                    self._last_sync_time = datetime.now()
+                    self._last_sync_time = datetime.now(timezone.utc)
                     await asyncio.sleep(interval)
                 else:
                     # Health check failed - increase delay
@@ -296,7 +296,7 @@ def setup_flask_sync_integration(app, socketio):
         sync_manager.ws_connections["frontend"].add(request.sid)
         emit("connected", {
             "status": "ok",
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "sync_status": sync_manager.get_sync_status(),
         })
 

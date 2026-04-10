@@ -5,7 +5,7 @@ import threading
 from typing import Dict, Any, Optional
 import numpy as np
 import queue
-from datetime import datetime
+from datetime import datetime, timezone
 
 from utils.config.config_manager import ConfigManager
 from utils.logger import setup_project_logging
@@ -96,7 +96,7 @@ class SimulationOrchestrator:
         surface = SurfaceModel(size[0], size[1])
 
         # Сохраняем поверхность
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         filename = f"simulated_surface_{timestamp}.txt"
         surface.save_to_file(filename)
 
@@ -128,7 +128,7 @@ class SimulationOrchestrator:
         end_time = time.time()
 
         # Сохраняем результаты
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         results_filename = f"spm_scan_results_{timestamp}.txt"
         self.spm_controller.save_scan_results(results_filename)
 
@@ -171,7 +171,7 @@ class SimulationOrchestrator:
                 roughness = 0.0
 
             # Сохраняем результаты
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             results = {
                 "input_image": image_path,
                 "roughness": roughness,
@@ -209,7 +209,7 @@ class SimulationOrchestrator:
 
         if decoded_image:
             # Сохраняем декодированное изображение
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             output_file = f"sstv_decoded_{timestamp}.png"
             success = self.sstv_decoder.save_decoded_image(output_file)
 
@@ -255,7 +255,7 @@ class SimulationOrchestrator:
             self.visualizer.surface_viz.plot_surface_2d(
                 sample_surface_data,
                 "Результаты комплексной симуляции",
-                f"output/comprehensive_simulation_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
+                f"output/comprehensive_simulation_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.png",
             )
         except Exception as e:
             self.logger_manager.log_system_event(f"Ошибка визуализации: {e}", "WARNING")
@@ -265,14 +265,14 @@ class SimulationOrchestrator:
         comprehensive_results = {
             "total_duration": end_time - start_time,
             "spm_results": spm_results,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "components_involved": ["SPM", "Visualization"],
         }
 
         # Сохраняем метаданные симуляции
         self.data_manager.save_simulation_metadata(
             comprehensive_results,
-            f"comprehensive_sim_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+            f"comprehensive_sim_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json",
         )
 
         self.logger_manager.log_simulation_event("Комплексная симуляция завершена", "INFO")
@@ -351,7 +351,7 @@ class SimulationOrchestrator:
             "simulation_running": self._stop_event.is_set(),
             "thread_active": self.simulation_thread.is_alive() if self.simulation_thread else False,
             "results_count": len(self.simulation_results),
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
 

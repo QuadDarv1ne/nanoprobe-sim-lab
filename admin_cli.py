@@ -8,7 +8,7 @@ import argparse
 import sys
 import json
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 import shutil
 
 
@@ -132,7 +132,7 @@ def cmd_backup(args):
     """Создание резервной копии"""
     print_header("Резервное копирование")
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     backup_dir = Path(args.output) if args.output else Path("backups")
     backup_dir.mkdir(parents=True, exist_ok=True)
 
@@ -167,7 +167,7 @@ def cmd_backup(args):
     # Создание метаданных
     metadata = {
         "backup_name": backup_name,
-        "created_at": datetime.now().isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
         "source_path": str(Path(".").absolute()),
         "files": {
             "database": db_path.exists(),
@@ -246,7 +246,7 @@ def cmd_users(args):
             "username": args.username,
             "password_hash": hash_password(args.password),
             "role": args.role or "user",
-            "created_at": datetime.now().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
         }
 
         print_success(f"Пользователь '{args.username}' создан (ID: {new_id})")

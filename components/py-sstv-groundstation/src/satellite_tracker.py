@@ -3,7 +3,7 @@
 Реальные TLE данные из CelesTrak, SGP4 propagation, предсказание пролётов.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Tuple
 from pathlib import Path
 import json
@@ -48,7 +48,7 @@ class Satellite:
             epoch = datetime(year, 1, 1) + timedelta(days=day_fraction - 1)
             return epoch
         except Exception:
-            return datetime.now()
+            return datetime.now(timezone.utc)
     
     def get_position(self, dt: datetime = None) -> Optional[Dict]:
         """

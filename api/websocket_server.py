@@ -2,7 +2,7 @@
 
 from flask import Flask, request
 from flask_socketio import SocketIO, emit
-from datetime import datetime
+from datetime import datetime, timezone
 import threading
 import time
 import os
@@ -52,7 +52,7 @@ class WebSocketServer:
             if sid:
                 self._connected_clients.add(sid)
                 self.logger.info(f"Клиент подключился: {sid}")
-            emit('status', {'status': 'connected', 'timestamp': datetime.now().isoformat()})
+            emit('status', {'status': 'connected', 'timestamp': datetime.now(timezone.utc).isoformat()})
 
         @self.socketio.on('disconnect')
         def handle_disconnect():
@@ -74,7 +74,7 @@ class WebSocketServer:
             simulation_id = data.get('simulation_id', 'default')
             emit('simulation_started', {
                 'simulation_id': simulation_id,
-                'timestamp': datetime.now().isoformat()
+                'timestamp': datetime.now(timezone.utc).isoformat()
             })
 
         @self.socketio.on('stop_simulation')
@@ -83,7 +83,7 @@ class WebSocketServer:
             simulation_id = data.get('simulation_id', 'default')
             emit('simulation_stopped', {
                 'simulation_id': simulation_id,
-                'timestamp': datetime.now().isoformat()
+                'timestamp': datetime.now(timezone.utc).isoformat()
             })
 
     def _setup_error_handlers(self):
@@ -100,7 +100,7 @@ class WebSocketServer:
             'cpu_percent': psutil.cpu_percent(interval=1),
             'memory_percent': psutil.virtual_memory().percent,
             'disk_usage': get_system_disk_usage().percent,
-            'timestamp': datetime.now().isoformat()
+            'timestamp': datetime.now(timezone.utc).isoformat()
         }
 
     def get_connected_clients_count(self) -> int:

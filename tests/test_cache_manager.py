@@ -88,13 +88,13 @@ class TestCacheInfo(unittest.TestCase):
 
     def test_cache_info_creation(self):
         """Тестирует создание CacheInfo"""
-        from datetime import datetime
+        from datetime import datetime, timezone
 
         info = CacheInfo(
             path=Path("/test/cache"),
             size_bytes=1024,
             file_count=10,
-            last_accessed=datetime.now(),
+            last_accessed=datetime.now(timezone.utc),
             cache_type="temp"
         )
 

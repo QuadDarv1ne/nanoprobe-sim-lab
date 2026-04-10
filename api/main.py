@@ -4,7 +4,7 @@ FastAPI REST API для Nanoprobe Simulation Lab
 """
 
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 
 import asyncio
 import json
@@ -282,7 +282,7 @@ async def health_check():
     try:
         result = {
             "status": "healthy",
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "version": "1.0.0",
         }
         logger.info(f"Health check result: {result}")
@@ -331,7 +331,7 @@ async def detailed_health_check():
 
     return {
         "status": health_status,
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "version": "1.0.0",
         "python_version": f"{os.sys.version}",
         "database": "SQLite 3.x",
@@ -370,7 +370,7 @@ async def realtime_metrics():
 
     from api.state import get_system_disk_usage
     return {
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "cpu_percent": psutil.cpu_percent(interval=0.1),
         "memory_percent": psutil.virtual_memory().percent,
         "disk_percent": get_system_disk_usage().percent,
@@ -470,7 +470,7 @@ async def websocket_endpoint(websocket: WebSocket):
     if not await manager.connect(websocket):
         return
 
-    last_pong = datetime.now()
+    last_pong = datetime.now(timezone.utc)
 
     try:
         while True:
@@ -480,7 +480,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     websocket.receive_text(),
                     timeout=30.0
                 )
-                last_pong = datetime.now()
+                last_pong = datetime.now(timezone.utc)
                 
                 # Валидация сообщения через менеджер
                 try:
@@ -489,7 +489,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     await manager.send_personal(websocket, {
                         "type": "error",
                         "message": str(e),
-                        "timestamp": datetime.now().isoformat()
+                        "timestamp": datetime.now(timezone.utc).isoformat()
                     })
                     continue
 
@@ -500,14 +500,14 @@ async def websocket_endpoint(websocket: WebSocket):
                         await manager.send_personal(websocket, {
                             "type": "subscribed",
                             "channel": channel,
-                            "timestamp": datetime.now().isoformat(),
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
                         })
                         logger.info(f"Client subscribed to channel: {channel}")
                     else:
                         await manager.send_personal(websocket, {
                             "type": "error",
                             "message": f"Failed to subscribe to {channel}",
-                            "timestamp": datetime.now().isoformat()
+                            "timestamp": datetime.now(timezone.utc).isoformat()
                         })
 
                 elif message.get("type") == "unsubscribe":
@@ -516,13 +516,13 @@ async def websocket_endpoint(websocket: WebSocket):
                     await manager.send_personal(websocket, {
                         "type": "unsubscribed",
                         "channel": channel,
-                        "timestamp": datetime.now().isoformat(),
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
                     })
 
                 elif message.get("type") == "ping":
                     await manager.send_personal(websocket, {
                         "type": "pong",
-                        "timestamp": datetime.now().isoformat(),
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
                     })
 
                 elif message.get("type") == "get_metrics":
@@ -531,7 +531,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     from api.state import get_system_disk_usage
                     metrics = {
                         "type": "metrics",
-                        "timestamp": datetime.now().isoformat(),
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
                         "data": {
                             "cpu_percent": psutil.cpu_percent(interval=0.1),
                             "memory_percent": psutil.virtual_memory().percent,
@@ -542,7 +542,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
             except asyncio.TimeoutError:
                 # Проверка heartbeat
-                if (datetime.now() - last_pong).total_seconds() > 60:
+                if (datetime.now(timezone.utc) - last_pong).total_seconds() > 60:
                     logger.warning("Client heartbeat timeout, disconnecting")
                     break
                 continue
@@ -581,7 +581,7 @@ async def push_realtime_updates():
 
             payload = {
                 "type": "metrics_update",
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "data": {
                     "cpu_percent": psutil.cpu_percent(interval=None),
                     "memory_percent": psutil.virtual_memory().percent,

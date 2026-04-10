@@ -4,7 +4,7 @@ Log Viewer Widget
 Просмотр последних логов проекта.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import List
 from .base import Widget, WidgetData, WidgetPriority
@@ -44,7 +44,7 @@ class LogViewerWidget(Widget):
         return WidgetData(
             title=self.title,
             content=logs,
-            timestamp=datetime.now()
+            timestamp=datetime.now(timezone.utc)
         )
 
     def render(self, width: int = 60) -> str:

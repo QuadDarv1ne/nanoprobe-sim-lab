@@ -4,7 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 from typing import Dict, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
 from cryptography.hazmat.primitives import hashes
@@ -192,7 +192,7 @@ class DataIntegrityChecker:
         dir_path = Path(directory)
         manifest = {
             "directory": str(dir_path.absolute()),
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "files": [],
             "subdirectories": [],
         }
@@ -325,11 +325,11 @@ class IntegrityReportGenerator:
             Путь к созданному отчету
         """
         if output_path is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             output_path = f"data_integrity_report_{timestamp}.json"
 
         report = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "report_type": "data_integrity",
             "check_results": check_results,
             "summary": self._generate_summary(check_results),
@@ -404,7 +404,7 @@ def main():
 
     # Тестируем проверку данных симуляции
     sim_data = {
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "data": test_array,
         "metadata": {"type": "surface_data", "source": "spm_simulation"},
     }

@@ -5,7 +5,7 @@
 
 import logging
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Создание директорий для логов
 LOG_DIR = Path('logs/api')
@@ -170,7 +170,7 @@ def setup_logging():
     logging.config.dictConfig(LOGGING_CONFIG)
 
     logger = logging.getLogger('nanoprobe')
-    logger.info(f"Логирование инициализировано: {datetime.now().isoformat()}")
+    logger.info(f"Логирование инициализировано: {datetime.now(timezone.utc).isoformat()}")
 
     return logger
 

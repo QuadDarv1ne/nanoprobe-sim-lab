@@ -20,7 +20,7 @@ from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect, status, De
 from fastapi.responses import JSONResponse
 from fastapi import Header
 from api.state import get_system_disk_usage
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Any
 import psutil
 import os
@@ -81,7 +81,7 @@ def get_cached_stats() -> Optional[Dict]:
     if cache_time is None or cached is None:
         return None
     
-    age = (datetime.now() - cache_time).total_seconds()
+    age = (datetime.now(timezone.utc) - cache_time).total_seconds()
     if age < STATS_CACHE_TTL:
         return cached
     return None
@@ -90,7 +90,7 @@ def get_cached_stats() -> Optional[Dict]:
 def cache_stats(stats: Dict):
     """Закэшировать статистику"""
     set_app_state("stats_cache", stats)
-    set_app_state("stats_cache_time", datetime.now())
+    set_app_state("stats_cache_time", datetime.now(timezone.utc))
 
 
 def get_storage_stats() -> Dict[str, float]:
@@ -259,7 +259,7 @@ async def get_detailed_stats(
 
         # Uptime системы
         boot_time = datetime.fromtimestamp(psutil.boot_time())
-        uptime = datetime.now() - boot_time
+        uptime = datetime.now(timezone.utc) - boot_time
 
         return {
             "summary": {
@@ -364,7 +364,7 @@ async def get_detailed_health():
 
         return SystemHealth(
             status=health_status,
-            timestamp=datetime.now().isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
             version="1.0.0",
             metrics={
                 "cpu": {
@@ -494,7 +494,7 @@ async def get_realtime_metrics_detailed():
     cache_timestamp = get_app_state("metrics_cache_time")
 
     if metrics_cache and cache_timestamp:
-        age = (datetime.now() - cache_timestamp).total_seconds()
+        age = (datetime.now(timezone.utc) - cache_timestamp).total_seconds()
         if age < METRICS_CACHE_TTL:
             return metrics_cache
 
@@ -526,7 +526,7 @@ async def get_realtime_metrics_detailed():
                 continue
 
         metrics = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "cpu": {
                 "total": psutil.cpu_percent(interval=0.1),
                 "per_core": cpu_percent_per_core,
@@ -554,7 +554,7 @@ async def get_realtime_metrics_detailed():
 
         # Кэширование
         set_app_state("metrics_cache", metrics)
-        set_app_state("metrics_cache_time", datetime.now())
+        set_app_state("metrics_cache_time", datetime.now(timezone.utc))
 
         logger.debug(f"Realtime detailed metrics retrieved: CPU {metrics['cpu']['total']}%")
         return metrics
@@ -581,7 +581,7 @@ async def get_activity_timeline(
     - Анализы
     """
     try:
-        end_date = datetime.now()
+        end_date = datetime.now(timezone.utc)
         start_date = end_date - timedelta(days=days)
 
         # Активность сканирований по дням
@@ -984,7 +984,7 @@ async def export_data(format: str):
             f"Неподдерживаемый формат: {format}. Доступны: json, csv, pdf"
         )
 
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
     return {
         "format": format,
         "status": "success",
@@ -1053,7 +1053,7 @@ async def start_component_action(component: dict):
             "message": f"Компонент '{component_name}' запущен",
             "component": component_name,
             "pid": os.getpid(),
-            "started_at": datetime.now().isoformat()
+            "started_at": datetime.now(timezone.utc).isoformat()
         }
     )
 
@@ -1075,6 +1075,6 @@ async def stop_component_action(component: dict):
             "success": True,
             "message": f"Компонент '{component_name}' остановлен",
             "component": component_name,
-            "stopped_at": datetime.now().isoformat()
+            "stopped_at": datetime.now(timezone.utc).isoformat()
         }
     )

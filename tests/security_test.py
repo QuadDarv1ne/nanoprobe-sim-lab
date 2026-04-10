@@ -32,7 +32,7 @@ import json
 import time
 import re
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
@@ -576,7 +576,7 @@ class SecurityTester:
         print("🔒 Security Testing: Nanoprobe Sim Lab API")
         print("=" * 70)
         print(f"Base URL: {self.base_url}")
-        print(f"Start Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"Start Time: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}")
         print("=" * 70)
         
         # Попытка аутентификации
@@ -689,7 +689,7 @@ class SecurityTester:
     def save_report(self, filename: str = "security_report.json"):
         """Сохранение отчёта в JSON"""
         report = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "base_url": self.base_url,
             "summary": {
                 "total_tests": len(self.results),

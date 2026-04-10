@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from typing import Union, Dict, List, Any, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class DataManager:
@@ -211,7 +211,7 @@ class DataManager:
         """
         try:
             # Добавляем временную метку
-            metadata["timestamp"] = datetime.now().isoformat()
+            metadata["timestamp"] = datetime.now(timezone.utc).isoformat()
 
             filepath = self.output_dir / filename
             with open(filepath, "w", encoding="utf-8") as f:
@@ -355,7 +355,7 @@ def main():
     test_results = {
         "surface_roughness": 0.123,
         "defect_count": 5,
-        "analysis_date": datetime.now().isoformat(),
+        "analysis_date": datetime.now(timezone.utc).isoformat(),
         "quality_score": 0.85,
     }
 

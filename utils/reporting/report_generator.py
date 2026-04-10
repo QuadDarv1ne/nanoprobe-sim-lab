@@ -1,6 +1,6 @@
 """Модуль генерации отчетов для проекта Лаборатория моделирования нанозонда."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Any
 from jinja2 import Template
@@ -215,13 +215,13 @@ class ReportGenerator:
         Returns:
             Путь к созданному отчету
         """
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
         # Подготовка данных для шаблона
         template_data = {
             "title": title,
             "timestamp": timestamp,
-            "year": datetime.now().year,
+            "year": datetime.now(timezone.utc).year,
             "summary": simulation_data.get("summary", {}),
             "surface_analysis": simulation_data.get("surface_analysis", {}),
             "image_analysis": simulation_data.get("image_analysis", {}),
@@ -234,7 +234,7 @@ class ReportGenerator:
         html_content = self.html_template.render(**template_data)
 
         # Сохранение отчета
-        report_filename = f"simulation_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+        report_filename = f"simulation_report_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.html"
         report_path = self.output_dir / report_filename
 
         with open(report_path, "w", encoding="utf-8") as f:
@@ -265,13 +265,13 @@ class ReportGenerator:
         Returns:
             Путь к созданному отчету
         """
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
         # Подготовка данных для шаблона
         template_data = {
             "title": title,
             "timestamp": timestamp,
-            "year": datetime.now().year,
+            "year": datetime.now(timezone.utc).year,
             "summary": analytics_data.get("summary", {}),
             "surface_analysis": analytics_data.get("surface_analysis", {}),
             "image_analysis": analytics_data.get("image_analysis", {}),
@@ -284,7 +284,7 @@ class ReportGenerator:
         html_content = self.html_template.render(**template_data)
 
         # Сохранение отчета
-        report_filename = f"analytics_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+        report_filename = f"analytics_report_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.html"
         report_path = self.output_dir / report_filename
 
         with open(report_path, "w", encoding="utf-8") as f:
@@ -315,13 +315,13 @@ class ReportGenerator:
         Returns:
             Путь к созданному отчету
         """
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
         # Подготовка данных для сравнения
         comparison_data = {
             "title": title,
             "timestamp": timestamp,
-            "year": datetime.now().year,
+            "year": datetime.now(timezone.utc).year,
             "comparisons": [],
         }
 
@@ -445,7 +445,7 @@ class ReportGenerator:
         html_content = comparison_template.render(**comparison_data)
 
         # Сохранение отчета
-        report_filename = f"comparison_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+        report_filename = f"comparison_report_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.html"
         report_path = self.output_dir / report_filename
 
         with open(report_path, "w", encoding="utf-8") as f:

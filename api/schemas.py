@@ -5,7 +5,7 @@ Pydantic схемы для Nanoprobe Sim Lab API
 
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional, Dict, Any, List
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 import re
 
@@ -280,7 +280,7 @@ class ErrorResponse(BaseModel):
     detail: str
     error_code: Optional[str] = None
     severity: Optional[str] = None
-    timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     path: Optional[str] = None
 
 

@@ -4,7 +4,7 @@ import requests
 import json
 from pathlib import Path
 from typing import Dict, List, Optional, Any
-from datetime import datetime
+from datetime import datetime, timezone
 import numpy as np
 from PIL import Image
 
@@ -136,7 +136,7 @@ class SpaceImageDownloader:
             response.raise_for_status()
 
             if filename is None:
-                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
                 filename = f"space_image_{timestamp}.{save_format}"
 
             filepath = self.download_dir / filename

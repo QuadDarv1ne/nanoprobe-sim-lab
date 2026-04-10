@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 from typing import Dict, Any, List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import re
 from jsonschema import Draft7Validator
 
@@ -54,7 +54,7 @@ class ConfigValidator:
                 "config_path": config_path,
                 "errors": [str(error) for error in errors],
                 "config": config,
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
             return result
@@ -64,14 +64,14 @@ class ConfigValidator:
                 "valid": False,
                 "config_path": config_path,
                 "errors": [f"JSON decode error: {str(e)}"],
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
         except Exception as e:
             return {
                 "valid": False,
                 "config_path": config_path,
                 "errors": [f"Validation error: {str(e)}"],
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
     def get_default_config_schema(self) -> Dict[str, Any]:
@@ -158,7 +158,7 @@ class ConfigValidator:
             "errors": [str(error) for error in errors],
             "config": config,
             "schema": schema,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     def validate_project_structure(self, project_root: str = ".") -> Dict[str, Any]:
@@ -200,7 +200,7 @@ class ConfigValidator:
             "directories": {"found": [], "missing": [], "unexpected": []},
             "files": {"found": [], "missing": [], "unexpected": []},
             "valid": True,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         # Проверяем директории
@@ -242,7 +242,7 @@ class ConfigValidator:
                 return {
                     "valid": False,
                     "errors": [f"Файл зависимостей не найден: {requirements_path}"],
-                    "timestamp": datetime.now().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                 }
 
             with open(req_path, "r", encoding="utf-8") as f:
@@ -286,7 +286,7 @@ class ConfigValidator:
                 "invalid_dependencies": invalid_deps,
                 "warnings": warnings,
                 "total_dependencies": len(valid_deps) + len(invalid_deps),
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
             return result
@@ -295,7 +295,7 @@ class ConfigValidator:
             return {
                 "valid": False,
                 "errors": [f"Dependency validation error: {str(e)}"],
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
     def generate_validation_report(
@@ -312,11 +312,11 @@ class ConfigValidator:
             Путь к созданному отчету
         """
         if output_path is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             output_path = f"config_validation_report_{timestamp}.json"
 
         report = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "report_type": "config_validation",
             "validation_results": validation_results,
             "summary": self._generate_validation_summary(validation_results),
@@ -591,11 +591,11 @@ class OptimizationAdvisor:
             Путь к созданному отчету
         """
         if output_path is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             output_path = f"optimization_report_{timestamp}.json"
 
         report = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "report_type": "optimization_advice",
             "recommendations": recommendations,
             "summary": {

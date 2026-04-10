@@ -5,7 +5,7 @@ import sys
 import time
 import json
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any, List
 
 import psutil
@@ -45,7 +45,7 @@ class OptimizationOrchestrator:
 
         # Хранилище результатов
         self.optimization_results = []
-        self.current_session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.current_session_id = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
 
         # Состояние оркестратора
         self.is_active = False
@@ -98,7 +98,7 @@ class OptimizationOrchestrator:
                 "resources": resource_result,
                 "logs": log_result,
                 "memory": memory_result,
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
         # Останавливаем мониторинг
@@ -112,7 +112,7 @@ class OptimizationOrchestrator:
                 "target_modules": target_modules,
                 "results": results,
                 "summary": self._generate_summary(results),
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
         )
 
@@ -308,7 +308,7 @@ class OptimizationOrchestrator:
                     opt_result = self.resource_manager.optimize_all_resources()
                     cycle_results.append(
                         {
-                            "timestamp": datetime.now().isoformat(),
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
                             "type": "resource_optimization",
                             "result": {
                                 k: {
@@ -327,7 +327,7 @@ class OptimizationOrchestrator:
                     snapshot = self.memory_tracker.take_snapshot()
                     cycle_results.append(
                         {
-                            "timestamp": datetime.now().isoformat(),
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
                             "type": "memory_check",
                             "result": {"rss_mb": snapshot.rss_mb, "percent": snapshot.percent},
                         }
@@ -364,7 +364,7 @@ class OptimizationOrchestrator:
             )
 
         report = {
-            "report_generation_time": datetime.now().isoformat(),
+            "report_generation_time": datetime.now(timezone.utc).isoformat(),
             "total_sessions": len(self.optimization_results),
             "latest_session": self.optimization_results[-1] if self.optimization_results else None,
             "historical_summary": self._get_historical_summary(),

@@ -4,7 +4,7 @@ import logging
 import logging.handlers
 from pathlib import Path
 from typing import Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import threading
 from enum import Enum
@@ -68,7 +68,7 @@ class OptimizationLogger:
         self.log_directory = Path(log_directory)
         self.log_directory.mkdir(exist_ok=True)
 
-        self.session_id = session_id or datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.session_id = session_id or datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
 
         # Настройка центрального логгера
         self.logger = logging.getLogger("optimization_system")
@@ -131,7 +131,7 @@ class OptimizationLogger:
         """
         # Создаем запись лога
         record = OptimizationLogRecord(
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             component=component,
             level=level,
             message=message,

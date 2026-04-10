@@ -5,7 +5,7 @@ import json
 import csv
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -252,8 +252,8 @@ class AdvancedLoggerAnalyzer:
                 info_count=0,
                 debug_count=0,
                 unique_components=[],
-                time_range=(datetime.now(), datetime.now()),
-                analysis_timestamp=datetime.now(),
+                time_range=(datetime.now(timezone.utc), datetime.now(timezone.utc)),
+                analysis_timestamp=datetime.now(timezone.utc),
             )
 
         # Подсчет по уровням
@@ -274,7 +274,7 @@ class AdvancedLoggerAnalyzer:
             debug_count=level_counts.get("DEBUG", 0),
             unique_components=unique_components,
             time_range=time_range,
-            analysis_timestamp=datetime.now(),
+            analysis_timestamp=datetime.now(timezone.utc),
         )
 
     def generate_statistics(self, logs: List[LogEntry] = None) -> Dict[str, Any]:
@@ -363,7 +363,7 @@ class AdvancedLoggerAnalyzer:
                     "type": "high_error_rate",
                     "severity": "high",
                     "description": f"Высокий процент ошибок: {len(error_entries)}/{len(logs)} ({len(error_entries) / len(logs) * 100:.2f}%)",
-                    "timestamp": datetime.now(),
+                    "timestamp": datetime.now(timezone.utc),
                 }
             )
 
@@ -377,7 +377,7 @@ class AdvancedLoggerAnalyzer:
                     "severity": "medium",
                     "description": f"Повторяющееся сообщение: {msg}",
                     "count": message_counts[msg],
-                    "timestamp": datetime.now(),
+                    "timestamp": datetime.now(timezone.utc),
                 }
             )
 
@@ -403,7 +403,7 @@ class AdvancedLoggerAnalyzer:
                         "type": "rapid_logging",
                         "severity": "medium",
                         "description": f"Обнаружено {len(rapid_logs)} случаев быстрого логирования",
-                        "timestamp": datetime.now(),
+                        "timestamp": datetime.now(timezone.utc),
                     }
                 )
 
@@ -428,7 +428,7 @@ class AdvancedLoggerAnalyzer:
             return ""
 
         if output_path is None:
-            output_path = f"log_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+            output_path = f"log_analysis_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.png"
 
         # Подготовка данных
         df = pd.DataFrame(
@@ -615,7 +615,7 @@ class AdvancedLoggerAnalyzer:
                     "severity": "high",
                     "count": len(error_entries),
                     "message": f"Обнаружено {len(error_entries)} ошибок",
-                    "timestamp": datetime.now(),
+                    "timestamp": datetime.now(timezone.utc),
                 }
             )
 
@@ -628,7 +628,7 @@ class AdvancedLoggerAnalyzer:
                     "severity": "medium",
                     "count": len(warning_entries),
                     "message": f"Обнаружено {len(warning_entries)} предупреждений",
-                    "timestamp": datetime.now(),
+                    "timestamp": datetime.now(timezone.utc),
                 }
             )
 
@@ -640,7 +640,7 @@ class AdvancedLoggerAnalyzer:
                     "severity": "low",
                     "count": len(logs),
                     "message": f"Высокая активность: {len(logs)} записей",
-                    "timestamp": datetime.now(),
+                    "timestamp": datetime.now(timezone.utc),
                 }
             )
 
@@ -665,7 +665,7 @@ def main():
     test_log_file = test_logs_dir / "test_app.log"
     with open(test_log_file, "w", encoding="utf-8") as f:
         for i in range(100):
-            timestamp = datetime.now() - timedelta(minutes=i)
+            timestamp = datetime.now(timezone.utc) - timedelta(minutes=i)
             level = "INFO" if i % 10 != 0 else ("ERROR" if i % 5 == 0 else "WARNING")
             component = f"Component_{i % 5}"
             message = f"Test message {i} - Some event occurred in {component}"

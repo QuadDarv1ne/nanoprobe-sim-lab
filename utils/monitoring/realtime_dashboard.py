@@ -14,7 +14,7 @@ import json
 import webbrowser
 import mimetypes
 from typing import Dict, Any, List
-from datetime import datetime
+from datetime import datetime, timezone
 from dataclasses import dataclass
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
@@ -108,7 +108,7 @@ class RealTimeDashboard:
         optimization_score = min(100, max(0, resource_efficiency + 10))  # Базовая оценка
 
         metric = RealTimeMetric(
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             cpu_percent=cpu_percent,
             memory_percent=memory.percent,
             disk_usage=disk_usage,

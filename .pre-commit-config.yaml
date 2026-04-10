@@ -1,0 +1,57 @@
+# Pre-commit hooks configuration
+# Install: pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # Форматирование кода
+  - repo: https://github.com/psf/black
+    rev: 24.3.0
+    hooks:
+      - id: black
+        args: ['--line-length', '100', '--target-version', 'py312']
+        types_or: [python, pyi]
+
+  # Сортировка импортов
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ['--profile', 'black', '--line-length', '100']
+
+  # Линтер
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        # Только критичные ошибки, игнорируем стиль в старом коде
+        args: ['--max-line-length', '120', '--ignore', 'E203,W503,E501,E402,E226,W293,W504,B007,F541,E128']
+        additional_dependencies: [flake8-bugbear]
+
+  # Проверка синтаксиса JSON/YAML
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      # Базовые проверки
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: ['--unsafe']  # Разрешить ! tags
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: check-case-conflict
+      
+      # Безопасность
+      - id: debug-statements  # Проверка на print/pdb
+      - id: check-docstring-first
+
+  # Очистка __pycache__
+  - repo: local
+    hooks:
+      - id: clean-pycache
+        name: clean-pycache
+        entry: bash -c 'find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true'
+        language: system
+        pass_filenames: false
+        always_run: true

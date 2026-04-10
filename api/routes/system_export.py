@@ -6,7 +6,7 @@ import io
 import logging
 import os
 import zipfile
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, BackgroundTasks
@@ -38,7 +38,7 @@ async def export_data(format: str):
         "format": format,
         "status": "success",
         "message": f"Данные экспортированы в формате {format.upper()}",
-        "download_url": f"/downloads/export_{format}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{format}"
+        "download_url": f"/downloads/export_{format}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.{format}"
     }
 
 
@@ -82,7 +82,7 @@ async def export_all_data():
         
         # Экспорт метаданных
         metadata = {
-            "export_date": datetime.now().isoformat(),
+            "export_date": datetime.now(timezone.utc).isoformat(),
             "version": "1.0.0",
             "total_scans": len(scans),
             "total_simulations": len(simulations),
@@ -111,7 +111,7 @@ async def export_all_data():
         zip_buffer,
         media_type="application/zip",
         headers={
-            "Content-Disposition": f"attachment; filename=nanoprobe_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
+            "Content-Disposition": f"attachment; filename=nanoprobe_export_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.zip"
         }
     )
 
@@ -155,7 +155,7 @@ async def restart_system(background_tasks: BackgroundTasks):
     return {
         "status": "success",
         "message": "Система перезапускается",
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "details": {
             "cache_cleared": True,
             "app_state_reset": True,
@@ -199,7 +199,7 @@ async def get_system_status():
     
     return {
         "status": "healthy",
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "system": {
             "cpu_percent": cpu_percent,
             "memory_percent": memory.percent,

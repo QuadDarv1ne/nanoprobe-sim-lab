@@ -8,7 +8,7 @@ import platform
 import psutil
 import time
 import threading
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional, Callable
 from collections import deque
 from dataclasses import dataclass, asdict
@@ -108,7 +108,7 @@ class EnhancedSystemMonitor:
             return
 
         self.monitoring = True
-        self.start_time = datetime.now()
+        self.start_time = datetime.now(timezone.utc)
         self.monitoring_thread = threading.Thread(
             target=self._monitor_loop,
             daemon=True,
@@ -143,7 +143,7 @@ class EnhancedSystemMonitor:
 
     def _collect_metrics(self) -> SystemMetrics:
         """Сбор текущих метрик"""
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         timestamp = now.isoformat()
 
         # CPU
@@ -238,7 +238,7 @@ class EnhancedSystemMonitor:
             level=level,
             component=component,
             message=message,
-            timestamp=datetime.now().isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
             value=value,
             threshold=threshold
         )

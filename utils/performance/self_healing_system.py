@@ -8,7 +8,7 @@ import json
 import gc
 import logging
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional, Callable
 from dataclasses import dataclass
 
@@ -203,41 +203,41 @@ class SelfHealingSystem:
         # Проверяем встроенные пороги
         if current_metrics["cpu_percent"] > self.thresholds["cpu_percent"]:
             issue = HealthIssue(
-                id=f"cpu_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                id=f"cpu_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}",
                 severity="high",
                 component="cpu",
                 description=f"Высокая загрузка CPU: {current_metrics['cpu_percent']:.1f}% > {self.thresholds['cpu_percent']}%",
-                timestamp=datetime.now(),
+                timestamp=datetime.now(timezone.utc),
             )
             detected_issues.append(issue)
 
         if current_metrics["memory_percent"] > self.thresholds["memory_percent"]:
             issue = HealthIssue(
-                id=f"memory_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                id=f"memory_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}",
                 severity="critical",
                 component="memory",
                 description=f"Высокое использование памяти: {current_metrics['memory_percent']:.1f}% > {self.thresholds['memory_percent']}%",
-                timestamp=datetime.now(),
+                timestamp=datetime.now(timezone.utc),
             )
             detected_issues.append(issue)
 
         if current_metrics["disk_usage"] > self.thresholds["disk_usage"]:
             issue = HealthIssue(
-                id=f"disk_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                id=f"disk_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}",
                 severity="high",
                 component="disk",
                 description=f"Высокое использование диска: {current_metrics['disk_usage']:.1f}% > {self.thresholds['disk_usage']}%",
-                timestamp=datetime.now(),
+                timestamp=datetime.now(timezone.utc),
             )
             detected_issues.append(issue)
 
         if current_metrics["active_processes"] > self.thresholds["process_count"]:
             issue = HealthIssue(
-                id=f"process_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                id=f"process_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}",
                 severity="medium",
                 component="process",
                 description=f"Высокое количество процессов: {current_metrics['active_processes']} > {self.thresholds['process_count']}",
-                timestamp=datetime.now(),
+                timestamp=datetime.now(timezone.utc),
             )
             detected_issues.append(issue)
 
@@ -246,11 +246,11 @@ class SelfHealingSystem:
             try:
                 if rule["condition"](current_metrics):
                     issue = HealthIssue(
-                        id=f"{rule['issue_type']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                        id=f"{rule['issue_type']}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}",
                         severity=rule["severity"],
                         component=rule["issue_type"],
                         description=rule["description"],
-                        timestamp=datetime.now(),
+                        timestamp=datetime.now(timezone.utc),
                     )
                     detected_issues.append(issue)
             except Exception as e:
@@ -289,7 +289,7 @@ class SelfHealingSystem:
             "active_processes": active_processes,
             "threads_count": threads_count,
             "load_average": load_average,
-            "timestamp": datetime.now(),
+            "timestamp": datetime.now(timezone.utc),
         }
 
     def apply_recovery_action(self, issue: HealthIssue) -> RecoveryAction:
@@ -338,7 +338,7 @@ class SelfHealingSystem:
             issue_id=issue.id,
             action_type="optimize" if recovery_success else "notify",
             action_description=f"Восстановление для {issue.component} проблемы: {issue.description}",
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             success=recovery_success,
             details=action_details,
         )
@@ -348,7 +348,7 @@ class SelfHealingSystem:
         if recovery_success:
             self.stats["recovery_success"] += 1
             issue.resolved = True
-            issue.resolution_time = datetime.now()
+            issue.resolution_time = datetime.now(timezone.utc)
             self.logger.info(f"Проблема {issue.id} решена")
         else:
             self.logger.warning(f"Не удалось решить проблему {issue.id}")
@@ -713,7 +713,7 @@ class SelfHealingSystem:
                 }
                 for action in self.recovery_actions[-5:]  # Последние 5 действий
             ],
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     def generate_health_report(self, output_path: Optional[str] = None) -> str:
@@ -727,12 +727,12 @@ class SelfHealingSystem:
             Путь к созданному отчету
         """
         if output_path is None:
-            filename = f"health_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            filename = f"health_report_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
             output_path = str(self.output_dir / filename)
 
         report = {
             "metadata": {
-                "generated_at": datetime.now().isoformat(),
+                "generated_at": datetime.now(timezone.utc).isoformat(),
                 "report_type": "self_healing_health_report",
             },
             "health_status": self.get_health_status(),

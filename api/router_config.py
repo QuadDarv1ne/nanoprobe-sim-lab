@@ -4,7 +4,7 @@
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 import shutil
 
@@ -52,10 +52,10 @@ def register_routes(app: FastAPI):
             return {
                 "status": "healthy",
                 "size_bytes": db_path.stat().st_size if db_path.exists() else 0,
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
         except Exception as e:
-            return {"status": "unhealthy", "error": str(e), "timestamp": datetime.now().isoformat()}
+            return {"status": "unhealthy", "error": str(e), "timestamp": datetime.now(timezone.utc).isoformat()}
 
     @app.post("/api/v1/database/backup", tags=["Health"])
     async def database_backup_alias():
@@ -64,14 +64,14 @@ def register_routes(app: FastAPI):
         db = get_db_manager()
         backup_dir = Path("data/backups")
         backup_dir.mkdir(parents=True, exist_ok=True)
-        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         backup_path = backup_dir / f"nanoprobe_{ts}.db"
         try:
             shutil.copy2(str(db.db_path), str(backup_path))
             return {
                 "status": "success", 
                 "backup_path": str(backup_path), 
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
         except Exception as e:
             from api.error_handlers import ValidationError

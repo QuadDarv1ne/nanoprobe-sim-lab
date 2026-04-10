@@ -2,7 +2,7 @@
 
 from pathlib import Path
 from typing import Dict, List, Any
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import re
 from dataclasses import dataclass
@@ -466,7 +466,7 @@ class CodeAnalyzer:
         )
 
         report = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "project_root": str(self.project_root),
             "summary": {
                 "total_files_analyzed": total_files,

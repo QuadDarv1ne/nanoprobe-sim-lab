@@ -6,7 +6,7 @@
 import numpy as np
 import logging
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Any, Tuple
 import json
 import asyncio
@@ -416,11 +416,11 @@ class DefectAnalysisPipeline:
         results = self.detector.detect_defects(image_array)
 
         # Добавление метаданных
-        analysis_id = f"defect_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        analysis_id = f"defect_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
 
         full_report = {
             'analysis_id': analysis_id,
-            'timestamp': datetime.now().isoformat(),
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'image_path': image_path,
             'image_name': Path(image_path).name,
             'model_name': model_name,
@@ -791,12 +791,12 @@ class AdvancedDefectAnalyzer:
         Returns:
             Путь к отчёту
         """
-        report_id = f"adv_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        report_id = f"adv_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
         report_path = self.output_dir / f"{report_id}_report.json"
 
         report = {
             'id': report_id,
-            'timestamp': datetime.now().isoformat(),
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'image_path': image_path,
             'analysis': result,
             'recommendations': self._generate_recommendations(result),

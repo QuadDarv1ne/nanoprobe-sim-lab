@@ -11,7 +11,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 from typing import Dict, Any, List, Union, Callable
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import hashlib
 import re
@@ -451,12 +451,12 @@ class DataValidator:
             Путь к созданному отчету
         """
         if output_path is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             output_path = f"data_report_{timestamp}.json"
 
         if isinstance(data, pd.DataFrame):
             report = {
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "data_type": "DataFrame",
                 "shape": data.shape,
                 "dtypes": {col: str(dtype) for col, dtype in data.dtypes.items()},
@@ -470,7 +470,7 @@ class DataValidator:
             }
         elif isinstance(data, np.ndarray):
             report = {
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "data_type": "numpy_array",
                 "shape": data.shape,
                 "dtype": str(data.dtype),
@@ -489,7 +489,7 @@ class DataValidator:
             }
         else:
             report = {
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "data_type": str(type(data)),
                 "quality_metrics": self.calculate_data_quality_score(data),
             }

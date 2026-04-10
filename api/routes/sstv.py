@@ -10,7 +10,7 @@ import sys
 import subprocess
 import signal
 from subprocess import DEVNULL
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Dict, Any
 
@@ -271,7 +271,7 @@ async def get_iss_current_position():
             "altitude_km": position['altitude_km'],
             "velocity_kmh": position['velocity_kmh'],
             "footprint_km": position['footprint_km'],
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
 
         # Кэшируем на 30 секунд
@@ -312,7 +312,7 @@ async def is_iss_visible(
             "visible": visible,
             "elevation": tracker._elevation_from_position(position, __import__('datetime').datetime.utcnow()) if position else 0,
             "message": "ISS видна" if visible else "ISS не видна",
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
 
     except Exception as e:
@@ -370,7 +370,7 @@ async def decode_sstv_audio(
         output_dir = Path("output/sstv")
         output_dir.mkdir(parents=True, exist_ok=True)
         
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
         output_path = output_dir / f"sstv_decoded_{timestamp}.png"
         
         image.save(str(output_path), 'png')
@@ -382,7 +382,7 @@ async def decode_sstv_audio(
             "image_path": str(output_path),
             "image_size": image.size,
             "mode": metadata.get('mode', 'unknown'),
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "download_url": f"/api/v1/sstv/download/{output_path.name}"
         }
         
@@ -534,7 +534,7 @@ async def iss_websocket(websocket: WebSocket):
                         await websocket.send_json({
                             "type": "position",
                             "data": position,
-                            "timestamp": datetime.now().isoformat()
+                            "timestamp": datetime.now(timezone.utc).isoformat()
                         })
                 except Exception:
                     pass
@@ -598,7 +598,7 @@ async def get_tle_status():
             "age_hours": round(age_hours, 2),
             "fresh": age_hours < 12,
             "file": str(tle_file),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
     
     return {
@@ -617,11 +617,11 @@ async def get_tle_status():
 async def sstv_health_check():
     """Проверка здоровья SSTV модуля."""
     recording_process = get_app_state("recording_process")
-    
+
     # Проверяем наличие rtl_fm в PATH
     import shutil
     rtl_fm_available = shutil.which("rtl_fm") is not None
-    
+
     # Проверяем TLE возраст
     from pathlib import Path as _Path
     import time as _time
@@ -629,7 +629,7 @@ async def sstv_health_check():
     tle_age_hours = None
     if tle_file.exists():
         tle_age_hours = round((_time.time() - tle_file.stat().st_mtime) / 3600, 1)
-    
+
     status = {
         "sstv_decoder": "available" if SSTV_AVAILABLE else "unavailable",
         "satellite_tracker": "available" if tracker_module is not None else "unavailable",
@@ -638,7 +638,7 @@ async def sstv_health_check():
         "rtl_fm_binary": "found" if rtl_fm_available else "not_found",
         "tle_cache_age_hours": tle_age_hours,
         "tle_fresh": tle_age_hours is not None and tle_age_hours < 12,
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
     all_ok = SSTV_AVAILABLE and tracker_module is not None
@@ -647,6 +647,167 @@ async def sstv_health_check():
         "status": "healthy" if all_ok else "degraded",
         "components": status
     }
+
+
+@router.get("/health/extended")
+async def sstv_extended_health_check():
+    """
+    Расширенная проверка здоровья SSTV/RTL-SDR модуля.
+
+    Включает:
+    - Device status и serial
+    - Signal strength
+    - Memory usage
+    - Error rate
+    - Graceful degradation status
+    """
+    import shutil
+    import psutil
+    from pathlib import Path as _Path
+
+    recording_process = get_app_state("recording_process")
+
+    # Базовая проверка
+    rtl_fm_available = shutil.which("rtl_fm") is not None
+    rtl_test_available = shutil.which("rtl_test") is not None
+
+    # Проверка устройства
+    device_info = None
+    device_status = "unknown"
+
+    try:
+        from rtlsdr import RtlSdr
+
+        if hasattr(RtlSdr, 'get_device_count'):
+            num_devices = RtlSdr.get_device_count()
+        else:
+            num_devices = 0
+
+        if num_devices > 0:
+            # Получаем инфо о первом устройстве
+            sdr = None
+            try:
+                sdr = RtlSdr(device_index=0)
+                device_info = {
+                    "name": sdr.get_device_name() if hasattr(sdr, 'get_device_name') else "Unknown",
+                    "serial": sdr.get_serial_number() if hasattr(sdr, 'get_serial_number') else "Unknown",
+                    "index": 0,
+                }
+                device_status = "connected"
+
+                # Проверяем sample rate
+                sdr.sample_rate = 2400000
+                sdr.center_freq = 145800000
+                device_info["sample_rate"] = sdr.sample_rate
+                device_info["center_freq"] = sdr.center_freq
+
+            except Exception as e:
+                device_status = "error"
+                device_info = {"error": str(e)}
+            finally:
+                if sdr:
+                    try:
+                        sdr.close()
+                    except:
+                        pass
+        else:
+            device_status = "not_found"
+
+    except ImportError:
+        device_status = "driver_not_installed"
+    except Exception as e:
+        device_status = "error"
+        device_info = {"error": str(e)}
+
+    # Проверка памяти
+    memory_usage = {
+        "recording_process_mb": None,
+        "system_available_mb": None,
+    }
+
+    if recording_process and hasattr(recording_process, 'pid'):
+        try:
+            proc = psutil.Process(recording_process.pid)
+            memory_info = proc.memory_info()
+            memory_usage["recording_process_mb"] = memory_info.rss / (1024 * 1024)
+        except:
+            pass
+
+    memory_usage["system_available_mb"] = psutil.virtual_memory().available / (1024 * 1024)
+
+    # Graceful degradation status
+    degradation_level = "full"  # full, partial, minimal, offline
+    capabilities = []
+
+    if device_status == "connected" and SSTV_AVAILABLE:
+        capabilities.extend(["realtime_recording", "sstv_decoding", "satellite_tracking"])
+    elif device_status == "connected":
+        degradation_level = "partial"
+        capabilities.append("realtime_recording")
+    elif rtl_fm_available:
+        degradation_level = "minimal"
+        capabilities.append("cli_recording")
+    else:
+        degradation_level = "offline"
+
+    # TLE cache
+    tle_file = _Path("data/tle_data.json")
+    tle_age_hours = None
+    tle_status = "unknown"
+
+    if tle_file.exists():
+        tle_age_hours = round((_time.time() - tle_file.stat().st_mtime) / 3600, 1)
+        if tle_age_hours < 12:
+            tle_status = "fresh"
+        elif tle_age_hours < 24:
+            tle_status = "acceptable"
+        else:
+            tle_status = "stale"
+    else:
+        tle_status = "not_found"
+
+    return {
+        "status": "healthy" if degradation_level == "full" else "degraded",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "device": {
+            "status": device_status,
+            "info": device_info,
+        },
+        "memory": memory_usage,
+        "capabilities": capabilities,
+        "degradation_level": degradation_level,
+        "components": {
+            "sstv_decoder": SSTV_AVAILABLE,
+            "satellite_tracker": tracker_module is not None,
+            "rtl_fm_binary": rtl_fm_available,
+            "rtl_test_binary": rtl_test_available,
+            "redis_cache": REDIS_AVAILABLE,
+        },
+        "tle_cache": {
+            "status": tle_status,
+            "age_hours": tle_age_hours,
+        },
+        "recommendations": _get_degradation_recommendations(degradation_level, device_status),
+    }
+
+
+def _get_degradation_recommendations(degradation_level: str, device_status: str) -> list:
+    """Получение рекомендаций при деградации функциональности"""
+    recommendations = []
+
+    if degradation_level == "offline":
+        recommendations.append("Подключите RTL-SDR устройство")
+        recommendations.append("Установите rtl-sdr утилиты (rtl_fm, rtl_test)")
+    elif degradation_level == "minimal":
+        recommendations.append("Установите pyrtlsdr для расширенных функций")
+        recommendations.append("pip install pyrtlsdr")
+    elif degradation_level == "partial":
+        recommendations.append("Проверьте SSTV модуль: pip install pysstv")
+    elif device_status == "error":
+        recommendations.append("Проверьте подключение RTL-SDR устройства")
+        recommendations.append("Запустите rtl_test для диагностики")
+
+    return recommendations
 
 
 @router.get("/device/check")
@@ -764,7 +925,7 @@ async def start_sstv_recording(
     output_dir = Path("output/sstv/recordings")
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
     output_file = output_dir / f"sstv_{frequency}MHz_{timestamp}.wav"
     
     # Команда для rtl_fm (часть rtl-sdr)
@@ -787,7 +948,7 @@ async def start_sstv_recording(
     except FileNotFoundError:
         # rtl_fm не найден - симулируем для тестирования
         logger.warning("rtl_fm not found - simulation mode")
-        recording_start_time = datetime.now()
+        recording_start_time = datetime.now(timezone.utc)
         recording_metadata = {
             "frequency": frequency,
             "sample_rate": sample_rate,
@@ -817,7 +978,7 @@ async def start_sstv_recording(
             stderr=DEVNULL,
             stdin=DEVNULL
         )
-        recording_start_time = datetime.now()
+        recording_start_time = datetime.now(timezone.utc)
         recording_metadata = {
             "frequency": frequency,
             "sample_rate": sample_rate,
@@ -876,7 +1037,7 @@ async def stop_sstv_recording():
     # Если симуляция
     if recording_metadata.get("simulated"):
         recording_start_time = get_app_state("recording_start_time")
-        duration = (datetime.now() - recording_start_time).total_seconds() if recording_start_time else 0
+        duration = (datetime.now(timezone.utc) - recording_start_time).total_seconds() if recording_start_time else 0
         set_app_state("recording_process", None)
         metadata = recording_metadata.copy()
         set_app_state("recording_metadata", {})
@@ -904,7 +1065,7 @@ async def stop_sstv_recording():
         # Process resources automatically cleaned up on termination
 
         recording_start_time = get_app_state("recording_start_time")
-        duration = (datetime.now() - recording_start_time).total_seconds() if recording_start_time else 0
+        duration = (datetime.now(timezone.utc) - recording_start_time).total_seconds() if recording_start_time else 0
         output_file = recording_metadata.get("output_file")
 
         set_app_state("recording_process", None)
@@ -941,7 +1102,7 @@ async def get_recording_status():
     recording_start_time = get_app_state("recording_start_time")
 
     if recording_process is not None or recording_metadata.get("simulated"):
-        duration = (datetime.now() - recording_start_time).total_seconds() if recording_start_time else 0
+        duration = (datetime.now(timezone.utc) - recording_start_time).total_seconds() if recording_start_time else 0
 
         return {
             "status": "recording",

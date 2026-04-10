@@ -34,4 +34,19 @@ jobs:
     
     - name: Run mypy
       run: |
-        mypy src/ --ignore-missing-imports || true
+        mypy src/ utils/ --ignore-missing-imports || true
+
+    - name: Run mypy --strict (core modules only)
+      run: |
+        # Строгая проверка для ключевых модулей
+        mypy --strict \
+          utils/database.py \
+          utils/core/ \
+          utils/config/ \
+          utils/data/ \
+          --ignore-missing-imports \
+          --warn-return-any \
+          --warn-unused-configs \
+          --warn-redundant-casts \
+          --warn-unused-ignores \
+          || true

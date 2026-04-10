@@ -12,7 +12,7 @@ import sys
 import threading
 import webbrowser
 import subprocess
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 import requests
 
@@ -103,7 +103,7 @@ class IntegratedWebDashboard:
         self.database = DatabaseManager(db_path="data/nanoprobe.db")
 
         # Время запуска
-        self._start_time = datetime.now()
+        self._start_time = datetime.now(timezone.utc)
 
         # Регистрация reverse proxy (если доступен)
         if PROXY_AVAILABLE:
@@ -351,7 +351,7 @@ class IntegratedWebDashboard:
             try:
                 return jsonify({
                     "status": "healthy",
-                    "timestamp": datetime.now().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                     "uptime": self._get_uptime(),
                     "components": {
                         "database": "ok",
@@ -892,7 +892,7 @@ class IntegratedWebDashboard:
                 "flask": {"status": "healthy", "uptime": self._get_uptime()},
                 "fastapi": {"status": "unknown"},
                 "proxy": {"status": "enabled" if PROXY_AVAILABLE else "disabled"},
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
 
             # Проверка FastAPI
@@ -1034,7 +1034,7 @@ class IntegratedWebDashboard:
             emit("system_status", {
                 "status": "online",
                 "uptime": self._get_uptime(),
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "fastapi_integrated": PROXY_AVAILABLE
             })
 
@@ -1055,7 +1055,7 @@ class IntegratedWebDashboard:
                     'cpu_percent': psutil.cpu_percent(interval=1),
                     'memory_percent': psutil.virtual_memory().percent,
                     'disk_usage': disk_usage.percent if disk_usage else 0,
-                    'timestamp': datetime.now().isoformat()
+                    'timestamp': datetime.now(timezone.utc).isoformat()
                 }
                 emit('metrics', metrics)
             except Exception as e:
@@ -1083,8 +1083,8 @@ class IntegratedWebDashboard:
 
     def _get_uptime(self) -> str:
         """Получение времени работы системы"""
-        start_time = getattr(self, "_start_time", datetime.now())
-        uptime = datetime.now() - start_time
+        start_time = getattr(self, "_start_time", datetime.now(timezone.utc))
+        uptime = datetime.now(timezone.utc) - start_time
         return str(uptime).split(".")[0]
 
     def run(self, debug: bool = False, open_browser: bool = True):

@@ -4,7 +4,7 @@ import os
 import sys
 import json
 import subprocess
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 import re
 
@@ -25,7 +25,7 @@ class ProjectImprover:
 
     def log_message(self, message: str, level: str = "INFO"):
         """Логирование сообщений"""
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
         log_entry = {
             "timestamp": timestamp,
             "level": level,
@@ -384,14 +384,14 @@ class ProjectImprover:
 
     def save_improvement_report(self):
         """Сохранение отчета об улучшениях"""
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         report_path = project_root / "reports" / f"improvement_report_{timestamp}.json"
 
         # Создаем папку отчетов если не существует
         report_path.parent.mkdir(exist_ok=True)
 
         report_data = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "project_name": "Nanoprobe Simulation Lab",
             "improvements_log": self.improvements_log,
             "changes_made": self.changes_made,

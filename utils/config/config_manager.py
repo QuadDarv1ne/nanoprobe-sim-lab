@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Dict, Any, Optional, List
 import os
 import threading
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class ConfigManager:
@@ -104,7 +104,7 @@ class ConfigManager:
             try:
                 with open(self.config_file, "w", encoding="utf-8") as f:
                     json.dump(self.config, f, indent=2, ensure_ascii=False)
-                self._last_modified = datetime.now()
+                self._last_modified = datetime.now(timezone.utc)
                 return True
             except Exception as e:
                 print(f"Ошибка при сохранении конфигурации: {e}")

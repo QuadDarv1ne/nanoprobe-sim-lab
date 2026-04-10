@@ -4,7 +4,7 @@ API роуты для анализа дефектов и изображений
 
 from fastapi import APIRouter, Depends
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 import logging
 
@@ -88,7 +88,7 @@ async def analyze_image_defects(
             defects=defects,
             confidence_score=confidence_score,
             processing_time_ms=result.get('processing_time_ms', 0),
-            timestamp=datetime.now().isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
         )
 
     except (ValidationError, NotFoundError):

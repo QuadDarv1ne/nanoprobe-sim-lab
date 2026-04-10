@@ -11,7 +11,7 @@ import joblib
 import json
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple, List, Union
-from datetime import datetime
+from datetime import datetime, timezone
 import matplotlib.pyplot as plt
 import seaborn as sns
 from dataclasses import dataclass
@@ -469,7 +469,7 @@ class ModelTrainer:
         if output_path:
             plt.savefig(output_path, dpi=300, bbox_inches="tight")
         else:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
 
             output_path = self.output_dir / f"feature_importance_{timestamp}.png"
             plt.savefig(output_path, dpi=300, bbox_inches="tight")
@@ -530,7 +530,7 @@ class ModelTrainer:
         if output_path:
             plt.savefig(output_path, dpi=300, bbox_inches="tight")
         else:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             output_path = self.output_dir / f"predictions_vs_actual_{timestamp}.png"
             plt.savefig(output_path, dpi=300, bbox_inches="tight")
 
@@ -625,7 +625,7 @@ def main():
     # Сохраняем модель
     print("\nСохранение модели...")
     metadata = {
-        "created_at": datetime.now().isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
         "model_type": "random_forest_regression",
         "features_count": X_reg.shape[1],
         "samples_count": X_reg.shape[0],
