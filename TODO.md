@@ -27,17 +27,12 @@
 - ✅ Тесты: исправлены 24 теста auth.py (JWT, refresh tokens)
 - ✅ Тесты: исправлены 15 тестов api.py (инициализация БД)
 - ✅ Тесты: исправлен test_integration_db.py (fixture'ы, API calls)
-- ✅ 25/29 тестов passing (test_database.py + test_api.py)
-- ⚠️ 4 теста skipped (created_at bug в test_api.py — исправлено в БД, нужно обновить тесты)
+- ✅ 66/66 тестов passing (test_api.py + test_database.py + test_integration_db.py + test_auth.py)
+- ✅ **ВСЕ 4 skipped теста в test_api.py ИСПРАВЛЕНЫ** — created_at assertions обновлены
 
 ---
 
 ## Known Issues
-
-- ~~⚠️ `created_at` возвращает NULL из БД (4 теста пропущены)~~ **ИСПРАВЛЕНО 2026-04-09**
-  - **Файл:** `utils/database.py` — 10 INSERT методов исправлены
-  - **Статус:** ✅ ИСПРАВЛЕНО — created_at устанавливается явно
-  - **Примечание:** 4 теста в test_api.py всё ещё skipped — нужно обновить assertions
 
 - ⚠️ **pysstv не декодирует SSTV** — это только генератор (encoder)
   - **Влияние:** Нельзя декодировать изображения из WAV файлов
