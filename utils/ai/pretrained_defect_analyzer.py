@@ -6,7 +6,7 @@ Pre-trained модели и transfer learning
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
@@ -23,23 +23,23 @@ class PretrainedDefectAnalyzer:
     """
 
     MODEL_TYPES = {
-        'resnet50': {'input_size': (224, 224), 'pretrained': True},
-        'efficientnet': {'input_size': (224, 224), 'pretrained': True},
-        'mobilenet': {'input_size': (224, 224), 'pretrained': True},
+        "resnet50": {"input_size": (224, 224), "pretrained": True},
+        "efficientnet": {"input_size": (224, 224), "pretrained": True},
+        "mobilenet": {"input_size": (224, 224), "pretrained": True},
     }
 
     DEFECT_CLASSES = [
-        'normal',
-        'scratch',
-        'crack',
-        'pit',
-        'inclusion',
-        'void',
-        'contamination',
-        'roughness',
+        "normal",
+        "scratch",
+        "crack",
+        "pit",
+        "inclusion",
+        "void",
+        "contamination",
+        "roughness",
     ]
 
-    def __init__(self, model_type: str = 'resnet50', use_gpu: bool = False):
+    def __init__(self, model_type: str = "resnet50", use_gpu: bool = False):
         """
         Инициализация анализатора
 
@@ -57,7 +57,8 @@ class PretrainedDefectAnalyzer:
         """Проверка доступности GPU"""
         try:
             import tensorflow as tf
-            return len(tf.config.list_physical_devices('GPU')) > 0
+
+            return len(tf.config.list_physical_devices("GPU")) > 0
         except ImportError:
             return False
 
@@ -85,38 +86,25 @@ class PretrainedDefectAnalyzer:
     def _load_pretrained_model(self) -> bool:
         """Загрузка pre-trained модели с дообучением"""
         try:
-            import tensorflow as tf
             from tensorflow import keras
             from tensorflow.keras import layers
 
             # Базовая модель
-            if self.model_type == 'resnet50':
+            if self.model_type == "resnet50":
                 base_model = keras.applications.ResNet50(
-                    include_top=False,
-                    weights='imagenet',
-                    input_shape=(224, 224, 3),
-                    pooling='avg'
+                    include_top=False, weights="imagenet", input_shape=(224, 224, 3), pooling="avg"
                 )
-            elif self.model_type == 'efficientnet':
+            elif self.model_type == "efficientnet":
                 base_model = keras.applications.EfficientNetB0(
-                    include_top=False,
-                    weights='imagenet',
-                    input_shape=(224, 224, 3),
-                    pooling='avg'
+                    include_top=False, weights="imagenet", input_shape=(224, 224, 3), pooling="avg"
                 )
-            elif self.model_type == 'mobilenet':
+            elif self.model_type == "mobilenet":
                 base_model = keras.applications.MobileNetV2(
-                    include_top=False,
-                    weights='imagenet',
-                    input_shape=(224, 224, 3),
-                    pooling='avg'
+                    include_top=False, weights="imagenet", input_shape=(224, 224, 3), pooling="avg"
                 )
             else:
                 base_model = keras.applications.ResNet50(
-                    include_top=False,
-                    weights='imagenet',
-                    input_shape=(224, 224, 3),
-                    pooling='avg'
+                    include_top=False, weights="imagenet", input_shape=(224, 224, 3), pooling="avg"
                 )
 
             # Заморозка базовой модели для transfer learning
@@ -126,25 +114,25 @@ class PretrainedDefectAnalyzer:
             inputs = keras.Input(shape=(224, 224, 3))
             x = base_model(inputs, training=False)
             x = layers.Dropout(0.3)(x)
-            x = layers.Dense(128, activation='relu')(x)
+            x = layers.Dense(128, activation="relu")(x)
             x = layers.Dropout(0.2)(x)
-            outputs = layers.Dense(len(self.DEFECT_CLASSES), activation='softmax')(x)
+            outputs = layers.Dense(len(self.DEFECT_CLASSES), activation="softmax")(x)
 
             self.model = keras.Model(inputs, outputs)
 
             # Компиляция модели
             self.model.compile(
                 optimizer=keras.optimizers.Adam(learning_rate=0.001),
-                loss='categorical_crossentropy',
-                metrics=['accuracy', keras.metrics.Precision(), keras.metrics.Recall()]
+                loss="categorical_crossentropy",
+                metrics=["accuracy", keras.metrics.Precision(), keras.metrics.Recall()],
             )
 
             # Preprocessor
-            if self.model_type == 'resnet50':
+            if self.model_type == "resnet50":
                 self.preprocessor = keras.applications.resnet50.preprocess_input
-            elif self.model_type == 'efficientnet':
+            elif self.model_type == "efficientnet":
                 self.preprocessor = keras.applications.efficientnet.preprocess_input
-            elif self.model_type == 'mobilenet':
+            elif self.model_type == "mobilenet":
                 self.preprocessor = keras.applications.mobilenet_v2.preprocess_input
 
             self._model_loaded = True
@@ -159,6 +147,7 @@ class PretrainedDefectAnalyzer:
         """Загрузка кастомной модели"""
         try:
             import tensorflow as tf
+
             self.model = tf.keras.models.load_model(model_path)
             self.preprocessor = None  # Используем встроенный preprocessing
             self._model_loaded = True
@@ -181,23 +170,21 @@ class PretrainedDefectAnalyzer:
         if not self._model_loaded:
             if not self.load_model():
                 return {
-                    'success': False,
-                    'error': 'Model not loaded',
-                    'defect_type': None,
-                    'confidence': 0.0,
+                    "success": False,
+                    "error": "Model not loaded",
+                    "defect_type": None,
+                    "confidence": 0.0,
                 }
 
         try:
             import cv2
-            import tensorflow as tf
-            from tensorflow import keras
 
             # Загрузка и предобработка изображения
             image = cv2.imread(str(image_path))
             if image is None:
                 return {
-                    'success': False,
-                    'error': 'Failed to load image',
+                    "success": False,
+                    "error": "Failed to load image",
                 }
 
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -219,27 +206,26 @@ class PretrainedDefectAnalyzer:
 
             # Все вероятности
             all_probabilities = {
-                cls: float(prob)
-                for cls, prob in zip(self.DEFECT_CLASSES, probabilities)
+                cls: float(prob) for cls, prob in zip(self.DEFECT_CLASSES, probabilities)
             }
 
             return {
-                'success': True,
-                'defect_type': defect_type,
-                'confidence': confidence,
-                'all_probabilities': all_probabilities,
-                'image_path': str(image_path),
-                'timestamp': datetime.now(timezone.utc).isoformat(),
-                'model_type': self.model_type,
+                "success": True,
+                "defect_type": defect_type,
+                "confidence": confidence,
+                "all_probabilities": all_probabilities,
+                "image_path": str(image_path),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "model_type": self.model_type,
             }
 
         except Exception as e:
             logger.error(f"Failed to analyze image: {e}")
             return {
-                'success': False,
-                'error': str(e),
-                'defect_type': None,
-                'confidence': 0.0,
+                "success": False,
+                "error": str(e),
+                "defect_type": None,
+                "confidence": 0.0,
             }
 
     def analyze_batch(self, image_paths: List[str]) -> List[Dict[str, Any]]:
@@ -263,7 +249,7 @@ class PretrainedDefectAnalyzer:
         train_data_path: str,
         epochs: int = 10,
         batch_size: int = 32,
-        validation_split: float = 0.2
+        validation_split: float = 0.2,
     ) -> Dict[str, Any]:
         """
         Дообучение модели на кастомных данных
@@ -278,10 +264,9 @@ class PretrainedDefectAnalyzer:
             История обучения
         """
         if not self._model_loaded:
-            return {'success': False, 'error': 'Model not loaded'}
+            return {"success": False, "error": "Model not loaded"}
 
         try:
-            import tensorflow as tf
             from tensorflow import keras
             from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
@@ -293,58 +278,54 @@ class PretrainedDefectAnalyzer:
             # Перекомпиляция с меньшим learning rate
             self.model.compile(
                 optimizer=keras.optimizers.Adam(learning_rate=0.0001),
-                loss='categorical_crossentropy',
-                metrics=['accuracy']
+                loss="categorical_crossentropy",
+                metrics=["accuracy"],
             )
 
             # Подготовка данных
             datagen = ImageDataGenerator(
-                rescale=1./255,
+                rescale=1.0 / 255,
                 rotation_range=20,
                 width_shift_range=0.2,
                 height_shift_range=0.2,
                 horizontal_flip=True,
-                validation_split=validation_split
+                validation_split=validation_split,
             )
 
             train_generator = datagen.flow_from_directory(
                 train_data_path,
                 target_size=(224, 224),
                 batch_size=batch_size,
-                class_mode='categorical',
-                subset='training'
+                class_mode="categorical",
+                subset="training",
             )
 
             val_generator = datagen.flow_from_directory(
                 train_data_path,
                 target_size=(224, 224),
                 batch_size=batch_size,
-                class_mode='categorical',
-                subset='validation'
+                class_mode="categorical",
+                subset="validation",
             )
 
             # Обучение
-            history = self.model.fit(
-                train_generator,
-                epochs=epochs,
-                validation_data=val_generator
-            )
+            history = self.model.fit(train_generator, epochs=epochs, validation_data=val_generator)
 
             return {
-                'success': True,
-                'epochs': epochs,
-                'final_accuracy': float(history.history['accuracy'][-1]),
-                'final_loss': float(history.history['loss'][-1]),
-                'val_accuracy': float(history.history['val_accuracy'][-1]),
-                'history': {
-                    'accuracy': [float(x) for x in history.history['accuracy']],
-                    'loss': [float(x) for x in history.history['loss']],
-                }
+                "success": True,
+                "epochs": epochs,
+                "final_accuracy": float(history.history["accuracy"][-1]),
+                "final_loss": float(history.history["loss"][-1]),
+                "val_accuracy": float(history.history["val_accuracy"][-1]),
+                "history": {
+                    "accuracy": [float(x) for x in history.history["accuracy"]],
+                    "loss": [float(x) for x in history.history["loss"]],
+                },
             }
 
         except Exception as e:
             logger.error(f"Fine-tuning failed: {e}")
-            return {'success': False, 'error': str(e)}
+            return {"success": False, "error": str(e)}
 
     def save_model(self, save_path: str) -> bool:
         """
@@ -370,11 +351,11 @@ class PretrainedDefectAnalyzer:
     def get_model_info(self) -> Dict[str, Any]:
         """Получение информации о модели"""
         return {
-            'model_type': self.model_type,
-            'loaded': self._model_loaded,
-            'use_gpu': self.use_gpu,
-            'defect_classes': self.DEFECT_CLASSES,
-            'input_size': self.MODEL_TYPES.get(self.model_type, {}).get('input_size'),
+            "model_type": self.model_type,
+            "loaded": self._model_loaded,
+            "use_gpu": self.use_gpu,
+            "defect_classes": self.DEFECT_CLASSES,
+            "input_size": self.MODEL_TYPES.get(self.model_type, {}).get("input_size"),
         }
 
 
@@ -382,7 +363,7 @@ class PretrainedDefectAnalyzer:
 _analyzer_instance: Optional[PretrainedDefectAnalyzer] = None
 
 
-def get_analyzer(model_type: str = 'resnet50') -> PretrainedDefectAnalyzer:
+def get_analyzer(model_type: str = "resnet50") -> PretrainedDefectAnalyzer:
     """Получение экземпляра анализатора"""
     global _analyzer_instance
     if _analyzer_instance is None or _analyzer_instance.model_type != model_type:

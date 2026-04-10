@@ -6,21 +6,21 @@ Thread-safe операции, broadcast, subscribe/unsubscribe, валидаци
 import asyncio
 import json
 import logging
-from typing import Dict, Set, Optional, Any
+from typing import Any, Dict, Optional, Set
+
 from fastapi import WebSocket, WebSocketDisconnect
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
 # Whitelist допустимых каналов
 ALLOWED_CHANNELS = {
-    "metrics",      # Системные метрики
-    "sstv",         # SSTV обновления
-    "iss",          # Позиция МКС
+    "metrics",  # Системные метрики
+    "sstv",  # SSTV обновления
+    "iss",  # Позиция МКС
     "simulations",  # Симуляции
-    "scans",        # Сканы
-    "alerts",       # Оповещения
-    "realtime",     # Real-time обновления
+    "scans",  # Сканы
+    "alerts",  # Оповещения
+    "realtime",  # Real-time обновления
 }
 
 # Максимальный размер сообщения (64 KB)
@@ -46,11 +46,11 @@ class ConnectionManager:
     async def connect(self, websocket: WebSocket, channels: Optional[Set[str]] = None) -> bool:
         """
         Принимает новое WebSocket подключение.
-        
+
         Args:
             websocket: WebSocket соединение
             channels: Начальные каналы подписки
-            
+
         Returns:
             bool: True если подключение успешно
         """
@@ -63,16 +63,16 @@ class ConnectionManager:
 
             # Принятие подключения
             await websocket.accept()
-            
+
             # Инициализация подписок
             subscribed_channels = channels or {"realtime", "metrics"}
             self.active_connections[websocket] = subscribed_channels
-            
+
             # Добавление в каналы
             for channel in subscribed_channels:
                 if channel in self.channel_subscribers:
                     self.channel_subscribers[channel].add(websocket)
-            
+
             self.connection_count += 1
             logger.info(
                 f"WebSocket connected. Total: {len(self.active_connections)}, "
@@ -83,7 +83,7 @@ class ConnectionManager:
     async def disconnect(self, websocket: WebSocket):
         """
         Отключает WebSocket клиента и очищает подписки.
-        
+
         Args:
             websocket: WebSocket соединение
         """
@@ -106,18 +106,16 @@ class ConnectionManager:
             except Exception:
                 pass
 
-            logger.info(
-                f"WebSocket disconnected. Total: {len(self.active_connections)}"
-            )
+            logger.info(f"WebSocket disconnected. Total: {len(self.active_connections)}")
 
     async def subscribe(self, websocket: WebSocket, channel: str) -> bool:
         """
         Подписывает клиента на канал.
-        
+
         Args:
             websocket: WebSocket соединение
             channel: Название канала
-            
+
         Returns:
             bool: True если подписка успешна
         """
@@ -139,11 +137,11 @@ class ConnectionManager:
     async def unsubscribe(self, websocket: WebSocket, channel: str) -> bool:
         """
         Отписывает клиента от канала.
-        
+
         Args:
             websocket: WebSocket соединение
             channel: Название канала
-            
+
         Returns:
             bool: True если отписка успешна
         """
@@ -157,10 +155,12 @@ class ConnectionManager:
             logger.debug(f"Unsubscribed from channel: {channel}")
             return True
 
-    async def send_to_channel(self, channel: str, data: Any, exclude: Optional[Set[WebSocket]] = None):
+    async def send_to_channel(
+        self, channel: str, data: Any, exclude: Optional[Set[WebSocket]] = None
+    ):
         """
         Отправляет данные всем подписчикам канала.
-        
+
         Args:
             channel: Название канала
             data: Данные для отправки
@@ -195,11 +195,11 @@ class ConnectionManager:
     async def send_personal(self, websocket: WebSocket, data: Any) -> bool:
         """
         Отправляет данные конкретному клиенту.
-        
+
         Args:
             websocket: WebSocket соединение
             data: Данные для отправки
-            
+
         Returns:
             bool: True если отправка успешна
         """
@@ -218,7 +218,7 @@ class ConnectionManager:
     async def broadcast(self, data: Any, exclude: Optional[Set[WebSocket]] = None):
         """
         Отправляет данные ВСЕМ подключённым клиентам.
-        
+
         Args:
             data: Данные для отправки
             exclude: Исключить указанные подключения
@@ -249,13 +249,13 @@ class ConnectionManager:
     def validate_message(self, data: str) -> dict:
         """
         Валидирует входящее WebSocket сообщение.
-        
+
         Args:
             data: JSON строка сообщения
-            
+
         Returns:
             dict: Распарсенное сообщение
-            
+
         Raises:
             ValueError: При невалидном сообщении
         """
@@ -282,16 +282,14 @@ class ConnectionManager:
             if not channel:
                 raise ValueError("subscribe/unsubscribe requires 'channel' field")
             if channel not in ALLOWED_CHANNELS:
-                raise ValueError(
-                    f"Invalid channel: {channel}. Allowed: {ALLOWED_CHANNELS}"
-                )
+                raise ValueError(f"Invalid channel: {channel}. Allowed: {ALLOWED_CHANNELS}")
 
         return message
 
     def get_stats(self) -> dict:
         """
         Получает статистику подключений.
-        
+
         Returns:
             dict: Статистика
         """

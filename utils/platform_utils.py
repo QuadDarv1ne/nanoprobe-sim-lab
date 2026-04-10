@@ -4,17 +4,15 @@
 
 import os
 import platform
-from pathlib import Path
-from typing import Optional
 
 
 def get_system_drive() -> str:
     """
     Получение пути системного диска для текущей ОС
-    
+
     Returns:
         Путь системного диска: "C:\" для Windows, "/" для Linux/Mac
-        
+
     Examples:
         >>> get_system_drive()
         'C:\\'  # на Windows
@@ -29,11 +27,11 @@ def get_system_drive() -> str:
 def get_system_disk_usage():
     """
     Получение информации об использовании системного диска
-    
+
     Returns:
         Именованный кортеж с полями: total, used, free, percent
         Или None в случае ошибки
-        
+
     Examples:
         >>> usage = get_system_disk_usage()
         >>> if usage:
@@ -41,9 +39,11 @@ def get_system_disk_usage():
     """
     try:
         import psutil
+
         return psutil.disk_usage(get_system_drive())
     except (OSError, ImportError) as e:
         import logging
+
         logger = logging.getLogger(__name__)
         logger.warning(f"Failed to get disk usage: {e}")
         return None

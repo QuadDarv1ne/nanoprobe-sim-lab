@@ -1,13 +1,12 @@
 """Модуль ведения логов для проекта Лаборатория моделирования нанозонда."""
 
-import logging
 import json
-import asyncio
-from pathlib import Path
-from datetime import datetime, timezone
-from typing import Optional, Dict, Any
-from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
+import logging
 import threading
+from datetime import datetime, timezone
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
+from typing import Any, Dict, Optional
 
 
 class JsonFormatter(logging.Formatter):
@@ -60,9 +59,9 @@ class LoggerSetup:
         self,
         log_dir: str = "logs",
         log_level: str = "INFO",
-        max_bytes: int = 10*1024*1024,
+        max_bytes: int = 10 * 1024 * 1024,
         backup_count: int = 5,
-        enable_json: bool = False
+        enable_json: bool = False,
     ):
         """
         Инициализирует настройщик логов
@@ -107,8 +106,7 @@ class LoggerSetup:
             formatter = JsonFormatter(name)
         else:
             formatter = logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-                datefmt="%Y-%m-%d %H:%M:%S"
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
             )
 
         # Обработчик для консоли
@@ -125,10 +123,7 @@ class LoggerSetup:
 
         # RotatingFileHandler для управления размером файлов
         file_handler = RotatingFileHandler(
-            file_path,
-            encoding="utf-8",
-            maxBytes=self.max_bytes,
-            backupCount=self.backup_count
+            file_path, encoding="utf-8", maxBytes=self.max_bytes, backupCount=self.backup_count
         )
         file_handler.setLevel(self.log_level)
         file_handler.setFormatter(formatter)
@@ -148,8 +143,8 @@ class NanoprobeLogger:
         self,
         config_manager=None,
         enable_json: bool = False,
-        max_bytes: int = 10*1024*1024,
-        backup_count: int = 5
+        max_bytes: int = 10 * 1024 * 1024,
+        backup_count: int = 5,
     ):
         """
         Инициализирует логгер проекта
@@ -172,7 +167,7 @@ class NanoprobeLogger:
             log_level=log_level,
             max_bytes=max_bytes,
             backup_count=backup_count,
-            enable_json=enable_json
+            enable_json=enable_json,
         )
         self.loggers = {}
         self._context: Dict[str, Any] = {}

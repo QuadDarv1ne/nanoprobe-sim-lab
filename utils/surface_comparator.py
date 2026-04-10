@@ -3,12 +3,13 @@
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict
 
 import numpy as np
 
 try:
     from PIL import Image
+
     PIL_AVAILABLE = True
 except ImportError:
     PIL_AVAILABLE = False
@@ -18,6 +19,7 @@ from scipy.stats import pearsonr
 
 try:
     import matplotlib.pyplot as plt
+
     MATPLOTLIB_AVAILABLE = True
 except ImportError:
     MATPLOTLIB_AVAILABLE = False
@@ -36,16 +38,17 @@ def _calculate_ssim(img1: np.ndarray, img2: np.ndarray, win_size: int = 7) -> fl
     mu1 = ndimage.uniform_filter(img1, size=win_size)
     mu2 = ndimage.uniform_filter(img2, size=win_size)
 
-    mu1_sq = mu1 ** 2
-    mu2_sq = mu2 ** 2
+    mu1_sq = mu1**2
+    mu2_sq = mu2**2
     mu1_mu2 = mu1 * mu2
 
-    sigma1_sq = ndimage.uniform_filter(img1 ** 2, size=win_size) - mu1_sq
-    sigma2_sq = ndimage.uniform_filter(img2 ** 2, size=win_size) - mu2_sq
+    sigma1_sq = ndimage.uniform_filter(img1**2, size=win_size) - mu1_sq
+    sigma2_sq = ndimage.uniform_filter(img2**2, size=win_size) - mu2_sq
     sigma12 = ndimage.uniform_filter(img1 * img2, size=win_size) - mu1_mu2
 
-    ssim_map = ((2 * mu1_mu2 + C1) * (2 * sigma12 + C2)) / \
-               ((mu1_sq + mu2_sq + C1) * (sigma1_sq + sigma2_sq + C2))
+    ssim_map = ((2 * mu1_mu2 + C1) * (2 * sigma12 + C2)) / (
+        (mu1_sq + mu2_sq + C1) * (sigma1_sq + sigma2_sq + C2)
+    )
 
     return float(np.mean(ssim_map))
 
@@ -54,7 +57,7 @@ def _calculate_psnr(img1: np.ndarray, img2: np.ndarray) -> float:
     """Calculate PSNR manually"""
     mse_val = np.mean((img1 - img2) ** 2)
     if mse_val == 0:
-        return float('inf')
+        return float("inf")
     return float(20 * np.log10(1.0 / np.sqrt(mse_val)))
 
 
@@ -64,7 +67,7 @@ class SurfaceComparator:
     def __init__(self, comparison_method: str = "ssim"):
         """
         Initialize surface comparator
-        
+
         Args:
             comparison_method: Method for comparison ('ssim', 'mse', 'psnr')
         """
@@ -72,7 +75,9 @@ class SurfaceComparator:
         self.output_dir = Path("output/surface_comparisons")
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-    def compare_surfaces(self, image1: np.ndarray, image2: np.ndarray, normalize: bool = True) -> Dict[str, Any]:
+    def compare_surfaces(
+        self, image1: np.ndarray, image2: np.ndarray, normalize: bool = True
+    ) -> Dict[str, Any]:
         """Compare two surface images"""
         if image1.shape != image2.shape:
             raise ValueError(f"Shape mismatch: {image1.shape} vs {image2.shape}")
@@ -154,7 +159,7 @@ class SurfaceComparator:
         img2: np.ndarray,
         metrics: Dict,
         cid: str,
-        save_difference_map: bool = True
+        save_difference_map: bool = True,
     ):
         """Save comprehensive comparison visualization"""
         fig = plt.figure(figsize=(20, 12))
@@ -162,23 +167,27 @@ class SurfaceComparator:
 
         # Основные изображения
         ax1 = fig.add_subplot(gs[0, 0])
-        im1 = ax1.imshow(img1, cmap="viridis", aspect='equal')
-        ax1.set_title("Image 1", fontsize=11, fontweight='bold')
+        im1 = ax1.imshow(img1, cmap="viridis", aspect="equal")
+        ax1.set_title("Image 1", fontsize=11, fontweight="bold")
         ax1.axis("off")
         plt.colorbar(im1, ax=ax1, shrink=0.8)
 
         ax2 = fig.add_subplot(gs[0, 1])
-        im2 = ax2.imshow(img2, cmap="viridis", aspect='equal')
-        ax2.set_title("Image 2", fontsize=11, fontweight='bold')
+        im2 = ax2.imshow(img2, cmap="viridis", aspect="equal")
+        ax2.set_title("Image 2", fontsize=11, fontweight="bold")
         ax2.axis("off")
         plt.colorbar(im2, ax=ax2, shrink=0.8)
 
         # Разница
         diff = img2 - img1
         ax3 = fig.add_subplot(gs[0, 2])
-        im3 = ax3.imshow(diff, cmap="RdBu", aspect='equal',
-                        vmin=-max(abs(diff.min()), diff.max()),
-                        vmax=max(abs(diff.min()), diff.max()))
+        im3 = ax3.imshow(
+            diff,
+            cmap="RdBu",
+            aspect="equal",
+            vmin=-max(abs(diff.min()), diff.max()),
+            vmax=max(abs(diff.min()), diff.max()),
+        )
         ax3.set_title(f"Difference\n(mean={metrics['mean_diff']:.4f})", fontsize=10)
         ax3.axis("off")
         plt.colorbar(im3, ax=ax3, shrink=0.8)
@@ -186,47 +195,47 @@ class SurfaceComparator:
         # Абсолютная разница (тепловая карта)
         abs_diff = np.abs(diff)
         ax4 = fig.add_subplot(gs[0, 3])
-        im4 = ax4.imshow(abs_diff, cmap="hot", aspect='equal')
+        im4 = ax4.imshow(abs_diff, cmap="hot", aspect="equal")
         ax4.set_title(f"Absolute Diff\n(max={metrics['max_diff']:.4f})", fontsize=10)
         ax4.axis("off")
         plt.colorbar(im4, ax=ax4, shrink=0.8)
 
         # 3D визуализация
-        ax5 = fig.add_subplot(gs[1, 0], projection='3d')
+        ax5 = fig.add_subplot(gs[1, 0], projection="3d")
         x = np.arange(img1.shape[1])
         y = np.arange(img1.shape[0])
         X, Y = np.meshgrid(x, y)
-        ax5.plot_surface(X, Y, img1, cmap='viridis', alpha=0.9, linewidth=0, antialiased=True)
-        ax5.set_title("Image 1 (3D)", fontsize=10, fontweight='bold')
+        ax5.plot_surface(X, Y, img1, cmap="viridis", alpha=0.9, linewidth=0, antialiased=True)
+        ax5.set_title("Image 1 (3D)", fontsize=10, fontweight="bold")
         ax5.set_xticks([])
         ax5.set_yticks([])
 
-        ax6 = fig.add_subplot(gs[1, 1], projection='3d')
-        ax6.plot_surface(X, Y, img2, cmap='viridis', alpha=0.9, linewidth=0, antialiased=True)
-        ax6.set_title("Image 2 (3D)", fontsize=10, fontweight='bold')
+        ax6 = fig.add_subplot(gs[1, 1], projection="3d")
+        ax6.plot_surface(X, Y, img2, cmap="viridis", alpha=0.9, linewidth=0, antialiased=True)
+        ax6.set_title("Image 2 (3D)", fontsize=10, fontweight="bold")
         ax6.set_xticks([])
         ax6.set_yticks([])
 
-        ax7 = fig.add_subplot(gs[1, 2], projection='3d')
-        ax7.plot_surface(X, Y, diff, cmap='RdBu', alpha=0.9, linewidth=0, antialiased=True)
-        ax7.set_title("Difference (3D)", fontsize=10, fontweight='bold')
+        ax7 = fig.add_subplot(gs[1, 2], projection="3d")
+        ax7.plot_surface(X, Y, diff, cmap="RdBu", alpha=0.9, linewidth=0, antialiased=True)
+        ax7.set_title("Difference (3D)", fontsize=10, fontweight="bold")
         ax7.set_xticks([])
         ax7.set_yticks([])
 
         # Гистограммы
         ax8 = fig.add_subplot(gs[1, 3])
-        ax8.hist(img1.flatten(), bins=50, alpha=0.6, label='Image 1', color='blue', density=True)
-        ax8.hist(img2.flatten(), bins=50, alpha=0.6, label='Image 2', color='red', density=True)
-        ax8.set_title("Intensity Distribution", fontsize=10, fontweight='bold')
+        ax8.hist(img1.flatten(), bins=50, alpha=0.6, label="Image 1", color="blue", density=True)
+        ax8.hist(img2.flatten(), bins=50, alpha=0.6, label="Image 2", color="red", density=True)
+        ax8.set_title("Intensity Distribution", fontsize=10, fontweight="bold")
         ax8.legend(fontsize=8)
         ax8.grid(True, alpha=0.3)
 
         # Профили интенсивности
         ax9 = fig.add_subplot(gs[2, :2])
         mid_y = img1.shape[0] // 2
-        ax9.plot(img1[mid_y, :], label='Image 1', color='blue', linewidth=1.5)
-        ax9.plot(img2[mid_y, :], label='Image 2', color='red', linewidth=1.5, linestyle='--')
-        ax9.set_title(f"Horizontal Profile (row {mid_y})", fontsize=10, fontweight='bold')
+        ax9.plot(img1[mid_y, :], label="Image 1", color="blue", linewidth=1.5)
+        ax9.plot(img2[mid_y, :], label="Image 2", color="red", linewidth=1.5, linestyle="--")
+        ax9.set_title(f"Horizontal Profile (row {mid_y})", fontsize=10, fontweight="bold")
         ax9.set_xlabel("X position")
         ax9.set_ylabel("Intensity")
         ax9.legend(fontsize=8)
@@ -235,8 +244,12 @@ class SurfaceComparator:
         # Корреляция
         ax10 = fig.add_subplot(gs[2, 2:])
         ax10.scatter(img1.flatten()[::100], img2.flatten()[::100], alpha=0.3, s=5)
-        ax10.plot([0, 1], [0, 1], 'r--', linewidth=2)
-        ax10.set_title(f"Pixel Correlation\n(Pearson: {metrics['pearson']:.4f})", fontsize=10, fontweight='bold')
+        ax10.plot([0, 1], [0, 1], "r--", linewidth=2)
+        ax10.set_title(
+            f"Pixel Correlation\n(Pearson: {metrics['pearson']:.4f})",
+            fontsize=10,
+            fontweight="bold",
+        )
         ax10.set_xlabel("Image 1")
         ax10.set_ylabel("Image 2")
         ax10.grid(True, alpha=0.3)
@@ -246,7 +259,9 @@ class SurfaceComparator:
             f"Surface Comparison: SSIM={metrics.get('ssim', 0):.4f} | "
             f"PSNR={metrics.get('psnr', 0):.2f} dB | "
             f"Similarity={metrics.get('similarity', 0):.4f}",
-            fontsize=14, fontweight='bold', y=0.98
+            fontsize=14,
+            fontweight="bold",
+            y=0.98,
         )
 
         plt.savefig(self.output_dir / f"{cid}_viz.png", dpi=150, bbox_inches="tight")
@@ -255,9 +270,12 @@ class SurfaceComparator:
         # Сохранение карты разницы отдельно
         if save_difference_map and MATPLOTLIB_AVAILABLE:
             fig_diff, ax_diff = plt.subplots(figsize=(10, 8))
-            im_diff = ax_diff.imshow(abs_diff, cmap="hot", aspect='equal')
-            ax_diff.set_title(f"Absolute Difference Map\nMax: {metrics['max_diff']:.4f}, Mean: {metrics['mean_diff']:.4f}",
-                            fontsize=12, fontweight='bold')
+            im_diff = ax_diff.imshow(abs_diff, cmap="hot", aspect="equal")
+            ax_diff.set_title(
+                f"Absolute Difference Map\nMax: {metrics['max_diff']:.4f}, Mean: {metrics['mean_diff']:.4f}",
+                fontsize=12,
+                fontweight="bold",
+            )
             ax_diff.axis("off")
             plt.colorbar(im_diff, ax=ax_diff, shrink=0.8)
             plt.tight_layout()
@@ -265,7 +283,9 @@ class SurfaceComparator:
             plt.close()
 
 
-def compare_surfaces(path1: str, path2: str, out: str = "output/surface_comparisons") -> Dict[str, Any]:
+def compare_surfaces(
+    path1: str, path2: str, out: str = "output/surface_comparisons"
+) -> Dict[str, Any]:
     """Quick surface comparison function"""
     c = SurfaceComparator()
     c.output_dir = Path(out)
@@ -285,8 +305,14 @@ if __name__ == "__main__":
         X, Y = np.meshgrid(x, x)
         base = np.sin(3 * np.sqrt(X**2 + Y**2)) * np.exp(-(X**2 + Y**2) / 2)
 
-        img1 = ((base + np.random.randn(256, 256) * 0.05 - base.min()) / (base.max() - base.min()) * 255).astype(np.uint8)
-        img2 = ((base * 1.1 + np.random.randn(256, 256) * 0.07 - base.min()) / (base.max() - base.min()) * 255).astype(np.uint8)
+        img1 = (
+            (base + np.random.randn(256, 256) * 0.05 - base.min()) / (base.max() - base.min()) * 255
+        ).astype(np.uint8)
+        img2 = (
+            (base * 1.1 + np.random.randn(256, 256) * 0.07 - base.min())
+            / (base.max() - base.min())
+            * 255
+        ).astype(np.uint8)
 
         Image.fromarray(img1).save(test_dir / "s1.png")
         Image.fromarray(img2).save(test_dir / "s2.png")

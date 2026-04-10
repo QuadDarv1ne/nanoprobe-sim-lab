@@ -4,10 +4,7 @@ System Monitor Widget
 Мониторинг системы: CPU, память, диск, сеть.
 """
 
-import os
-import platform
 from datetime import datetime, timezone
-from typing import Dict
 
 import psutil
 
@@ -17,6 +14,7 @@ from .base import Widget, WidgetData, WidgetPriority
 def _get_disk_usage():
     """Cross-platform disk usage"""
     from utils.platform_utils import get_system_disk_usage
+
     return get_system_disk_usage()
 
 
@@ -42,13 +40,13 @@ class SystemMonitorWidget(Widget):
         net = psutil.net_io_counters()
 
         metrics = {
-            'cpu': cpu_percent,
-            'memory_percent': memory.percent,
-            'memory_available': memory.available // (1024 * 1024),  # MB
-            'disk_percent': disk.percent,
-            'disk_free': disk.free // (1024 * 1024 * 1024),  # GB
-            'net_sent': net.bytes_sent // (1024 * 1024),  # MB
-            'net_recv': net.bytes_recv // (1024 * 1024),  # MB
+            "cpu": cpu_percent,
+            "memory_percent": memory.percent,
+            "memory_available": memory.available // (1024 * 1024),  # MB
+            "disk_percent": disk.percent,
+            "disk_free": disk.free // (1024 * 1024 * 1024),  # GB
+            "net_sent": net.bytes_sent // (1024 * 1024),  # MB
+            "net_recv": net.bytes_recv // (1024 * 1024),  # MB
         }
 
         # Сохраняем историю (последние 60 значений)
@@ -56,11 +54,7 @@ class SystemMonitorWidget(Widget):
         if len(self._history) > 60:
             self._history.pop(0)
 
-        return WidgetData(
-            title=self.title,
-            content=metrics,
-            timestamp=datetime.now(timezone.utc)
-        )
+        return WidgetData(title=self.title, content=metrics, timestamp=datetime.now(timezone.utc))
 
     def render(self, width: int = 60) -> str:
         """Отрисовка виджета"""
@@ -74,19 +68,23 @@ class SystemMonitorWidget(Widget):
         lines = []
 
         # CPU
-        cpu_bar = self._make_bar(metrics['cpu'], width - 15)
-        cpu_color = self._get_color(metrics['cpu'])
+        cpu_bar = self._make_bar(metrics["cpu"], width - 15)
+        cpu_color = self._get_color(metrics["cpu"])
         lines.append(f"CPU    [{cpu_color}{cpu_bar}{self._reset_color()}] {metrics['cpu']:5.1f}%")
 
         # Memory
-        mem_bar = self._make_bar(metrics['memory_percent'], width - 15)
-        mem_color = self._get_color(metrics['memory_percent'])
-        lines.append(f"RAM    [{mem_color}{mem_bar}{self._reset_color()}] {metrics['memory_percent']:5.1f}% ({metrics['memory_available']} MB)")
+        mem_bar = self._make_bar(metrics["memory_percent"], width - 15)
+        mem_color = self._get_color(metrics["memory_percent"])
+        lines.append(
+            f"RAM    [{mem_color}{mem_bar}{self._reset_color()}] {metrics['memory_percent']:5.1f}% ({metrics['memory_available']} MB)"
+        )
 
         # Disk
-        disk_bar = self._make_bar(metrics['disk_percent'], width - 15)
-        disk_color = self._get_color(metrics['disk_percent'])
-        lines.append(f"Disk   [{disk_color}{disk_bar}{self._reset_color()}] {metrics['disk_percent']:5.1f}% ({metrics['disk_free']} GB free)")
+        disk_bar = self._make_bar(metrics["disk_percent"], width - 15)
+        disk_color = self._get_color(metrics["disk_percent"])
+        lines.append(
+            f"Disk   [{disk_color}{disk_bar}{self._reset_color()}] {metrics['disk_percent']:5.1f}% ({metrics['disk_free']} GB free)"
+        )
 
         # Network
         lines.append(f"Net ↑↓ {metrics['net_sent']:6d} MB | {metrics['net_recv']:6d} MB")

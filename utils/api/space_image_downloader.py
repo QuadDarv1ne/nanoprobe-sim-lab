@@ -1,16 +1,14 @@
 """Модуль загрузки и обработки космических снимков."""
 
-import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 import numpy as np
 import requests
 from PIL import Image
 
 try:
-    import pandas as pd
     HAS_PANDAS = True
 except ImportError:
     HAS_PANDAS = False
@@ -26,17 +24,14 @@ class SpaceImageDownloader:
 
         # API endpoints
         self.apis = {
-            'hubble': 'https://mast.stsci.edu/api/v0.1/Discovery/api/',
-            'nasa': 'https://images-api.nasa.gov',
-            'esa': 'https://esahubble.org/api/v1',
-            'jwst': 'https://mast.stsci.edu/api/v0.1/Discovery/api/'
+            "hubble": "https://mast.stsci.edu/api/v0.1/Discovery/api/",
+            "nasa": "https://images-api.nasa.gov",
+            "esa": "https://esahubble.org/api/v1",
+            "jwst": "https://mast.stsci.edu/api/v0.1/Discovery/api/",
         }
 
     def search_hubble(
-        self,
-        target: str = None,
-        observation_type: str = None,
-        pagesize: int = 10
+        self, target: str = None, observation_type: str = None, pagesize: int = 10
     ) -> List[Dict]:
         """
         Поиск данных Hubble.
@@ -49,23 +44,16 @@ class SpaceImageDownloader:
         Returns:
             Список метаданных изображений
         """
-        params = {
-            'format': 'json',
-            'pagesize': pagesize
-        }
+        params = {"format": "json", "pagesize": pagesize}
 
         if target:
-            params['target_name'] = target
+            params["target_name"] = target
 
         if observation_type:
-            params['observation_type'] = observation_type
+            params["observation_type"] = observation_type
 
         try:
-            response = requests.get(
-                self.apis['hubble'],
-                params=params,
-                timeout=30
-            )
+            response = requests.get(self.apis["hubble"], params=params, timeout=30)
             response.raise_for_status()
             return response.json()
         except requests.RequestException as e:
@@ -73,11 +61,7 @@ class SpaceImageDownloader:
             return []
 
     def search_nasa(
-        self,
-        query: str,
-        year_start: int = None,
-        year_end: int = None,
-        pagesize: int = 10
+        self, query: str, year_start: int = None, year_end: int = None, pagesize: int = 10
     ) -> List[Dict]:
         """
         Поиск изображений NASA.
@@ -91,35 +75,24 @@ class SpaceImageDownloader:
         Returns:
             Список метаданных изображений
         """
-        params = {
-            'q': query,
-            'media_type': 'image',
-            'page_size': pagesize
-        }
+        params = {"q": query, "media_type": "image", "page_size": pagesize}
 
         if year_start:
-            params['year_start'] = year_start
+            params["year_start"] = year_start
         if year_end:
-            params['year_end'] = year_end
+            params["year_end"] = year_end
 
         try:
-            response = requests.get(
-                f"{self.apis['nasa']}/search",
-                params=params,
-                timeout=30
-            )
+            response = requests.get(f"{self.apis['nasa']}/search", params=params, timeout=30)
             response.raise_for_status()
             data = response.json()
-            return data.get('collection', {}).get('items', [])
+            return data.get("collection", {}).get("items", [])
         except requests.RequestException as e:
             print(f"Ошибка поиска NASA: {e}")
             return []
 
     def download_image(
-        self,
-        url: str,
-        filename: str = None,
-        save_format: str = 'png'
+        self, url: str, filename: str = None, save_format: str = "png"
     ) -> Optional[Path]:
         """
         Загрузка изображения по URL.
@@ -137,11 +110,11 @@ class SpaceImageDownloader:
             response.raise_for_status()
 
             if filename is None:
-                timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+                timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
                 filename = f"space_image_{timestamp}.{save_format}"
 
             filepath = self.download_dir / filename
-            with open(filepath, 'wb') as f:
+            with open(filepath, "wb") as f:
                 f.write(response.content)
 
             print(f"Изображение сохранено: {filepath}")
@@ -151,11 +124,7 @@ class SpaceImageDownloader:
             print(f"Ошибка загрузки: {e}")
             return None
 
-    def download_hubble_product(
-        self,
-        product_id: str,
-        save_format: str = 'fits'
-    ) -> Optional[Path]:
+    def download_hubble_product(self, product_id: str, save_format: str = "fits") -> Optional[Path]:
         """
         Загрузка продукта Hubble по ID.
 
@@ -185,9 +154,9 @@ class SpaceImageProcessor:
         """Загружает изображение."""
         try:
             self.image = Image.open(filepath)
-            self.metadata['filepath'] = filepath
-            self.metadata['size'] = self.image.size
-            self.metadata['mode'] = self.image.mode
+            self.metadata["filepath"] = filepath
+            self.metadata["size"] = self.image.size
+            self.metadata["mode"] = self.image.mode
             return True
         except Exception as e:
             print(f"Ошибка загрузки: {e}")
@@ -199,7 +168,7 @@ class SpaceImageProcessor:
             response = requests.get(url, timeout=30)
             response.raise_for_status()
             self.image = Image.open(BytesIO(response.content))
-            self.metadata['url'] = url
+            self.metadata["url"] = url
             return True
         except Exception as e:
             print(f"Ошибка загрузки URL: {e}")
@@ -210,7 +179,7 @@ class SpaceImageProcessor:
         if self.image is None:
             raise ValueError("Изображение не загружено")
 
-        self.processed_image = self.image.convert('L')
+        self.processed_image = self.image.convert("L")
         return self.processed_image
 
     def enhance_contrast(self, factor: float = 1.5) -> Image.Image:
@@ -235,31 +204,27 @@ class SpaceImageProcessor:
         self.processed_image = enhancer.enhance(factor)
         return self.processed_image
 
-    def apply_color_map(self, cmap: str = 'viridis') -> Image.Image:
+    def apply_color_map(self, cmap: str = "viridis") -> Image.Image:
         """Применяет цветовую карту к чёрно-белому изображению."""
         if self.image is None:
             raise ValueError("Изображение не загружено")
 
         # Конвертируем в numpy массив
-        img_array = np.array(self.image.convert('L'))
+        img_array = np.array(self.image.convert("L"))
 
         # Нормализуем
         img_normalized = (img_array - img_array.min()) / (img_array.max() - img_array.min())
 
         # Применяем цветовую карту matplotlib
         import matplotlib.pyplot as plt
+
         colormap = plt.get_cmap(cmap)
         colored = (colormap(img_normalized) * 255).astype(np.uint8)
 
         self.processed_image = Image.fromarray(colored[:, :, :3])
         return self.processed_image
 
-    def save_image(
-        self,
-        filepath: str,
-        quality: int = 95,
-        fmt: str = None
-    ) -> bool:
+    def save_image(self, filepath: str, quality: int = 95, fmt: str = None) -> bool:
         """
         Сохраняет изображение.
 
@@ -279,16 +244,16 @@ class SpaceImageProcessor:
 
             # Определяем формат
             if fmt is None:
-                fmt = Path(filepath).suffix.lstrip('.').upper()
-                if fmt == 'JPG':
-                    fmt = 'JPEG'
+                fmt = Path(filepath).suffix.lstrip(".").upper()
+                if fmt == "JPG":
+                    fmt = "JPEG"
 
             # Сохраняем
             save_kwargs = {}
-            if fmt == 'JPEG':
-                save_kwargs['quality'] = quality
-            elif fmt == 'PNG':
-                save_kwargs['optimize'] = True
+            if fmt == "JPEG":
+                save_kwargs["quality"] = quality
+            elif fmt == "PNG":
+                save_kwargs["optimize"] = True
 
             img.save(filepath, fmt, **save_kwargs)
             print(f"Изображение сохранено: {filepath}")
@@ -299,9 +264,7 @@ class SpaceImageProcessor:
             return False
 
     def create_print_versions(
-        self,
-        base_filename: str,
-        output_dir: str = "output/print"
+        self, base_filename: str, output_dir: str = "output/print"
     ) -> Dict[str, Path]:
         """
         Создаёт версии для печати (цветная и Ч/Б).
@@ -326,20 +289,20 @@ class SpaceImageProcessor:
         self.enhance_brightness(1.1)
         color_path = output_path / f"{base_filename}_color.png"
         self.save_image(str(color_path))
-        results['color'] = color_path
+        results["color"] = color_path
 
         # Чёрно-белая версия
         self.convert_to_grayscale()
         bw_path = output_path / f"{base_filename}_bw.png"
         self.save_image(str(bw_path))
-        results['black_white'] = bw_path
+        results["black_white"] = bw_path
 
         # Псевдоцветная (для науки)
-        self.image = self.image.convert('L')  # Сначала в Ч/Б
-        self.apply_color_map('plasma')
+        self.image = self.image.convert("L")  # Сначала в Ч/Б
+        self.apply_color_map("plasma")
         false_color_path = output_path / f"{base_filename}_false_color.png"
         self.save_image(str(false_color_path))
-        results['false_color'] = false_color_path
+        results["false_color"] = false_color_path
 
         print(f"Создано версий для печати: {len(results)}")
         return results
@@ -367,6 +330,7 @@ class FITSReader:
             # Пробуем astropy
             try:
                 from astropy.io import fits
+
                 with fits.open(filepath) as hdul:
                     self.data = hdul[0].data
                     self.header = dict(hdul[0].header)
@@ -384,7 +348,7 @@ class FITSReader:
         """Упрощённое чтение FITS без astropy."""
         try:
             # Читаем как бинарный файл
-            with open(filepath, 'rb') as f:
+            with open(filepath, "rb") as f:
                 # Пропускаем заголовок (упрощённо)
                 f.seek(2880)  # Первый блок FITS
                 # Читаем данные
@@ -407,8 +371,7 @@ class FITSReader:
 
 
 def download_and_print_hubble_image(
-    target: str,
-    output_dir: str = "output/print"
+    target: str, output_dir: str = "output/print"
 ) -> Dict[str, Path]:
     """
     Полная цепочка: поиск → загрузка → обработка → печать.
@@ -437,10 +400,10 @@ def download_and_print_hubble_image(
 
     # Получаем URL
     image_url = None
-    if 'url' in first_result:
-        image_url = first_result['url']
-    elif 'product_url' in first_result:
-        image_url = first_result['product_url']
+    if "url" in first_result:
+        image_url = first_result["url"]
+    elif "product_url" in first_result:
+        image_url = first_result["product_url"]
 
     if not image_url:
         print("❌ Не найден URL изображения")
@@ -470,7 +433,7 @@ def download_and_print_hubble_image(
 
 
 # Пример использования
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Загрузка и обработка изображения Hubble
     results = download_and_print_hubble_image("M31")
 

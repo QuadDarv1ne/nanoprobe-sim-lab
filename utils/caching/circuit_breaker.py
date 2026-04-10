@@ -15,19 +15,18 @@ logger = logging.getLogger(__name__)
 
 class CircuitState(Enum):
     """Состояния circuit breaker"""
-    CLOSED = "closed"      # Нормальная работа
-    OPEN = "open"          # Сбой, запросы блокируются
+
+    CLOSED = "closed"  # Нормальная работа
+    OPEN = "open"  # Сбой, запросы блокируются
     HALF_OPEN = "half_open"  # Проверка восстановления
 
 
 class CircuitBreakerError(Exception):
     """Исключение circuit breaker"""
-    pass
 
 
 class CircuitBreakerOpenError(CircuitBreakerError):
     """Circuit breaker открыт"""
-    pass
 
 
 class CircuitBreaker:
@@ -45,7 +44,7 @@ class CircuitBreaker:
         failure_threshold: int = 5,
         recovery_timeout: int = 60,
         half_open_max_calls: int = 1,
-        name: str = "default"
+        name: str = "default",
     ):
         """
         Инициализация circuit breaker
@@ -119,9 +118,7 @@ class CircuitBreaker:
 
             if current_state == CircuitState.HALF_OPEN:
                 if self._half_open_calls >= self.half_open_max_calls:
-                    logger.warning(
-                        f"Circuit breaker '{self.name}' HALF_OPEN max calls reached"
-                    )
+                    logger.warning(f"Circuit breaker '{self.name}' HALF_OPEN max calls reached")
                     raise CircuitBreakerOpenError(
                         f"Circuit breaker '{self.name}' half-open limit reached"
                     )
@@ -187,7 +184,9 @@ class CircuitBreaker:
                 "success_count": self._success_count,
                 "failure_threshold": self.failure_threshold,
                 "recovery_timeout": self.recovery_timeout,
-                "last_failure_time": self._last_failure_time.isoformat() if self._last_failure_time else None,
+                "last_failure_time": (
+                    self._last_failure_time.isoformat() if self._last_failure_time else None
+                ),
                 "last_state_change": self._last_state_change.isoformat(),
             }
 
@@ -209,9 +208,7 @@ _breakers_lock = threading.Lock()
 
 
 def get_circuit_breaker(
-    name: str = "default",
-    failure_threshold: int = 5,
-    recovery_timeout: int = 60
+    name: str = "default", failure_threshold: int = 5, recovery_timeout: int = 60
 ) -> CircuitBreaker:
     """
     Получение или создание circuit breaker
@@ -227,9 +224,7 @@ def get_circuit_breaker(
     with _breakers_lock:
         if name not in _circuit_breakers:
             _circuit_breakers[name] = CircuitBreaker(
-                failure_threshold=failure_threshold,
-                recovery_timeout=recovery_timeout,
-                name=name
+                failure_threshold=failure_threshold, recovery_timeout=recovery_timeout, name=name
             )
         return _circuit_breakers[name]
 
@@ -238,7 +233,7 @@ def circuit_breaker(
     name: str = "default",
     failure_threshold: int = 5,
     recovery_timeout: int = 60,
-    fallback: Optional[Any] = None
+    fallback: Optional[Any] = None,
 ):
     """
     Декоратор circuit breaker
@@ -254,6 +249,7 @@ def circuit_breaker(
         def call_external_api():
             ...
     """
+
     def decorator(func: Callable) -> Callable:
         breaker = get_circuit_breaker(name, failure_threshold, recovery_timeout)
 
@@ -269,9 +265,7 @@ def circuit_breaker(
                     return fallback
                 raise
             except Exception as e:
-                logger.error(
-                    f"Circuit breaker '{name}' caught exception in {func.__name__}: {e}"
-                )
+                logger.error(f"Circuit breaker '{name}' caught exception in {func.__name__}: {e}")
                 if fallback is not None:
                     return fallback
                 raise
@@ -285,10 +279,7 @@ def circuit_breaker(
 def get_all_circuit_breakers_stats() -> dict:
     """Получение статистики всех circuit breakers"""
     with _breakers_lock:
-        return {
-            name: cb.get_stats()
-            for name, cb in _circuit_breakers.items()
-        }
+        return {name: cb.get_stats() for name, cb in _circuit_breakers.items()}
 
 
 def reset_all_circuit_breakers():

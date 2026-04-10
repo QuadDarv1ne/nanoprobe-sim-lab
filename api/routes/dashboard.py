@@ -21,7 +21,7 @@ import logging
 import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import psutil
 from fastapi import APIRouter, Depends, Header, Query, WebSocket, WebSocketDisconnect, status
@@ -62,6 +62,7 @@ CACHE_PREFIX = {
 
 # ==================== Утилиты ====================
 
+
 def get_project_root() -> Path:
     """Получить корень проекта"""
     return Path(__file__).parent.parent.parent
@@ -71,10 +72,10 @@ def get_cached_stats() -> Optional[Dict]:
     """Получить кэшированную статистику если не истёк TTL"""
     cached = get_app_state("stats_cache")
     cache_time = get_app_state("stats_cache_time")
-    
+
     if cache_time is None or cached is None:
         return None
-    
+
     age = (datetime.now(timezone.utc) - cache_time).total_seconds()
     if age < STATS_CACHE_TTL:
         return cached
@@ -113,11 +114,12 @@ def get_storage_stats() -> Dict[str, float]:
     return {
         "used_mb": round(used_mb, 2),
         "total_mb": round(total_mb, 2),
-        "percent": round((used_mb / total_mb) * 100, 2) if total_mb > 0 else 0
+        "percent": round((used_mb / total_mb) * 100, 2) if total_mb > 0 else 0,
     }
 
 
 # ==================== Basic Stats ====================
+
 
 @router.get(
     "/stats",
@@ -173,22 +175,22 @@ async def get_dashboard_stats(
             logger.warning(f"Failed to get DB size: {e}")
 
         result = DashboardStats(
-            total_scans=db_stats.get('total_scans', 0),
-            total_simulations=db_stats.get('total_simulations', 0),
-            active_simulations=db_stats.get('active_simulations', 0),
+            total_scans=db_stats.get("total_scans", 0),
+            total_simulations=db_stats.get("total_simulations", 0),
+            active_simulations=db_stats.get("active_simulations", 0),
             storage_used_mb=storage["used_mb"],
             storage_total_mb=storage["total_mb"],
-            recent_scans_count=db_stats.get('total_scans', 0),
-            recent_simulations_count=db_stats.get('total_simulations', 0),
-            success_rate=100.0 if db_stats.get('total_scans', 0) == 0 else 100.0,
-            total_images=db_stats.get('total_images', 0),
-            total_exports=db_stats.get('total_exports', 0),
-            total_comparisons=db_stats.get('total_comparisons', 0),
-            total_defect_analyses=db_stats.get('total_defect_analyses', 0),
-            total_pdf_reports=db_stats.get('total_pdf_reports', 0),
-            total_batch_jobs=db_stats.get('total_batch_jobs', 0),
-            active_batch_jobs=db_stats.get('active_batch_jobs', 0),
-            scans_by_type=db_stats.get('scans_by_type', {}),
+            recent_scans_count=db_stats.get("total_scans", 0),
+            recent_simulations_count=db_stats.get("total_simulations", 0),
+            success_rate=100.0 if db_stats.get("total_scans", 0) == 0 else 100.0,
+            total_images=db_stats.get("total_images", 0),
+            total_exports=db_stats.get("total_exports", 0),
+            total_comparisons=db_stats.get("total_comparisons", 0),
+            total_defect_analyses=db_stats.get("total_defect_analyses", 0),
+            total_pdf_reports=db_stats.get("total_pdf_reports", 0),
+            total_batch_jobs=db_stats.get("total_batch_jobs", 0),
+            active_batch_jobs=db_stats.get("active_batch_jobs", 0),
+            scans_by_type=db_stats.get("scans_by_type", {}),
             db_size_mb=db_size_mb,
         )
 
@@ -197,7 +199,9 @@ async def get_dashboard_stats(
         if cache.is_available():
             cache.set(f"{CACHE_PREFIX['stats']}:all", result.model_dump(), expire=5)
 
-        logger.debug(f"Dashboard stats retrieved: {result.total_scans} scans, {result.total_simulations} simulations")
+        logger.debug(
+            f"Dashboard stats retrieved: {result.total_scans} scans, {result.total_simulations} simulations"
+        )
         return result
     except Exception as e:
         logger.error(f"Error getting dashboard stats: {e}")
@@ -205,6 +209,7 @@ async def get_dashboard_stats(
 
 
 # ==================== Detailed Stats ====================
+
 
 @router.get("/stats/detailed")
 @cached(prefix="dashboard", expire=5)
@@ -262,7 +267,7 @@ async def get_detailed_stats(
                 "total_analysis": analysis_count,
                 "total_comparisons": comparisons_count,
                 "total_reports": reports_count,
-                "total_items": scans_count + simulations_count + analysis_count + comparisons_count
+                "total_items": scans_count + simulations_count + analysis_count + comparisons_count,
             },
             "scans": {
                 "total": scans_count,
@@ -272,20 +277,20 @@ async def get_detailed_stats(
                         "id": row["id"],
                         "type": row["scan_type"],
                         "surface_type": row["surface_type"],
-                        "created_at": row["created_at"]
+                        "created_at": row["created_at"],
                     }
                     for row in (recent_scans or [])
-                ]
+                ],
             },
             "simulations": {
                 "total": simulations_count,
                 "by_type": {
                     row["simulation_type"]: {
                         "count": row["count"],
-                        "avg_duration_sec": round(row["avg_duration"] or 0, 2)
+                        "avg_duration_sec": round(row["avg_duration"] or 0, 2),
                     }
                     for row in (sim_stats or [])
-                }
+                },
             },
             "system": {
                 "cpu_percent": cpu_percent,
@@ -295,8 +300,8 @@ async def get_detailed_stats(
                 "disk_percent": disk.percent,
                 "disk_used_gb": round(disk.used / (1024**3), 2),
                 "disk_total_gb": round(disk.total / (1024**3), 2),
-                "uptime": str(uptime).split('.')[0]
-            }
+                "uptime": str(uptime).split(".")[0],
+            },
         }
     except Exception as e:
         logger.error(f"Error getting detailed stats: {e}")
@@ -304,6 +309,7 @@ async def get_detailed_stats(
 
 
 # ==================== Health Checks ====================
+
 
 @router.get(
     "/health/detailed",
@@ -365,42 +371,42 @@ async def get_detailed_health():
                     "percent": metrics["cpu_percent"],
                     "cores": metrics["cpu_cores"],
                     "freq_mhz": metrics.get("cpu_freq_mhz"),
-                    "status": "ok" if metrics["cpu_percent"] < 80 else "warning"
+                    "status": "ok" if metrics["cpu_percent"] < 80 else "warning",
                 },
                 "memory": {
                     "percent": metrics["memory_percent"],
                     "used_gb": metrics["memory_used_gb"],
                     "total_gb": metrics["memory_total_gb"],
                     "available_gb": metrics["memory_available_gb"],
-                    "status": "ok" if metrics["memory_percent"] < 80 else "warning"
+                    "status": "ok" if metrics["memory_percent"] < 80 else "warning",
                 },
                 "disk": {
                     "percent": metrics["disk_percent"],
                     "used_gb": metrics["disk_used_gb"],
                     "total_gb": metrics["disk_total_gb"],
                     "free_gb": metrics["disk_free_gb"],
-                    "status": "ok" if metrics["disk_percent"] < 80 else "warning"
+                    "status": "ok" if metrics["disk_percent"] < 80 else "warning",
                 },
                 "network": {
                     "bytes_sent": metrics["network_bytes_sent"],
                     "bytes_recv": metrics["network_bytes_recv"],
                     "packets_sent": metrics["network_packets_sent"],
-                    "packets_recv": metrics["network_packets_recv"]
+                    "packets_recv": metrics["network_packets_recv"],
                 },
                 "system": {
                     "uptime_seconds": metrics["uptime_seconds"],
                     "uptime_formatted": format_uptime(metrics["uptime_seconds"]),
                     "boot_time": metrics["boot_time"],
-                    "processes_count": metrics["processes_count"]
-                }
+                    "processes_count": metrics["processes_count"],
+                },
             },
             issues=issues,
             services={
                 "api": "running",
                 "database": "running",
                 "cache": "disabled",
-                "monitoring": "running"
-            }
+                "monitoring": "running",
+            },
         )
     except Exception as e:
         logger.error(f"Error getting detailed health: {e}")
@@ -408,6 +414,7 @@ async def get_detailed_health():
 
 
 # ==================== Real-time Metrics ====================
+
 
 @router.get(
     "/metrics/realtime",
@@ -507,15 +514,17 @@ async def get_realtime_metrics_detailed():
 
         # Python процессы
         python_processes = []
-        for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent']):
+        for proc in psutil.process_iter(["pid", "name", "cpu_percent", "memory_percent"]):
             try:
-                if 'python' in proc.info['name'].lower():
-                    python_processes.append({
-                        "pid": proc.info['pid'],
-                        "name": proc.info['name'],
-                        "cpu_percent": proc.info['cpu_percent'] or 0,
-                        "memory_percent": proc.info['memory_percent'] or 0
-                    })
+                if "python" in proc.info["name"].lower():
+                    python_processes.append(
+                        {
+                            "pid": proc.info["pid"],
+                            "name": proc.info["name"],
+                            "cpu_percent": proc.info["cpu_percent"] or 0,
+                            "memory_percent": proc.info["memory_percent"] or 0,
+                        }
+                    )
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 continue
 
@@ -524,26 +533,26 @@ async def get_realtime_metrics_detailed():
             "cpu": {
                 "total": psutil.cpu_percent(interval=0.1),
                 "per_core": cpu_percent_per_core,
-                "cores": len(cpu_percent_per_core)
+                "cores": len(cpu_percent_per_core),
             },
             "memory": {
                 "percent": memory.percent,
                 "used_mb": round(memory.used / (1024**2), 2),
                 "available_mb": round(memory.available / (1024**2), 2),
-                "total_mb": round(memory.total / (1024**2), 2)
+                "total_mb": round(memory.total / (1024**2), 2),
             },
             "disk": {
                 "percent": get_system_disk_usage().percent,
                 "read_mb": round(disk_io.read_bytes / (1024**2), 2) if disk_io else 0,
-                "write_mb": round(disk_io.write_bytes / (1024**2), 2) if disk_io else 0
+                "write_mb": round(disk_io.write_bytes / (1024**2), 2) if disk_io else 0,
             },
             "network": {
                 "bytes_sent_mb": round(net_io.bytes_sent / (1024**2), 2) if net_io else 0,
                 "bytes_recv_mb": round(net_io.bytes_recv / (1024**2), 2) if net_io else 0,
                 "packets_sent": net_io.packets_sent if net_io else 0,
-                "packets_recv": net_io.packets_recv if net_io else 0
+                "packets_recv": net_io.packets_recv if net_io else 0,
             },
-            "python_processes": python_processes[:5]
+            "python_processes": python_processes[:5],
         }
 
         # Кэширование
@@ -559,6 +568,7 @@ async def get_realtime_metrics_detailed():
 
 
 # ==================== Activity Timeline ====================
+
 
 @router.get("/activity/timeline")
 @cached(prefix="dashboard:activity", expire=60)
@@ -587,7 +597,7 @@ async def get_activity_timeline(
             GROUP BY DATE(created_at)
             ORDER BY date
             """,
-            (start_date.isoformat(),)
+            (start_date.isoformat(),),
         )
 
         # Активность симуляций по дням
@@ -599,7 +609,7 @@ async def get_activity_timeline(
             GROUP BY DATE(created_at)
             ORDER BY date
             """,
-            (start_date.isoformat(),)
+            (start_date.isoformat(),),
         )
 
         # Активность анализа по дням
@@ -611,49 +621,45 @@ async def get_activity_timeline(
             GROUP BY DATE(created_at)
             ORDER BY date
             """,
-            (start_date.isoformat(),)
+            (start_date.isoformat(),),
         )
 
         # Формирование таймлайна
         timeline = {}
         for i in range(days):
-            date = (start_date + timedelta(days=i)).strftime('%Y-%m-%d')
-            timeline[date] = {
-                "scans": 0,
-                "simulations": 0,
-                "analysis": 0
-            }
+            date = (start_date + timedelta(days=i)).strftime("%Y-%m-%d")
+            timeline[date] = {"scans": 0, "simulations": 0, "analysis": 0}
 
-        for row in (scans_timeline or []):
+        for row in scans_timeline or []:
             date = row["date"]
             if date in timeline:
                 timeline[date]["scans"] = row["count"]
 
-        for row in (sims_timeline or []):
+        for row in sims_timeline or []:
             date = row["date"]
             if date in timeline:
                 timeline[date]["simulations"] = row["count"]
 
-        for row in (analysis_timeline or []):
+        for row in analysis_timeline or []:
             date = row["date"]
             if date in timeline:
                 timeline[date]["analysis"] = row["count"]
 
         return {
             "period": {
-                "start": start_date.strftime('%Y-%m-%d'),
-                "end": end_date.strftime('%Y-%m-%d'),
-                "days": days
+                "start": start_date.strftime("%Y-%m-%d"),
+                "end": end_date.strftime("%Y-%m-%d"),
+                "days": days,
             },
             "timeline": [
                 {
                     "date": date,
                     "scans": data["scans"],
                     "simulations": data["simulations"],
-                    "analysis": data["analysis"]
+                    "analysis": data["analysis"],
                 }
                 for date, data in timeline.items()
-            ]
+            ],
         }
     except Exception as e:
         logger.error(f"Error getting activity timeline: {e}")
@@ -661,6 +667,7 @@ async def get_activity_timeline(
 
 
 # ==================== Storage Statistics ====================
+
 
 @router.get(
     "/storage",
@@ -697,11 +704,13 @@ async def get_storage_stats_endpoint(
                 try:
                     size = item.stat().st_size
                     total_size += size
-                    files.append({
-                        "path": str(item.relative_to(root)),
-                        "size_mb": round(size / (1024**2), 4),
-                        "modified": datetime.fromtimestamp(item.stat().st_mtime).isoformat()
-                    })
+                    files.append(
+                        {
+                            "path": str(item.relative_to(root)),
+                            "size_mb": round(size / (1024**2), 4),
+                            "modified": datetime.fromtimestamp(item.stat().st_mtime).isoformat(),
+                        }
+                    )
                 except (OSError, IOError):
                     continue
 
@@ -710,12 +719,12 @@ async def get_storage_stats_endpoint(
         return {
             "files": len(files),
             "size_mb": round(total_size / (1024**2), 2),
-            "largest_files": files[:5]
+            "largest_files": files[:5],
         }
 
     try:
         disk = get_system_disk_usage()
-        
+
         # Размер БД
         db_path = Path("data/nanoprobe.db")
         db_size_mb = round(db_path.stat().st_size / (1024**2), 2) if db_path.exists() else 0
@@ -724,16 +733,13 @@ async def get_storage_stats_endpoint(
             "data": get_dir_stats(data_dir),
             "output": get_dir_stats(output_dir),
             "logs": get_dir_stats(logs_dir),
-            "database": {
-                "size_mb": db_size_mb,
-                "path": str(db_path)
-            },
+            "database": {"size_mb": db_size_mb, "path": str(db_path)},
             "disk": {
                 "total_gb": round(disk.total / (1024**3), 2),
                 "used_gb": round(disk.used / (1024**3), 2),
                 "free_gb": round(disk.free / (1024**3), 2),
-                "percent": disk.percent
-            }
+                "percent": disk.percent,
+            },
         }
     except Exception as e:
         logger.error(f"Error getting storage stats: {e}")
@@ -742,10 +748,12 @@ async def get_storage_stats_endpoint(
 
 # ==================== WebSocket ====================
 
+
 @router.websocket("/ws/metrics")
 async def metrics_websocket(websocket: WebSocket):
     """WebSocket для real-time метрик — отправляет обновления каждую секунду"""
     from api.websocket_manager import get_connection_manager
+
     manager = get_connection_manager()
 
     if not await manager.connect(websocket):
@@ -780,6 +788,7 @@ async def metrics_websocket(websocket: WebSocket):
 
 # ==================== Alerts ====================
 
+
 @router.get("/alerts/config")
 async def get_alerts_config():
     """
@@ -792,12 +801,9 @@ async def get_alerts_config():
             "memory_warning": 70,
             "memory_critical": 90,
             "disk_warning": 80,
-            "disk_critical": 95
+            "disk_critical": 95,
         },
-        "notifications": {
-            "enabled": True,
-            "channels": ["ui", "log"]
-        }
+        "notifications": {"enabled": True, "channels": ["ui", "log"]},
     }
 
 
@@ -815,62 +821,74 @@ async def check_alerts():
 
         # CPU алерты
         if cpu_percent >= 90:
-            alerts.append({
-                "level": "critical",
-                "type": "cpu",
-                "message": f"Critical CPU usage: {cpu_percent}%",
-                "value": cpu_percent,
-                "threshold": 90
-            })
+            alerts.append(
+                {
+                    "level": "critical",
+                    "type": "cpu",
+                    "message": f"Critical CPU usage: {cpu_percent}%",
+                    "value": cpu_percent,
+                    "threshold": 90,
+                }
+            )
         elif cpu_percent >= 70:
-            alerts.append({
-                "level": "warning",
-                "type": "cpu",
-                "message": f"High CPU usage: {cpu_percent}%",
-                "value": cpu_percent,
-                "threshold": 70
-            })
+            alerts.append(
+                {
+                    "level": "warning",
+                    "type": "cpu",
+                    "message": f"High CPU usage: {cpu_percent}%",
+                    "value": cpu_percent,
+                    "threshold": 70,
+                }
+            )
 
         # Memory алерты
         if memory.percent >= 90:
-            alerts.append({
-                "level": "critical",
-                "type": "memory",
-                "message": f"Critical memory usage: {memory.percent}%",
-                "value": memory.percent,
-                "threshold": 90
-            })
+            alerts.append(
+                {
+                    "level": "critical",
+                    "type": "memory",
+                    "message": f"Critical memory usage: {memory.percent}%",
+                    "value": memory.percent,
+                    "threshold": 90,
+                }
+            )
         elif memory.percent >= 70:
-            alerts.append({
-                "level": "warning",
-                "type": "memory",
-                "message": f"High memory usage: {memory.percent}%",
-                "value": memory.percent,
-                "threshold": 70
-            })
+            alerts.append(
+                {
+                    "level": "warning",
+                    "type": "memory",
+                    "message": f"High memory usage: {memory.percent}%",
+                    "value": memory.percent,
+                    "threshold": 70,
+                }
+            )
 
         # Disk алерты
         if disk.percent >= 95:
-            alerts.append({
-                "level": "critical",
-                "type": "disk",
-                "message": f"Critical disk usage: {disk.percent}%",
-                "value": disk.percent,
-                "threshold": 95
-            })
+            alerts.append(
+                {
+                    "level": "critical",
+                    "type": "disk",
+                    "message": f"Critical disk usage: {disk.percent}%",
+                    "value": disk.percent,
+                    "threshold": 95,
+                }
+            )
         elif disk.percent >= 80:
-            alerts.append({
-                "level": "warning",
-                "type": "disk",
-                "message": f"High disk usage: {disk.percent}%",
-                "value": disk.percent,
-                "threshold": 80
-            })
+            alerts.append(
+                {
+                    "level": "warning",
+                    "type": "disk",
+                    "message": f"High disk usage: {disk.percent}%",
+                    "value": disk.percent,
+                    "threshold": 80,
+                }
+            )
 
         return {
             "active_alerts": len(alerts),
             "alerts": alerts,
-            "status": "critical" if any(a["level"] == "critical" for a in alerts) else "ok"
+            "status": "critical" if any(a["level"] == "critical" for a in alerts) else "ok",
         }
     except Exception as e:
         logger.error(f"Error checking alerts: {e}")
@@ -878,6 +896,7 @@ async def check_alerts():
 
 
 # ==================== Metrics History ====================
+
 
 @router.get(
     "/metrics/history",
@@ -897,20 +916,17 @@ async def get_metrics_history(
             filtered_history = []
             for entry in history:
                 if component == "cpu" and "cpu_percent" in entry:
-                    filtered_history.append({
-                        "timestamp": entry["timestamp"],
-                        "value": entry["cpu_percent"]
-                    })
+                    filtered_history.append(
+                        {"timestamp": entry["timestamp"], "value": entry["cpu_percent"]}
+                    )
                 elif component == "memory" and "memory_percent" in entry:
-                    filtered_history.append({
-                        "timestamp": entry["timestamp"],
-                        "value": entry["memory_percent"]
-                    })
+                    filtered_history.append(
+                        {"timestamp": entry["timestamp"], "value": entry["memory_percent"]}
+                    )
                 elif component == "disk" and "disk_percent" in entry:
-                    filtered_history.append({
-                        "timestamp": entry["timestamp"],
-                        "value": entry["disk_percent"]
-                    })
+                    filtered_history.append(
+                        {"timestamp": entry["timestamp"], "value": entry["disk_percent"]}
+                    )
             return {"component": component, "history": filtered_history}
 
         return {"history": history}
@@ -920,6 +936,7 @@ async def get_metrics_history(
 
 
 # ==================== Additional Endpoints ====================
+
 
 @router.get(
     "/alerts",
@@ -961,6 +978,7 @@ async def get_top_processes(
 
 # ==================== Actions ====================
 
+
 @router.post(
     "/export/{format}",
     summary="Экспорт данных",
@@ -974,17 +992,15 @@ async def export_data(format: str):
     - pdf: PDF отчёт
     """
     if format not in ["json", "csv", "pdf"]:
-        raise ValidationError(
-            f"Неподдерживаемый формат: {format}. Доступны: json, csv, pdf"
-        )
+        raise ValidationError(f"Неподдерживаемый формат: {format}. Доступны: json, csv, pdf")
 
-    timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     return {
         "format": format,
         "status": "success",
         "message": f"Данные экспортированы в формате {format.upper()}",
         "download_url": f"/api/v1/downloads/export_{timestamp}.{format}",
-        "expires_in": 3600
+        "expires_in": 3600,
     }
 
 
@@ -997,6 +1013,7 @@ async def clean_cache_action():
     """Очистка системного кэша"""
     try:
         from utils.caching.cache_manager import CacheManager
+
         cache_mgr = CacheManager()
 
         cleaned_size = 0.0
@@ -1015,17 +1032,14 @@ async def clean_cache_action():
                 "success": True,
                 "message": "Кэш успешно очищен",
                 "cleaned_size_mb": cleaned_size,
-                "cleaned_files": cleaned_files
-            }
+                "cleaned_files": cleaned_files,
+            },
         )
     except Exception as e:
         logger.error(f"Error cleaning cache: {e}")
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={
-                "success": False,
-                "error": str(e)
-            }
+            content={"success": False, "error": str(e)},
         )
 
 
@@ -1047,8 +1061,8 @@ async def start_component_action(component: dict):
             "message": f"Компонент '{component_name}' запущен",
             "component": component_name,
             "pid": os.getpid(),
-            "started_at": datetime.now(timezone.utc).isoformat()
-        }
+            "started_at": datetime.now(timezone.utc).isoformat(),
+        },
     )
 
 
@@ -1069,6 +1083,6 @@ async def stop_component_action(component: dict):
             "success": True,
             "message": f"Компонент '{component_name}' остановлен",
             "component": component_name,
-            "stopped_at": datetime.now(timezone.utc).isoformat()
-        }
+            "stopped_at": datetime.now(timezone.utc).isoformat(),
+        },
     )

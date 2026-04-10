@@ -8,7 +8,6 @@ import json
 import time
 from datetime import datetime, timezone
 from io import BytesIO
-from pathlib import Path
 from threading import Lock
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -18,13 +17,14 @@ try:
     import matplotlib.animation as animation
     import matplotlib.pyplot as plt
     from matplotlib.colors import Normalize
-    from matplotlib.widgets import Button, Slider
+
     MATPLOTLIB_AVAILABLE = True
 except ImportError:
     MATPLOTLIB_AVAILABLE = False
 
 try:
     from PIL import Image
+
     PIL_AVAILABLE = True
 except ImportError:
     PIL_AVAILABLE = False
@@ -60,11 +60,13 @@ class StreamingDataBuffer:
             if timestamp is None:
                 timestamp = time.time()
 
-            self.buffer.append({
-                'data': frame_data.copy(),
-                'timestamp': timestamp,
-                'frame_id': self.total_items_added
-            })
+            self.buffer.append(
+                {
+                    "data": frame_data.copy(),
+                    "timestamp": timestamp,
+                    "frame_id": self.total_items_added,
+                }
+            )
 
             self.total_items_added += 1
 
@@ -90,7 +92,7 @@ class StreamingDataBuffer:
             if len(self.buffer) < 2:
                 return 0
 
-            time_diff = self.buffer[-1]['timestamp'] - self.buffer[0]['timestamp']
+            time_diff = self.buffer[-1]["timestamp"] - self.buffer[0]["timestamp"]
             if time_diff <= 0:
                 return 0
 
@@ -106,11 +108,11 @@ class StreamingDataBuffer:
         """Получение статистики буфера"""
         with self.lock:
             return {
-                'current_size': len(self.buffer),
-                'max_size': self.max_size,
-                'total_frames': self.total_items_added,
-                'fps': self.get_fps(),
-                'buffer_usage': len(self.buffer) / self.max_size * 100 if self.max_size > 0 else 0
+                "current_size": len(self.buffer),
+                "max_size": self.max_size,
+                "total_frames": self.total_items_added,
+                "fps": self.get_fps(),
+                "buffer_usage": len(self.buffer) / self.max_size * 100 if self.max_size > 0 else 0,
             }
 
 
@@ -123,8 +125,8 @@ class RealTimeSPMVisualizer:
     def __init__(
         self,
         figsize: Tuple[int, int] = (14, 10),
-        colormap: str = 'viridis',
-        update_interval: int = 100
+        colormap: str = "viridis",
+        update_interval: int = 100,
     ):
         """
         Инициализация визуализатора
@@ -154,25 +156,25 @@ class RealTimeSPMVisualizer:
 
         # Параметры сканирования
         self.scan_params = {
-            'scan_size': 100,  # нм
-            'scan_rate': 1.0,  # Гц
-            'resolution': 256,
-            'z_range': (0, 10),  # нм
+            "scan_size": 100,  # нм
+            "scan_rate": 1.0,  # Гц
+            "resolution": 256,
+            "z_range": (0, 10),  # нм
         }
 
         # Статистика в реальном времени
         self.runtime_metrics = {
-            'frames_displayed': 0,
-            'last_update': None,
-            'fps': 0,
+            "frames_displayed": 0,
+            "last_update": None,
+            "fps": 0,
         }
 
     def create_figure(self, title: str = "СЗМ Real-time Визуализация"):
         """Создание фигуры для визуализации"""
-        plt.close('all')
+        plt.close("all")
 
         self.fig = plt.figure(figsize=self.figsize)
-        self.fig.suptitle(title, fontsize=14, fontweight='bold')
+        self.fig.suptitle(title, fontsize=14, fontweight="bold")
 
         # Основная область для изображения
         gs = self.fig.add_gridspec(3, 3, hspace=0.3, wspace=0.3)
@@ -182,14 +184,18 @@ class RealTimeSPMVisualizer:
         self.ax_profile = self.fig.add_subplot(gs[2, 0:2])
 
         # Настройка осей статистики
-        self.ax_stats.axis('off')
+        self.ax_stats.axis("off")
         self.stats_text = self.ax_stats.text(
-            0.1, 0.9, '', transform=self.ax_stats.transAxes,
-            fontsize=10, verticalalignment='top',
-            family='monospace'
+            0.1,
+            0.9,
+            "",
+            transform=self.ax_stats.transAxes,
+            fontsize=10,
+            verticalalignment="top",
+            family="monospace",
         )
 
-        self.fig.canvas.manager.set_window_title('Nanoprobe SPM Real-time Viewer')
+        self.fig.canvas.manager.set_window_title("Nanoprobe SPM Real-time Viewer")
 
     def initialize_plot(self, initial_data: np.ndarray = None):
         """
@@ -202,29 +208,30 @@ class RealTimeSPMVisualizer:
             self.create_figure()
 
         if initial_data is None:
-            initial_data = np.zeros((self.scan_params['resolution'],
-                                    self.scan_params['resolution']))
+            initial_data = np.zeros(
+                (self.scan_params["resolution"], self.scan_params["resolution"])
+            )
 
         with self.data_lock:
             self.current_data = initial_data
 
-        vmin, vmax = self.scan_params['z_range']
+        vmin, vmax = self.scan_params["z_range"]
 
         self.im = self.ax.imshow(
             initial_data,
             cmap=self.colormap,
             norm=Normalize(vmin=vmin, vmax=vmax),
-            interpolation='bilinear',
-            animated=True
+            interpolation="bilinear",
+            animated=True,
         )
 
-        self.colorbar = self.fig.colorbar(self.im, ax=self.ax, label='Высота (нм)')
+        self.colorbar = self.fig.colorbar(self.im, ax=self.ax, label="Высота (нм)")
 
         # Инициализация профиля
-        self.profile_line, = self.ax_profile.plot([], [], 'b-', linewidth=2)
-        self.ax_profile.set_xlabel('Позиция X (пиксели)')
-        self.ax_profile.set_ylabel('Высота (нм)')
-        self.ax_profile.set_title('Профиль поверхности')
+        (self.profile_line,) = self.ax_profile.plot([], [], "b-", linewidth=2)
+        self.ax_profile.set_xlabel("Позиция X (пиксели)")
+        self.ax_profile.set_ylabel("Высота (нм)")
+        self.ax_profile.set_title("Профиль поверхности")
         self.ax_profile.grid(True, alpha=0.3)
 
         self._update_stats({})
@@ -241,11 +248,13 @@ class RealTimeSPMVisualizer:
             self.current_data = new_data.copy()
 
             # Сохранение в историю
-            self.data_history.append({
-                'data': new_data.copy(),
-                'timestamp': datetime.now(timezone.utc),
-                'metadata': metadata or {}
-            })
+            self.data_history.append(
+                {
+                    "data": new_data.copy(),
+                    "timestamp": datetime.now(timezone.utc),
+                    "metadata": metadata or {},
+                }
+            )
 
             # Ограничение истории
             if len(self.data_history) > self.max_history:
@@ -283,19 +292,19 @@ class RealTimeSPMVisualizer:
         self._update_stats(stats)
 
         # Обновление метрик
-        self.runtime_metrics['frames_displayed'] += 1
-        self.runtime_metrics['last_update'] = datetime.now(timezone.utc)
+        self.runtime_metrics["frames_displayed"] += 1
+        self.runtime_metrics["last_update"] = datetime.now(timezone.utc)
 
         return [self.im, self.profile_line, self.stats_text]
 
     def _calculate_stats(self, data: np.ndarray) -> Dict[str, float]:
         """Расчёт статистики данных"""
         return {
-            'mean': float(np.mean(data)),
-            'std': float(np.std(data)),
-            'min': float(np.min(data)),
-            'max': float(np.max(data)),
-            'rms': float(np.sqrt(np.mean(data**2))),
+            "mean": float(np.mean(data)),
+            "std": float(np.std(data)),
+            "min": float(np.min(data)),
+            "max": float(np.max(data)),
+            "rms": float(np.sqrt(np.mean(data**2))),
         }
 
     def _update_stats(self, stats: Dict[str, float]):
@@ -331,7 +340,7 @@ class RealTimeSPMVisualizer:
         def animate(frame):
             """
             Функция анимации для обновления данных
-            
+
             Args:
                 frame: Номер текущего кадра
             """
@@ -344,11 +353,7 @@ class RealTimeSPMVisualizer:
             return self._update_display(frame)
 
         self.anim = animation.FuncAnimation(
-            self.fig,
-            animate,
-            interval=self.update_interval,
-            blit=True,
-            cache_frame_data=False
+            self.fig, animate, interval=self.update_interval, blit=True, cache_frame_data=False
         )
 
         plt.show()
@@ -370,10 +375,12 @@ class RealTimeSPMVisualizer:
             Путь сохранённого файла
         """
         if filepath is None:
-            filepath = f"output/spm_snapshot_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.png"
+            filepath = (
+                f"output/spm_snapshot_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.png"
+            )
 
         if self.fig:
-            self.fig.savefig(filepath, dpi=150, bbox_inches='tight')
+            self.fig.savefig(filepath, dpi=150, bbox_inches="tight")
             return filepath
         return ""
 
@@ -395,13 +402,17 @@ class RealTimeSPMVisualizer:
                 np.save(filepath, self.current_data)
 
                 # Сохранение метаданных
-                meta_path = filepath.replace('.npy', '_meta.json')
-                with open(meta_path, 'w', encoding='utf-8') as f:
-                    json.dump({
-                        'timestamp': datetime.now(timezone.utc).isoformat(),
-                        'scan_params': self.scan_params,
-                        'shape': self.current_data.shape,
-                    }, f, indent=2)
+                meta_path = filepath.replace(".npy", "_meta.json")
+                with open(meta_path, "w", encoding="utf-8") as f:
+                    json.dump(
+                        {
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                            "scan_params": self.scan_params,
+                            "shape": self.current_data.shape,
+                        },
+                        f,
+                        indent=2,
+                    )
 
                 return filepath
         return ""
@@ -414,10 +425,7 @@ class SPMScanSimulator:
     """
 
     def __init__(
-        self,
-        surface_generator: Callable = None,
-        scan_speed: float = 1.0,
-        noise_level: float = 0.01
+        self, surface_generator: Callable = None, scan_speed: float = 1.0, noise_level: float = 0.01
     ):
         """
         Инициализация симулятора
@@ -446,9 +454,9 @@ class SPMScanSimulator:
 
         # Комбинация различных функций
         Z = (
-            np.sin(3 * np.sqrt(X**2 + Y**2)) * np.exp(-(X**2 + Y**2) / 2) +
-            0.3 * np.cos(5 * X) * np.sin(5 * Y) +
-            0.1 * np.random.randn(size, size)
+            np.sin(3 * np.sqrt(X**2 + Y**2)) * np.exp(-(X**2 + Y**2) / 2)
+            + 0.3 * np.cos(5 * X) * np.sin(5 * Y)
+            + 0.1 * np.random.randn(size, size)
         )
 
         return Z
@@ -521,10 +529,7 @@ class WebSocketVisualizer:
         self.last_emit = 0
 
     def emit_surface_data(
-        self,
-        data: np.ndarray,
-        event: str = 'surface_update',
-        downsample: int = 4
+        self, data: np.ndarray, event: str = "surface_update", downsample: int = 4
     ):
         """
         Отправка данных поверхности
@@ -549,19 +554,22 @@ class WebSocketVisualizer:
 
         # Статистика
         stats = {
-            'mean': float(np.mean(data)),
-            'std': float(np.std(data)),
-            'min': float(np.min(data)),
-            'max': float(np.max(data)),
-            'timestamp': datetime.now(timezone.utc).isoformat(),
+            "mean": float(np.mean(data)),
+            "std": float(np.std(data)),
+            "min": float(np.min(data)),
+            "max": float(np.max(data)),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         # Отправка
-        self.socketio.emit(event, {
-            'data': data_list,
-            'stats': stats,
-            'shape': small_data.shape,
-        })
+        self.socketio.emit(
+            event,
+            {
+                "data": data_list,
+                "stats": stats,
+                "shape": small_data.shape,
+            },
+        )
 
     def emit_scan_progress(self, progress: float):
         """
@@ -571,14 +579,12 @@ class WebSocketVisualizer:
             progress: Прогресс (0-100)
         """
         if self.socketio:
-            self.socketio.emit('scan_progress', {'progress': progress})
+            self.socketio.emit("scan_progress", {"progress": progress})
 
 
 # Глобальные функции для быстрой визуализации
 def visualize_spm_realtime(
-    data_source: Callable = None,
-    title: str = "СЗМ Real-time",
-    colormap: str = 'viridis'
+    data_source: Callable = None, title: str = "СЗМ Real-time", colormap: str = "viridis"
 ):
     """
     Быстрая визуализация СЗМ в реальном времени
@@ -601,9 +607,7 @@ def visualize_spm_realtime(
 
 
 def create_spm_visualization(
-    surface_data: np.ndarray,
-    save_path: str = None,
-    show_profile: bool = True
+    surface_data: np.ndarray, save_path: str = None, show_profile: bool = True
 ) -> plt.Figure:
     """
     Создание статической визуализации СЗМ
@@ -627,29 +631,29 @@ def create_spm_visualization(
         ax1 = axes
 
     # 2D визуализация
-    im = ax1.imshow(surface_data, cmap='viridis', aspect='equal')
-    ax1.set_title('2D Визуализация')
-    ax1.set_xlabel('X (пиксели)')
-    ax1.set_ylabel('Y (пиксели)')
-    plt.colorbar(im, ax=ax1, label='Высота (нм)')
+    im = ax1.imshow(surface_data, cmap="viridis", aspect="equal")
+    ax1.set_title("2D Визуализация")
+    ax1.set_xlabel("X (пиксели)")
+    ax1.set_ylabel("Y (пиксели)")
+    plt.colorbar(im, ax=ax1, label="Высота (нм)")
 
     if show_profile:
         # Профиль
         profile_x = np.mean(surface_data, axis=0)
         profile_y = np.mean(surface_data, axis=1)
 
-        ax2.plot(profile_x, label='Среднее по Y')
-        ax2.plot(profile_y, label='Среднее по X')
-        ax2.set_title('Профиль поверхности')
-        ax2.set_xlabel('Позиция')
-        ax2.set_ylabel('Высота (нм)')
+        ax2.plot(profile_x, label="Среднее по Y")
+        ax2.plot(profile_y, label="Среднее по X")
+        ax2.set_title("Профиль поверхности")
+        ax2.set_xlabel("Позиция")
+        ax2.set_ylabel("Высота (нм)")
         ax2.legend()
         ax2.grid(True, alpha=0.3)
 
     plt.tight_layout()
 
     if save_path:
-        plt.savefig(save_path, dpi=150, bbox_inches='tight')
+        plt.savefig(save_path, dpi=150, bbox_inches="tight")
 
     return fig
 
@@ -728,28 +732,27 @@ class RealTimeSPMWebSocketAdapter:
         # Конвертация в base64 для передачи
         img_buffer = BytesIO()
         img = Image.fromarray((normalized * 255).astype(np.uint8))
-        img.save(img_buffer, format='PNG')
-        img_base64 = base64.b64encode(img_buffer.getvalue()).decode('utf-8')
+        img.save(img_buffer, format="PNG")
+        img_base64 = base64.b64encode(img_buffer.getvalue()).decode("utf-8")
 
         return {
-            'type': 'spm_frame',
-            'timestamp': timestamp or time.time(),
-            'frame_id': self.buffer.total_items_added - 1,
-            'image_base64': img_base64,
-            'shape': list(compressed.shape),
-            'min_value': float(compressed.min()),
-            'max_value': float(compressed.max()),
-            'stats': {
-                'mean': float(np.mean(compressed)),
-                'std': float(np.std(compressed)),
-                'rms': float(np.sqrt(np.mean(compressed ** 2))),
-            }
+            "type": "spm_frame",
+            "timestamp": timestamp or time.time(),
+            "frame_id": self.buffer.total_items_added - 1,
+            "image_base64": img_base64,
+            "shape": list(compressed.shape),
+            "min_value": float(compressed.min()),
+            "max_value": float(compressed.max()),
+            "stats": {
+                "mean": float(np.mean(compressed)),
+                "std": float(np.std(compressed)),
+                "rms": float(np.sqrt(np.mean(compressed**2))),
+            },
         }
 
     def _broadcast(self, message: Dict[str, Any]):
         """Рассылка сообщения клиентам"""
         # Заглушка для реальной реализации WebSocket
-        pass
 
     def add_client(self, client_id: str):
         """Добавление клиента"""
@@ -781,19 +784,19 @@ class RealTimeSPMWebSocketAdapter:
             frame = self.buffer.get_latest_frame()
         else:
             frames = self.buffer.get_frames(frame_id + 1)
-            frame = frames[0] if frames and frames[0]['frame_id'] == frame_id else None
+            frame = frames[0] if frames and frames[0]["frame_id"] == frame_id else None
 
         if not frame:
             return None
 
         result = {
-            'frame_id': frame['frame_id'],
-            'timestamp': frame['timestamp'],
-            'shape': list(frame['data'].shape),
-            'min': float(frame['data'].min()),
-            'max': float(frame['data'].max()),
-            'mean': float(np.mean(frame['data'])),
-            'std': float(np.std(frame['data'])),
+            "frame_id": frame["frame_id"],
+            "timestamp": frame["timestamp"],
+            "shape": list(frame["data"].shape),
+            "min": float(frame["data"].min()),
+            "max": float(frame["data"].max()),
+            "mean": float(np.mean(frame["data"])),
+            "std": float(np.std(frame["data"])),
         }
 
         return json.dumps(result, indent=2)

@@ -25,15 +25,11 @@ data/tle_data.json
 logs/*.log
 
 # Временные файлы разработки
-tools/
 output/
 output/test_export/
 docs/cyclic_imports_report.txt
 config/device_calibration.json
 *.whl
-
-# SSTV recordings
-sstv_recordings/
 
 # Env
 .env
@@ -52,9 +48,6 @@ dump1090*.zip
 test_*.raw
 *_5sec.raw
 
-# Reports
-reports/pdf/
-
 # Бинарные файлы (большие)
 bin/*.exe
 bin/*.dll
@@ -68,13 +61,3 @@ bin/*.dll
 __pycache__/
 *.pyc
 *.pyo
-
-# External tools binaries (большие файлы)
-tools/dump1090/
-tools/rtl_433/
-tools/rtl-sdr-blog/
-# Оставляем только документацию
-!tools/README.md
-
-# Archived utils (не используются)
-utils/archived/

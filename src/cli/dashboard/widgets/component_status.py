@@ -5,7 +5,6 @@ Component Status Widget
 """
 
 import asyncio
-import socket
 from datetime import datetime, timezone
 from typing import Dict, List
 
@@ -29,19 +28,18 @@ class ComponentStatusWidget(Widget):
     def _get_components(self) -> List[Dict]:
         """Список компонентов для проверки"""
         return [
-            {'name': 'API Server', 'host': 'localhost', 'port': 8000, 'type': 'http'},
-            {'name': 'Flask Frontend', 'host': 'localhost', 'port': 5000, 'type': 'http'},
-            {'name': 'Next.js Frontend', 'host': 'localhost', 'port': 3000, 'type': 'http'},
-            {'name': 'Redis', 'host': 'localhost', 'port': 6379, 'type': 'tcp'},
-            {'name': 'PostgreSQL', 'host': 'localhost', 'port': 5432, 'type': 'tcp'},
+            {"name": "API Server", "host": "localhost", "port": 8000, "type": "http"},
+            {"name": "Flask Frontend", "host": "localhost", "port": 5000, "type": "http"},
+            {"name": "Next.js Frontend", "host": "localhost", "port": 3000, "type": "http"},
+            {"name": "Redis", "host": "localhost", "port": 6379, "type": "tcp"},
+            {"name": "PostgreSQL", "host": "localhost", "port": 5432, "type": "tcp"},
         ]
 
     async def _check_http(self, host: str, port: int) -> bool:
         """Проверка HTTP сервиса"""
         try:
             reader, writer = await asyncio.wait_for(
-                asyncio.open_connection(host, port),
-                timeout=2.0
+                asyncio.open_connection(host, port), timeout=2.0
             )
             writer.close()
             await writer.wait_closed()
@@ -53,8 +51,7 @@ class ComponentStatusWidget(Widget):
         """Проверка TCP порта"""
         try:
             reader, writer = await asyncio.wait_for(
-                asyncio.open_connection(host, port),
-                timeout=2.0
+                asyncio.open_connection(host, port), timeout=2.0
             )
             writer.close()
             await writer.wait_closed()
@@ -67,18 +64,14 @@ class ComponentStatusWidget(Widget):
         statuses = {}
 
         for component in self._components:
-            if component['type'] == 'http':
-                is_up = await self._check_http(component['host'], component['port'])
+            if component["type"] == "http":
+                is_up = await self._check_http(component["host"], component["port"])
             else:
-                is_up = await self._check_tcp(component['host'], component['port'])
+                is_up = await self._check_tcp(component["host"], component["port"])
 
-            statuses[component['name']] = 'up' if is_up else 'down'
+            statuses[component["name"]] = "up" if is_up else "down"
 
-        return WidgetData(
-            title=self.title,
-            content=statuses,
-            timestamp=datetime.now(timezone.utc)
-        )
+        return WidgetData(title=self.title, content=statuses, timestamp=datetime.now(timezone.utc))
 
     def render(self, width: int = 40) -> str:
         """Отрисовка статуса компонентов"""
@@ -92,7 +85,7 @@ class ComponentStatusWidget(Widget):
         statuses = self.data.content
 
         for name, status in statuses.items():
-            icon = "🟢" if status == 'up' else "🔴"
+            icon = "🟢" if status == "up" else "🔴"
             lines.append(f"{icon} {name:20s} {status}")
 
         return "\n".join(lines)
@@ -100,11 +93,11 @@ class ComponentStatusWidget(Widget):
     def get_summary(self) -> Dict:
         """Получить сводку по компонентам"""
         if self.data is None:
-            return {'total': 0, 'up': 0, 'down': 0}
+            return {"total": 0, "up": 0, "down": 0}
 
         statuses = self.data.content.values()
         return {
-            'total': len(statuses),
-            'up': sum(1 for s in statuses if s == 'up'),
-            'down': sum(1 for s in statuses if s == 'down'),
+            "total": len(statuses),
+            "up": sum(1 for s in statuses if s == "up"),
+            "down": sum(1 for s in statuses if s == "down"),
         }

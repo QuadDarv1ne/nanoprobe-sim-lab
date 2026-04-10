@@ -10,15 +10,15 @@ import os
 import sys
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Dict, List, Optional, Type
+from typing import Dict, List, Optional
 
 # Добавляем parent directory в path для импортов
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 
 import logging
 
 from src.cli.dashboard.widgets.activity import ActivityWidget
-from src.cli.dashboard.widgets.base import Widget, WidgetData, WidgetMode, WidgetPriority
+from src.cli.dashboard.widgets.base import Widget, WidgetMode
 from src.cli.dashboard.widgets.component_status import ComponentStatusWidget
 from src.cli.dashboard.widgets.log_viewer import LogViewerWidget
 from src.cli.dashboard.widgets.metrics import MetricsWidget
@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 class DashboardTheme(Enum):
     """Темы оформления"""
+
     DARK = "dark"
     LIGHT = "light"
     COLOR = "color"
@@ -211,7 +212,6 @@ class UnifiedDashboard:
         """Обработка ввода пользователя (асинхронно)"""
         # Примечание: это упрощённая версия
         # Для полноценной обработки нужен curses или подобная библиотека
-        pass
 
     async def stop(self):
         """Остановить dashboard"""
@@ -227,10 +227,10 @@ class UnifiedDashboard:
         """Получить сводку dashboard"""
         visible = self.get_visible_widgets()
         return {
-            'mode': self.mode.value,
-            'total_widgets': len(self.widgets),
-            'visible_widgets': len(visible),
-            'theme': self.theme.value,
+            "mode": self.mode.value,
+            "total_widgets": len(self.widgets),
+            "visible_widgets": len(visible),
+            "theme": self.theme.value,
         }
 
 
@@ -243,15 +243,15 @@ def run_dashboard(mode: str = "enhanced", theme: str = "dark"):
         theme: Тема (dark, light, color)
     """
     mode_map = {
-        'minimal': WidgetMode.MINIMAL,
-        'standard': WidgetMode.STANDARD,
-        'enhanced': WidgetMode.ENHANCED,
+        "minimal": WidgetMode.MINIMAL,
+        "standard": WidgetMode.STANDARD,
+        "enhanced": WidgetMode.ENHANCED,
     }
 
     theme_map = {
-        'dark': DashboardTheme.DARK,
-        'light': DashboardTheme.LIGHT,
-        'color': DashboardTheme.COLOR,
+        "dark": DashboardTheme.DARK,
+        "light": DashboardTheme.LIGHT,
+        "color": DashboardTheme.COLOR,
     }
 
     dashboard_mode = mode_map.get(mode.lower(), WidgetMode.ENHANCED)

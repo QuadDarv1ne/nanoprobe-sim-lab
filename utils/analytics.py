@@ -2,18 +2,19 @@
 Модуль аналитики для проекта Лаборатория моделирования нанозонда
 """
 
+import json
+import logging
+from typing import Any, Dict, Optional, Tuple
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import logging
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, r2_score
-import matplotlib.pyplot as plt
-from typing import Dict, Tuple, Optional, Any
-import json
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 logger = logging.getLogger(__name__)
 
@@ -182,7 +183,6 @@ class ImageAnalytics:
 
     def __init__(self):
         """Инициализирует аналитический модуль для изображений"""
-        pass
 
     def calculate_image_features(self, image_data: np.ndarray) -> Dict[str, float]:
         """
@@ -207,15 +207,15 @@ class ImageAnalytics:
             "std_intensity": float(np.std(flat_data)),
             "min_intensity": float(np.min(flat_data)),
             "max_intensity": float(np.max(flat_data)),
-            "contrast": float(np.std(flat_data) / np.mean(flat_data))
-            if np.mean(flat_data) != 0
-            else 0,
+            "contrast": (
+                float(np.std(flat_data) / np.mean(flat_data)) if np.mean(flat_data) != 0 else 0
+            ),
             "entropy": self._calculate_entropy(flat_data),
             "homogeneity": self._calculate_homogeneity(gray),
             "energy": float(np.sum(flat_data**2)),
-            "correlation": float(np.corrcoef(flat_data[:-1], flat_data[1:])[0, 1])
-            if len(flat_data) > 1
-            else 0,
+            "correlation": (
+                float(np.corrcoef(flat_data[:-1], flat_data[1:])[0, 1]) if len(flat_data) > 1 else 0
+            ),
         }
 
         return features
@@ -293,7 +293,6 @@ class SSTVAnalytics:
 
     def __init__(self):
         """Инициализирует аналитический модуль для SSTV"""
-        pass
 
     def analyze_signal_quality(
         self, signal_data: np.ndarray, sample_rate: int = 44100

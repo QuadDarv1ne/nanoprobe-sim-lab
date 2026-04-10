@@ -38,12 +38,12 @@ class DataFormatSpec:
             True если данные соответствуют формату, иначе False
         """
         required_fields = {
-            DataFormatSpec.FORMAT_SURFACE_DATA: ['data', 'metadata', 'format_version'],
-            DataFormatSpec.FORMAT_SCAN_RESULTS: ['scan_data', 'surface_id', 'timestamp'],
-            DataFormatSpec.FORMAT_IMAGE_DATA: ['image', 'format', 'width', 'height'],
-            DataFormatSpec.FORMAT_SSTV_SIGNAL: ['signal_data', 'sample_rate', 'encoding'],
-            DataFormatSpec.FORMAT_SIMULATION_CONFIG: ['parameters', 'components', 'settings'],
-            DataFormatSpec.FORMAT_ANALYTICS_REPORT: ['metrics', 'timestamp', 'analysis_type']
+            DataFormatSpec.FORMAT_SURFACE_DATA: ["data", "metadata", "format_version"],
+            DataFormatSpec.FORMAT_SCAN_RESULTS: ["scan_data", "surface_id", "timestamp"],
+            DataFormatSpec.FORMAT_IMAGE_DATA: ["image", "format", "width", "height"],
+            DataFormatSpec.FORMAT_SSTV_SIGNAL: ["signal_data", "sample_rate", "encoding"],
+            DataFormatSpec.FORMAT_SIMULATION_CONFIG: ["parameters", "components", "settings"],
+            DataFormatSpec.FORMAT_ANALYTICS_REPORT: ["metrics", "timestamp", "analysis_type"],
         }
 
         if format_type not in required_fields:
@@ -65,42 +65,36 @@ class DataFormatSpec:
         """
         schemas = {
             DataFormatSpec.FORMAT_SURFACE_DATA: {
-                'type': 'object',
-                'properties': {
-                    'data': {
-                        'type': 'array',
-                        'items': {
-                            'type': 'array',
-                            'items': {'type': 'number'}
-                        }
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {"type": "array", "items": {"type": "number"}},
                     },
-                    'metadata': {
-                        'type': 'object',
-                        'properties': {
-                            'width': {'type': 'integer'},
-                            'height': {'type': 'integer'},
-                            'units': {'type': 'string'},
-                            'created_at': {'type': 'string'}
-                        }
+                    "metadata": {
+                        "type": "object",
+                        "properties": {
+                            "width": {"type": "integer"},
+                            "height": {"type": "integer"},
+                            "units": {"type": "string"},
+                            "created_at": {"type": "string"},
+                        },
                     },
-                    'format_version': {'type': 'string'}
-                }
+                    "format_version": {"type": "string"},
+                },
             },
             DataFormatSpec.FORMAT_SCAN_RESULTS: {
-                'type': 'object',
-                'properties': {
-                    'scan_data': {
-                        'type': 'array',
-                        'items': {
-                            'type': 'array',
-                            'items': {'type': 'number'}
-                        }
+                "type": "object",
+                "properties": {
+                    "scan_data": {
+                        "type": "array",
+                        "items": {"type": "array", "items": {"type": "number"}},
                     },
-                    'surface_id': {'type': 'string'},
-                    'timestamp': {'type': 'string'},
-                    'scan_parameters': {'type': 'object'}
-                }
-            }
+                    "surface_id": {"type": "string"},
+                    "timestamp": {"type": "string"},
+                    "scan_parameters": {"type": "object"},
+                },
+            },
         }
 
         return schemas.get(format_type, {})
@@ -124,13 +118,11 @@ class BaseDataConverter(ABC):
     @abstractmethod
     def numpy_to_standard(cls, array: np.ndarray, **kwargs) -> Dict[str, Any]:
         """Преобразует numpy массив в стандартный формат"""
-        pass
 
     @classmethod
     @abstractmethod
     def standard_to_numpy(cls, data: Dict[str, Any]) -> np.ndarray:
         """Преобразует стандартный формат в numpy массив"""
-        pass
 
     @staticmethod
     def encode_base64(array: np.ndarray) -> str:
@@ -143,10 +135,12 @@ class BaseDataConverter(ABC):
         Returns:
             Строка в формате base64
         """
-        return base64.b64encode(array.tobytes()).decode('utf-8')
+        return base64.b64encode(array.tobytes()).decode("utf-8")
 
     @staticmethod
-    def decode_base64(encoded_data: str, shape: Tuple[int, ...], dtype: str = 'float64') -> np.ndarray:
+    def decode_base64(
+        encoded_data: str, shape: Tuple[int, ...], dtype: str = "float64"
+    ) -> np.ndarray:
         """
         Декодирует base64 строку в массив
 
@@ -158,7 +152,7 @@ class BaseDataConverter(ABC):
         Returns:
             Numpy массив
         """
-        surface_bytes = base64.b64decode(encoded_data.encode('utf-8'))
+        surface_bytes = base64.b64decode(encoded_data.encode("utf-8"))
         surface_array = np.frombuffer(surface_bytes, dtype=dtype)
         return surface_array.reshape(shape)
 
@@ -171,7 +165,7 @@ class SurfaceDataConverter(BaseDataConverter):
     """
 
     format_type = DataFormatSpec.FORMAT_SURFACE_DATA
-    data_key = 'data'
+    data_key = "data"
 
     @classmethod
     def numpy_to_standard(cls, surface_array: np.ndarray) -> Dict[str, Any]:
@@ -185,15 +179,15 @@ class SurfaceDataConverter(BaseDataConverter):
             Словарь в стандартном формате
         """
         return {
-            'data': surface_array.tolist(),
-            'metadata': {
-                'width': int(surface_array.shape[1]),
-                'height': int(surface_array.shape[0]),
-                'units': 'nm',
-                'created_at': datetime.now(timezone.utc).isoformat(),
-                'dtype': str(surface_array.dtype)
+            "data": surface_array.tolist(),
+            "metadata": {
+                "width": int(surface_array.shape[1]),
+                "height": int(surface_array.shape[0]),
+                "units": "nm",
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "dtype": str(surface_array.dtype),
             },
-            'format_version': DataFormatSpec.FORMAT_SURFACE_DATA
+            "format_version": DataFormatSpec.FORMAT_SURFACE_DATA,
         }
 
     @classmethod
@@ -226,11 +220,11 @@ class SurfaceDataConverter(BaseDataConverter):
         # Преобразуем в bytes
         surface_bytes = surface_array.tobytes()
         # Кодируем в base64
-        encoded = base64.b64encode(surface_bytes).decode('utf-8')
+        encoded = base64.b64encode(surface_bytes).decode("utf-8")
         return encoded
 
     @staticmethod
-    def decode_base64(encoded_data: str, shape: tuple, dtype: str = 'float64') -> np.ndarray:
+    def decode_base64(encoded_data: str, shape: tuple, dtype: str = "float64") -> np.ndarray:
         """
         Декодирует base64 строку в массив поверхности
 
@@ -243,7 +237,7 @@ class SurfaceDataConverter(BaseDataConverter):
             Numpy массив поверхности
         """
         # Декодируем из base64
-        surface_bytes = base64.b64decode(encoded_data.encode('utf-8'))
+        surface_bytes = base64.b64decode(encoded_data.encode("utf-8"))
         # Создаем numpy массив
         surface_array = np.frombuffer(surface_bytes, dtype=dtype)
         # Изменяем форму
@@ -258,10 +252,12 @@ class ScanResultsConverter(BaseDataConverter):
     """
 
     format_type = DataFormatSpec.FORMAT_SCAN_RESULTS
-    data_key = 'scan_data'
+    data_key = "scan_data"
 
     @classmethod
-    def numpy_to_standard(cls, scan_array: np.ndarray, surface_id: str = "unknown") -> Dict[str, Any]:
+    def numpy_to_standard(
+        cls, scan_array: np.ndarray, surface_id: str = "unknown"
+    ) -> Dict[str, Any]:
         """
         Преобразует numpy массив результатов сканирования в стандартный формат
 
@@ -273,14 +269,11 @@ class ScanResultsConverter(BaseDataConverter):
             Словарь в стандартном формате
         """
         return {
-            'scan_data': scan_array.tolist(),
-            'surface_id': surface_id,
-            'timestamp': datetime.now(timezone.utc).isoformat(),
-            'scan_parameters': {
-                'resolution': scan_array.shape,
-                'scan_type': 'topography'
-            },
-            'format_version': DataFormatSpec.FORMAT_SCAN_RESULTS
+            "scan_data": scan_array.tolist(),
+            "surface_id": surface_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "scan_parameters": {"resolution": scan_array.shape, "scan_type": "topography"},
+            "format_version": DataFormatSpec.FORMAT_SCAN_RESULTS,
         }
 
     @classmethod
@@ -308,7 +301,7 @@ class ImageDataConverter(BaseDataConverter):
     """
 
     format_type = DataFormatSpec.FORMAT_IMAGE_DATA
-    data_key = 'image'
+    data_key = "image"
 
     @classmethod
     def numpy_to_standard(cls, image_array: np.ndarray) -> Dict[str, Any]:
@@ -322,14 +315,14 @@ class ImageDataConverter(BaseDataConverter):
             Словарь в стандартном формате
         """
         return {
-            'image': image_array.tolist(),
-            'format': 'numpy_array',
-            'width': int(image_array.shape[1]),
-            'height': int(image_array.shape[0]),
-            'channels': int(image_array.shape[2]) if len(image_array.shape) > 2 else 1,
-            'dtype': str(image_array.dtype),
-            'timestamp': datetime.now(timezone.utc).isoformat(),
-            'format_version': DataFormatSpec.FORMAT_IMAGE_DATA
+            "image": image_array.tolist(),
+            "format": "numpy_array",
+            "width": int(image_array.shape[1]),
+            "height": int(image_array.shape[0]),
+            "channels": int(image_array.shape[2]) if len(image_array.shape) > 2 else 1,
+            "dtype": str(image_array.dtype),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "format_version": DataFormatSpec.FORMAT_IMAGE_DATA,
         }
 
     @classmethod
@@ -357,10 +350,12 @@ class SSTVSignalConverter(BaseDataConverter):
     """
 
     format_type = DataFormatSpec.FORMAT_SSTV_SIGNAL
-    data_key = 'signal_data'
+    data_key = "signal_data"
 
     @classmethod
-    def numpy_to_standard(cls, signal_array: np.ndarray, sample_rate: int = 44100) -> Dict[str, Any]:
+    def numpy_to_standard(
+        cls, signal_array: np.ndarray, sample_rate: int = 44100
+    ) -> Dict[str, Any]:
         """
         Преобразует numpy массив сигнала в стандартный формат
 
@@ -372,12 +367,12 @@ class SSTVSignalConverter(BaseDataConverter):
             Словарь в стандартном формате
         """
         return {
-            'signal_data': signal_array.tolist(),
-            'sample_rate': sample_rate,
-            'encoding': 'pcm_f32',
-            'length_seconds': len(signal_array) / sample_rate,
-            'timestamp': datetime.now(timezone.utc).isoformat(),
-            'format_version': DataFormatSpec.FORMAT_SSTV_SIGNAL
+            "signal_data": signal_array.tolist(),
+            "sample_rate": sample_rate,
+            "encoding": "pcm_f32",
+            "length_seconds": len(signal_array) / sample_rate,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "format_version": DataFormatSpec.FORMAT_SSTV_SIGNAL,
         }
 
     @classmethod
@@ -416,15 +411,11 @@ class SimulationConfigConverter:
             Словарь в стандартном формате
         """
         return {
-            'parameters': config_dict,
-            'components': ['spm', 'image_processor', 'sstv_decoder'],
-            'settings': {
-                'precision': 'high',
-                'real_time': False,
-                'output_format': 'standard'
-            },
-            'timestamp': datetime.now(timezone.utc).isoformat(),
-            'format_version': DataFormatSpec.FORMAT_SIMULATION_CONFIG
+            "parameters": config_dict,
+            "components": ["spm", "image_processor", "sstv_decoder"],
+            "settings": {"precision": "high", "real_time": False, "output_format": "standard"},
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "format_version": DataFormatSpec.FORMAT_SIMULATION_CONFIG,
         }
 
     @staticmethod
@@ -441,7 +432,7 @@ class SimulationConfigConverter:
         if not DataFormatSpec.validate_format(config_data, DataFormatSpec.FORMAT_SIMULATION_CONFIG):
             raise ValueError("Invalid simulation config format")
 
-        return config_data['parameters']
+        return config_data["parameters"]
 
 
 class AnalyticsReportConverter:
@@ -464,14 +455,11 @@ class AnalyticsReportConverter:
             Словарь в стандартном формате
         """
         return {
-            'metrics': metrics_dict,
-            'analysis_type': analysis_type,
-            'timestamp': datetime.now(timezone.utc).isoformat(),
-            'report_metadata': {
-                'generator': 'nanoprobe-analytics',
-                'version': '1.0'
-            },
-            'format_version': DataFormatSpec.FORMAT_ANALYTICS_REPORT
+            "metrics": metrics_dict,
+            "analysis_type": analysis_type,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "report_metadata": {"generator": "nanoprobe-analytics", "version": "1.0"},
+            "format_version": DataFormatSpec.FORMAT_ANALYTICS_REPORT,
         }
 
     @staticmethod
@@ -488,7 +476,7 @@ class AnalyticsReportConverter:
         if not DataFormatSpec.validate_format(report_data, DataFormatSpec.FORMAT_ANALYTICS_REPORT):
             raise ValueError("Invalid analytics report format")
 
-        return report_data['metrics']
+        return report_data["metrics"]
 
 
 class DataExchangeManager:
@@ -506,7 +494,7 @@ class DataExchangeManager:
             DataFormatSpec.FORMAT_IMAGE_DATA: ImageDataConverter,
             DataFormatSpec.FORMAT_SSTV_SIGNAL: SSTVSignalConverter,
             DataFormatSpec.FORMAT_SIMULATION_CONFIG: SimulationConfigConverter,
-            DataFormatSpec.FORMAT_ANALYTICS_REPORT: AnalyticsReportConverter
+            DataFormatSpec.FORMAT_ANALYTICS_REPORT: AnalyticsReportConverter,
         }
 
     def convert(self, data: Any, from_format: str, to_format: str) -> Any:
@@ -554,7 +542,7 @@ class DataExchangeManager:
             return self.converters[to_format].numpy_to_standard(numpy_data)
         elif to_format == DataFormatSpec.FORMAT_SCAN_RESULTS:
             # Для результатов сканирования нужен дополнительный параметр
-            surface_id = getattr(data, 'surface_id', 'unknown')
+            surface_id = getattr(data, "surface_id", "unknown")
             return self.converters[to_format].numpy_to_standard(numpy_data, surface_id)
         elif to_format == DataFormatSpec.FORMAT_IMAGE_DATA:
             return self.converters[to_format].numpy_to_standard(numpy_data)

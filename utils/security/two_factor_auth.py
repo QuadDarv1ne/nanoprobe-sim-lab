@@ -12,7 +12,7 @@ import json
 import logging
 import secrets
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Optional, Tuple
 
@@ -102,16 +102,10 @@ class RateLimiter:
         # Очищаем старые попытки
         cutoff_short = current_time - self.window_short
         cutoff_long = current_time - self.window_long
-        self._attempts[username] = [
-            t for t in self._attempts[username]
-            if t > cutoff_long
-        ]
+        self._attempts[username] = [t for t in self._attempts[username] if t > cutoff_long]
 
         # Проверяем лимиты
-        attempts_short = sum(
-            1 for t in self._attempts[username]
-            if t > cutoff_short
-        )
+        attempts_short = sum(1 for t in self._attempts[username] if t > cutoff_short)
         attempts_long = len(self._attempts[username])
 
         if attempts_short >= self.max_attempts_short:
@@ -166,7 +160,7 @@ class TwoFactorAuth:
         """Загрузка секретов из файла"""
         if self.storage_path.exists():
             try:
-                with open(self.storage_path, 'r') as f:
+                with open(self.storage_path, "r") as f:
                     self._secrets = json.load(f)
                 logger.info(f"Loaded 2FA secrets for {len(self._secrets)} users")
             except Exception as e:
@@ -176,7 +170,7 @@ class TwoFactorAuth:
     def _save_secrets(self):
         """Сохранение секретов в файл"""
         try:
-            with open(self.storage_path, 'w') as f:
+            with open(self.storage_path, "w") as f:
                 json.dump(self._secrets, f, indent=2)
         except Exception as e:
             logger.error(f"Failed to save 2FA secrets: {e}")
@@ -199,16 +193,13 @@ class TwoFactorAuth:
         totp = pyotp.TOTP(secret)
 
         # Создание provisioning URI для QR кода
-        provisioning_uri = totp.provisioning_uri(
-            name=user_email,
-            issuer_name="Nanoprobe Sim Lab"
-        )
+        provisioning_uri = totp.provisioning_uri(name=user_email, issuer_name="Nanoprobe Sim Lab")
 
         # Сохранение секрета
         self._secrets[username] = {
-            'secret': secret,
-            'enabled': False,  # Включается после верификации
-            'created_at': str(datetime.now(timezone.utc))
+            "secret": secret,
+            "enabled": False,  # Включается после верификации
+            "created_at": str(datetime.now(timezone.utc)),
         }
         self._save_secrets()
 
@@ -231,13 +222,13 @@ class TwoFactorAuth:
             logger.warning(f"2FA setup not found for user: {username}")
             return False
 
-        secret = self._secrets[username]['secret']
+        secret = self._secrets[username]["secret"]
         totp = pyotp.TOTP(secret)
 
         # Проверка OTP кода
         if totp.verify(otp_code, valid_window=1):
-            self._secrets[username]['enabled'] = True
-            self._secrets[username]['verified_at'] = str(datetime.now(timezone.utc))
+            self._secrets[username]["enabled"] = True
+            self._secrets[username]["verified_at"] = str(datetime.now(timezone.utc))
             self._save_secrets()
             logger.info(f"2FA verified and enabled for user: {username}")
             return True
@@ -267,11 +258,11 @@ class TwoFactorAuth:
             # 2FA не настроена для пользователя
             return True, "2FA not configured"
 
-        if not self._secrets[username].get('enabled', False):
+        if not self._secrets[username].get("enabled", False):
             # 2FA настроена но не включена
             return True, "2FA disabled"
 
-        secret = self._secrets[username]['secret']
+        secret = self._secrets[username]["secret"]
         totp = pyotp.TOTP(secret)
 
         # Проверка OTP кода с окном в 1 период (30 секунд)
@@ -305,7 +296,7 @@ class TwoFactorAuth:
         """
         if username not in self._secrets:
             return False
-        return self._secrets[username].get('enabled', False)
+        return self._secrets[username].get("enabled", False)
 
     def disable_2fa(self, username: str, otp_code: str) -> bool:
         """
@@ -347,11 +338,11 @@ class TwoFactorAuth:
 
         backup_codes = [secrets.token_hex(4) for _ in range(count)]
 
-        if 'backup_codes' not in self._secrets[username]:
-            self._secrets[username]['backup_codes'] = []
+        if "backup_codes" not in self._secrets[username]:
+            self._secrets[username]["backup_codes"] = []
 
-        self._secrets[username]['backup_codes'] = backup_codes
-        self._secrets[username]['backup_codes_generated_at'] = str(datetime.now(timezone.utc))
+        self._secrets[username]["backup_codes"] = backup_codes
+        self._secrets[username]["backup_codes_generated_at"] = str(datetime.now(timezone.utc))
         self._save_secrets()
 
         logger.info(f"Generated {count} backup codes for user: {username}")
@@ -371,13 +362,13 @@ class TwoFactorAuth:
         if username not in self._secrets:
             return False
 
-        backup_codes = self._secrets[username].get('backup_codes', [])
+        backup_codes = self._secrets[username].get("backup_codes", [])
 
         if backup_code in backup_codes:
             # Удаление использованного кода
             backup_codes.remove(backup_code)
-            self._secrets[username]['backup_codes'] = backup_codes
-            self._secrets[username]['last_backup_code_used_at'] = str(datetime.now(timezone.utc))
+            self._secrets[username]["backup_codes"] = backup_codes
+            self._secrets[username]["last_backup_code_used_at"] = str(datetime.now(timezone.utc))
             self._save_secrets()
             logger.info(f"Backup code used for user: {username}")
             return True
@@ -407,8 +398,9 @@ class TwoFactorAuth:
 
         # Конвертация в bytes
         import io
+
         img_bytes = io.BytesIO()
-        img.save(img_bytes, format='PNG')
+        img.save(img_bytes, format="PNG")
         return img_bytes.getvalue()
 
 

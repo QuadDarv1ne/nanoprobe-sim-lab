@@ -5,7 +5,6 @@ Provides weather forecasts for any location using Open-Meteo (free, no API key).
 
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
 
 import httpx
 from fastapi import APIRouter, Query
@@ -18,16 +17,34 @@ router = APIRouter()
 
 # Weather codes mapping (WMO)
 WEATHER_CODES = {
-    0: "Ясно", 1: "Преимущественно ясно", 2: "Переменная облачность",
-    3: "Пасмурно", 45: "Туман", 48: "Туман с изморозью",
-    51: "Лёгкая морось", 53: "Морось", 55: "Сильная морось",
-    56: "Ледяная морось", 57: "Сильная ледяная морось",
-    61: "Небольшой дождь", 63: "Дождь", 65: "Сильный дождь",
-    66: "Ледяной дождь", 67: "Сильный ледяной дождь",
-    71: "Небольшой снег", 73: "Снег", 75: "Сильный снег",
-    77: "Снежная крупа", 80: "Небольшой ливень", 81: "Ливень",
-    82: "Сильный ливень", 85: "Снегопад", 86: "Сильный снегопад",
-    95: "Гроза", 96: "Гроза с градом", 99: "Сильная гроза с градом",
+    0: "Ясно",
+    1: "Преимущественно ясно",
+    2: "Переменная облачность",
+    3: "Пасмурно",
+    45: "Туман",
+    48: "Туман с изморозью",
+    51: "Лёгкая морось",
+    53: "Морось",
+    55: "Сильная морось",
+    56: "Ледяная морось",
+    57: "Сильная ледяная морось",
+    61: "Небольшой дождь",
+    63: "Дождь",
+    65: "Сильный дождь",
+    66: "Ледяной дождь",
+    67: "Сильный ледяной дождь",
+    71: "Небольшой снег",
+    73: "Снег",
+    75: "Сильный снег",
+    77: "Снежная крупа",
+    80: "Небольшой ливень",
+    81: "Ливень",
+    82: "Сильный ливень",
+    85: "Снегопад",
+    86: "Сильный снегопад",
+    95: "Гроза",
+    96: "Гроза с градом",
+    99: "Сильная гроза с градом",
 }
 
 # Known locations
@@ -119,34 +136,40 @@ async def get_weather(
     dates = daily.get("time", [])
     for i, date_str in enumerate(dates):
         wcode = daily.get("weathercode", [None] * len(dates))
-        forecasts.append({
-            "date": date_str,
-            "temp_max": daily.get("temperature_2m_max", [None] * len(dates))[i],
-            "temp_min": daily.get("temperature_2m_min", [None] * len(dates))[i],
-            "precipitation": daily.get("precipitation_sum", [None] * len(dates))[i],
-            "wind_speed_max": daily.get("windspeed_10m_max", [None] * len(dates))[i],
-            "wind_direction": daily.get("winddirection_10m_dominant", [None] * len(dates))[i],
-            "uv_index_max": daily.get("uv_index_max", [None] * len(dates))[i],
-            "sunrise": daily.get("sunrise", [None] * len(dates))[i],
-            "sunset": daily.get("sunset", [None] * len(dates))[i],
-            "weather_code": wcode[i] if isinstance(wcode, list) else wcode,
-            "weather_description": _get_weather_desc(wcode[i] if isinstance(wcode, list) else wcode),
-        })
+        forecasts.append(
+            {
+                "date": date_str,
+                "temp_max": daily.get("temperature_2m_max", [None] * len(dates))[i],
+                "temp_min": daily.get("temperature_2m_min", [None] * len(dates))[i],
+                "precipitation": daily.get("precipitation_sum", [None] * len(dates))[i],
+                "wind_speed_max": daily.get("windspeed_10m_max", [None] * len(dates))[i],
+                "wind_direction": daily.get("winddirection_10m_dominant", [None] * len(dates))[i],
+                "uv_index_max": daily.get("uv_index_max", [None] * len(dates))[i],
+                "sunrise": daily.get("sunrise", [None] * len(dates))[i],
+                "sunset": daily.get("sunset", [None] * len(dates))[i],
+                "weather_code": wcode[i] if isinstance(wcode, list) else wcode,
+                "weather_description": _get_weather_desc(
+                    wcode[i] if isinstance(wcode, list) else wcode
+                ),
+            }
+        )
 
     # Hourly for today (first 24 hours)
     hourly_times = hourly.get("time", [])[:24]
     hourly_data = []
     for i, t in enumerate(hourly_times):
-        hourly_data.append({
-            "time": t,
-            "temperature": hourly.get("temperature_2m", [None] * len(hourly_times))[i],
-            "humidity": hourly.get("relativehumidity_2m", [None] * len(hourly_times))[i],
-            "weather_code": hourly.get("weathercode", [None] * len(hourly_times))[i],
-            "weather_description": _get_weather_desc(
-                hourly.get("weathercode", [None] * len(hourly_times))[i]
-            ),
-            "wind_speed": hourly.get("windspeed_10m", [None] * len(hourly_times))[i],
-        })
+        hourly_data.append(
+            {
+                "time": t,
+                "temperature": hourly.get("temperature_2m", [None] * len(hourly_times))[i],
+                "humidity": hourly.get("relativehumidity_2m", [None] * len(hourly_times))[i],
+                "weather_code": hourly.get("weathercode", [None] * len(hourly_times))[i],
+                "weather_description": _get_weather_desc(
+                    hourly.get("weathercode", [None] * len(hourly_times))[i]
+                ),
+                "wind_speed": hourly.get("windspeed_10m", [None] * len(hourly_times))[i],
+            }
+        )
 
     return {
         "status": "success",

@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from utils.caching.cache_manager import CacheManager
 from utils.database import DatabaseManager
@@ -181,9 +181,7 @@ async def get_stats():
         cursor.execute("SELECT COUNT(DISTINCT icao) FROM adsb_sightings")
         unique_aircraft = cursor.fetchone()[0]
 
-        cursor.execute(
-            "SELECT MIN(created_at), MAX(created_at) FROM adsb_sightings"
-        )
+        cursor.execute("SELECT MIN(created_at), MAX(created_at) FROM adsb_sightings")
         row = cursor.fetchone()
         first_seen = row[0]
         last_seen = row[1]
@@ -252,21 +250,15 @@ def _ensure_table():
             )
             """
         )
-        cursor.execute(
-            "CREATE INDEX IF NOT EXISTS idx_adsb_icao ON adsb_sightings(icao)"
-        )
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_adsb_icao ON adsb_sightings(icao)")
         cursor.execute(
             "CREATE INDEX IF NOT EXISTS idx_adsb_time ON adsb_sightings(created_at DESC)"
         )
-        cursor.execute(
-            "CREATE INDEX IF NOT EXISTS idx_adsb_flight ON adsb_sightings(flight)"
-        )
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_adsb_flight ON adsb_sightings(flight)")
         conn.commit()
 
 
-def _get_sightings_db(
-    limit: int, offset: int, icao: Optional[str], flight: Optional[str]
-) -> dict:
+def _get_sightings_db(limit: int, offset: int, icao: Optional[str], flight: Optional[str]) -> dict:
     """Get sightings from database"""
     with _db_manager.get_connection() as conn:
         cursor = conn.cursor()
@@ -283,9 +275,7 @@ def _get_sightings_db(
 
         where_clause = "WHERE " + " AND ".join(where) if where else ""
 
-        cursor.execute(
-            f"SELECT COUNT(*) FROM adsb_sightings {where_clause}", params
-        )
+        cursor.execute(f"SELECT COUNT(*) FROM adsb_sightings {where_clause}", params)
         total = cursor.fetchone()[0]
 
         cursor.execute(

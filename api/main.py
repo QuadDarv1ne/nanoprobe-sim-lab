@@ -15,10 +15,8 @@ from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
-from api.error_handlers import ValidationError, register_error_handlers
+from api.error_handlers import register_error_handlers
 from api.router_config import register_routes
-from api.state import init_app_state
-from utils.caching.redis_cache import RedisCache
 
 # Импорт существующих утилит
 from utils.database import DatabaseManager
@@ -38,7 +36,7 @@ async def lifespan(app: FastAPI):
             import sentry_sdk
             from sentry_sdk.integrations.fastapi import FastApiIntegration
             from sentry_sdk.integrations.starlette import StarletteIntegration
-            
+
             sentry_sdk.init(
                 dsn=sentry_dsn,
                 traces_sample_rate=0.1,  # 10% транзакций для мониторинга
@@ -77,17 +75,20 @@ async def lifespan(app: FastAPI):
             if redis.is_available():
                 logger.info("Redis cache initialized and connected")
             else:
-                logger.info("Redis cache initialized (Redis server not available, using fallback mode)")
+                logger.info(
+                    "Redis cache initialized (Redis server not available, using fallback mode)"
+                )
         except Exception as e:
             logger.warning(f"Redis initialization warning: {e}")
 
         # Инициализация app state
-        init_app_state(db, redis if 'redis' in locals() else None)
+        init_app_state(db, redis if "redis" in locals() else None)
         logger.info("App state initialized")
 
         # Запуск автоматической очистки rate limiter
         try:
             from utils.security.rate_limiter import start_rate_limit_cleanup
+
             start_rate_limit_cleanup()
             logger.info("Rate limiter auto-cleanup started")
         except Exception as e:
@@ -114,6 +115,7 @@ async def lifespan(app: FastAPI):
     # 1. Остановка мониторинга
     try:
         from utils.monitoring.performance_monitor import get_monitor
+
         monitor = get_monitor()
         monitor.stop()
         logger.info("Performance monitor stopped")
@@ -123,6 +125,7 @@ async def lifespan(app: FastAPI):
     # 2. Закрытие circuit breakers
     try:
         from utils.caching.circuit_breaker import close_all_circuit_breakers
+
         close_all_circuit_breakers()
         logger.info("Circuit breakers closed")
     except Exception as e:
@@ -131,6 +134,7 @@ async def lifespan(app: FastAPI):
     # 3. Закрытие HTTP сессий
     try:
         from api.routes.external_services import close_http_session
+
         close_http_session()
         logger.info("HTTP session closed")
     except Exception as e:
@@ -139,6 +143,7 @@ async def lifespan(app: FastAPI):
     # 4. Закрытие Redis
     try:
         from api.dependencies import get_redis_cache
+
         redis = get_redis_cache()
         if redis:
             redis.close()
@@ -149,6 +154,7 @@ async def lifespan(app: FastAPI):
     # 5. Закрытие соединений БД (последним, т.к. может использоваться другими компонентами)
     try:
         from api.state import get_db_manager
+
         db = get_db_manager()
         if db:
             db.close_pool()
@@ -219,6 +225,7 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 # Prometheus middleware для сбора метрик
 try:
     from api.metrics import PrometheusMiddleware
+
     app.add_middleware(PrometheusMiddleware)
 except ImportError:
     pass
@@ -226,6 +233,7 @@ except ImportError:
 # Rate Limiting для защиты от DDoS/bruteforce
 try:
     from api.rate_limiter import setup_rate_limiter
+
     setup_rate_limiter(app)
     logger.info("Rate limiting enabled")
 except ImportError as e:
@@ -234,6 +242,7 @@ except ImportError as e:
 # Security Headers для защиты от XSS, Clickjacking, MIME sniffing
 try:
     from api.security_headers import setup_security_headers
+
     is_production = os.getenv("ENVIRONMENT", "development") == "production"
     setup_security_headers(app, production=is_production)
 except ImportError as e:
@@ -258,11 +267,12 @@ async def track_requests(request: Request, call_next):
     # Запись метрик
     try:
         from utils.monitoring.performance_monitor import record_api_request
+
         record_api_request(
             method=request.method,
             endpoint=request.url.path,
             status=response.status_code,
-            latency=latency
+            latency=latency,
         )
     except Exception as e:
         logger.debug(f"Metrics recording error: {e}")
@@ -276,6 +286,7 @@ async def health_check():
     """Проверка здоровья API"""
     import logging
     import traceback
+
     logger = logging.getLogger(__name__)
     logger.info("Health check endpoint called")
     try:
@@ -324,6 +335,7 @@ async def detailed_health_check():
     # Redis status
     try:
         from api.state import get_redis
+
         _r = get_redis()
         cache_status = "running" if _r and _r.is_available() else "unavailable"
     except Exception:
@@ -336,29 +348,26 @@ async def detailed_health_check():
         "python_version": f"{os.sys.version}",
         "database": "SQLite 3.x",
         "metrics": {
-            "cpu": {
-                "percent": cpu_percent,
-                "status": "ok" if cpu_percent < 90 else "warning"
-            },
+            "cpu": {"percent": cpu_percent, "status": "ok" if cpu_percent < 90 else "warning"},
             "memory": {
                 "percent": memory.percent,
-                "used_gb": round(memory.used / (1024 ** 3), 2),
-                "total_gb": round(memory.total / (1024 ** 3), 2),
-                "status": "ok" if memory.percent < 90 else "warning"
+                "used_gb": round(memory.used / (1024**3), 2),
+                "total_gb": round(memory.total / (1024**3), 2),
+                "status": "ok" if memory.percent < 90 else "warning",
             },
             "disk": {
                 "percent": disk.percent,
-                "used_gb": round(disk.used / (1024 ** 3), 2),
-                "total_gb": round(disk.total / (1024 ** 3), 2),
-                "status": "ok" if disk.percent < 90 else "warning"
-            }
+                "used_gb": round(disk.used / (1024**3), 2),
+                "total_gb": round(disk.total / (1024**3), 2),
+                "status": "ok" if disk.percent < 90 else "warning",
+            },
         },
         "issues": issues,
         "services": {
             "api": "running",
             "database": "running",
             "cache": cache_status,
-        }
+        },
     }
 
 
@@ -369,6 +378,7 @@ async def realtime_metrics():
     import psutil
 
     from api.state import get_system_disk_usage
+
     return {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "cpu_percent": psutil.cpu_percent(interval=0.1),
@@ -405,10 +415,8 @@ async def metrics():
     prometheus_metrics = monitor.export_prometheus_metrics()
 
     from fastapi.responses import PlainTextResponse
-    return PlainTextResponse(
-        content=prometheus_metrics,
-        media_type="text/plain"
-    )
+
+    return PlainTextResponse(content=prometheus_metrics, media_type="text/plain")
 
 
 # GraphQL endpoint
@@ -422,11 +430,7 @@ async def graphql_endpoint(request: Request):
     variables = body.get("variables")
     operation_name = body.get("operationName")
 
-    result = await schema.execute(
-        query,
-        variable_values=variables,
-        operation_name=operation_name
-    )
+    result = await schema.execute(query, variable_values=variables, operation_name=operation_name)
 
     if result.errors:
         logger.error(f"GraphQL errors: {result.errors}")
@@ -454,7 +458,7 @@ query {
         timestamp
     }
 }
-"""
+""",
     }
 
 
@@ -463,9 +467,9 @@ query {
 async def websocket_endpoint(websocket: WebSocket):
     """WebSocket для real-time обновлений с ConnectionManager"""
     from api.websocket_manager import get_connection_manager
-    
+
     manager = get_connection_manager()
-    
+
     # Принятие подключения через менеджер
     if not await manager.connect(websocket):
         return
@@ -476,60 +480,73 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             try:
                 # Получение команд от клиента с timeout (30s heartbeat)
-                data = await asyncio.wait_for(
-                    websocket.receive_text(),
-                    timeout=30.0
-                )
+                data = await asyncio.wait_for(websocket.receive_text(), timeout=30.0)
                 last_pong = datetime.now(timezone.utc)
-                
+
                 # Валидация сообщения через менеджер
                 try:
                     message = manager.validate_message(data)
                 except ValueError as e:
-                    await manager.send_personal(websocket, {
-                        "type": "error",
-                        "message": str(e),
-                        "timestamp": datetime.now(timezone.utc).isoformat()
-                    })
+                    await manager.send_personal(
+                        websocket,
+                        {
+                            "type": "error",
+                            "message": str(e),
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                        },
+                    )
                     continue
 
                 # Обработка команд
                 if message.get("type") == "subscribe":
                     channel = message.get("channel")
                     if await manager.subscribe(websocket, channel):
-                        await manager.send_personal(websocket, {
-                            "type": "subscribed",
-                            "channel": channel,
-                            "timestamp": datetime.now(timezone.utc).isoformat(),
-                        })
+                        await manager.send_personal(
+                            websocket,
+                            {
+                                "type": "subscribed",
+                                "channel": channel,
+                                "timestamp": datetime.now(timezone.utc).isoformat(),
+                            },
+                        )
                         logger.info(f"Client subscribed to channel: {channel}")
                     else:
-                        await manager.send_personal(websocket, {
-                            "type": "error",
-                            "message": f"Failed to subscribe to {channel}",
-                            "timestamp": datetime.now(timezone.utc).isoformat()
-                        })
+                        await manager.send_personal(
+                            websocket,
+                            {
+                                "type": "error",
+                                "message": f"Failed to subscribe to {channel}",
+                                "timestamp": datetime.now(timezone.utc).isoformat(),
+                            },
+                        )
 
                 elif message.get("type") == "unsubscribe":
                     channel = message.get("channel")
                     await manager.unsubscribe(websocket, channel)
-                    await manager.send_personal(websocket, {
-                        "type": "unsubscribed",
-                        "channel": channel,
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
-                    })
+                    await manager.send_personal(
+                        websocket,
+                        {
+                            "type": "unsubscribed",
+                            "channel": channel,
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                        },
+                    )
 
                 elif message.get("type") == "ping":
-                    await manager.send_personal(websocket, {
-                        "type": "pong",
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
-                    })
+                    await manager.send_personal(
+                        websocket,
+                        {
+                            "type": "pong",
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                        },
+                    )
 
                 elif message.get("type") == "get_metrics":
                     # Отправка текущих метрик
                     import psutil
 
                     from api.state import get_system_disk_usage
+
                     metrics = {
                         "type": "metrics",
                         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -537,7 +554,7 @@ async def websocket_endpoint(websocket: WebSocket):
                             "cpu_percent": psutil.cpu_percent(interval=0.1),
                             "memory_percent": psutil.virtual_memory().percent,
                             "disk_percent": get_system_disk_usage().percent,
-                        }
+                        },
                     }
                     await manager.send_personal(websocket, metrics)
 
@@ -602,6 +619,7 @@ async def push_realtime_updates():
 def get_db() -> DatabaseManager:
     """Зависимость для получения менеджера БД (устарело, используйте api.dependencies.get_db)"""
     from api.state import get_db_manager
+
     return get_db_manager()
 
 

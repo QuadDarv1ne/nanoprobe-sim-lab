@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +23,7 @@ class WidgetPriority(Enum):
     NORMAL — виден только в enhanced режиме
     LOW — опциональный виджет
     """
+
     CRITICAL = 0
     HIGH = 1
     NORMAL = 2
@@ -31,14 +32,16 @@ class WidgetPriority(Enum):
 
 class WidgetMode(Enum):
     """Режимы отображения dashboard"""
-    MINIMAL = "minimal"      # Только CRITICAL виджеты
-    STANDARD = "standard"    # CRITICAL + HIGH
-    ENHANCED = "enhanced"    # Все виджеты
+
+    MINIMAL = "minimal"  # Только CRITICAL виджеты
+    STANDARD = "standard"  # CRITICAL + HIGH
+    ENHANCED = "enhanced"  # Все виджеты
 
 
 @dataclass
 class WidgetData:
     """Данные виджета"""
+
     title: str
     content: Any
     timestamp: datetime = field(default_factory=datetime.now)
@@ -94,7 +97,6 @@ class Widget(ABC):
         Returns:
             WidgetData: Обновлённые данные
         """
-        pass
 
     @abstractmethod
     def render(self, width: int = 40) -> str:
@@ -107,7 +109,6 @@ class Widget(ABC):
         Returns:
             str: Строковое представление виджета
         """
-        pass
 
     def is_visible(self, mode: WidgetMode) -> bool:
         """
@@ -139,11 +140,7 @@ class Widget(ABC):
         except Exception as e:
             self.error = str(e)
             logger.error(f"Widget {self.name} refresh error: {e}")
-            return WidgetData(
-                title=self.title,
-                content=None,
-                error=str(e)
-            )
+            return WidgetData(title=self.title, content=None, error=str(e))
 
     def get_status_icon(self) -> str:
         """Получить иконку статуса"""

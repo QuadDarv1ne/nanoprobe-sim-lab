@@ -13,14 +13,16 @@ import sys
 
 MIN_PYTHON_VERSION = (3, 11)
 MAX_PYTHON_VERSION = (3, 14)
-if sys.version_info < MIN_PYTHON_VERSION or sys.version_info >= (MAX_PYTHON_VERSION[0], MAX_PYTHON_VERSION[1] + 1):
+if sys.version_info < MIN_PYTHON_VERSION or sys.version_info >= (
+    MAX_PYTHON_VERSION[0],
+    MAX_PYTHON_VERSION[1] + 1,
+):
     print(f"[ERROR] Требуется Python 3.11 - 3.14, текущая версия: {sys.version}")
     print(f"Путь к Python: {sys.executable}")
     print("Установите Python 3.11 - 3.14 с https://www.python.org/downloads/")
     sys.exit(1)
 
 import os
-import platform
 import subprocess
 import threading
 import time
@@ -33,18 +35,21 @@ from typing import Any, Dict
 def _get_disk_usage():
     """Cross-platform disk usage"""
     from utils.platform_utils import get_system_disk_usage
+
     return get_system_disk_usage()
+
 
 # Установка UTF-8 кодировки для Windows
 if sys.platform == "win32":
     os.system("chcp 65001 >nul")
     try:
-        sys.stdout.reconfigure(encoding='utf-8')
-        sys.stderr.reconfigure(encoding='utf-8')
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
     except AttributeError:
         import io
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 from flask import Flask, jsonify, render_template, request
 from flask_socketio import SocketIO, emit
@@ -70,6 +75,7 @@ from utils.system_monitor import SystemMonitor
 # Интеграция с Backend (FastAPI)
 try:
     from api.reverse_proxy import register_proxy
+
     PROXY_ENABLED = True
 except ImportError:
     PROXY_ENABLED = False
@@ -100,11 +106,16 @@ class WebDashboard:
 
         # Инициализация Flask приложения
         self.app = Flask(__name__, template_folder=str(template_folder))
-        self.app.config["SECRET_KEY"] = os.environ.get("NANOPROBE_SECRET_KEY", "nanoprobe_simulation_lab_secret_key_dev_change_in_production")
+        self.app.config["SECRET_KEY"] = os.environ.get(
+            "NANOPROBE_SECRET_KEY", "nanoprobe_simulation_lab_secret_key_dev_change_in_production"
+        )
 
         # Инициализация SocketIO
         self.socketio = SocketIO(
-            self.app, cors_allowed_origins=["http://localhost:5000", "http://127.0.0.1:5000"], ping_timeout=60, ping_interval=25
+            self.app,
+            cors_allowed_origins=["http://localhost:5000", "http://127.0.0.1:5000"],
+            ping_timeout=60,
+            ping_interval=25,
         )
 
         # Инициализация служебных компонентов
@@ -130,9 +141,13 @@ class WebDashboard:
         # Регистрация reverse proxy для интеграции с FastAPI
         if PROXY_ENABLED and register_proxy:
             register_proxy(self.app)
-            self.logger.log_system_event("Reverse proxy зарегистрирован (FastAPI интеграция)", "INFO")
+            self.logger.log_system_event(
+                "Reverse proxy зарегистрирован (FastAPI интеграция)", "INFO"
+            )
         else:
-            self.logger.log_system_event("Reverse proxy недоступен (FastAPI интеграция отключена)", "WARNING")
+            self.logger.log_system_event(
+                "Reverse proxy недоступен (FastAPI интеграция отключена)", "WARNING"
+            )
 
         self.logger.log_system_event("Веб-панель инициализирована", "INFO")
 
@@ -172,15 +187,17 @@ class WebDashboard:
         def api_health():
             """Health check endpoint"""
             try:
-                return jsonify({
-                    "status": "healthy",
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "uptime": self._get_uptime(),
-                    "components": {
-                        "database": "ok",
-                        "socketio": "ok" if hasattr(self, 'socketio') else "not_initialized"
+                return jsonify(
+                    {
+                        "status": "healthy",
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "uptime": self._get_uptime(),
+                        "components": {
+                            "database": "ok",
+                            "socketio": "ok" if hasattr(self, "socketio") else "not_initialized",
+                        },
                     }
-                })
+                )
             except Exception as e:
                 return jsonify({"status": "unhealthy", "error": str(e)}), 500
 
@@ -199,6 +216,7 @@ class WebDashboard:
             """API для получения статуса компонентов (интеграция с FastAPI)"""
             try:
                 import requests
+
                 try:
                     # Пробуем получить данные от FastAPI
                     resp = requests.get("http://localhost:8000/api/v1/dashboard/stats", timeout=2)
@@ -231,7 +249,9 @@ class WebDashboard:
 
                 component_status["spm_simulator"] = {
                     "name": "SPM Simulator",
-                    "status": "running" if spm_running else ("ready" if spm_exists else "not_installed"),
+                    "status": (
+                        "running" if spm_running else ("ready" if spm_exists else "not_installed")
+                    ),
                     "processes": 1 if spm_running else 0,
                 }
 
@@ -246,7 +266,11 @@ class WebDashboard:
 
                 component_status["image_analyzer"] = {
                     "name": "Image Analyzer",
-                    "status": "running" if analyzer_running else ("ready" if analyzer_path.exists() else "not_installed"),
+                    "status": (
+                        "running"
+                        if analyzer_running
+                        else ("ready" if analyzer_path.exists() else "not_installed")
+                    ),
                     "processes": 1 if analyzer_running else 0,
                 }
 
@@ -261,14 +285,18 @@ class WebDashboard:
 
                 component_status["sstv_station"] = {
                     "name": "SSTV Station",
-                    "status": "running" if sstv_running else ("ready" if sstv_path.exists() else "not_installed"),
+                    "status": (
+                        "running"
+                        if sstv_running
+                        else ("ready" if sstv_path.exists() else "not_installed")
+                    ),
                     "processes": 1 if sstv_running else 0,
                 }
 
                 component_status["web_dashboard"] = {
                     "name": "Web Dashboard",
                     "status": "running",
-                    "processes": 1
+                    "processes": 1,
                 }
 
                 return jsonify(component_status)
@@ -295,49 +323,74 @@ class WebDashboard:
                     project_root / "components" / "cpp-spm-hardware-sim" / "build" / "spm-simulator"
                 )
                 spm_exists = spm_python.exists() or spm_cpp.exists()
-                spm_running = "spm_simulator" in self._active_processes and self._active_processes["spm_simulator"].poll() is None
+                spm_running = (
+                    "spm_simulator" in self._active_processes
+                    and self._active_processes["spm_simulator"].poll() is None
+                )
 
                 component_status["spm_simulator"] = {
                     "name": "SPM Simulator",
-                    "status": "running" if spm_running else ("ready" if spm_exists else "not_installed"),
+                    "status": (
+                        "running" if spm_running else ("ready" if spm_exists else "not_installed")
+                    ),
                     "processes": 1 if spm_running else 0,
                 }
 
                 # Проверяем анализатор изображений
-                analyzer_path = project_root / "components" / "py-surface-image-analyzer" / "src" / "main.py"
-                analyzer_running = "image_analyzer" in self._active_processes and self._active_processes["image_analyzer"].poll() is None
+                analyzer_path = (
+                    project_root / "components" / "py-surface-image-analyzer" / "src" / "main.py"
+                )
+                analyzer_running = (
+                    "image_analyzer" in self._active_processes
+                    and self._active_processes["image_analyzer"].poll() is None
+                )
 
                 component_status["image_analyzer"] = {
                     "name": "Image Analyzer",
-                    "status": "running" if analyzer_running else ("ready" if analyzer_path.exists() else "not_installed"),
+                    "status": (
+                        "running"
+                        if analyzer_running
+                        else ("ready" if analyzer_path.exists() else "not_installed")
+                    ),
                     "processes": 1 if analyzer_running else 0,
                 }
 
                 # Проверяем SSTV станцию
-                sstv_path = project_root / "components" / "py-sstv-groundstation" / "src" / "main.py"
-                sstv_running = "sstv_station" in self._active_processes and self._active_processes["sstv_station"].poll() is None
+                sstv_path = (
+                    project_root / "components" / "py-sstv-groundstation" / "src" / "main.py"
+                )
+                sstv_running = (
+                    "sstv_station" in self._active_processes
+                    and self._active_processes["sstv_station"].poll() is None
+                )
 
                 component_status["sstv_station"] = {
                     "name": "SSTV Station",
-                    "status": "running" if sstv_running else ("ready" if sstv_path.exists() else "not_installed"),
+                    "status": (
+                        "running"
+                        if sstv_running
+                        else ("ready" if sstv_path.exists() else "not_installed")
+                    ),
                     "processes": 1 if sstv_running else 0,
                 }
 
                 component_status["web_dashboard"] = {
                     "name": "Web Dashboard",
                     "status": "running",
-                    "processes": 1
+                    "processes": 1,
                 }
 
                 # Преобразуем в список для frontend
                 components_list = []
                 for comp_key, comp_data in component_status.items():
-                    components_list.append({
-                        "name": comp_key,
-                        "status": comp_data.get("status", "unknown"),
-                        "description": comp_data.get("name", comp_key),
-                        "processes": comp_data.get("processes", 0),
-                    })
+                    components_list.append(
+                        {
+                            "name": comp_key,
+                            "status": comp_data.get("status", "unknown"),
+                            "description": comp_data.get("name", comp_key),
+                            "processes": comp_data.get("processes", 0),
+                        }
+                    )
 
                 return jsonify(components_list)
             except Exception as e:
@@ -374,15 +427,14 @@ class WebDashboard:
                             "pid": proc.pid,
                             "status": "running" if poll_result is None else "stopped",
                             "exit_code": poll_result,
-                            "returncode": proc.returncode
+                            "returncode": proc.returncode,
                         }
                 else:
                     self._active_processes = {}
 
-                return jsonify({
-                    "active_count": len(self._active_processes),
-                    "processes": processes
-                })
+                return jsonify(
+                    {"active_count": len(self._active_processes), "processes": processes}
+                )
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка получения статуса процессов: {e}")
                 return jsonify({"error": str(e)}), 500
@@ -431,22 +483,24 @@ class WebDashboard:
                 memory = psutil.virtual_memory()
                 disk = psutil.disk_usage(str(project_root))
 
-                return jsonify({
-                    "components": {
-                        "active": active_count,
-                        "stopped": stopped_count,
-                        "total": active_count + stopped_count
-                    },
-                    "system": {
-                        "cpu_percent": cpu_percent,
-                        "memory_percent": memory.percent,
-                        "memory_available_mb": memory.available // (1024 * 1024),
-                        "disk_percent": disk.percent,
-                        "disk_free_gb": disk.free // (1024 * 1024 * 1024)
-                    },
-                    "uptime": self._get_uptime(),
-                    "timestamp": datetime.now(timezone.utc).isoformat()
-                })
+                return jsonify(
+                    {
+                        "components": {
+                            "active": active_count,
+                            "stopped": stopped_count,
+                            "total": active_count + stopped_count,
+                        },
+                        "system": {
+                            "cpu_percent": cpu_percent,
+                            "memory_percent": memory.percent,
+                            "memory_available_mb": memory.available // (1024 * 1024),
+                            "disk_percent": disk.percent,
+                            "disk_free_gb": disk.free // (1024 * 1024 * 1024),
+                        },
+                        "uptime": self._get_uptime(),
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                    }
+                )
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка получения статистики: {e}")
                 return jsonify({"error": str(e)}), 500
@@ -465,18 +519,16 @@ class WebDashboard:
                 }
 
                 if action not in actions_map:
-                    return jsonify({
-                        "success": False,
-                        "error": f"Неизвестное действие: {action}"
-                    }), 400
+                    return (
+                        jsonify({"success": False, "error": f"Неизвестное действие: {action}"}),
+                        400,
+                    )
 
                 # Выполнение действия
                 result = actions_map[action]()
-                return jsonify({
-                    "success": True,
-                    "message": f"Действие '{action}' выполнено",
-                    "result": result
-                })
+                return jsonify(
+                    {"success": True, "message": f"Действие '{action}' выполнено", "result": result}
+                )
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка быстрого действия: {e}")
                 return jsonify({"success": False, "error": str(e)}), 500
@@ -507,13 +559,26 @@ class WebDashboard:
             self._stop_all_components()
 
             import time
+
             time.sleep(1)
 
             # Затем запускаем заново
             component_paths = {
-                "spm_simulator": project_root / "components" / "cpp-spm-hardware-sim" / "src" / "spm_simulator.py",
-                "image_analyzer": project_root / "components" / "py-surface-image-analyzer" / "src" / "main.py",
-                "sstv_station": project_root / "components" / "py-sstv-groundstation" / "src" / "main.py",
+                "spm_simulator": project_root
+                / "components"
+                / "cpp-spm-hardware-sim"
+                / "src"
+                / "spm_simulator.py",
+                "image_analyzer": project_root
+                / "components"
+                / "py-surface-image-analyzer"
+                / "src"
+                / "main.py",
+                "sstv_station": project_root
+                / "components"
+                / "py-sstv-groundstation"
+                / "src"
+                / "main.py",
             }
 
             for component, path in component_paths.items():
@@ -522,34 +587,47 @@ class WebDashboard:
                         log_dir = project_root / "logs" / "components"
                         log_dir.mkdir(parents=True, exist_ok=True)
 
-                        with open(log_dir / f"{component}_stdout.log", "ab") as out_f, \
-                             open(log_dir / f"{component}_stderr.log", "ab") as err_f:
+                        with (
+                            open(log_dir / f"{component}_stdout.log", "ab") as out_f,
+                            open(log_dir / f"{component}_stderr.log", "ab") as err_f,
+                        ):
                             process = subprocess.Popen(
                                 [sys.executable, str(path)],
                                 cwd=str(project_root),
                                 stdout=out_f,
                                 stderr=err_f,
-                                creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+                                creationflags=(
+                                    subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+                                ),
                             )
 
                         if not hasattr(self, "_active_processes"):
                             self._active_processes = {}
                         self._active_processes[component] = process
                         restarted.append(component)
-                        self.logger.log_system_event(f"Перезапущен: {component} (PID: {process.pid})", "INFO")
+                        self.logger.log_system_event(
+                            f"Перезапущен: {component} (PID: {process.pid})", "INFO"
+                        )
 
                         # WebSocket уведомление
-                        if hasattr(self, 'socketio'):
+                        if hasattr(self, "socketio"):
                             from flask_socketio import emit
-                            emit('component_status', {
-                                'component': component,
-                                'status': 'running',
-                                'pid': process.pid,
-                                'restarted': True
-                            }, broadcast=True)
+
+                            emit(
+                                "component_status",
+                                {
+                                    "component": component,
+                                    "status": "running",
+                                    "pid": process.pid,
+                                    "restarted": True,
+                                },
+                                broadcast=True,
+                            )
                     except Exception as e:
                         failed.append({"component": component, "error": str(e)})
-                        self.logger.log_system_event(f"Ошибка перезапуска {component}: {e}", "ERROR")
+                        self.logger.log_system_event(
+                            f"Ошибка перезапуска {component}: {e}", "ERROR"
+                        )
 
             return {"restarted": restarted, "failed": failed}
 
@@ -585,16 +663,10 @@ class WebDashboard:
             """API для очистки кэша (action)"""
             try:
                 self.cache_manager.auto_cleanup()
-                return jsonify({
-                    "success": True,
-                    "message": "Кэш очищен"
-                })
+                return jsonify({"success": True, "message": "Кэш очищен"})
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка очистки кэша: {e}")
-                return jsonify({
-                    "success": False,
-                    "error": str(e)
-                }), 500
+                return jsonify({"success": False, "error": str(e)}), 500
 
         @self.app.route("/api/actions/start_component", methods=["POST"])
         def api_start_component_action():
@@ -605,24 +677,41 @@ class WebDashboard:
 
                 # Маппинг компонентов на пути
                 component_paths = {
-                    "spm_simulator": project_root / "components" / "cpp-spm-hardware-sim" / "src" / "spm_simulator.py",
-                    "image_analyzer": project_root / "components" / "py-surface-image-analyzer" / "src" / "main.py",
-                    "sstv_station": project_root / "components" / "py-sstv-groundstation" / "src" / "main.py",
+                    "spm_simulator": project_root
+                    / "components"
+                    / "cpp-spm-hardware-sim"
+                    / "src"
+                    / "spm_simulator.py",
+                    "image_analyzer": project_root
+                    / "components"
+                    / "py-surface-image-analyzer"
+                    / "src"
+                    / "main.py",
+                    "sstv_station": project_root
+                    / "components"
+                    / "py-sstv-groundstation"
+                    / "src"
+                    / "main.py",
                 }
 
                 if component not in component_paths:
-                    return jsonify({
-                        "success": False,
-                        "error": f"Компонент '{component}' не найден"
-                    }), 404
+                    return (
+                        jsonify({"success": False, "error": f"Компонент '{component}' не найден"}),
+                        404,
+                    )
 
                 component_path = component_paths[component]
 
                 if not component_path.exists():
-                    return jsonify({
-                        "success": False,
-                        "error": f"Файл компонента не найден: {component_path}"
-                    }), 404
+                    return (
+                        jsonify(
+                            {
+                                "success": False,
+                                "error": f"Файл компонента не найден: {component_path}",
+                            }
+                        ),
+                        404,
+                    )
 
                 # Проверка, запущен ли уже компонент
                 if not hasattr(self, "_active_processes"):
@@ -631,10 +720,15 @@ class WebDashboard:
                 if component in self._active_processes:
                     process = self._active_processes[component]
                     if process.poll() is None:
-                        return jsonify({
-                            "success": False,
-                            "error": f"Компонент '{component}' уже запущен (PID: {process.pid})"
-                        }), 409
+                        return (
+                            jsonify(
+                                {
+                                    "success": False,
+                                    "error": f"Компонент '{component}' уже запущен (PID: {process.pid})",
+                                }
+                            ),
+                            409,
+                        )
 
                 # Запуск процесса с логами
                 log_dir = project_root / "logs" / "components"
@@ -657,14 +751,17 @@ class WebDashboard:
                         cwd=str(project_root),
                         stdout=out_f,
                         stderr=err_f,
-                        creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+                        creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
                     )
 
                 self._active_processes[component] = process
-                self.logger.log_system_event(f"Запуск компонента: {component} (PID: {process.pid})", "INFO")
+                self.logger.log_system_event(
+                    f"Запуск компонента: {component} (PID: {process.pid})", "INFO"
+                )
 
                 # Проверка что процесс запустился успешно
                 import time
+
                 time.sleep(0.5)
                 if process.poll() is not None:
                     # Процесс завершился сразу с ошибкой
@@ -672,41 +769,43 @@ class WebDashboard:
                     self.logger.log_system_event(error_msg, "ERROR")
 
                     # WebSocket уведомление
-                    if hasattr(self, 'socketio'):
+                    if hasattr(self, "socketio"):
                         from flask_socketio import emit
-                        emit('component_status', {
-                            'component': component,
-                            'status': 'error',
-                            'message': error_msg
-                        }, broadcast=True)
 
-                    return jsonify({
-                        "success": False,
-                        "error": error_msg,
-                        "log_file": str(stderr_log)
-                    }), 500
+                        emit(
+                            "component_status",
+                            {"component": component, "status": "error", "message": error_msg},
+                            broadcast=True,
+                        )
+
+                    return (
+                        jsonify(
+                            {"success": False, "error": error_msg, "log_file": str(stderr_log)}
+                        ),
+                        500,
+                    )
 
                 # WebSocket уведомление об успешном запуске
-                if hasattr(self, 'socketio'):
+                if hasattr(self, "socketio"):
                     from flask_socketio import emit
-                    emit('component_status', {
-                        'component': component,
-                        'status': 'running',
-                        'pid': process.pid
-                    }, broadcast=True)
 
-                return jsonify({
-                    "success": True,
-                    "message": f"Компонент '{component}' запущен",
-                    "component": component,
-                    "pid": process.pid
-                })
+                    emit(
+                        "component_status",
+                        {"component": component, "status": "running", "pid": process.pid},
+                        broadcast=True,
+                    )
+
+                return jsonify(
+                    {
+                        "success": True,
+                        "message": f"Компонент '{component}' запущен",
+                        "component": component,
+                        "pid": process.pid,
+                    }
+                )
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка запуска компонента: {e}")
-                return jsonify({
-                    "success": False,
-                    "error": str(e)
-                }), 500
+                return jsonify({"success": False, "error": str(e)}), 500
 
         @self.app.route("/api/actions/stop_component", methods=["POST"])
         def api_stop_component_action():
@@ -719,10 +818,10 @@ class WebDashboard:
                     self._active_processes = {}
 
                 if component not in self._active_processes:
-                    return jsonify({
-                        "success": False,
-                        "error": f"Компонент '{component}' не запущен"
-                    }), 404
+                    return (
+                        jsonify({"success": False, "error": f"Компонент '{component}' не запущен"}),
+                        404,
+                    )
 
                 process = self._active_processes[component]
 
@@ -739,24 +838,25 @@ class WebDashboard:
                 self.logger.log_system_event(f"Остановка компонента: {component}", "INFO")
 
                 # WebSocket уведомление
-                if hasattr(self, 'socketio'):
+                if hasattr(self, "socketio"):
                     from flask_socketio import emit
-                    emit('component_status', {
-                        'component': component,
-                        'status': 'stopped'
-                    }, broadcast=True)
 
-                return jsonify({
-                    "success": True,
-                    "message": f"Компонент '{component}' остановлен",
-                    "component": component
-                })
+                    emit(
+                        "component_status",
+                        {"component": component, "status": "stopped"},
+                        broadcast=True,
+                    )
+
+                return jsonify(
+                    {
+                        "success": True,
+                        "message": f"Компонент '{component}' остановлен",
+                        "component": component,
+                    }
+                )
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка остановки компонента: {e}")
-                return jsonify({
-                    "success": False,
-                    "error": str(e)
-                }), 500
+                return jsonify({"success": False, "error": str(e)}), 500
 
         @self.app.route("/api/actions/restart_component", methods=["POST"])
         def api_restart_component_action():
@@ -781,13 +881,26 @@ class WebDashboard:
                     del self._active_processes[component]
 
                 import time
+
                 time.sleep(0.5)
 
                 # Запускаем заново
                 component_paths = {
-                    "spm_simulator": project_root / "components" / "cpp-spm-hardware-sim" / "src" / "spm_simulator.py",
-                    "image_analyzer": project_root / "components" / "py-surface-image-analyzer" / "src" / "main.py",
-                    "sstv_station": project_root / "components" / "py-sstv-groundstation" / "src" / "main.py",
+                    "spm_simulator": project_root
+                    / "components"
+                    / "cpp-spm-hardware-sim"
+                    / "src"
+                    / "spm_simulator.py",
+                    "image_analyzer": project_root
+                    / "components"
+                    / "py-surface-image-analyzer"
+                    / "src"
+                    / "main.py",
+                    "sstv_station": project_root
+                    / "components"
+                    / "py-sstv-groundstation"
+                    / "src"
+                    / "main.py",
                 }
 
                 if component not in component_paths:
@@ -800,49 +913,71 @@ class WebDashboard:
                 log_dir = project_root / "logs" / "components"
                 log_dir.mkdir(parents=True, exist_ok=True)
 
-                with open(log_dir / f"{component}_stdout.log", "ab") as out_f, \
-                     open(log_dir / f"{component}_stderr.log", "ab") as err_f:
+                with (
+                    open(log_dir / f"{component}_stdout.log", "ab") as out_f,
+                    open(log_dir / f"{component}_stderr.log", "ab") as err_f,
+                ):
                     process = subprocess.Popen(
                         [sys.executable, str(component_path)],
                         cwd=str(project_root),
-                        stdout=out_f, stderr=err_f,
-                        creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+                        stdout=out_f,
+                        stderr=err_f,
+                        creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
                     )
 
                 self._active_processes[component] = process
-                self.logger.log_system_event(f"Перезапуск: {component} (PID: {process.pid})", "INFO")
+                self.logger.log_system_event(
+                    f"Перезапуск: {component} (PID: {process.pid})", "INFO"
+                )
 
                 time.sleep(0.5)
                 if process.poll() is not None:
                     # WebSocket уведомление об ошибке
-                    if hasattr(self, 'socketio'):
+                    if hasattr(self, "socketio"):
                         from flask_socketio import emit
-                        emit('component_status', {
-                            'component': component,
-                            'status': 'error',
-                            'message': f'Не удалось запустить (код {process.returncode})'
-                        }, broadcast=True)
 
-                    return jsonify({
-                        "success": False,
-                        "error": f"Не удалось запустить (код {process.returncode})"
-                    }), 500
+                        emit(
+                            "component_status",
+                            {
+                                "component": component,
+                                "status": "error",
+                                "message": f"Не удалось запустить (код {process.returncode})",
+                            },
+                            broadcast=True,
+                        )
+
+                    return (
+                        jsonify(
+                            {
+                                "success": False,
+                                "error": f"Не удалось запустить (код {process.returncode})",
+                            }
+                        ),
+                        500,
+                    )
 
                 # WebSocket уведомление об успешном перезапуске
-                if hasattr(self, 'socketio'):
+                if hasattr(self, "socketio"):
                     from flask_socketio import emit
-                    emit('component_status', {
-                        'component': component,
-                        'status': 'running',
-                        'pid': process.pid,
-                        'restarted': True
-                    }, broadcast=True)
 
-                return jsonify({
-                    "success": True,
-                    "message": f"Компонент '{component}' перезапущен",
-                    "pid": process.pid
-                })
+                    emit(
+                        "component_status",
+                        {
+                            "component": component,
+                            "status": "running",
+                            "pid": process.pid,
+                            "restarted": True,
+                        },
+                        broadcast=True,
+                    )
+
+                return jsonify(
+                    {
+                        "success": True,
+                        "message": f"Компонент '{component}' перезапущен",
+                        "pid": process.pid,
+                    }
+                )
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка перезапуска: {e}")
                 return jsonify({"success": False, "error": str(e)}), 500
@@ -851,19 +986,15 @@ class WebDashboard:
         def api_export_data():
             """API для экспорта данных"""
             try:
-                data = request.json.get('data')
-                filename = request.json.get('filename', 'export')
-                fmt = request.json.get('format', 'csv')
+                data = request.json.get("data")
+                filename = request.json.get("filename", "export")
+                fmt = request.json.get("format", "csv")
 
                 if not data:
                     return jsonify({"error": "Данные не предоставлены"}), 400
 
                 filepath = self.data_exporter.export(data, filename, fmt=fmt)
-                return jsonify({
-                    "status": "success",
-                    "filepath": str(filepath),
-                    "format": fmt
-                })
+                return jsonify({"status": "success", "filepath": str(filepath), "format": fmt})
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка экспорта данных: {e}")
                 return jsonify({"error": str(e)}), 500
@@ -873,18 +1004,16 @@ class WebDashboard:
             """API для экспорта данных поверхности"""
             try:
                 import numpy as np
-                surface_data = np.array(request.json.get('surface_data', []))
-                metadata = request.json.get('metadata', {})
-                fmt = request.json.get('format', 'hdf5')
+
+                surface_data = np.array(request.json.get("surface_data", []))
+                metadata = request.json.get("metadata", {})
+                fmt = request.json.get("format", "hdf5")
 
                 if surface_data.size == 0:
                     return jsonify({"error": "Данные поверхности пусты"}), 400
 
                 filepath = self.data_exporter.export_surface_data(surface_data, metadata, fmt=fmt)
-                return jsonify({
-                    "status": "success",
-                    "filepath": str(filepath)
-                })
+                return jsonify({"status": "success", "filepath": str(filepath)})
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка экспорта поверхности: {e}")
                 return jsonify({"error": str(e)}), 500
@@ -905,9 +1034,9 @@ class WebDashboard:
             """API для получения списка сканирований"""
             try:
                 db = get_database()
-                scan_type = request.args.get('type')
-                limit = int(request.args.get('limit', 50))
-                offset = int(request.args.get('offset', 0))
+                scan_type = request.args.get("type")
+                limit = int(request.args.get("limit", 50))
+                offset = int(request.args.get("offset", 0))
 
                 scans = db.get_scan_results(scan_type=scan_type, limit=limit, offset=offset)
                 return jsonify({"scans": scans, "count": len(scans)})
@@ -920,8 +1049,8 @@ class WebDashboard:
             """API для получения списка симуляций"""
             try:
                 db = get_database()
-                status = request.args.get('status')
-                limit = int(request.args.get('limit', 50))
+                status = request.args.get("status")
+                limit = int(request.args.get("limit", 50))
 
                 simulations = db.get_simulations(status=status, limit=limit)
                 return jsonify({"simulations": simulations, "count": len(simulations)})
@@ -934,9 +1063,9 @@ class WebDashboard:
             """API для получения списка изображений"""
             try:
                 db = get_database()
-                image_type = request.args.get('type')
-                source = request.args.get('source')
-                limit = int(request.args.get('limit', 100))
+                image_type = request.args.get("type")
+                source = request.args.get("source")
+                limit = int(request.args.get("limit", 100))
 
                 images = db.get_images(image_type=image_type, source=source, limit=limit)
                 return jsonify({"images": images, "count": len(images)})
@@ -951,16 +1080,21 @@ class WebDashboard:
                 from datetime import datetime
 
                 db = get_database()
-                output_dir = request.json.get('output_dir', 'output')
-                output_path = Path(output_dir) / f"db_export_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
+                output_dir = request.json.get("output_dir", "output")
+                output_path = (
+                    Path(output_dir)
+                    / f"db_export_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
+                )
 
                 result_path = db.export_to_json(str(output_path))
 
-                return jsonify({
-                    "status": "success",
-                    "filepath": str(result_path),
-                    "size_bytes": result_path.stat().st_size
-                })
+                return jsonify(
+                    {
+                        "status": "success",
+                        "filepath": str(result_path),
+                        "size_bytes": result_path.stat().st_size,
+                    }
+                )
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка экспорта БД: {e}")
                 return jsonify({"error": str(e)}), 500
@@ -970,19 +1104,16 @@ class WebDashboard:
             """API для сравнения поверхностей"""
             try:
                 data = request.json
-                image1_path = data.get('image1_path')
-                image2_path = data.get('image2_path')
-                output_dir = data.get('output_dir', 'output/surface_comparisons')
+                image1_path = data.get("image1_path")
+                image2_path = data.get("image2_path")
+                output_dir = data.get("output_dir", "output/surface_comparisons")
 
                 if not image1_path or not image2_path:
                     return jsonify({"error": "image1_path и image2_path обязательны"}), 400
 
                 result = compare_surfaces_util(image1_path, image2_path, output_dir)
 
-                return jsonify({
-                    "status": "success",
-                    "result": result
-                })
+                return jsonify({"status": "success", "result": result})
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка сравнения поверхностей: {e}")
                 return jsonify({"error": str(e)}), 500
@@ -992,19 +1123,16 @@ class WebDashboard:
             """API для анализа дефектов"""
             try:
                 data = request.json
-                image_path = data.get('image_path')
-                model_name = data.get('model_name', 'isolation_forest')
-                output_dir = data.get('output_dir', 'output/defect_analysis')
+                image_path = data.get("image_path")
+                model_name = data.get("model_name", "isolation_forest")
+                output_dir = data.get("output_dir", "output/defect_analysis")
 
                 if not image_path:
                     return jsonify({"error": "image_path обязателен"}), 400
 
                 result = analyze_defects_util(image_path, model_name, output_dir)
 
-                return jsonify({
-                    "status": "success",
-                    "result": result
-                })
+                return jsonify({"status": "success", "result": result})
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка анализа дефектов: {e}")
                 return jsonify({"error": str(e)}), 500
@@ -1014,13 +1142,10 @@ class WebDashboard:
             """API для получения истории сравнений поверхностей"""
             try:
                 db = get_database()
-                limit = request.args.get('limit', 50, type=int)
+                limit = request.args.get("limit", 50, type=int)
                 comparisons = db.get_surface_comparisons(limit)
 
-                return jsonify({
-                    "status": "success",
-                    "comparisons": comparisons
-                })
+                return jsonify({"status": "success", "comparisons": comparisons})
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка получения истории сравнений: {e}")
                 return jsonify({"error": str(e)}), 500
@@ -1030,13 +1155,10 @@ class WebDashboard:
             """API для получения истории анализов дефектов"""
             try:
                 db = get_database()
-                limit = request.args.get('limit', 50, type=int)
+                limit = request.args.get("limit", 50, type=int)
                 analyses = db.get_defect_analyses(limit=limit)
 
-                return jsonify({
-                    "status": "success",
-                    "analyses": analyses
-                })
+                return jsonify({"status": "success", "analyses": analyses})
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка получения истории анализов: {e}")
                 return jsonify({"error": str(e)}), 500
@@ -1046,8 +1168,9 @@ class WebDashboard:
             """API для получения заданий пакетной обработки"""
             try:
                 from utils.batch.batch_processor import BatchProcessor
+
                 processor = BatchProcessor()
-                status_filter = request.args.get('status', None)
+                status_filter = request.args.get("status", None)
                 jobs = processor.get_all_jobs(status=status_filter)
                 return jsonify({"jobs": jobs, "total": len(jobs)})
             except Exception as e:
@@ -1059,6 +1182,7 @@ class WebDashboard:
             """API для получения статистики пакетной обработки"""
             try:
                 from utils.batch.batch_processor import BatchProcessor
+
                 processor = BatchProcessor()
                 stats = processor.get_statistics()
                 return jsonify(stats)
@@ -1075,11 +1199,14 @@ class WebDashboard:
             self.logger.log_system_event("Клиент подключен к веб-панели", "INFO")
             emit("connection_response", {"data": "Connected to Nanoprobe Simulation Lab Dashboard"})
             # Отправляем приветственное сообщение с uptime
-            emit("system_status", {
-                "status": "online",
-                "uptime": self._get_uptime(),
-                "timestamp": datetime.now(timezone.utc).isoformat()
-            })
+            emit(
+                "system_status",
+                {
+                    "status": "online",
+                    "uptime": self._get_uptime(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                },
+            )
 
         @self.socketio.on("disconnect")
         def handle_disconnect():
@@ -1103,14 +1230,14 @@ class WebDashboard:
                 cpu_percent = psutil.cpu_percent(interval=0.1)
                 memory = psutil.virtual_memory()
 
-                emit("status_update", {
-                    "components": {"active": active_count},
-                    "system": {
-                        "cpu_percent": cpu_percent,
-                        "memory_percent": memory.percent
+                emit(
+                    "status_update",
+                    {
+                        "components": {"active": active_count},
+                        "system": {"cpu_percent": cpu_percent, "memory_percent": memory.percent},
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
                     },
-                    "timestamp": datetime.now(timezone.utc).isoformat()
-                })
+                )
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка обновления статуса: {e}")
 
@@ -1122,41 +1249,33 @@ class WebDashboard:
 
                 if action == "clean_cache":
                     result = self.cache_manager.auto_cleanup()
-                    emit("quick_action_result", {
-                        "success": True,
-                        "action": action,
-                        "result": result
-                    })
+                    emit(
+                        "quick_action_result", {"success": True, "action": action, "result": result}
+                    )
                 elif action == "stop_all":
                     result = self._stop_all_components()
-                    emit("quick_action_result", {
-                        "success": True,
-                        "action": action,
-                        "result": result
-                    })
+                    emit(
+                        "quick_action_result", {"success": True, "action": action, "result": result}
+                    )
                 elif action == "restart_all":
                     result = self._restart_all_components()
-                    emit("quick_action_result", {
-                        "success": True,
-                        "action": action,
-                        "result": result
-                    })
+                    emit(
+                        "quick_action_result", {"success": True, "action": action, "result": result}
+                    )
                 else:
-                    emit("quick_action_result", {
-                        "success": False,
-                        "error": f"Неизвестное действие: {action}"
-                    })
+                    emit(
+                        "quick_action_result",
+                        {"success": False, "error": f"Неизвестное действие: {action}"},
+                    )
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка быстрого действия: {e}")
-                emit("quick_action_result", {
-                    "success": False,
-                    "error": str(e)
-                })
+                emit("quick_action_result", {"success": False, "error": str(e)})
 
         # Фоновая задача для периодической отправки обновлений
         def background_stats_updater():
             """Фоновая отправка статистики каждые 5 секунд"""
             import time
+
             while True:
                 time.sleep(5)
                 try:
@@ -1168,11 +1287,15 @@ class WebDashboard:
                             if proc.poll() is not None:
                                 # Процесс завершился
                                 del self._active_processes[comp]
-                                emit("component_status", {
-                                    'component': comp,
-                                    'status': 'stopped',
-                                    'exit_code': proc.returncode
-                                }, broadcast=True)
+                                emit(
+                                    "component_status",
+                                    {
+                                        "component": comp,
+                                        "status": "stopped",
+                                        "exit_code": proc.returncode,
+                                    },
+                                    broadcast=True,
+                                )
                             else:
                                 active_count += 1
 
@@ -1180,20 +1303,23 @@ class WebDashboard:
                     memory = psutil.virtual_memory()
                     disk = psutil.disk_usage(str(project_root))
 
-                    emit("stats_update", {
-                        "components": {
-                            "active": active_count,
-                            "total": len(getattr(self, "_active_processes", {}))
+                    emit(
+                        "stats_update",
+                        {
+                            "components": {
+                                "active": active_count,
+                                "total": len(getattr(self, "_active_processes", {})),
+                            },
+                            "system": {
+                                "cpu_percent": cpu_percent,
+                                "memory_percent": memory.percent,
+                                "memory_available_mb": memory.available // (1024 * 1024),
+                                "disk_percent": disk.percent,
+                                "disk_free_gb": disk.free // (1024 * 1024 * 1024),
+                            },
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
                         },
-                        "system": {
-                            "cpu_percent": cpu_percent,
-                            "memory_percent": memory.percent,
-                            "memory_available_mb": memory.available // (1024 * 1024),
-                            "disk_percent": disk.percent,
-                            "disk_free_gb": disk.free // (1024 * 1024 * 1024)
-                        },
-                        "timestamp": datetime.now(timezone.utc).isoformat()
-                    })
+                    )
                 except Exception as e:
                     self.error_handler.log_error(f"Ошибка фоновой статистики: {e}")
 
@@ -1206,13 +1332,14 @@ class WebDashboard:
             """Запрос метрик системы в realtime"""
             try:
                 import psutil
+
                 metrics = {
-                    'cpu_percent': psutil.cpu_percent(interval=1),
-                    'memory_percent': psutil.virtual_memory().percent,
-                    'disk_usage': _get_disk_usage().percent,
-                    'timestamp': datetime.now(timezone.utc).isoformat()
+                    "cpu_percent": psutil.cpu_percent(interval=1),
+                    "memory_percent": psutil.virtual_memory().percent,
+                    "disk_usage": _get_disk_usage().percent,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                 }
-                emit('metrics', metrics)
+                emit("metrics", metrics)
             except Exception as e:
                 self.error_handler.log_error(f"Ошибка получения метрик: {e}")
 
@@ -1244,21 +1371,16 @@ class WebDashboard:
         def handle_export_data(data):
             """Обработка запроса на экспорт данных через WebSocket"""
             try:
-                export_data = data.get('data')
-                filename = data.get('filename', 'export')
-                fmt = data.get('format', 'csv')
+                export_data = data.get("data")
+                filename = data.get("filename", "export")
+                fmt = data.get("format", "csv")
 
                 filepath = self.data_exporter.export(export_data, filename, fmt=fmt)
-                emit("export_result", {
-                    "status": "success",
-                    "filepath": str(filepath),
-                    "format": fmt
-                })
+                emit(
+                    "export_result", {"status": "success", "filepath": str(filepath), "format": fmt}
+                )
             except Exception as e:
-                emit("export_result", {
-                    "status": "error",
-                    "error": str(e)
-                })
+                emit("export_result", {"status": "error", "error": str(e)})
 
         @self.socketio.on("execute_command")
         def handle_execute_command(data):
@@ -1399,10 +1521,11 @@ class WebDashboard:
         """Выполнение команды экспорта данных поверхности"""
         try:
             import numpy as np
-            surface_data = np.array(params.get('surface_data', []))
-            filename = params.get('filename', 'surface_export')
-            fmt = params.get('format', 'hdf5')
-            metadata = params.get('metadata', {})
+
+            surface_data = np.array(params.get("surface_data", []))
+            filename = params.get("filename", "surface_export")
+            fmt = params.get("format", "hdf5")
+            metadata = params.get("metadata", {})
 
             if surface_data.size == 0:
                 return {"status": "error", "message": "Данные поверхности пусты"}
@@ -1414,7 +1537,7 @@ class WebDashboard:
             return {
                 "status": "success",
                 "message": f"Поверхность экспортирована: {filepath}",
-                "filepath": str(filepath)
+                "filepath": str(filepath),
             }
         except Exception as e:
             self.error_handler.log_error(f"Ошибка экспорта поверхности: {e}")
@@ -1426,21 +1549,17 @@ class WebDashboard:
             db = get_database()
 
             scan_id = db.add_scan_result(
-                scan_type=params.get('scan_type', 'unknown'),
-                surface_type=params.get('surface_type'),
-                width=params.get('width'),
-                height=params.get('height'),
-                file_path=params.get('file_path'),
-                metadata=params.get('metadata')
+                scan_type=params.get("scan_type", "unknown"),
+                surface_type=params.get("surface_type"),
+                width=params.get("width"),
+                height=params.get("height"),
+                file_path=params.get("file_path"),
+                metadata=params.get("metadata"),
             )
 
             self.logger.log_system_event(f"Добавлено сканирование: {scan_id}", "INFO")
 
-            return {
-                "status": "success",
-                "message": "Сканирование добавлено",
-                "scan_id": scan_id
-            }
+            return {"status": "success", "message": "Сканирование добавлено", "scan_id": scan_id}
         except Exception as e:
             self.error_handler.log_error(f"Ошибка добавления сканирования: {e}")
             return {"status": "error", "message": str(e)}
@@ -1451,11 +1570,7 @@ class WebDashboard:
             db = get_database()
             stats = db.get_statistics()
 
-            return {
-                "status": "success",
-                "message": "Статистика получена",
-                "stats": stats
-            }
+            return {"status": "success", "message": "Статистика получена", "stats": stats}
         except Exception as e:
             self.error_handler.log_error(f"Ошибка получения статистики: {e}")
             return {"status": "error", "message": str(e)}

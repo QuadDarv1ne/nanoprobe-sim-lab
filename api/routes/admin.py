@@ -22,6 +22,7 @@ router = APIRouter(prefix="/admin", tags=["Администрирование"])
 
 # ==================== Системная информация ====================
 
+
 @router.get(
     "/cache/redis",
     summary="Статус Redis кэша",
@@ -41,6 +42,7 @@ async def get_redis_cache_status(
 
 
 # ==================== Система ====================
+
 
 @router.get(
     "/system/info",
@@ -139,6 +141,7 @@ async def get_system_processes(current_user: dict = Depends(get_current_user)):
 
 # ==================== Управление логами ====================
 
+
 @router.get(
     "/logs/list",
     summary="Список логов",
@@ -155,11 +158,13 @@ async def list_logs(current_user: dict = Depends(get_current_user)):
 
     files = []
     for f in logs_dir.glob("*.log"):
-        files.append({
-            "name": f.name,
-            "size": f.stat().st_size,
-            "modified": datetime.fromtimestamp(f.stat().st_mtime).isoformat(),
-        })
+        files.append(
+            {
+                "name": f.name,
+                "size": f.stat().st_size,
+                "modified": datetime.fromtimestamp(f.stat().st_mtime).isoformat(),
+            }
+        )
 
     return {"files": sorted(files, key=lambda x: x["modified"], reverse=True)}
 
@@ -241,6 +246,7 @@ async def clear_logs(
 
 # ==================== Управление базой данных ====================
 
+
 @router.get(
     "/database/health",
     summary="Здоровье БД",
@@ -264,7 +270,11 @@ async def get_database_health(current_user: dict = Depends(get_current_user)):
         }
     except Exception as e:
         logger.error(f"Database health check failed: {e}")
-        return {"status": "unhealthy", "error": str(e), "timestamp": datetime.now(timezone.utc).isoformat()}
+        return {
+            "status": "unhealthy",
+            "error": str(e),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
 
 
 @router.post(
@@ -285,6 +295,7 @@ async def backup_database(current_user: dict = Depends(get_current_user)):
 
     try:
         import shutil
+
         shutil.copy2(str(db.db_path), str(backup_path))
         size = backup_path.stat().st_size
         logger.info(f"Database backup created: {backup_path}")
@@ -297,6 +308,7 @@ async def backup_database(current_user: dict = Depends(get_current_user)):
     except Exception as e:
         logger.error(f"Database backup failed: {e}")
         raise ValidationError(f"Ошибка создания бэкапа: {str(e)}")
+
 
 @router.get(
     "/database/stats",
@@ -370,6 +382,7 @@ async def get_database_tables(current_user: dict = Depends(get_current_user)):
 
 # ==================== Управление пользователями ====================
 
+
 @router.get(
     "/users/list",
     summary="Список пользователей",
@@ -428,7 +441,10 @@ async def create_user(
     }
 
     logger.info(f"User created: {username} (role={role}) by {current_user['username']}")
-    return {"message": f"Пользователь {username} создан", "user": {"id": new_id, "username": username, "role": role}}
+    return {
+        "message": f"Пользователь {username} создан",
+        "user": {"id": new_id, "username": username, "role": role},
+    }
 
 
 @router.delete(
@@ -462,6 +478,7 @@ async def delete_user(
 
 
 # ==================== Кэш ====================
+
 
 @router.get(
     "/cache/stats",
@@ -518,6 +535,7 @@ async def clear_cache(
 
 # ==================== Задачи ====================
 
+
 @router.get(
     "/tasks/list",
     summary="Список задач",
@@ -529,13 +547,52 @@ async def list_tasks(current_user: dict = Depends(get_current_user)):
         raise AuthorizationError("Требуется роль администратора")
 
     import asyncio
+
     tasks = []
     for task in asyncio.all_tasks():
-        tasks.append({
-            "name": task.get_name(),
-            "done": task.done(),
-            "cancelled": task.cancelled(),
-            "coroutine": str(task.get_coro()),
-        })
+        tasks.append(
+            {
+                "name": task.get_name(),
+                "done": task.done(),
+                "cancelled": task.cancelled(),
+                "coroutine": str(task.get_coro()),
+            }
+        )
 
     return {"tasks": tasks, "total": len(tasks)}
+
+
+@router.get(
+    "/database/stats",
+    summary="Статистика базы данных",
+    description="Информация о таблицах, индексах и размерах БД",
+)
+async def get_database_stats(current_user: dict = Depends(get_current_user)):
+    """Получить статистику базы данных"""
+    if current_user.get("role") != "admin":
+        raise AuthorizationError("Требуется роль администратора")
+
+    from api.state import get_db_manager
+
+    db = get_db_manager()
+    stats = db.get_database_stats()
+
+    return stats
+
+
+@router.post(
+    "/database/optimize",
+    summary="Оптимизация базы данных",
+    description="ANALYZE, VACUUM и проверка целостности",
+)
+async def optimize_database(current_user: dict = Depends(get_current_user)):
+    """Оптимизировать базу данных (может занять время на больших БД)"""
+    if current_user.get("role") != "admin":
+        raise AuthorizationError("Требуется роль администратора")
+
+    from api.state import get_db_manager
+
+    db = get_db_manager()
+    result = db.optimize_database()
+
+    return result

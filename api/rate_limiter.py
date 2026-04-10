@@ -14,17 +14,18 @@ Endpoints:
 - Redis (опционально для production)
 """
 
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
-from slowapi.middleware import SlowAPIMiddleware
+import os
+from typing import Dict
+
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from typing import Dict, Optional
-import os
-
+from slowapi import Limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi.util import get_remote_address
 
 # ==================== Limiter Configuration ====================
+
 
 def _create_limiter() -> Limiter:
     """
@@ -45,7 +46,10 @@ def _create_limiter() -> Limiter:
             )
         except Exception as e:
             import logging
-            logging.getLogger(__name__).warning(f"Redis limiter failed, falling back to memory: {e}")
+
+            logging.getLogger(__name__).warning(
+                f"Redis limiter failed, falling back to memory: {e}"
+            )
 
     return Limiter(
         key_func=get_remote_address,
@@ -66,6 +70,7 @@ limiter = Limiter(
 
 # ==================== Setup ====================
 
+
 def setup_rate_limiter(app):
     """
     Настройка rate limiter для FastAPI приложения.
@@ -80,6 +85,7 @@ def setup_rate_limiter(app):
 
 
 # ==================== Rate Limit Decorators ====================
+
 
 def auth_limit(max_requests: int = 5, window: int = 60):
     return limiter.limit(f"{max_requests}/{window}seconds")
@@ -107,15 +113,16 @@ def sstv_limit(max_requests: int = 10, window: int = 60):
 
 # ==================== Custom Rate Limit Response ====================
 
+
 def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
     """
     Кастомный обработчик превышения лимита
-    
+
     Returns:
         JSONResponse с информацией о лимите и Retry-After
     """
     retry_after = get_retry_after(exc)
-    
+
     return JSONResponse(
         status_code=429,
         content={
@@ -123,13 +130,13 @@ def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) -> JSO
             "message": "Слишком много запросов. Пожалуйста, подождите.",
             "detail": str(exc.detail),
             "retry_after": retry_after,
-            "retry_after_formatted": format_retry_after(retry_after)
+            "retry_after_formatted": format_retry_after(retry_after),
         },
         headers={
             "Retry-After": str(retry_after),
             "X-RateLimit-Limit": get_limit_from_exception(exc),
-            "X-RateLimit-Remaining": "0"
-        }
+            "X-RateLimit-Remaining": "0",
+        },
     )
 
 
@@ -261,7 +268,4 @@ def is_ip_blacklisted(ip: str) -> bool:
 def get_ip_lists() -> Dict:
     """Получение списков IP"""
     with _ip_lock:
-        return {
-            "whitelist": list(_ip_whitelist),
-            "blacklist": list(_ip_blacklist)
-        }
+        return {"whitelist": list(_ip_whitelist), "blacklist": list(_ip_blacklist)}

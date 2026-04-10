@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from utils.caching.cache_manager import CacheManager
 from utils.database import DatabaseManager
@@ -162,9 +162,7 @@ async def get_stats():
         cursor.execute("SELECT COUNT(*) FROM fm_recordings")
         total_recordings = cursor.fetchone()[0]
 
-        cursor.execute(
-            "SELECT COUNT(DISTINCT frequency_mhz) FROM fm_stations"
-        )
+        cursor.execute("SELECT COUNT(DISTINCT frequency_mhz) FROM fm_stations")
         unique_stations = cursor.fetchone()[0]
 
         cursor.execute("SELECT SUM(file_size_bytes) FROM fm_recordings")

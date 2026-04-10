@@ -8,19 +8,19 @@ import json
 import logging
 import threading
 import time
-import traceback
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
-from dataclasses import dataclass, field
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from queue import Empty, Queue
-from typing import Any, Callable, Dict, List, Optional, Union
+from queue import Queue
+from typing import Any, Callable, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
 try:
     from PIL import Image
+
     PIL_AVAILABLE = True
 except ImportError:
     PIL_AVAILABLE = False
@@ -28,6 +28,7 @@ except ImportError:
 
 class JobStatus(Enum):
     """Статусы задания"""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -39,6 +40,7 @@ class JobStatus(Enum):
 @dataclass
 class BatchJobStats:
     """Статистика задания"""
+
     job_id: str
     job_type: str
     status: str
@@ -65,7 +67,7 @@ class BatchJob:
         processor: Callable,
         parameters: Dict = None,
         priority: int = 0,
-        callback: Optional[Callable] = None
+        callback: Optional[Callable] = None,
     ):
         """
         Инициализация задания
@@ -87,7 +89,7 @@ class BatchJob:
         self.priority = priority
         self.callback = callback
 
-        self.status = 'pending'
+        self.status = "pending"
         self.total_items = len(items)
         self.processed_items = 0
         self.failed_items = 0
@@ -112,17 +114,17 @@ class BatchJob:
     def to_dict(self) -> Dict[str, Any]:
         """Конвертация в словарь"""
         return {
-            'job_id': self.job_id,
-            'job_type': self.job_type,
-            'status': self.status,
-            'total_items': self.total_items,
-            'processed_items': self.processed_items,
-            'failed_items': self.failed_items,
-            'started_at': self.started_at.isoformat() if self.started_at else None,
-            'completed_at': self.completed_at.isoformat() if self.completed_at else None,
-            'progress': self.progress_percent,
-            'priority': self.priority,
-            'success_rate': self.success_rate,
+            "job_id": self.job_id,
+            "job_type": self.job_type,
+            "status": self.status,
+            "total_items": self.total_items,
+            "processed_items": self.processed_items,
+            "failed_items": self.failed_items,
+            "started_at": self.started_at.isoformat() if self.started_at else None,
+            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "progress": self.progress_percent,
+            "priority": self.priority,
+            "success_rate": self.success_rate,
         }
 
     @property
@@ -146,12 +148,7 @@ class BatchProcessor:
     Управление очередями, выполнение заданий, отслеживание прогресса
     """
 
-    def __init__(
-        self,
-        max_workers: int = 4,
-        output_dir: str = "output/batch",
-        db_manager=None
-    ):
+    def __init__(self, max_workers: int = 4, output_dir: str = "output/batch", db_manager=None):
         """
         Инициализация процессора
 
@@ -181,7 +178,7 @@ class BatchProcessor:
         processor: Callable,
         parameters: Dict = None,
         priority: int = 0,
-        callback: Callable = None
+        callback: Callable = None,
     ) -> str:
         """
         Создание нового задания
@@ -208,10 +205,7 @@ class BatchProcessor:
         # Сохранение в БД
         if self.db_manager:
             self.db_manager.add_batch_job(
-                job_id=job_id,
-                job_type=job_type,
-                total_items=len(items),
-                parameters=parameters
+                job_id=job_id, job_type=job_type, total_items=len(items), parameters=parameters
             )
 
         return job_id
@@ -221,7 +215,7 @@ class BatchProcessor:
         audio_files: List[str],
         output_dir: str = "output/sstv_batch",
         parameters: Dict = None,
-        callback: Callable = None
+        callback: Callable = None,
     ) -> str:
         """
         Пакетное декодирование SSTV файлов
@@ -240,12 +234,12 @@ class BatchProcessor:
         def decode_sstv_file(path: str) -> Dict:
             """Декодирование одного SSTV файла"""
             result = {
-                'path': path,
-                'name': Path(path).name,
-                'status': 'success',
-                'image_path': None,
-                'mode': None,
-                'error': None
+                "path": path,
+                "name": Path(path).name,
+                "status": "success",
+                "image_path": None,
+                "mode": None,
+                "error": None,
             }
 
             try:
@@ -254,29 +248,29 @@ class BatchProcessor:
 
                 if image:
                     Path(output_dir).mkdir(parents=True, exist_ok=True)
-                    timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+                    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
                     output_path = f"{output_dir}/sstv_{Path(path).stem}_{timestamp}.png"
                     image.save(output_path)
 
-                    result['image_path'] = output_path
-                    result['mode'] = decoder.metadata.get('mode', 'unknown')
+                    result["image_path"] = output_path
+                    result["mode"] = decoder.metadata.get("mode", "unknown")
                 else:
-                    result['status'] = 'failed'
-                    result['error'] = 'Decoding failed'
+                    result["status"] = "failed"
+                    result["error"] = "Decoding failed"
 
             except Exception as e:
                 logger.error(f"SSTV decode error for {path}: {e}")
-                result['status'] = 'failed'
-                result['error'] = str(e)
+                result["status"] = "failed"
+                result["error"] = str(e)
 
             return result
 
         return self.create_job(
-            job_type='sstv_decode',
+            job_type="sstv_decode",
             items=audio_files,
             processor=decode_sstv_file,
-            parameters={'output_dir': output_dir, **(parameters or {})},
-            callback=callback
+            parameters={"output_dir": output_dir, **(parameters or {})},
+            callback=callback,
         )
 
     def process_satellite_passes(
@@ -285,7 +279,7 @@ class BatchProcessor:
         hours_ahead: int = 24,
         ground_station_lat: float = 55.75,
         ground_station_lon: float = 37.61,
-        callback: Callable = None
+        callback: Callable = None,
     ) -> str:
         """
         Пакетный расчёт пролётов спутников
@@ -304,48 +298,36 @@ class BatchProcessor:
 
         def calculate_passes(sat_name: str) -> Dict:
             """Расчёт пролётов для одного спутника"""
-            result = {
-                'satellite': sat_name,
-                'status': 'success',
-                'passes': [],
-                'error': None
-            }
+            result = {"satellite": sat_name, "status": "success", "passes": [], "error": None}
 
             try:
                 tracker = SatelliteTracker(
-                    ground_station_lat=ground_station_lat,
-                    ground_station_lon=ground_station_lon
+                    ground_station_lat=ground_station_lat, ground_station_lon=ground_station_lon
                 )
-                passes = tracker.get_pass_predictions(
-                    sat_name,
-                    hours_ahead=hours_ahead
-                )
-                result['passes'] = passes
+                passes = tracker.get_pass_predictions(sat_name, hours_ahead=hours_ahead)
+                result["passes"] = passes
 
             except Exception as e:
                 logger.error(f"Satellite passes calculation error for {sat_name}: {e}")
-                result['status'] = 'failed'
-                result['error'] = str(e)
+                result["status"] = "failed"
+                result["error"] = str(e)
 
             return result
 
         return self.create_job(
-            job_type='satellite_passes',
+            job_type="satellite_passes",
             items=satellite_names,
             processor=calculate_passes,
             parameters={
-                'hours_ahead': hours_ahead,
-                'ground_station_lat': ground_station_lat,
-                'ground_station_lon': ground_station_lon
+                "hours_ahead": hours_ahead,
+                "ground_station_lat": ground_station_lat,
+                "ground_station_lon": ground_station_lon,
             },
-            callback=callback
+            callback=callback,
         )
 
     def process_image_batch(
-        self,
-        image_paths: List[str],
-        operation: str = 'analyze',
-        parameters: Dict = None
+        self, image_paths: List[str], operation: str = "analyze", parameters: Dict = None
     ) -> str:
         """
         Пакетная обработка изображений
@@ -358,64 +340,63 @@ class BatchProcessor:
         Returns:
             ID задания
         """
+
         def process_single_image(path: str) -> Dict:
             """Обработка одного изображения"""
             result = {
-                'path': path,
-                'name': Path(path).name,
-                'status': 'success',
-                'data': None,
-                'error': None
+                "path": path,
+                "name": Path(path).name,
+                "status": "success",
+                "data": None,
+                "error": None,
             }
 
             try:
-                if operation == 'analyze':
+                if operation == "analyze":
                     # Анализ изображения
                     img = Image.open(path)
-                    result['data'] = {
-                        'size': img.size,
-                        'mode': img.mode,
-                        'format': img.format,
-                        'width': img.width,
-                        'height': img.height,
+                    result["data"] = {
+                        "size": img.size,
+                        "mode": img.mode,
+                        "format": img.format,
+                        "width": img.width,
+                        "height": img.height,
                     }
-                elif operation == 'resize':
+                elif operation == "resize":
                     # Изменение размера
-                    size = parameters.get('size', (256, 256))
+                    size = parameters.get("size", (256, 256))
                     img = Image.open(path)
                     resized = img.resize(size, Image.Resampling.LANCZOS)
                     output_path = self.output_dir / f"resized_{Path(path).name}"
                     resized.save(output_path)
-                    result['data'] = {'output_path': str(output_path)}
-                elif operation == 'convert':
+                    result["data"] = {"output_path": str(output_path)}
+                elif operation == "convert":
                     # Конвертация формата
-                    format_out = parameters.get('format', 'PNG')
+                    format_out = parameters.get("format", "PNG")
                     img = Image.open(path)
                     output_path = self.output_dir / f"{Path(path).stem}.{format_out.lower()}"
                     img.save(output_path, format=format_out)
-                    result['data'] = {'output_path': str(output_path)}
+                    result["data"] = {"output_path": str(output_path)}
                 else:
-                    result['error'] = f"Неизвестная операция: {operation}"
-                    result['status'] = 'error'
+                    result["error"] = f"Неизвестная операция: {operation}"
+                    result["status"] = "error"
 
             except Exception as e:
                 logger.error(f"Image {operation} error for {path}: {e}")
-                result['error'] = str(e)
-                result['status'] = 'error'
+                result["error"] = str(e)
+                result["status"] = "error"
 
             return result
 
         return self.create_job(
-            job_type=f'image_{operation}',
+            job_type=f"image_{operation}",
             items=image_paths,
             processor=process_single_image,
-            parameters=parameters
+            parameters=parameters,
         )
 
     def process_surface_analysis_batch(
-        self,
-        surface_data_list: List[Dict[str, Any]],
-        analysis_type: str = 'statistics'
+        self, surface_data_list: List[Dict[str, Any]], analysis_type: str = "statistics"
     ) -> str:
         """
         Пакетный анализ поверхностей
@@ -427,62 +408,61 @@ class BatchProcessor:
         Returns:
             ID задания
         """
+
         def analyze_surface(data: Dict) -> Dict:
             """Анализ одной поверхности"""
             import numpy as np
 
             result = {
-                'id': data.get('id', 'unknown'),
-                'status': 'success',
-                'data': None,
-                'error': None
+                "id": data.get("id", "unknown"),
+                "status": "success",
+                "data": None,
+                "error": None,
             }
 
             try:
-                surface = data.get('surface', np.zeros((100, 100)))
+                surface = data.get("surface", np.zeros((100, 100)))
 
-                if analysis_type == 'statistics':
-                    result['data'] = {
-                        'mean': float(np.mean(surface)),
-                        'std': float(np.std(surface)),
-                        'min': float(np.min(surface)),
-                        'max': float(np.max(surface)),
-                        'rms': float(np.sqrt(np.mean(surface**2))),
+                if analysis_type == "statistics":
+                    result["data"] = {
+                        "mean": float(np.mean(surface)),
+                        "std": float(np.std(surface)),
+                        "min": float(np.min(surface)),
+                        "max": float(np.max(surface)),
+                        "rms": float(np.sqrt(np.mean(surface**2))),
                     }
-                elif analysis_type == 'full':
-                    result['data'] = {
-                        'mean': float(np.mean(surface)),
-                        'std': float(np.std(surface)),
-                        'min': float(np.min(surface)),
-                        'max': float(np.max(surface)),
-                        'rms': float(np.sqrt(np.mean(surface**2))),
-                        'skewness': float(self._calculate_skewness(surface)),
-                        'kurtosis': float(self._calculate_kurtosis(surface)),
+                elif analysis_type == "full":
+                    result["data"] = {
+                        "mean": float(np.mean(surface)),
+                        "std": float(np.std(surface)),
+                        "min": float(np.min(surface)),
+                        "max": float(np.max(surface)),
+                        "rms": float(np.sqrt(np.mean(surface**2))),
+                        "skewness": float(self._calculate_skewness(surface)),
+                        "kurtosis": float(self._calculate_kurtosis(surface)),
                     }
 
             except Exception as e:
                 logger.error(f"Surface {analysis_type} error: {e}")
-                result['error'] = str(e)
-                result['status'] = 'error'
+                result["error"] = str(e)
+                result["status"] = "error"
 
             return result
 
         return self.create_job(
-            job_type=f'surface_{analysis_type}',
-            items=surface_data_list,
-            processor=analyze_surface
+            job_type=f"surface_{analysis_type}", items=surface_data_list, processor=analyze_surface
         )
 
     def _calculate_skewness(self, data) -> float:
         """Расчёт асимметрии"""
-        import numpy as np
         from scipy import stats
+
         return float(stats.skew(data.flatten()))
 
     def _calculate_kurtosis(self, data) -> float:
         """Расчёт эксцесса"""
-        import numpy as np
         from scipy import stats
+
         return float(stats.kurtosis(data.flatten()))
 
     def run_job(self, job_id: str, parallel: bool = True) -> Dict[str, Any]:
@@ -498,20 +478,20 @@ class BatchProcessor:
         """
         with self.lock:
             if job_id not in self.jobs:
-                return {'error': f'Задание {job_id} не найдено'}
+                return {"error": f"Задание {job_id} не найдено"}
 
             job = self.jobs[job_id]
 
-            if job.status == 'running':
-                return {'error': 'Задание уже выполняется'}
+            if job.status == "running":
+                return {"error": "Задание уже выполняется"}
 
-            job.status = 'running'
+            job.status = "running"
             job.started_at = datetime.now(timezone.utc)
             self.active_jobs.add(job_id)
 
         # Обновление в БД
         if self.db_manager:
-            self.db_manager.update_batch_job(job_id, status='running')
+            self.db_manager.update_batch_job(job_id, status="running")
 
         try:
             if parallel and len(job.items) > 1:
@@ -520,7 +500,7 @@ class BatchProcessor:
                 results = self._run_sequential(job)
 
             job.results = results
-            job.status = 'completed'
+            job.status = "completed"
             job.completed_at = datetime.now(timezone.utc)
 
             self.total_jobs_completed += 1
@@ -530,10 +510,10 @@ class BatchProcessor:
             if self.db_manager:
                 self.db_manager.update_batch_job(
                     job_id,
-                    status='completed',
+                    status="completed",
                     processed_items=job.processed_items,
                     failed_items=job.failed_items,
-                    results_summary={'results_count': len(results)}
+                    results_summary={"results_count": len(results)},
                 )
 
             # Сохранение результатов
@@ -541,12 +521,12 @@ class BatchProcessor:
 
         except Exception as e:
             logger.error(f"Batch job {job_id} failed: {e}")
-            job.status = 'failed'
+            job.status = "failed"
             job.completed_at = datetime.now(timezone.utc)
             job.errors.append(str(e))
 
             if self.db_manager:
-                self.db_manager.update_batch_job(job_id, status='failed')
+                self.db_manager.update_batch_job(job_id, status="failed")
 
         finally:
             with self.lock:
@@ -566,7 +546,7 @@ class BatchProcessor:
             except Exception as e:
                 logger.debug(f"Sequential processing error: {e}")
                 job.failed_items += 1
-                results.append({'error': str(e), 'item': str(item)})
+                results.append({"error": str(e), "item": str(item)})
 
         return results
 
@@ -585,7 +565,7 @@ class BatchProcessor:
                 except Exception as e:
                     logger.debug(f"Parallel processing error: {e}")
                     job.failed_items += 1
-                    results.append({'error': str(e)})
+                    results.append({"error": str(e)})
 
         return results
 
@@ -593,8 +573,9 @@ class BatchProcessor:
         """Запуск всех ожидающих заданий"""
         with self.lock:
             pending_jobs = [
-                job_id for job_id, job in self.jobs.items()
-                if job.status == 'pending' and job_id not in self.active_jobs
+                job_id
+                for job_id, job in self.jobs.items()
+                if job.status == "pending" and job_id not in self.active_jobs
             ]
 
         # Сортировка по приоритету
@@ -615,12 +596,12 @@ class BatchProcessor:
         """
         job = self.jobs.get(job_id)
         if not job:
-            return {'error': 'Job not found'}
+            return {"error": "Job not found"}
 
         # Детальная статистика
         error_types = {}
         for err in job.errors:
-            error_type = type(err).__name__ if isinstance(err, Exception) else 'Unknown'
+            error_type = type(err).__name__ if isinstance(err, Exception) else "Unknown"
             error_types[error_type] = error_types.get(error_type, 0) + 1
 
         # Распределение результатов по времени
@@ -630,14 +611,18 @@ class BatchProcessor:
 
         return {
             **job.to_dict(),
-            'detailed_stats': {
-                'processing_time_sec': processing_time,
-                'avg_time_per_item': processing_time / job.total_items if processing_time and job.total_items > 0 else None,
-                'error_types': error_types,
-                'errors_list': job.errors[:10],  # Первые 10 ошибок
+            "detailed_stats": {
+                "processing_time_sec": processing_time,
+                "avg_time_per_item": (
+                    processing_time / job.total_items
+                    if processing_time and job.total_items > 0
+                    else None
+                ),
+                "error_types": error_types,
+                "errors_list": job.errors[:10],  # Первые 10 ошибок
             },
-            'sample_results': job.results[:5],  # Первые 5 результатов
-            'recommendations': self._generate_job_recommendations(job),
+            "sample_results": job.results[:5],  # Первые 5 результатов
+            "recommendations": self._generate_job_recommendations(job),
         }
 
     def _generate_job_recommendations(self, job: BatchJob) -> List[str]:
@@ -647,11 +632,15 @@ class BatchProcessor:
         if job.failed_items > 0:
             fail_rate = job.failed_items / job.total_items * 100
             if fail_rate > 20:
-                recommendations.append(f"Высокий процент ошибок ({fail_rate:.1f}%) - проверьте входные данные")
+                recommendations.append(
+                    f"Высокий процент ошибок ({fail_rate:.1f}%) - проверьте входные данные"
+                )
             elif fail_rate > 5:
-                recommendations.append(f"Замечены ошибки ({fail_rate:.1f}%) - рекомендуется анализ логов")
+                recommendations.append(
+                    f"Замечены ошибки ({fail_rate:.1f}%) - рекомендуется анализ логов"
+                )
 
-        if job.progress_percent < 100 and job.status == 'running':
+        if job.progress_percent < 100 and job.status == "running":
             recommendations.append("Задание выполняется - ожидайте завершения")
 
         if job.priority < 5 and job.total_items > 100:
@@ -683,12 +672,12 @@ class BatchProcessor:
                 total_items += job.total_items
 
             return {
-                'total_jobs': len(self.jobs),
-                'jobs_by_status': jobs_by_status,
-                'jobs_by_priority': jobs_by_priority,
-                'total_items': total_items,
-                'active_jobs': len(self.active_jobs),
-                'queue_size': self.job_queue.qsize(),
+                "total_jobs": len(self.jobs),
+                "jobs_by_status": jobs_by_status,
+                "jobs_by_priority": jobs_by_priority,
+                "total_items": total_items,
+                "active_jobs": len(self.active_jobs),
+                "queue_size": self.job_queue.qsize(),
             }
 
     def export_job_report(self, job_id: str, output_path: str = None) -> str:
@@ -709,7 +698,7 @@ class BatchProcessor:
         else:
             output_path = Path(output_path)
 
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(report, f, indent=2, ensure_ascii=False, default=str)
 
         return str(output_path)
@@ -718,7 +707,7 @@ class BatchProcessor:
         """Получение статуса задания"""
         with self.lock:
             if job_id not in self.jobs:
-                return {'error': f'Задание {job_id} не найдено'}
+                return {"error": f"Задание {job_id} не найдено"}
             return self.jobs[job_id].to_dict()
 
     def get_job_stats(self, job_id: str) -> Optional[BatchJobStats]:
@@ -765,14 +754,14 @@ class BatchProcessor:
 
             job = self.jobs[job_id]
 
-            if job.status == 'running':
+            if job.status == "running":
                 return False
 
-            job.status = 'cancelled'
+            job.status = "cancelled"
             job.completed_at = datetime.now(timezone.utc)
 
             if self.db_manager:
-                self.db_manager.update_batch_job(job_id, status='cancelled')
+                self.db_manager.update_batch_job(job_id, status="cancelled")
 
             return True
 
@@ -782,9 +771,9 @@ class BatchProcessor:
             if job_id not in self.jobs:
                 return False
             job = self.jobs[job_id]
-            if job.status != 'running':
+            if job.status != "running":
                 return False
-            job.status = 'paused'
+            job.status = "paused"
             return True
 
     def resume_job(self, job_id: str) -> bool:
@@ -793,9 +782,9 @@ class BatchProcessor:
             if job_id not in self.jobs:
                 return False
             job = self.jobs[job_id]
-            if job.status != 'paused':
+            if job.status != "paused":
                 return False
-            job.status = 'running'
+            job.status = "running"
             self.job_queue.put(job)
             return True
 
@@ -804,33 +793,35 @@ class BatchProcessor:
         results_path = self.output_dir / f"{job.job_id}_results.json"
 
         output_data = {
-            'job_info': job.to_dict(),
-            'results': job.results,
-            'errors': job.errors,
+            "job_info": job.to_dict(),
+            "results": job.results,
+            "errors": job.errors,
         }
 
-        with open(results_path, 'w', encoding='utf-8') as f:
+        with open(results_path, "w", encoding="utf-8") as f:
             json.dump(output_data, f, indent=2, ensure_ascii=False, default=str)
 
     def get_statistics(self) -> Dict[str, Any]:
         """Получение статистики обработки"""
         with self.lock:
             total_jobs = len(self.jobs)
-            completed = sum(1 for j in self.jobs.values() if j.status == 'completed')
-            failed = sum(1 for j in self.jobs.values() if j.status == 'failed')
+            completed = sum(1 for j in self.jobs.values() if j.status == "completed")
+            failed = sum(1 for j in self.jobs.values() if j.status == "failed")
             running = len(self.active_jobs)
             pending = total_jobs - completed - failed - running
-            paused = sum(1 for j in self.jobs.values() if j.status == 'paused')
+            paused = sum(1 for j in self.jobs.values() if j.status == "paused")
 
             return {
-                'total_jobs': total_jobs,
-                'completed': completed,
-                'failed': failed,
-                'running': running,
-                'pending': pending,
-                'paused': paused,
-                'total_items_processed': self.total_items_processed,
-                'success_rate': completed / (completed + failed) * 100 if (completed + failed) > 0 else 0,
+                "total_jobs": total_jobs,
+                "completed": completed,
+                "failed": failed,
+                "running": running,
+                "pending": pending,
+                "paused": paused,
+                "total_items_processed": self.total_items_processed,
+                "success_rate": (
+                    completed / (completed + failed) * 100 if (completed + failed) > 0 else 0
+                ),
             }
 
     async def process_item_async(self, item: Any, processor: Callable) -> Any:
@@ -839,10 +830,7 @@ class BatchProcessor:
         return await loop.run_in_executor(None, processor, item)
 
     async def process_batch_async(
-        self,
-        items: List[Any],
-        processor: Callable,
-        max_concurrent: int = 4
+        self, items: List[Any], processor: Callable, max_concurrent: int = 4
     ) -> List[Any]:
         """
         Асинхронная пакетная обработка
@@ -876,7 +864,7 @@ class FolderWatcher:
         watch_folder: str,
         processor: BatchProcessor,
         pattern: str = "*.png",
-        callback: Callable = None
+        callback: Callable = None,
     ):
         """
         Инициализация наблюдателя
@@ -939,8 +927,7 @@ class FolderWatcher:
 
         # Добавление в пакетную обработку
         job_id = self.processor.process_image_batch(
-            image_paths=[str(file_path)],
-            operation='analyze'
+            image_paths=[str(file_path)], operation="analyze"
         )
 
         self.processed_files.add(file_path)
@@ -951,10 +938,7 @@ class FolderWatcher:
 
 # Глобальная функция для быстрой пакетной обработки
 def batch_process_images(
-    folder: str,
-    operation: str = 'analyze',
-    output_dir: str = "output/batch",
-    max_workers: int = 4
+    folder: str, operation: str = "analyze", output_dir: str = "output/batch", max_workers: int = 4
 ) -> Dict[str, Any]:
     """
     Быстрая пакетная обработка изображений
@@ -974,17 +958,12 @@ def batch_process_images(
     processor = BatchProcessor(max_workers=max_workers, output_dir=output_dir)
 
     job_id = processor.process_image_batch(
-        image_paths=[str(img) for img in images],
-        operation=operation
+        image_paths=[str(img) for img in images], operation=operation
     )
 
     result = processor.run_job(job_id)
 
-    return {
-        'job_id': job_id,
-        'status': result,
-        'statistics': processor.get_statistics()
-    }
+    return {"job_id": job_id, "status": result, "statistics": processor.get_statistics()}
 
 
 if __name__ == "__main__":
@@ -1000,15 +979,14 @@ if __name__ == "__main__":
         test_folder.mkdir(parents=True, exist_ok=True)
 
         for i in range(5):
-            img = Image.new('RGB', (100, 100), color=(i*50, 100, 150))
+            img = Image.new("RGB", (100, 100), color=(i * 50, 100, 150))
             img.save(test_folder / f"test_{i}.png")
 
         # Пакетная обработка
         images = list(test_folder.glob("*.png"))
 
         job_id = processor.process_image_batch(
-            image_paths=[str(img) for img in images],
-            operation='analyze'
+            image_paths=[str(img) for img in images], operation="analyze"
         )
 
         print(f"Создано задание: {job_id}")
