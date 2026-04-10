@@ -51,18 +51,20 @@ data/.password_hashes.json
 data/2fa_secrets.json
 
 # Временные файлы разработки
-adsb_capture.py
 adsb_output.txt
 adsb_samples_*.npy
 fm_*.raw
 fm_*.wav
-fm_radio_capture.py
-fm_radio_scanner.py
 tools/
 output/test_export/
 docs/cyclic_imports_report.txt
 config/device_calibration.json
 data/noaa/*.wav
+
+# RTL-SDR данные (большие файлы)
+data/adsb/*.npy
+data/fm_radio/*.raw
+data/fm_radio/*.wav
 data/sstv/*.wav
 *.whl
 *_samples.dat
