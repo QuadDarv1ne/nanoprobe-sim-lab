@@ -432,9 +432,12 @@ class FlaskFastAPIIntegration:
                 if len(fastapi_scans) == len(flask_scans):
                     result["synced"].append("scans")
                 else:
-                    result["errors"].append(
-                        f"Несовпадение количества сканирований: FastAPI={len(fastapi_scans)}, Flask={len(flask_scans)}"
+                    msg = (
+                        f"Несовпадение количества сканирований: "
+                        f"FastAPI={len(fastapi_scans)}, "
+                        f"Flask={len(flask_scans)}"
                     )
+                    result["errors"].append(msg)
             except Exception as e:
                 result["errors"].append(f"Ошибка синхронизации сканирований: {e}")
 
@@ -446,9 +449,12 @@ class FlaskFastAPIIntegration:
                 if len(fastapi_sims) == len(flask_sims):
                     result["synced"].append("simulations")
                 else:
-                    result["errors"].append(
-                        f"Несовпадение количества симуляций: FastAPI={len(fastapi_sims)}, Flask={len(flask_sims)}"
+                    msg = (
+                        f"Несовпадение количества симуляций: "
+                        f"FastAPI={len(fastapi_sims)}, "
+                        f"Flask={len(flask_sims)}"
                     )
+                    result["errors"].append(msg)
             except Exception as e:
                 result["errors"].append(f"Ошибка синхронизации симуляций: {e}")
 

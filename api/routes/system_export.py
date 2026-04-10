@@ -31,11 +31,13 @@ async def export_data(format: str):
         raise ValidationError(f"Неподдерживаемый формат: {format}. Доступны: json, csv, pdf")
 
     # Здесь можно добавить реальную логику экспорта
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    download_url = f"/downloads/export_{format}_{timestamp}.{format}"
     return {
         "format": format,
         "status": "success",
         "message": f"Данные экспортированы в формате {format.upper()}",
-        "download_url": f"/downloads/export_{format}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.{format}",
+        "download_url": download_url,
     }
 
 
@@ -103,12 +105,12 @@ async def export_all_data():
 
     zip_buffer.seek(0)
 
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    content_disposition = f"attachment; filename=nanoprobe_export_{timestamp}.zip"
     return StreamingResponse(
         zip_buffer,
         media_type="application/zip",
-        headers={
-            "Content-Disposition": f"attachment; filename=nanoprobe_export_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.zip"
-        },
+        headers={"Content-Disposition": content_disposition},
     )
 
 

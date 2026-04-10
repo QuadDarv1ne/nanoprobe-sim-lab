@@ -405,7 +405,9 @@ class AlertManager:
         try:
             config = self.config["email"]
 
-            subject = f"{'✅ RESOLVED' if is_recovery else '🚨 ALERT'}: {alert['alert_name']} ({alert['severity'].upper()})"
+            status = "✅ RESOLVED" if is_recovery else "🚨 ALERT"
+            severity = alert["severity"].upper()
+            subject = f"{status}: {alert['alert_name']} ({severity})"
 
             body = f"""
 <html>
