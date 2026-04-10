@@ -22,6 +22,8 @@ from fastapi import APIRouter, Query, Request
 from api.dependencies import rate_limit
 from api.error_handlers import ExternalServiceError
 from api.schemas import APODResponse
+from utils.api.nasa_api_client import get_nasa_client
+from utils.caching.redis_cache import cache
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +34,7 @@ router = APIRouter(prefix="/nasa", tags=["NASA API"])
 # APOD Endpoints
 # ==========================================
 
+
 @router.get(
     "/apod",
     summary="NASA APOD",
@@ -41,29 +44,31 @@ router = APIRouter(prefix="/nasa", tags=["NASA API"])
 async def get_apod(
     request: Request,
     date: Optional[str] = Query(None, description="Дата в формате YYYY-MM-DD"),
-    count: Optional[int] = Query(None, ge=1, le=100, description="Количество случайных изображений"),
+    count: Optional[int] = Query(
+        None, ge=1, le=100, description="Количество случайных изображений"
+    ),
 ):
     """
     Получение Astronomy Picture of the Day.
-    
+
     - **date**: Конкретная дата (по умолчанию сегодня)
     - **count**: Количество случайных изображений (1-100)
     """
     client = get_nasa_client()
-    
+
     # Проверка кэша
     cache_key = f"nasa:apod:{date or 'today'}:{count or 'single'}"
     cached = cache.get(cache_key)
     if cached:
         cached["cached"] = True
         return cached
-    
+
     try:
         result = await client.get_apod(date=date, count=count)
-        
+
         # Кэширование на 1 час
         cache.set(cache_key, result, expire=3600)
-        
+
         return result
     except Exception as e:
         logger.error(f"APOD fetch error: {e}")
@@ -82,13 +87,13 @@ async def get_apod_range(
 ):
     """Получение APOD за диапазон дат"""
     client = get_nasa_client()
-    
+
     cache_key = f"nasa:apod:range:{start_date}:{end_date}"
     cached = cache.get(cache_key)
     if cached:
         cached["cached"] = True
         return cached
-    
+
     try:
         result = await client.get_apod(start_date=start_date, end_date=end_date)
         cache.set(cache_key, result, expire=7200)  # 2 часа
@@ -101,6 +106,7 @@ async def get_apod_range(
 # Mars Rover Photos
 # ==========================================
 
+
 @router.get(
     "/mars/photos",
     summary="Mars Rover Photos",
@@ -111,19 +117,21 @@ async def get_mars_photos(
     sol: Optional[int] = Query(None, ge=0, description="Марсианский день миссии"),
     earth_date: Optional[str] = Query(None, description="Земная дата YYYY-MM-DD"),
     camera: Optional[str] = Query(None, description="Камера (FHAZ, RHAZ, MAHI, etc.)"),
-    rover: Optional[str] = Query(None, description="Ровер (Curiosity, Opportunity, Spirit, Perseverance)"),
+    rover: Optional[str] = Query(
+        None, description="Ровер (Curiosity, Opportunity, Spirit, Perseverance)"
+    ),
     page: int = Query(0, ge=0),
     per_page: int = Query(25, ge=1, le=100),
 ):
     """Получение фотографий с марсоходов"""
     client = get_nasa_client()
-    
+
     cache_key = f"nasa:mars:{sol or 'any'}:{earth_date or 'any'}:{rover or 'all'}:{page}:{per_page}"
     cached = cache.get(cache_key)
     if cached:
         cached["cached"] = True
         return cached
-    
+
     try:
         result = await client.get_mars_photos(
             sol=sol,
@@ -148,13 +156,13 @@ async def get_mars_photos(
 async def get_mars_rovers():
     """Получение информации о марсоходах"""
     client = get_nasa_client()
-    
+
     cache_key = "nasa:mars:rovers"
     cached = cache.get(cache_key)
     if cached:
         cached["cached"] = True
         return cached
-    
+
     try:
         result = await client.get_mars_rover_manifest()
         cache.set(cache_key, result, expire=86400)  # 24 часа
@@ -166,6 +174,7 @@ async def get_mars_rovers():
 # ==========================================
 # Near Earth Objects (Asteroids)
 # ==========================================
+
 
 @router.get(
     "/asteroids/feed",
@@ -181,19 +190,19 @@ async def get_asteroids(
 ):
     """Получение данных об астероидах"""
     client = get_nasa_client()
-    
+
     # Даты по умолчанию - сегодня + 7 дней
     if not start_date:
         start_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     if not end_date:
         end_date = (datetime.now(timezone.utc) + timedelta(days=7)).strftime("%Y-%m-%d")
-    
+
     cache_key = f"nasa:asteroids:{start_date}:{end_date}:{page}:{per_page}"
     cached = cache.get(cache_key)
     if cached:
         cached["cached"] = True
         return cached
-    
+
     try:
         result = await client.get_asteroids(
             start_date=start_date,
@@ -216,13 +225,13 @@ async def get_asteroids(
 async def get_asteroid(asteroid_id: int):
     """Получение данных об астероиде по ID"""
     client = get_nasa_client()
-    
+
     cache_key = f"nasa:asteroid:{asteroid_id}"
     cached = cache.get(cache_key)
     if cached:
         cached["cached"] = True
         return cached
-    
+
     try:
         result = await client.get_asteroid_by_id(asteroid_id)
         cache.set(cache_key, result, expire=86400)  # 24 часа
@@ -234,6 +243,7 @@ async def get_asteroid(asteroid_id: int):
 # ==========================================
 # Earth Imagery (EPIC)
 # ==========================================
+
 
 @router.get(
     "/earth/imagery",
@@ -248,17 +258,17 @@ async def get_earth_imagery(
 ):
     """Получение изображений Земли"""
     client = get_nasa_client()
-    
+
     coordinates = None
     if lat is not None and lon is not None:
         coordinates = {"lat": lat, "lon": lon}
-    
+
     cache_key = f"nasa:earth:{date or 'latest'}:{lat}:{lon}"
     cached = cache.get(cache_key)
     if cached:
         cached["cached"] = True
         return cached
-    
+
     try:
         result = await client.get_earth_imagery(
             date=date,
@@ -273,6 +283,7 @@ async def get_earth_imagery(
 # ==========================================
 # NASA Image Library
 # ==========================================
+
 
 @router.get(
     "/image-library/search",
@@ -290,13 +301,13 @@ async def search_images(
 ):
     """Поиск в библиотеке изображений NASA"""
     client = get_nasa_client()
-    
+
     cache_key = f"nasa:library:{query}:{media_type}:{page}:{page_size}"
     cached = cache.get(cache_key)
     if cached:
         cached["cached"] = True
         return cached
-    
+
     try:
         result = await client.search_images(
             query=query,
@@ -316,6 +327,7 @@ async def search_images(
 # EONET - Natural Events
 # ==========================================
 
+
 @router.get(
     "/events/natural",
     summary="EONET Natural Events",
@@ -329,13 +341,13 @@ async def get_natural_events(
 ):
     """Получение данных о природных событиях"""
     client = get_nasa_client()
-    
+
     cache_key = f"nasa:events:{status or 'all'}:{days or 'any'}:{limit}"
     cached = cache.get(cache_key)
     if cached:
         cached["cached"] = True
         return cached
-    
+
     try:
         result = await client.get_natural_events(
             status=status,
@@ -357,13 +369,13 @@ async def get_natural_events(
 async def get_event(event_id: str):
     """Получение данных о событии по ID"""
     client = get_nasa_client()
-    
+
     cache_key = f"nasa:event:{event_id}"
     cached = cache.get(cache_key)
     if cached:
         cached["cached"] = True
         return cached
-    
+
     try:
         result = await client.get_event_by_id(event_id)
         cache.set(cache_key, result, expire=3600)
@@ -376,6 +388,7 @@ async def get_event(event_id: str):
 # Health & Info
 # ==========================================
 
+
 @router.get(
     "/health",
     summary="NASA API Health Check",
@@ -384,12 +397,12 @@ async def get_event(event_id: str):
 async def health_check():
     """Проверка доступности NASA API"""
     client = get_nasa_client()
-    
+
     cache_key = "nasa:health"
     cached = cache.get(cache_key)
     if cached:
         return cached
-    
+
     try:
         is_healthy = await client.health_check()
         result = {

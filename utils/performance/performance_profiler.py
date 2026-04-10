@@ -226,7 +226,7 @@ class PerformanceProfiler:
     def profile_code_block(self, code: str, name: str = "code_block") -> Dict[str, Any]:
         """
         Профилирует блок кода (БЕЗОПАСНАЯ версия - exec() удалён)
-        
+
         Внимание: Эта функция теперь принимает только выражения (expressions),
         а не произвольный код. Для профилирования произвольного кода
         используйте внешние инструменты (cProfile, line_profiler).
@@ -237,27 +237,47 @@ class PerformanceProfiler:
 
         Returns:
             Результаты профилирования
-            
+
         Raises:
             ValueError: Если код содержит опасные конструкции
         """
         # Проверка безопасности: блокируем опасные конструкции
         dangerous_keywords = [
-            'import', 'open', 'exec', 'eval', 'compile', 'getattr', 'setattr',
-            'delattr', '__import__', 'globals', 'locals', 'vars', 'breakpoint',
-            'input', 'file', 'open(', 'exec(', 'eval(', 'subprocess', 'os.system',
-            'os.popen', 'sys.modules', 'importlib'
+            "import",
+            "open",
+            "exec",
+            "eval",
+            "compile",
+            "getattr",
+            "setattr",
+            "delattr",
+            "__import__",
+            "globals",
+            "locals",
+            "vars",
+            "breakpoint",
+            "input",
+            "file",
+            "open(",
+            "exec(",
+            "eval(",
+            "subprocess",
+            "os.system",
+            "os.popen",
+            "sys.modules",
+            "importlib",
         ]
-        
+
         for keyword in dangerous_keywords:
             if keyword in code:
                 raise ValueError(
                     f"Код содержит запрещённое ключевое слово: '{keyword}'. "
                     "profile_code_block поддерживает только безопасные выражения."
                 )
-        
+
         # AST парсинг для дополнительной проверки
         import ast
+
         try:
             tree = ast.parse(code)
             # Разрешаем только выражения и простые конструкции
@@ -265,7 +285,11 @@ class PerformanceProfiler:
                 if isinstance(node, (ast.Import, ast.ImportFrom, ast.Call)):
                     # Проверяем вызовы
                     if isinstance(node, ast.Call):
-                        if isinstance(node.func, ast.Name) and node.func.id in ['exec', 'eval', 'compile']:
+                        if isinstance(node.func, ast.Name) and node.func.id in [
+                            "exec",
+                            "eval",
+                            "compile",
+                        ]:
                             raise ValueError(f"Запрещённый вызов: {node.func.id}")
         except SyntaxError as e:
             raise ValueError(f"Синтаксическая ошибка в коде: {e}")
@@ -276,12 +300,11 @@ class PerformanceProfiler:
         start_time = time.time()
         # Безопасное выполнение через eval (только выражения)
         try:
-            result = eval(compile(code, '<profiler>', 'eval'), {"__builtins__": {}}, {})
+            eval(compile(code, "<profiler>", "eval"), {"__builtins__": {}}, {})
         except SyntaxError:
             # Если не выражение, выполняем как statement через exec с ограниченным окружением
             safe_locals: dict = {}
-            exec(compile(code, '<profiler>', 'exec'), {"__builtins__": {}}, safe_locals)
-            result = safe_locals
+            exec(compile(code, "<profiler>", "exec"), {"__builtins__": {}}, safe_locals)
         end_time = time.time()
 
         pr.disable()
@@ -294,7 +317,8 @@ class PerformanceProfiler:
 
         # Сохраняем в файл
         profile_file = (
-            self.output_dir / f"profile_{name}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.txt"
+            self.output_dir
+            / f"profile_{name}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.txt"
         )
         with open(profile_file, "w", encoding="utf-8") as f:
             f.write(s.getvalue())
@@ -698,12 +722,12 @@ def main():
     # Пример профилирования блока кода
 
     print("\nПрофилирование блока кода...")
-    code_block = '''
+    code_block = """
 def test_function():
     return sum(i**2 for i in range(100000))
 
 result = test_function()
-'''
+"""
     code_profile_result = profiler.profile_code_block(code_block, "test_code_block")
     print(f"Время выполнения блока кода: {code_profile_result['execution_time']:.4f} сек")
 

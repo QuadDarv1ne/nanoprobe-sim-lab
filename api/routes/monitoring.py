@@ -41,10 +41,7 @@ async def get_metrics():
     """
     from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
-    return Response(
-        content=generate_latest(),
-        media_type=CONTENT_TYPE_LATEST
-    )
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 @router.get(
@@ -55,7 +52,7 @@ async def get_metrics():
 async def get_detailed_health():
     """
     Детальная информация о здоровье системы.
-    
+
     Включает:
     - CPU usage
     - Memory usage
@@ -67,19 +64,19 @@ async def get_detailed_health():
     cpu_percent = psutil.cpu_percent(interval=1)
     cpu_per_core = psutil.cpu_percent(percpu=True)
     cpu_freq = psutil.cpu_freq()
-    
+
     # Memory
     memory = psutil.virtual_memory()
-    
+
     # Disk
     disk = get_system_disk_usage()
-    
+
     # Network
     net = psutil.net_io_counters()
-    
+
     # Process
     process = psutil.Process()
-    
+
     return {
         "status": "healthy",
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -190,38 +187,50 @@ async def profile_database_query(
         raise HTTPException(status_code=404, detail="Database not found")
 
     # Защита от SQL injection - разрешаем только SELECT
-    if not re.match(r'^\s*SELECT\s+', query, re.IGNORECASE):
-        raise HTTPException(
-            status_code=400,
-            detail="Only SELECT queries are allowed for profiling"
-        )
+    if not re.match(r"^\s*SELECT\s+", query, re.IGNORECASE):
+        raise HTTPException(status_code=400, detail="Only SELECT queries are allowed for profiling")
 
     # Блокируем опасные операции
-    dangerous_patterns = ['DROP', 'DELETE', 'INSERT', 'UPDATE', 'ALTER', 'CREATE', 'ATTACH', 'DETACH']
+    dangerous_patterns = [
+        "DROP",
+        "DELETE",
+        "INSERT",
+        "UPDATE",
+        "ALTER",
+        "CREATE",
+        "ATTACH",
+        "DETACH",
+    ]
     for pattern in dangerous_patterns:
-        if re.search(rf'\b{pattern}\b', query, re.IGNORECASE):
+        if re.search(rf"\b{pattern}\b", query, re.IGNORECASE):
             raise HTTPException(
-                status_code=400,
-                detail=f"Query contains forbidden operation: {pattern}"
+                status_code=400, detail=f"Query contains forbidden operation: {pattern}"
             )
 
     # Валидация: извлекаем только имена таблиц для EXPLAIN QUERY PLAN (SQL injection fix)
     import re as _re
-    table_names = set(_re.findall(r'\bFROM\s+(\w+)', query, _re.IGNORECASE))
-    table_names.update(_re.findall(r'\bJOIN\s+(\w+)', query, _re.IGNORECASE))
-    
+
+    table_names = set(_re.findall(r"\bFROM\s+(\w+)", query, _re.IGNORECASE))
+    table_names.update(_re.findall(r"\bJOIN\s+(\w+)", query, _re.IGNORECASE))
+
     # Whitelist допустимых таблиц
     ALLOWED_TABLES = {
-        'scans', 'simulations', 'images', 'users', 'analysis_results',
-        'comparisons', 'reports', 'sstv_recordings', 'metrics'
+        "scans",
+        "simulations",
+        "images",
+        "users",
+        "analysis_results",
+        "comparisons",
+        "reports",
+        "sstv_recordings",
+        "metrics",
     }
-    
+
     # Проверяем что все таблицы из whitelist
     invalid_tables = table_names - ALLOWED_TABLES
     if invalid_tables:
         raise HTTPException(
-            status_code=400,
-            detail=f"Tables not allowed for profiling: {', '.join(invalid_tables)}"
+            status_code=400, detail=f"Tables not allowed for profiling: {', '.join(invalid_tables)}"
         )
 
     conn = None
@@ -242,7 +251,7 @@ async def profile_database_query(
         table_name = query.split()[-1] if query else ""
         if table_name not in allowed_tables:
             return {"error": "Invalid table name", "status_code": 400}
-        
+
         cursor.execute(f"EXPLAIN QUERY PLAN {query}")
 
         query_plan = cursor.fetchall()
@@ -258,7 +267,9 @@ async def profile_database_query(
             if "USING INDEX" in detail or "USING COVERING INDEX" in detail:
                 index_usage.append({"index": detail, "type": "optimal"})
             elif "SCAN" in detail and "USING" not in detail:
-                index_usage.append({"table": detail, "type": "full_scan", "warning": "No index used"})
+                index_usage.append(
+                    {"table": detail, "type": "full_scan", "warning": "No index used"}
+                )
 
         profile_result["index_usage"] = index_usage
 
@@ -266,11 +277,13 @@ async def profile_database_query(
         recommendations = []
         has_full_scan = any(item.get("type") == "full_scan" for item in index_usage)
         if has_full_scan:
-            recommendations.append({
-                "type": "warning",
-                "message": "Full table scan detected. Consider adding an index.",
-                "suggestion": "CREATE INDEX idx_table_column ON table_name(column_name);"
-            })
+            recommendations.append(
+                {
+                    "type": "warning",
+                    "message": "Full table scan detected. Consider adding an index.",
+                    "suggestion": "CREATE INDEX idx_table_column ON table_name(column_name);",
+                }
+            )
 
         if analyze:
             # Выполняем запрос для измерения времени
@@ -285,11 +298,13 @@ async def profile_database_query(
             profile_result["execution_time_ms"] = (end_time - start_time) * 1000
 
             if profile_result["execution_time_ms"] > 100:
-                recommendations.append({
-                    "type": "warning",
-                    "message": f"Slow query detected: {profile_result['execution_time_ms']:.2f}ms",
-                    "suggestion": "Consider optimizing the query or adding indexes."
-                })
+                recommendations.append(
+                    {
+                        "type": "warning",
+                        "message": f"Slow query detected: {profile_result['execution_time_ms']:.2f}ms",
+                        "suggestion": "Consider optimizing the query or adding indexes.",
+                    }
+                )
 
         profile_result["recommendations"] = recommendations
         profile_result["status"] = "success"
@@ -338,11 +353,10 @@ async def get_database_indexes() -> Dict[str, Any]:
         cursor = conn.cursor()
 
         # Получаем все индексы
-        cursor.execute("SELECT name, tbl_name, sql FROM sqlite_master WHERE type='index' AND sql IS NOT NULL")
-        indexes = [
-            {"name": row[0], "table": row[1], "sql": row[2]}
-            for row in cursor.fetchall()
-        ]
+        cursor.execute(
+            "SELECT name, tbl_name, sql FROM sqlite_master WHERE type='index' AND sql IS NOT NULL"
+        )
+        indexes = [{"name": row[0], "table": row[1], "sql": row[2]} for row in cursor.fetchall()]
 
         # Получаем статистику по таблицам
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
@@ -353,7 +367,7 @@ async def get_database_indexes() -> Dict[str, Any]:
             try:
                 # Безопасно - table из sqlite_master (доверенный источник)
                 # Дополнительная валидация имени таблицы
-                if not table.isidentifier() or table.startswith('_'):
+                if not table.isidentifier() or table.startswith("_"):
                     continue
                 cursor.execute(f"SELECT COUNT(*) FROM {table}")
                 count = cursor.fetchone()[0]
@@ -409,11 +423,10 @@ async def get_extended_health():
         health = await checker.full_health_check()
 
         # Определяем HTTP статус код
-        status_code = 200
         if health["status"] == "degraded":
-            status_code = 503
+            pass  # degraded status handled above
         elif health["status"] == "warning":
-            status_code = 200  # Warning всё ещё OK
+            pass  # warning is still OK
 
         return health
     except Exception as e:

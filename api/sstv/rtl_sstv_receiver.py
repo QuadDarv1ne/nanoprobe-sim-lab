@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 try:
     from rtlsdr import RtlSdr
+
     RTLSDR_AVAILABLE = True
 except ImportError:
     RTLSDR_AVAILABLE = False
@@ -26,12 +27,19 @@ except ImportError:
 try:
     from pysstv.color import PD90, PD120, PD180, MartinM1, MartinM2, Robot36, ScottieS1, ScottieS2
     from pysstv.grayscale import Robot8BW, Robot36BW
+
     SSTV_AVAILABLE = True
     SSTV_MODES = {
-        'PD120': PD120, 'PD90': PD90, 'PD180': PD180,
-        'MartinM1': MartinM1, 'MartinM2': MartinM2,
-        'ScottieS1': ScottieS1, 'ScottieS2': ScottieS2,
-        'Robot36': Robot36, 'Robot36BW': Robot36BW, 'Robot8BW': Robot8BW,
+        "PD120": PD120,
+        "PD90": PD90,
+        "PD180": PD180,
+        "MartinM1": MartinM1,
+        "MartinM2": MartinM2,
+        "ScottieS1": ScottieS1,
+        "ScottieS2": ScottieS2,
+        "Robot36": Robot36,
+        "Robot36BW": Robot36BW,
+        "Robot8BW": Robot8BW,
     }
 except ImportError:
     SSTV_AVAILABLE = False
@@ -41,15 +49,17 @@ except ImportError:
 AUDIO_SAMPLE_RATE = 44100  # Гц — стандарт для pysstv
 
 SSTV_FREQUENCIES = {
-    'iss_sstv': 145.800,
-    'noaa_15': 137.620,
-    'noaa_18': 137.9125,
-    'noaa_19': 137.100,
-    'meteor_m2': 137.900,
+    "iss_sstv": 145.800,
+    "noaa_15": 137.620,
+    "noaa_18": 137.9125,
+    "noaa_19": 137.100,
+    "meteor_m2": 137.900,
 }
 
 
-def _fm_demodulate(iq_samples: np.ndarray, src_rate: int, dst_rate: int = AUDIO_SAMPLE_RATE) -> np.ndarray:
+def _fm_demodulate(
+    iq_samples: np.ndarray, src_rate: int, dst_rate: int = AUDIO_SAMPLE_RATE
+) -> np.ndarray:
     """
     FM демодуляция I/Q → аудио с anti-aliasing фильтром и ресемплингом.
 
@@ -100,23 +110,24 @@ def _detect_vis(audio: np.ndarray, sample_rate: int = AUDIO_SAMPLE_RATE) -> Dict
         dict: detected, confidence, vis_code, mode_hint
     """
     if len(audio) < sample_rate * 0.5:
-        return {'detected': False, 'confidence': 0.0}
+        return {"detected": False, "confidence": 0.0}
 
     try:
         from scipy.signal import welch
 
         # Welch PSD для надёжной оценки спектра
-        f, pxx = welch(audio[:min(len(audio), sample_rate * 2)].astype(np.float64),
-                       sample_rate, nperseg=2048)
+        f, pxx = welch(
+            audio[: min(len(audio), sample_rate * 2)].astype(np.float64), sample_rate, nperseg=2048
+        )
 
         def _band_power(f_low, f_high):
             mask = (f >= f_low) & (f <= f_high)
             return float(np.mean(pxx[mask])) if mask.any() else 0.0
 
-        p_1900 = _band_power(1850, 1950)   # VIS лидер
-        p_1200 = _band_power(1150, 1250)   # старт/стоп бит
-        p_1100 = _band_power(1050, 1150)   # бит "1"
-        p_1300 = _band_power(1250, 1350)   # бит "0"
+        p_1900 = _band_power(1850, 1950)  # VIS лидер
+        # _p_1200 = _band_power(1150, 1250)  # старт/стоп бит (unused)
+        p_1100 = _band_power(1050, 1150)  # бит "1"
+        p_1300 = _band_power(1250, 1350)  # бит "0"
         p_total = float(np.mean(pxx)) + 1e-12
 
         # Отношение SSTV-полосы к общей мощности
@@ -133,20 +144,20 @@ def _detect_vis(audio: np.ndarray, sample_rate: int = AUDIO_SAMPLE_RATE) -> Dict
         mode_hint = None
         if detected:
             if p_1100 > p_1300:
-                mode_hint = 'MartinM1'  # больше единиц → Martin
+                mode_hint = "MartinM1"  # больше единиц → Martin
             else:
-                mode_hint = 'PD120'     # больше нулей → PD
+                mode_hint = "PD120"  # больше нулей → PD
 
         return {
-            'detected': detected,
-            'confidence': round(confidence, 3),
-            'leader_power': round(leader_ratio, 4),
-            'sstv_ratio': round(sstv_ratio, 3),
-            'mode_hint': mode_hint,
+            "detected": detected,
+            "confidence": round(confidence, 3),
+            "leader_power": round(leader_ratio, 4),
+            "sstv_ratio": round(sstv_ratio, 3),
+            "mode_hint": mode_hint,
         }
     except Exception as e:
         logger.debug(f"VIS detection error: {e}")
-        return {'detected': False, 'confidence': 0.0}
+        return {"detected": False, "confidence": 0.0}
 
 
 class RTLSDRReceiver:
@@ -175,10 +186,10 @@ class RTLSDRReceiver:
         self._hann_window: Optional[np.ndarray] = None
 
         self.stats = {
-            'samples_received': 0,
-            'recording_sessions': 0,
-            'total_recording_time': 0.0,
-            'signal_detections': 0,
+            "samples_received": 0,
+            "recording_sessions": 0,
+            "total_recording_time": 0.0,
+            "signal_detections": 0,
         }
 
     def initialize(self) -> bool:
@@ -194,12 +205,12 @@ class RTLSDRReceiver:
             self.sdr = RtlSdr(self.device_index)
             self.sdr.rs = self.sample_rate
             self.sdr.fc = int(self.frequency * 1e6)
-            self.sdr.gain = 'auto' if self.agc else self.gain
+            self.sdr.gain = "auto" if self.agc else self.gain
 
             if self.freq_correction_ppm != 0.0:
                 self.sdr.freq_correction = int(self.freq_correction_ppm)
 
-            if self.bias_tee and hasattr(self.sdr, 'bias_tee'):
+            if self.bias_tee and hasattr(self.sdr, "bias_tee"):
                 self.sdr.bias_tee = True
 
             # Hann-окно для FFT
@@ -220,21 +231,21 @@ class RTLSDRReceiver:
     def get_device_info(self) -> Dict[str, Any]:
         """Информация об устройстве."""
         info: Dict[str, Any] = {
-            'available': RTLSDR_AVAILABLE,
-            'connected': self.sdr is not None,
-            'device_index': self.device_index,
-            'frequency_mhz': self.frequency,
-            'sample_rate_msps': self.sample_rate / 1e6,
-            'gain_db': self.gain,
-            'bias_tee': self.bias_tee,
-            'agc': self.agc,
-            'freq_correction_ppm': self.freq_correction_ppm,
+            "available": RTLSDR_AVAILABLE,
+            "connected": self.sdr is not None,
+            "device_index": self.device_index,
+            "frequency_mhz": self.frequency,
+            "sample_rate_msps": self.sample_rate / 1e6,
+            "gain_db": self.gain,
+            "bias_tee": self.bias_tee,
+            "agc": self.agc,
+            "freq_correction_ppm": self.freq_correction_ppm,
         }
         if self.sdr:
             try:
-                info['tuner_type'] = str(self.sdr.get_tuner_type())
-                info['actual_gain'] = self.sdr.gain
-                info['actual_freq_mhz'] = self.sdr.fc / 1e6
+                info["tuner_type"] = str(self.sdr.get_tuner_type())
+                info["actual_gain"] = self.sdr.gain
+                info["actual_freq_mhz"] = self.sdr.fc / 1e6
             except Exception:
                 pass
         return info
@@ -245,7 +256,7 @@ class RTLSDRReceiver:
             return None
         try:
             samples = self.sdr.read_samples(num_samples)
-            self.stats['samples_received'] += len(samples)
+            self.stats["samples_received"] += len(samples)
             return samples
         except Exception as e:
             logger.error(f"Ошибка чтения сэмплов: {e}")
@@ -271,7 +282,7 @@ class RTLSDRReceiver:
             return None
 
         self.is_running = True
-        self.stats['recording_sessions'] += 1
+        self.stats["recording_sessions"] += 1
         start_time = time.time()
 
         # Размер буфера: кратен 512, ~0.1с при 2.4 MSPS
@@ -281,6 +292,7 @@ class RTLSDRReceiver:
         logger.info(f"Запись {duration}с на {self.frequency} МГц...")
 
         try:
+
             def _callback(samples, _ctx):
                 if not self.is_running:
                     raise StopIteration
@@ -309,7 +321,7 @@ class RTLSDRReceiver:
             return None
 
         iq_all = np.concatenate(iq_chunks)
-        self.stats['total_recording_time'] += time.time() - start_time
+        self.stats["total_recording_time"] += time.time() - start_time
 
         # FM демодуляция
         audio = _fm_demodulate(iq_all, self.sample_rate, AUDIO_SAMPLE_RATE)
@@ -324,7 +336,7 @@ class RTLSDRReceiver:
         """Сохраняет аудио float32 в 16-bit WAV."""
         Path(output_file).parent.mkdir(parents=True, exist_ok=True)
         pcm = (audio * 32767).clip(-32768, 32767).astype(np.int16)
-        with wave.open(output_file, 'w') as wf:
+        with wave.open(output_file, "w") as wf:
             wf.setnchannels(1)
             wf.setsampwidth(2)
             wf.setframerate(AUDIO_SAMPLE_RATE)
@@ -334,8 +346,8 @@ class RTLSDRReceiver:
     def detect_sstv_signal(self, audio: np.ndarray) -> Dict[str, Any]:
         """Детектирует SSTV VIS-код в аудио."""
         result = _detect_vis(audio, AUDIO_SAMPLE_RATE)
-        if result.get('detected'):
-            self.stats['signal_detections'] += 1
+        if result.get("detected"):
+            self.stats["signal_detections"] += 1
         return result
 
     def get_signal_strength(self) -> float:
@@ -361,11 +373,18 @@ class RTLSDRReceiver:
         if samples is None:
             return None, None
 
-        window = self._hann_window[:num_points] if self._hann_window is not None else np.hanning(num_points)
+        window = (
+            self._hann_window[:num_points]
+            if self._hann_window is not None
+            else np.hanning(num_points)
+        )
         windowed = samples[:num_points] * window
         fft = np.fft.fftshift(np.fft.fft(windowed))
         power_db = 10 * np.log10(np.abs(fft) ** 2 + 1e-12).astype(np.float32)
-        freqs = np.fft.fftshift(np.fft.fftfreq(num_points, 1.0 / self.sample_rate)) + self.frequency * 1e6
+        freqs = (
+            np.fft.fftshift(np.fft.fftfreq(num_points, 1.0 / self.sample_rate))
+            + self.frequency * 1e6
+        )
         return freqs, power_db
 
     def set_frequency(self, freq_mhz: float) -> bool:
@@ -419,17 +438,19 @@ class RTLSDRReceiver:
 class SSTVDecoder:
     """Декодер SSTV через pysstv."""
 
-    def __init__(self, mode: str = 'auto'):
+    def __init__(self, mode: str = "auto"):
         self.mode = mode
         self.last_image = None
         self.stats = {
-            'attempts': 0,
-            'successes': 0,
-            'last_time': None,
-            'last_size': None,
+            "attempts": 0,
+            "successes": 0,
+            "last_time": None,
+            "last_size": None,
         }
 
-    def decode_audio(self, audio: np.ndarray, sample_rate: int = AUDIO_SAMPLE_RATE) -> Optional[Any]:
+    def decode_audio(
+        self, audio: np.ndarray, sample_rate: int = AUDIO_SAMPLE_RATE
+    ) -> Optional[Any]:
         """
         Декодирует SSTV из аудио float32.
 
@@ -439,7 +460,7 @@ class SSTVDecoder:
             logger.error("pysstv не установлен: pip install pysstv")
             return None
 
-        self.stats['attempts'] += 1
+        self.stats["attempts"] += 1
 
         # Нормализация
         peak = np.max(np.abs(audio))
@@ -449,17 +470,18 @@ class SSTVDecoder:
 
         tmp_path = None
         try:
-            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as f:
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
                 tmp_path = f.name
 
-            with wave.open(tmp_path, 'w') as wf:
+            with wave.open(tmp_path, "w") as wf:
                 wf.setnchannels(1)
                 wf.setsampwidth(2)
                 wf.setframerate(sample_rate)
                 wf.writeframes(pcm.tobytes())
 
             modes_to_try = (
-                [SSTV_MODES[self.mode]] if self.mode != 'auto' and self.mode in SSTV_MODES
+                [SSTV_MODES[self.mode]]
+                if self.mode != "auto" and self.mode in SSTV_MODES
                 else list(SSTV_MODES.values())
             )
 
@@ -495,37 +517,37 @@ class SSTVDecoder:
             from pysstv.sstv import SSTV
 
             # Читаем WAV файл
-            with wave.open(wav_path, 'r') as wf:
+            with wave.open(wav_path, "r") as wf:
                 frames = wf.readframes(wf.getnframes())
                 audio_int16 = np.frombuffer(frames, dtype=np.int16)
-            
+
             # Конвертируем в float32 нормализованный [-1, 1]
             audio_float = audio_int16.astype(np.float32) / 32768.0
-            
+
             # pysstv ожидает аудио данные как итерируемый объект
             # Используем правильный API: создаём экземпляр SSTV с аудио
             sstv_instance = SSTV(
                 audio_float.tolist(),  # Аудио сэмплы как list
-                sample_rate,           # Частота дискретизации
-                16                     # Битность (хотя данные float32)
+                sample_rate,  # Частота дискретизации
+                16,  # Битность (хотя данные float32)
             )
-            
+
             # Декодируем изображение
             img = sstv_instance.decode()
-            
+
             # Проверяем что изображение получено
-            if img is not None and hasattr(img, 'size') and img.size[0] > 0:
+            if img is not None and hasattr(img, "size") and img.size[0] > 0:
                 return img
-                
+
         except Exception as e:
             logger.debug(f"Decode attempt failed with {mode_cls.__name__}: {e}")
-            
+
         return None
 
     def _record_success(self, img):
-        self.stats['successes'] += 1
-        self.stats['last_time'] = datetime.now(timezone.utc).isoformat()
-        self.stats['last_size'] = getattr(img, 'size', None)
+        self.stats["successes"] += 1
+        self.stats["last_time"] = datetime.now(timezone.utc).isoformat()
+        self.stats["last_size"] = getattr(img, "size", None)
         self.last_image = img
 
 

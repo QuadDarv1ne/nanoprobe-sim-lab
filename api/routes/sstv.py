@@ -9,6 +9,7 @@ import os
 import signal
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from subprocess import DEVNULL
@@ -594,13 +595,12 @@ async def sstv_health_check():
     rtl_fm_available = shutil.which("rtl_fm") is not None
 
     # Проверяем TLE возраст
-    import time as _time
     from pathlib import Path as _Path
 
     tle_file = _Path("data/tle_data.json")
     tle_age_hours = None
     if tle_file.exists():
-        tle_age_hours = round((_time.time() - tle_file.stat().st_mtime) / 3600, 1)
+        tle_age_hours = round((time.time() - tle_file.stat().st_mtime) / 3600, 1)
 
     status = {
         "sstv_decoder": "available" if SSTV_AVAILABLE else "unavailable",
@@ -680,7 +680,7 @@ async def sstv_extended_health_check():
                 if sdr:
                     try:
                         sdr.close()
-                    except:
+                    except Exception:
                         pass
         else:
             device_status = "not_found"
@@ -702,7 +702,7 @@ async def sstv_extended_health_check():
             proc = psutil.Process(recording_process.pid)
             memory_info = proc.memory_info()
             memory_usage["recording_process_mb"] = memory_info.rss / (1024 * 1024)
-        except:
+        except Exception:
             pass
 
     memory_usage["system_available_mb"] = psutil.virtual_memory().available / (1024 * 1024)
@@ -728,7 +728,7 @@ async def sstv_extended_health_check():
     tle_status = "unknown"
 
     if tle_file.exists():
-        tle_age_hours = round((_time.time() - tle_file.stat().st_mtime) / 3600, 1)
+        tle_age_hours = round((time.time() - tle_file.stat().st_mtime) / 3600, 1)
         if tle_age_hours < 12:
             tle_status = "fresh"
         elif tle_age_hours < 24:
@@ -914,7 +914,7 @@ async def start_sstv_recording(
 
     try:
         # Проверяем наличие rtl_fm
-        result = subprocess.run(["rtl_fm", "-h"], capture_output=True, timeout=5)
+        subprocess.run(["rtl_fm", "-h"], capture_output=True, timeout=5)
     except FileNotFoundError:
         # rtl_fm не найден - симулируем для тестирования
         logger.warning("rtl_fm not found - simulation mode")

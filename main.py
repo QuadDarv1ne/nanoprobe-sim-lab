@@ -19,25 +19,29 @@ Nanoprobe Sim Lab - Universal Launcher v3.0 (Unified)
 
 # Проверка версии Python
 import sys
+
 MIN_PYTHON_VERSION = (3, 11)
 MAX_PYTHON_VERSION = (3, 14)
-if sys.version_info < MIN_PYTHON_VERSION or sys.version_info >= (MAX_PYTHON_VERSION[0], MAX_PYTHON_VERSION[1] + 1):
+if sys.version_info < MIN_PYTHON_VERSION or sys.version_info >= (
+    MAX_PYTHON_VERSION[0],
+    MAX_PYTHON_VERSION[1] + 1,
+):
     print(f"[ERROR] Требуется Python 3.11 - 3.14, текущая версия: {sys.version}")
     sys.exit(1)
 
 import os
+import signal
+import socket
 import subprocess
 import time
 import webbrowser
-import socket
-import signal
 from pathlib import Path
-from datetime import datetime
-from typing import Optional, List, Dict, Any
+from typing import Dict, List, Optional
 
 # Автоопределение портов
 try:
-    from utils.port_finder import find_port, find_ports, PortFinder
+    from utils.port_finder import find_ports
+
     AUTO_PORT_ENABLED = True
 except ImportError:
     AUTO_PORT_ENABLED = False
@@ -45,12 +49,13 @@ except ImportError:
 if sys.platform == "win32":
     os.system("chcp 65001 >nul")
     try:
-        sys.stdout.reconfigure(encoding='utf-8')
-        sys.stderr.reconfigure(encoding='utf-8')
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
     except AttributeError:
         import io
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 PROJECT_ROOT = Path(__file__).parent
 
@@ -74,53 +79,50 @@ HEALTH_CHECK_INTERVAL = 2
 
 # ==================== Утилиты ====================
 
+
 def auto_detect_ports(services: List[str] = None) -> Dict[str, int]:
     """
     Автоматическое определение свободных портов
-    
+
     Args:
         services: Список сервисов ['backend', 'flask', 'nextjs']
-        
+
     Returns:
         Словарь {service: port}
     """
     global BACKEND_PORT, FLASK_PORT, NEXTJS_PORT
-    
+
     if not AUTO_PORT_ENABLED:
         print("⚠️  Автоопределение портов недоступно (portFinder не импортирован)")
-        return {
-            "backend": BACKEND_PORT,
-            "flask": FLASK_PORT,
-            "nextjs": NEXTJS_PORT
-        }
-    
+        return {"backend": BACKEND_PORT, "flask": FLASK_PORT, "nextjs": NEXTJS_PORT}
+
     if services is None:
         services = ["backend", "flask", "nextjs"]
-    
+
     try:
         print("🔍 Автоопределение свободных портов...")
         ports = find_ports(services)
-        
+
         # Обновляем глобальные переменные
         if "backend" in ports:
             BACKEND_PORT = ports["backend"]
             os.environ["BACKEND_PORT"] = str(BACKEND_PORT)
-        
+
         if "flask" in ports:
             FLASK_PORT = ports["flask"]
             os.environ["FLASK_PORT"] = str(FLASK_PORT)
-        
+
         if "nextjs" in ports:
             NEXTJS_PORT = ports["nextjs"]
             os.environ["NEXTJS_PORT"] = str(NEXTJS_PORT)
-        
+
         print("✅ Найденные порты:")
         for service, port in ports.items():
             print(f"   {service:15s}: {port}")
         print()
-        
+
         return ports
-        
+
     except Exception as e:
         print(f"⚠️  Автоопределение не удалось: {e}")
         print(f"📌 Используем порта по умолчанию:")
@@ -128,19 +130,15 @@ def auto_detect_ports(services: List[str] = None) -> Dict[str, int]:
         print(f"   flask:   {FLASK_PORT}")
         print(f"   nextjs:  {NEXTJS_PORT}")
         print()
-        
-        return {
-            "backend": BACKEND_PORT,
-            "flask": FLASK_PORT,
-            "nextjs": NEXTJS_PORT
-        }
+
+        return {"backend": BACKEND_PORT, "flask": FLASK_PORT, "nextjs": NEXTJS_PORT}
 
 
 def check_port(port: int) -> bool:
     """Проверка занятости порта"""
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        result = sock.connect_ex(('localhost', port))
+        result = sock.connect_ex(("localhost", port))
         sock.close()
         return result == 0
     except (socket.error, OSError):
@@ -189,7 +187,7 @@ def interactive_choice() -> str:
     print_versions()
     while True:
         choice = input("Выберите режим (1-5 или flask/nextjs/api-only/full/dev): ").strip().lower()
-        
+
         if choice in ["1", "flask"]:
             return "flask"
         elif choice in ["2", "nextjs"]:
@@ -207,6 +205,7 @@ def interactive_choice() -> str:
 
 # ==================== Запуск сервисов ====================
 
+
 def start_backend(reload: bool = False) -> Optional[subprocess.Popen]:
     """Запуск Backend (FastAPI)"""
     print("Запуск Backend (FastAPI)...")
@@ -219,16 +218,16 @@ def start_backend(reload: bool = False) -> Optional[subprocess.Popen]:
         return None
 
     # Проверка uvicorn
-    try:
-        import uvicorn
-    except ImportError:
+    import importlib.util
+
+    if importlib.util.find_spec("uvicorn") is None:
         print("[ERROR] uvicorn не установлен! Выполните: pip install uvicorn")
         return None
 
     cmd = [sys.executable, str(BACKEND_SCRIPT)]
     if reload:
         cmd.append("--reload")
-    
+
     process = subprocess.Popen(cmd, cwd=str(PROJECT_ROOT))
 
     if wait_for_port(BACKEND_PORT, timeout=15):
@@ -251,19 +250,16 @@ def start_flask_frontend() -> Optional[subprocess.Popen]:
         return None
 
     # Проверка Flask
-    try:
-        import flask
-    except ImportError:
+    import importlib.util
+
+    if importlib.util.find_spec("flask") is None:
         print("[ERROR] Flask не установлен! Выполните: pip install flask flask-socketio")
         return None
 
-    process = subprocess.Popen(
-        [sys.executable, str(FLASK_SCRIPT)],
-        cwd=str(PROJECT_ROOT)
-    )
+    process = subprocess.Popen([sys.executable, str(FLASK_SCRIPT)], cwd=str(PROJECT_ROOT))
 
     time.sleep(3)
-    
+
     if wait_for_port(FLASK_PORT, timeout=10):
         print("[OK] Flask Frontend запущен!")
         print()
@@ -290,10 +286,7 @@ def start_nextjs_frontend() -> Optional[subprocess.Popen]:
         print("[WARN] Установка зависимостей...")
         subprocess.run(["npm", "install"], cwd=str(FRONTEND_DIR))
 
-    process = subprocess.Popen(
-        ["npm", "run", "dev"],
-        cwd=str(FRONTEND_DIR)
-    )
+    process = subprocess.Popen(["npm", "run", "dev"], cwd=str(FRONTEND_DIR))
 
     time.sleep(5)
     print("[OK] Next.js Frontend запущен!")
@@ -315,7 +308,7 @@ def start_sync_manager() -> Optional[subprocess.Popen]:
     process = subprocess.Popen(
         [sys.executable, str(SYNC_SCRIPT)],
         cwd=str(PROJECT_ROOT),
-        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == "win32" else 0
+        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == "win32" else 0,
     )
 
     time.sleep(3)
@@ -331,21 +324,22 @@ def open_browser(mode: str):
         "nextjs": f"http://localhost:{NEXTJS_PORT}",
         "api-only": f"http://localhost:{BACKEND_PORT}/docs",
         "full": f"http://localhost:{FLASK_PORT}",
-        "dev": f"http://localhost:{FLASK_PORT}"
+        "dev": f"http://localhost:{FLASK_PORT}",
     }
-    
+
     url = urls.get(mode, urls["api-only"])
     print(f"Открытие браузера: {url}")
-    
+
     try:
         webbrowser.open(url)
     except Exception:
         pass
-    
+
     time.sleep(1)
 
 
 # ==================== Process Manager ====================
+
 
 class ProcessManager:
     """Менеджер процессов"""
@@ -388,7 +382,7 @@ class ProcessManager:
             return
 
         print("[INFO] Остановка всех сервисов...")
-        
+
         # Фаза 1: Отправка SIGTERM
         for proc in reversed(self.processes):
             if proc.poll() is None:  # Только живые процессы
@@ -397,7 +391,7 @@ class ProcessManager:
                     print(f"  → Отправлен SIGTERM процессу PID {proc.pid}")
                 except Exception as e:
                     print(f"  ⚠️  Ошибка terminate PID {proc.pid}: {e}")
-        
+
         # Фаза 2: Ожидание завершения (до 5 секунд)
         for proc in self.processes:
             if proc.poll() is None:
@@ -418,6 +412,7 @@ class ProcessManager:
         # Фаза 3: Убиваем дочерние процессы (orphan cleanup)
         try:
             import psutil
+
             parent = psutil.Process()
             children = parent.children(recursive=True)
             for child in children:
@@ -425,7 +420,7 @@ class ProcessManager:
                     child.terminate()
                 except psutil.NoSuchProcess:
                     pass
-            
+
             # Ждём завершения дочерних
             _, alive = psutil.wait_procs(children, timeout=3)
             for p in alive:
@@ -442,6 +437,7 @@ class ProcessManager:
 
 
 # ==================== Главная функция ====================
+
 
 def main():
     """Главная функция"""
@@ -476,12 +472,12 @@ def main():
     pm = ProcessManager()
 
     # Запуск Backend (обязательно для всех режимов)
-    reload = (mode == "dev")
+    reload = mode == "dev"
     backend_process = start_backend(reload=reload)
     if not backend_process:
         print("[ERROR] Не удалось запустить Backend. Завершение.")
         return
-    
+
     pm.add_process(backend_process)
 
     # Запуск Sync Manager (автоматически для всех режимов кроме api-only)

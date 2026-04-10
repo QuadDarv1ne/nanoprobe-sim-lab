@@ -1,6 +1,7 @@
 """Модуль загрузки и обработки космических снимков."""
 
 from datetime import datetime, timezone
+from io import BytesIO
 from pathlib import Path
 from typing import Dict, List, Optional
 

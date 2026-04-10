@@ -170,7 +170,7 @@ async def start_sstv_recording(
     receiver.gain = gain
 
     session_manager = get_session_manager()
-    session = session_manager.start_recording(sid, frequency, duration, gain)
+    session_manager.start_recording(sid, frequency, duration, gain)
 
     # Запускаем запись в фоне
     asyncio.create_task(_record_sstv_background(sid, receiver, duration))
