@@ -1,21 +1,22 @@
 # Nanoprobe Sim Lab — TODO
 
-**Последнее обновление:** 2026-04-10 18:00
+**Последнее обновление:** 2026-04-10 18:30
 
 ## Статус проекта
 
 - **Ветка:** `dev` (активная разработка) → `main` (стабильная)
 - **Тесты:** 66/66 core passing (100%) ✅
-- **Качество кода:** 240+ исправлений, pre-commit hooks проходят
-- **RTL-SDR V4:** подключён и работает
+- **Качество кода:** 240+ исправлений, pre-commit hooks проходят ✅
+- **RTL-SDR V4:** подключён и работает ✅
+- **Очистка:** удалено 12 дублирующих файлов (-1133 строк) ✅
 
 ## Последние улучшения (2026-04-10)
 
 ### Коммиты (pushed to origin/dev)
+- ✅ `56a00a4` chore: remove duplicate reports, QWEN.md, active_tests, bat scripts
+- ✅ `99959a8` docs: update todo.md with current project status
+- ✅ `f9b9923` feat: add FM Stereo and POCSAG decoders + update todo.md
 - ✅ `4ec59ea` test: add 89 new tests (RTL-SDR tools, API routes, utils)
-- ✅ `630f22b` docs: add improvements report 2026-04-10
-- ✅ `79bd8b1` feat: RTL-SDR tools improvements + E501 fixes
-- ✅ `d48c96d` style: fix W293 whitespace and E501 line length issues (autopep8)
 
 ### Качество кода — 240+ исправлений
 - ✅ **38 критических ошибок F821/F824** — исправлены undefined names
@@ -38,6 +39,7 @@
 - ✅ `listen_adsb.bat` — батник для ADS-B трекинга (1090 MHz)
 - ✅ `listen_rtl433.bat` — батник для RTL_433 сканирования (433 MHz)
 - ✅ Автопоиск rtl_433 на Windows/Linux/Mac
+- ✅ **Очистка**: удалены дублирующие батники из scripts/ (есть в rtl_sdr_tools/)
 
 ---
 
@@ -104,12 +106,12 @@
 
 #### Широкополосное радиосканирование
 - [x] FM-радиовещание (87.5-108 МГц) — стерео декодирование (fm_stereo_decoder.py)
-- [x] Авиадиапазоны VHF (118-137 МГц) — AM модуляция (listen_airband.bat)
+- [x] Авиадиапазоны VHF (118-137 МГц) — AM модуляция (listen_airband.py)
 - [ ] Любительские радиостанции 2 м (144-146 МГц) и 70 см (430-440 МГц)
 - [ ] Службы экстренного реагирования (полиция, скорая, пожарные)
 
 #### Цифровые сигналы
-- [x] ADS-B (1090 MHz) — отслеживание самолётов (adsb_receiver.py + listen_adsb.bat)
+- [x] ADS-B (1090 MHz) — отслеживание самолётов (adsb_receiver.py + listen_adsb.bat в rtl_sdr_tools/)
 - [x] RTL_433 — беспроводные метеостанции, датчики температуры/влажности (rtl433_scanner.py)
 - [x] POCSAG — пейджинговая связь (pocsag_decoder.py — 512/1200/2400 baud)
 - [ ] AIS (161.975/162.025 MHz) — морские суда
@@ -136,8 +138,8 @@
 ### API Routes (24 endpoints)
 admin, adsb, alerting, analysis, auth, batch, comparison, dashboard, external_services, fm_radio, graphql, ml_analysis, monitoring, nasa, reports, rtl433, scans, simulations, sstv, sstv_advanced, sync_manager, system_export, weather
 
-### RTL-SDR Tools (28 файлов)
-adsb_capture, adsb_receiver, adsb_tracker, am_airband, capture_sstv_mmsstv, fm_capture_simple, fm_multi_capture, fm_radio, fm_radio_capture, fm_radio_scanner, fm_radio_unified, fm_stereo_decoder, iss_tracker, listen_adsb.bat, listen_airband, listen_fm_radio, listen_rtl433.bat, pocsag_decoder, quick_scan_airband, raw_to_wav, rtl433_multi_scanner, rtl433_scanner, rtlsdr_control_panel, rtl_sdr_noaa_capture, rtl_sdr_sstv_capture, rtl_sdr_visualizer, sstv_ground_station
+### RTL-SDR Tools (25 файлов)
+adsb_capture, adsb_receiver, adsb_tracker, am_airband, capture_sstv_mmsstv, fm_capture_simple, fm_multi_capture, fm_radio, fm_radio_capture, fm_radio_scanner, fm_radio_unified, fm_stereo_decoder, iss_tracker, listen_adsb.bat, listen_airband.py, listen_fm_radio.py, listen_rtl433.bat, pocsag_decoder, quick_scan_airband.py, raw_to_wav.py, rtl433_multi_scanner.py, rtl433_scanner.py, rtlsdr_control_panel.py, rtl_sdr_noaa_capture.py, rtl_sdr_sstv_capture.py, rtl_sdr_visualizer.py, sstv_ground_station.py
 
 ### Utils (модули)
 ai, analytics, api, backup_manager, batch_processor, caching, config, core, data, database, deployment, dev, logger, monitoring, performance, reporting, security, simulator, spm_realtime_visualizer, structured_logger, surface_comparator, testing, test_framework, visualization, visualizer
