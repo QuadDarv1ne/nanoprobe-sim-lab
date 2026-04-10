@@ -8,20 +8,19 @@ Endpoints для мониторинга производительности:
 - /db/profile - Профилирование SQL запросов
 """
 
-from fastapi import APIRouter, Response, Query, HTTPException
-import psutil
-import logging
-import time
 import json
+import logging
 import re
-from datetime import datetime, timezone
 import sqlite3
+import time
+from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any, Dict, Optional
+
+import psutil
+from fastapi import APIRouter, HTTPException, Query, Response
 
 from api.state import get_system_disk_usage
-
-
-from typing import Optional, Dict, Any
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +39,7 @@ async def get_metrics():
     Используется Prometheus server для сбора метрик.
     Content-Type: text/plain; version=0.0.4
     """
-    from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+    from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
     return Response(
         content=generate_latest(),

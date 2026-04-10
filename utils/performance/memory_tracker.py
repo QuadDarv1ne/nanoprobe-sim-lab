@@ -6,18 +6,19 @@
 Этот модуль предоставляет инструменты для мониторинга, анализа и оптимизации использования памяти.
 """
 
-import psutil
 import gc
-import tracemalloc
+import json
 import threading
 import time
-from pathlib import Path
-from typing import Dict, List, Any, Optional, Callable
-from datetime import datetime, timezone
-import json
-import matplotlib.pyplot as plt
+import tracemalloc
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from functools import wraps
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional
+
+import matplotlib.pyplot as plt
+import psutil
 
 try:
     import objgraph

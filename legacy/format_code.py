@@ -2,8 +2,9 @@
 
 import os
 import re
-from pathlib import Path
 from datetime import datetime, timezone
+from pathlib import Path
+
 # External formatting tools are optional, we'll use built-in methods
 # import black  # type: ignore
 # import autopep8  # type: ignore

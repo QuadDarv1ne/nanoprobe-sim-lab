@@ -6,6 +6,7 @@ Metrics Widget
 
 from datetime import datetime, timezone
 from typing import Dict, Optional
+
 from .base import Widget, WidgetData, WidgetPriority
 
 

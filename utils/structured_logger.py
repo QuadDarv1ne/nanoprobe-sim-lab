@@ -8,13 +8,13 @@
 - Корреляция логов через request_id
 """
 
-import logging
-import sys
 import json
+import logging
 import os
+import sys
 from datetime import datetime, timezone
-from typing import Optional
 from pathlib import Path
+from typing import Optional
 
 
 class JSONFormatter(logging.Formatter):

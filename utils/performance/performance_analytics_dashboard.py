@@ -1,27 +1,27 @@
 """Модуль аналитики производительности для проекта Лаборатория моделирования нанозонда."""
 
-import os
-import sys
-import time
-import threading
 import json
+import os
 import statistics
-from pathlib import Path
-from datetime import datetime, timedelta, timezone
-from typing import Dict, Any, List
+import sys
+import threading
+import time
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from typing import Any, Dict, List
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils.performance_profiler import PerformanceProfiler
-from utils.resource_optimizer import ResourceManager
 from utils.logger_analyzer import AdvancedLoggerAnalyzer
 from utils.memory_tracker import MemoryTracker
-from utils.performance_benchmark import PerformanceBenchmarkSuite
 from utils.optimization_orchestrator import OptimizationOrchestrator
+from utils.performance_benchmark import PerformanceBenchmarkSuite
+from utils.performance_profiler import PerformanceProfiler
+from utils.resource_optimizer import ResourceManager
 from utils.system_health_monitor import SystemHealthMonitor
 
 

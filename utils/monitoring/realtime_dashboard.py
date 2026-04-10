@@ -6,32 +6,32 @@
 производительности и оптимизационных метрик в реальном времени.
 """
 
+import json
+import mimetypes
 import os
 import sys
-import time
 import threading
-import json
+import time
 import webbrowser
-import mimetypes
-from typing import Dict, Any, List
-from datetime import datetime, timezone
 from dataclasses import dataclass
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from datetime import datetime, timezone
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from typing import Any, Dict, List
 
-import psutil
 import plotly.graph_objects as go
+import psutil
 from plotly.subplots import make_subplots
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils.performance_profiler import PerformanceProfiler
-from utils.resource_optimizer import ResourceManager
 from utils.logger_analyzer import AdvancedLoggerAnalyzer
 from utils.memory_tracker import MemoryTracker
-from utils.performance_benchmark import PerformanceBenchmarkSuite
 from utils.optimization_orchestrator import OptimizationOrchestrator
-from utils.system_health_monitor import SystemHealthMonitor
 from utils.performance_analytics_dashboard import PerformanceAnalyticsDashboard
+from utils.performance_benchmark import PerformanceBenchmarkSuite
+from utils.performance_profiler import PerformanceProfiler
+from utils.resource_optimizer import ResourceManager
+from utils.system_health_monitor import SystemHealthMonitor
 
 
 @dataclass

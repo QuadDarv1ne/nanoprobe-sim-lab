@@ -9,12 +9,12 @@
 Автоматически создаёт backup перед изменениями.
 """
 
-import re
-import os
-from pathlib import Path
-from datetime import datetime
-import shutil
 import logging
+import os
+import re
+import shutil
+from datetime import datetime
+from pathlib import Path
 
 logging.basicConfig(
     level=logging.INFO,

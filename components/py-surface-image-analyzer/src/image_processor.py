@@ -1,10 +1,11 @@
 """Модуль обработки изображений."""
 
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, Optional, Tuple
+
 import cv2
 import numpy as np
-from typing import Optional, Dict, Any, Tuple
-from pathlib import Path
-from datetime import datetime, timezone
 
 
 class ImageProcessor:

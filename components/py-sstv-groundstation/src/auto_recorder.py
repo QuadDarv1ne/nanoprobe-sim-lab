@@ -3,16 +3,16 @@
 Мониторинг расписания, автозапуск за 5 мин до AOS, остановка после LOS.
 """
 
-import sys
-import os
-import time
-import threading
 import json
+import os
 import subprocess
+import sys
+import threading
+import time
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Dict, List, Optional, Callable
-from dataclasses import dataclass, field
+from typing import Callable, Dict, List, Optional
 
 # Гарантируем что src/ в sys.path при любом способе запуска
 _SRC_DIR = Path(__file__).parent

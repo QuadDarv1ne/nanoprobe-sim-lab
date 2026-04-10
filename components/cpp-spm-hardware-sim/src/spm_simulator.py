@@ -1,15 +1,17 @@
 """Модуль симулятора сканирующего зондового микроскопа (СЗМ)."""
 
-import numpy as np
 import matplotlib
+import numpy as np
+
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-from typing import Tuple, Dict, Any, Optional
-import random
 import json
-from multiprocessing import Pool, cpu_count
+import random
 from datetime import datetime, timezone
+from multiprocessing import Pool, cpu_count
 from pathlib import Path
+from typing import Any, Dict, Optional, Tuple
+
+import matplotlib.pyplot as plt
 
 # Import database for storing results
 try:

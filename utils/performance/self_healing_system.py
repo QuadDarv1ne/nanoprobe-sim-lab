@@ -1,33 +1,33 @@
 """Модуль самоисцеляющейся системы для проекта Лаборатория моделирования нанозонда."""
 
+import gc
+import json
+import logging
 import os
 import sys
-import time
 import threading
-import json
-import gc
-import logging
-from pathlib import Path
-from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional, Callable
+import time
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional
 
 import psutil
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils.performance_profiler import PerformanceProfiler
-from utils.resource_optimizer import ResourceManager
+from utils.ai_resource_optimizer import AIResourceOptimizer
+from utils.automated_optimization_scheduler import AutomatedOptimizationScheduler
 from utils.logger_analyzer import AdvancedLoggerAnalyzer
 from utils.memory_tracker import MemoryTracker
-from utils.performance_benchmark import PerformanceBenchmarkSuite
 from utils.optimization_orchestrator import OptimizationOrchestrator
-from utils.system_health_monitor import SystemHealthMonitor
 from utils.performance_analytics_dashboard import PerformanceAnalyticsDashboard
+from utils.performance_benchmark import PerformanceBenchmarkSuite
 from utils.performance_monitoring_center import PerformanceMonitoringCenter
+from utils.performance_profiler import PerformanceProfiler
 from utils.predictive_analytics_engine import PredictiveAnalyticsEngine
-from utils.automated_optimization_scheduler import AutomatedOptimizationScheduler
-from utils.ai_resource_optimizer import AIResourceOptimizer
+from utils.resource_optimizer import ResourceManager
+from utils.system_health_monitor import SystemHealthMonitor
 
 
 @dataclass

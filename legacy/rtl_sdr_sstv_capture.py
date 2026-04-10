@@ -9,13 +9,13 @@ RTL-SDR V4 SSTV Capture - Приём изображений с МКС
     python rtl_sdr_sstv_capture.py --no-decode      # Только запись, без декодирования
 """
 
-import sys
+import argparse
 import os
+import sys
 import time
 import wave
-import argparse
-from pathlib import Path
 from datetime import datetime, timezone
+from pathlib import Path
 
 import numpy as np
 

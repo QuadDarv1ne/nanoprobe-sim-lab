@@ -4,11 +4,11 @@ Circuit Breaker pattern для Nanoprobe Sim Lab
 """
 
 import logging
-from functools import wraps
-from typing import Callable, Any, Optional
-from enum import Enum
-from datetime import datetime, timezone
 import threading
+from datetime import datetime, timezone
+from enum import Enum
+from functools import wraps
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 

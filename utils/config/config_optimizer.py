@@ -1,16 +1,17 @@
 """Модуль оптимизации конфигурации для проекта Лаборатория моделирования нанозонда."""
 
-import json
-import toml
-from pathlib import Path
-from typing import Dict, Any, List
-from datetime import datetime, timezone
-import copy
-from dataclasses import dataclass, asdict
 import configparser
+import copy
+import json
 import threading
 import time
+from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, List
+
 import psutil
+import toml
 
 
 @dataclass

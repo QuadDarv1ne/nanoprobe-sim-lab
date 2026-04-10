@@ -6,9 +6,11 @@ System Monitor Widget
 
 import os
 import platform
-import psutil
 from datetime import datetime, timezone
 from typing import Dict
+
+import psutil
+
 from .base import Widget, WidgetData, WidgetPriority
 
 

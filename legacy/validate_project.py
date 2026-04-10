@@ -1,14 +1,14 @@
 """Скрипт валидации проекта Nanoprobe Simulation Lab."""
 
-import os
-import sys
-import json
-import subprocess
-import io
-from pathlib import Path
-from datetime import datetime, timezone
-from typing import Dict, List, Any, Tuple
 import importlib.util
+import io
+import json
+import os
+import subprocess
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, List, Tuple
 
 # Исправление кодировки для Windows
 if sys.platform == 'win32':

@@ -2,21 +2,17 @@
 API роуты для сравнения поверхностей
 """
 
-from fastapi import APIRouter, Depends
-from datetime import datetime, timezone
-import uuid
-from pathlib import Path
 import logging
-from api.error_handlers import ValidationError, NotFoundError
+import uuid
+from datetime import datetime, timezone
+from pathlib import Path
 
-from api.schemas import (
-    SurfaceComparisonRequest,
-    SurfaceComparisonResponse,
-    ComparisonMetrics,
-)
+from fastapi import APIRouter, Depends
+
 from api.dependencies import get_db
+from api.error_handlers import NotFoundError, ValidationError
+from api.schemas import ComparisonMetrics, SurfaceComparisonRequest, SurfaceComparisonResponse
 from utils.database import DatabaseManager
-
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +32,8 @@ async def compare_surfaces(
 ):
     """Сравнить две поверхности"""
     # Lazy import - heavy ML/scipy dependencies
-    from utils.surface_comparator import SurfaceComparator
     from api.metrics import BusinessMetrics
+    from utils.surface_comparator import SurfaceComparator
 
     try:
         # Проверка существования файлов
@@ -188,7 +184,8 @@ async def export_comparison(
         raise NotFoundError(f"Сравнение с ID {comparison_id} не найдено", resource_type="comparison")
 
     if fmt == "csv":
-        import csv, io
+        import csv
+        import io
         output = io.StringIO()
         writer = csv.DictWriter(output, fieldnames=comparison.keys())
         writer.writeheader()

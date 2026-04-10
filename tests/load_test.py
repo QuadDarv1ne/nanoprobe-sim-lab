@@ -17,17 +17,17 @@ Load Testing для Nanoprobe Sim Lab API
     pip install locust
 """
 
-import sys
-import os
-import time
-import json
-import statistics
-from pathlib import Path
-from datetime import datetime, timezone
-from typing import Dict, List, Any, Optional
-from dataclasses import dataclass
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import argparse
+import json
+import os
+import statistics
+import sys
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 # Добавляем путь к проекту
 sys.path.insert(0, str(Path(__file__).parent.parent))

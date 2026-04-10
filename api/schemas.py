@@ -3,12 +3,12 @@ Pydantic схемы для Nanoprobe Sim Lab API
 Валидация данных запросов и ответов
 """
 
-from pydantic import BaseModel, Field, field_validator
-from typing import Optional, Dict, Any, List
+import re
 from datetime import datetime, timezone
 from enum import Enum
-import re
+from typing import Any, Dict, List, Optional
 
+from pydantic import BaseModel, Field, field_validator
 
 # ==================== Типы для аннотаций (Python 3.10+) ====================
 # Для совместимости с Python 3.8-3.9 используем typing

@@ -2,9 +2,10 @@
 
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Any
-from jinja2 import Template
+from typing import Any, Dict, List
+
 import pdfkit
+from jinja2 import Template
 
 
 class ReportGenerator:

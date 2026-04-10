@@ -3,14 +3,14 @@
 Реальные TLE данные из CelesTrak, SGP4 propagation, предсказание пролётов.
 """
 
-from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Optional, Tuple
-from pathlib import Path
 import json
-import requests
-from sgp4.api import Satrec
-from sgp4.api import jday
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
 import numpy as np
+import requests
+from sgp4.api import Satrec, jday
 
 
 class Satellite:

@@ -8,12 +8,13 @@
 - JSON-LD (Linked Data) - семантическая веб
 """
 
-import json
 import csv
+import json
 import logging
-from pathlib import Path
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Any
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 import numpy as np
 
 try:

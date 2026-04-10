@@ -1,20 +1,21 @@
 """Модуль бенчмаркинга производительности для проекта Лаборатория моделирования нанозонда."""
 
-import time
+import gc
+import json
 import statistics
 import threading
-from pathlib import Path
-from typing import Dict, List, Any, Callable
-from datetime import datetime, timezone
-import json
-import matplotlib.pyplot as plt
-import pandas as pd
-from dataclasses import dataclass
-from functools import wraps
-import psutil
-import gc
+import time
 import tracemalloc
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from functools import wraps
+from pathlib import Path
+from typing import Any, Callable, Dict, List
+
+import matplotlib.pyplot as plt
+import pandas as pd
+import psutil
 
 
 @dataclass

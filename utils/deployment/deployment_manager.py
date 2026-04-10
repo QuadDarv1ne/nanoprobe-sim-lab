@@ -1,13 +1,13 @@
 """Модуль управления развертыванием для проекта Лаборатория моделирования нанозонда."""
 
 import os
-import sys
-import subprocess
 import shutil
-from pathlib import Path
-from typing import Dict, List, Any
-from datetime import datetime, timezone
+import subprocess
+import sys
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, List
 
 # Опциональный импорт Docker
 try:

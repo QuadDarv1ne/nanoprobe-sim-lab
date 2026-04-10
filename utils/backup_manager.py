@@ -1,16 +1,18 @@
 """Модуль управления резервным копированием для проекта Лаборатория моделирования нанозонда."""
 
+import json
 import os
 import shutil
+import tempfile
 import zipfile
-import json
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
-import tempfile
+
 from cryptography.fernet import Fernet
-from utils.logger import setup_project_logging
+
 from utils.config.config_manager import ConfigManager
+from utils.logger import setup_project_logging
 
 
 class BackupManager:

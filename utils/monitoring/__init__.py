@@ -8,10 +8,10 @@ Monitoring Utilities
 - Real-time dashboard
 """
 
-from .system_monitor import SystemMonitor
+from .extended_health_check import ExtendedHealthChecker, get_health_checker, init_health_checker
 from .monitoring import EnhancedSystemMonitor
 from .system_health_monitor import SystemHealthMonitor
-from .extended_health_check import ExtendedHealthChecker, get_health_checker, init_health_checker
+from .system_monitor import SystemMonitor
 
 __all__ = [
     'SystemMonitor',

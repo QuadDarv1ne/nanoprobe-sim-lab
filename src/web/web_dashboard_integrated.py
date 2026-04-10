@@ -8,17 +8,17 @@
 """
 
 import os
+import subprocess
 import sys
 import threading
 import webbrowser
-import subprocess
 from datetime import datetime, timezone
-from pathlib import Path
-import requests
-
-from flask import Flask, render_template, request, jsonify, session
-from flask_socketio import SocketIO, emit
 from functools import wraps
+from pathlib import Path
+
+import requests
+from flask import Flask, jsonify, render_template, request, session
+from flask_socketio import SocketIO, emit
 
 # Добавляем путь к utils для импорта служебных модулей
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -26,21 +26,21 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 # Project root for component paths
 project_root = Path(__file__).parent.parent.parent
 
-from utils.logger import NanoprobeLogger
-from utils.core.error_handler import ErrorHandler
-from utils.performance_monitor import PerformanceMonitor
-from utils.system_monitor import SystemMonitor
-from utils.config.config_manager import ConfigManager
-from utils.caching.cache_manager import CacheManager
-from utils.data.data_manager import DataManager
-from utils.data.data_exporter import DataExporter
-from utils.database.database import DatabaseManager, get_database
-from utils.surface_comparator import compare_surfaces as compare_surfaces_util
 from utils.ai.defect_analyzer import analyze_defects as analyze_defects_util
+from utils.caching.cache_manager import CacheManager
+from utils.config.config_manager import ConfigManager
+from utils.core.error_handler import ErrorHandler
+from utils.data.data_exporter import DataExporter
+from utils.data.data_manager import DataManager
+from utils.database.database import DatabaseManager, get_database
+from utils.logger import NanoprobeLogger
+from utils.performance_monitor import PerformanceMonitor
+from utils.surface_comparator import compare_surfaces as compare_surfaces_util
+from utils.system_monitor import SystemMonitor
 
 # Импорт reverse proxy
 try:
-    from api.reverse_proxy import register_proxy, FASTAPI_URL, JWT_SECRET
+    from api.reverse_proxy import FASTAPI_URL, JWT_SECRET, register_proxy
     PROXY_AVAILABLE = True
 except ImportError:
     PROXY_AVAILABLE = False
@@ -1047,8 +1047,11 @@ class IntegratedWebDashboard:
         def handle_request_metrics():
             """Запрос метрик системы в realtime"""
             try:
-                import os, platform
+                import os
+                import platform
+
                 import psutil
+
                 from utils.platform_utils import get_system_disk_usage
                 disk_usage = get_system_disk_usage()
                 metrics = {

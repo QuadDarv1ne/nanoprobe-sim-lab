@@ -5,12 +5,13 @@ RTL-SDR V4 SSTV Receiver
 
 import logging
 import os
+import tempfile
 import time
 import wave
-import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional, Dict, Any, Callable
+from typing import Any, Callable, Dict, Optional
+
 import numpy as np
 
 logger = logging.getLogger(__name__)
@@ -23,8 +24,8 @@ except ImportError:
     RtlSdr = None
 
 try:
-    from pysstv.color import PD120, PD90, PD180, MartinM1, MartinM2, ScottieS1, ScottieS2, Robot36
-    from pysstv.grayscale import Robot36BW, Robot8BW
+    from pysstv.color import PD90, PD120, PD180, MartinM1, MartinM2, Robot36, ScottieS1, ScottieS2
+    from pysstv.grayscale import Robot8BW, Robot36BW
     SSTV_AVAILABLE = True
     SSTV_MODES = {
         'PD120': PD120, 'PD90': PD90, 'PD180': PD180,
@@ -65,8 +66,10 @@ def _fm_demodulate(iq_samples: np.ndarray, src_rate: int, dst_rate: int = AUDIO_
     audio = np.diff(np.unwrap(phase)).astype(np.float32)
 
     if src_rate != dst_rate:
-        from scipy.signal import resample_poly, firwin, lfilter
         from math import gcd
+
+        from scipy.signal import firwin, lfilter, resample_poly
+
         # Anti-aliasing FIR перед ресемплингом
         nyq = src_rate / 2.0
         cutoff = min(dst_rate / 2.0 * 0.9, nyq * 0.9)
@@ -101,6 +104,7 @@ def _detect_vis(audio: np.ndarray, sample_rate: int = AUDIO_SAMPLE_RATE) -> Dict
 
     try:
         from scipy.signal import welch
+
         # Welch PSD для надёжной оценки спектра
         f, pxx = welch(audio[:min(len(audio), sample_rate * 2)].astype(np.float64),
                        sample_rate, nperseg=2048)
@@ -489,7 +493,7 @@ class SSTVDecoder:
             # pysstv имеет метод from_samples который принимает WAV файл напрямую
             # или можно использовать SSTV класс с аудио данными
             from pysstv.sstv import SSTV
-            
+
             # Читаем WAV файл
             with wave.open(wav_path, 'r') as wf:
                 frames = wf.readframes(wf.getnframes())

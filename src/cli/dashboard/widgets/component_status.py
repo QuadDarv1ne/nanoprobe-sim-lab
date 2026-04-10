@@ -8,6 +8,7 @@ import asyncio
 import socket
 from datetime import datetime, timezone
 from typing import Dict, List
+
 from .base import Widget, WidgetData, WidgetPriority
 
 

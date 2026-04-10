@@ -4,10 +4,11 @@
 """
 
 import asyncio
-import aiohttp
-from datetime import datetime, timezone
-from typing import Dict, Set, Optional, Any
 import logging
+from datetime import datetime, timezone
+from typing import Any, Dict, Optional, Set
+
+import aiohttp
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -340,7 +341,7 @@ def setup_flask_sync_integration(app, socketio):
 
         Backend может отправлять события сюда для трансляции во Frontend
         """
-        from flask import request, jsonify
+        from flask import jsonify, request
         data = request.json
         event = data.get("event")
         event_data = data.get("data")

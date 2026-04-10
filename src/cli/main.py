@@ -2,9 +2,9 @@
 Главная консольная утилита проекта Лаборатория моделирования нанозонда.
 """
 
-import sys
 import atexit
 import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 

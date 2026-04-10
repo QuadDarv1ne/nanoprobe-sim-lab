@@ -4,8 +4,8 @@
 """
 import subprocess
 import time
-from pathlib import Path
 from datetime import datetime, timezone
+from pathlib import Path
 
 FREQUENCY = 145.800  # МКС SSTV
 DURATION = 60  # секунд (SSTV передача обычно 60-120 сек)

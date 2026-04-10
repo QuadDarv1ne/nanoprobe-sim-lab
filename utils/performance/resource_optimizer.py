@@ -1,15 +1,16 @@
 """Модуль оптимизации ресурсов для проекта Лаборатория моделирования нанозонда."""
 
-import psutil
 import gc
-import threading
-import time
+import json
 import os
 import sys
-from typing import Dict, Any, List
-from datetime import datetime, timezone
-import json
+import threading
+import time
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from typing import Any, Dict, List
+
+import psutil
 
 
 @dataclass

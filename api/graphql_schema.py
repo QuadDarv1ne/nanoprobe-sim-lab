@@ -3,9 +3,11 @@ GraphQL API для Nanoprobe Sim Lab
 Schema и резолверы для GraphQL endpoint
 """
 
-import strawberry
-from typing import List, Optional
 from datetime import datetime, timezone
+from typing import List, Optional
+
+import strawberry
+
 from utils.database import DatabaseManager
 
 

@@ -3,12 +3,13 @@ External Services API routes с Circuit Breaker
 Интеграция с внешними сервисами через circuit breaker
 """
 
-from fastapi import APIRouter, Query
-from typing import Optional
-from datetime import datetime, timezone
 import logging
 import os
+from datetime import datetime, timezone
+from typing import Optional
+
 import requests
+from fastapi import APIRouter, Query
 
 from api.error_handlers import NotFoundError
 from api.state import get_app_state, set_app_state

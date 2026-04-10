@@ -1,17 +1,18 @@
 """WebSocket сервер для realtime обновлений дашборда."""
 
-from flask import Flask, request
-from flask_socketio import SocketIO, emit
-from datetime import datetime, timezone
-import threading
-import time
 import os
 import secrets
-import psutil
+import threading
+import time
+from datetime import datetime, timezone
 
+import psutil
+from flask import Flask, request
+from flask_socketio import SocketIO, emit
+
+from api.state import get_system_disk_usage
 from utils.config.config_manager import ConfigManager
 from utils.logger import setup_project_logging
-from api.state import get_system_disk_usage
 
 
 class WebSocketServer:

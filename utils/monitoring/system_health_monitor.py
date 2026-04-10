@@ -1,21 +1,22 @@
 """Модуль мониторинга здоровья системы для проекта Лаборатория моделирования нанозонда."""
 
-import time
-import threading
-import queue
-import sys
-import socket
-import os
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from pathlib import Path
-from typing import Dict, Any, List, Optional, Callable
-from datetime import datetime, timezone
 import json
+import os
+import queue
+import smtplib
+import socket
+import sys
+import threading
+import time
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional
+
 import psutil
 import requests
-from dataclasses import dataclass
 
 
 @dataclass

@@ -3,14 +3,15 @@
 Обнаружение и классификация дефектов на поверхностях с использованием ML
 """
 
-import numpy as np
-import logging
-from pathlib import Path
-from datetime import datetime, timezone
-from typing import Dict, List, Any, Tuple
-import json
 import asyncio
+import json
+import logging
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, List, Tuple
+
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -26,10 +27,10 @@ try:
 except ImportError:
     CV2_AVAILABLE = False
 
-from sklearn.cluster import KMeans, DBSCAN
+from scipy import ndimage
+from sklearn.cluster import DBSCAN, KMeans
 from sklearn.ensemble import IsolationForest, RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
-from scipy import ndimage
 
 
 class DefectDetector:

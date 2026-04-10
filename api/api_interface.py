@@ -1,24 +1,26 @@
 """API интерфейс для проекта Лаборатория моделирования нанозонда."""
 
-from flask import Flask, request, jsonify, Response
-from flask_cors import CORS
 import json
+import threading
+import time
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-import numpy as np
-from typing import Dict, Any, Tuple
-import threading
-import time
+from typing import Any, Dict, Tuple
 
+import numpy as np
+from cpp_spm_hardware_sim.src.spm_simulator import SPMController, SurfaceModel
+from flask import Flask, Response, jsonify, request
+from flask_cors import CORS
+from py_sstv_groundstation.src.sstv_decoder import SSTVDecoder
+from py_surface_image_analyzer.src.image_processor import ImageProcessor
+
+from api.state import get_system_disk_usage
 from utils.config.config_manager import ConfigManager
 from utils.data.data_manager import DataManager
 from utils.logger import NanoprobeLogger, setup_project_logging
-from cpp_spm_hardware_sim.src.spm_simulator import SurfaceModel, SPMController
-from py_surface_image_analyzer.src.image_processor import ImageProcessor
-from py_sstv_groundstation.src.sstv_decoder import SSTVDecoder
+
 from .validators import DataValidator, ResponseBuilder, ValidationError
-from api.state import get_system_disk_usage
 
 
 class NanoprobeAPI:
@@ -515,6 +517,7 @@ class NanoprobeAPI:
             JSON ответ с информацией о системе
         """
         import platform
+
         import psutil
 
         info = {

@@ -4,9 +4,9 @@
 """
 
 import logging
+import shutil
 from datetime import datetime, timezone
 from pathlib import Path
-import shutil
 
 from fastapi import FastAPI
 
@@ -19,11 +19,21 @@ def register_routes(app: FastAPI):
     # ============================================
     # Основные роуты (обязательные)
     # ============================================
+    from api.routes import system_export  # Новые эндпоинты экспорта и системных операций
     from api.routes import (
-        auth, scans, simulations, analysis, comparison,
-        reports, admin, graphql, ml_analysis,
-        external_services, nasa, weather, monitoring,
-        system_export  # Новые эндпоинты экспорта и системных операций
+        admin,
+        analysis,
+        auth,
+        comparison,
+        external_services,
+        graphql,
+        ml_analysis,
+        monitoring,
+        nasa,
+        reports,
+        scans,
+        simulations,
+        weather,
     )
 
     app.include_router(auth.router, prefix="/api/v1/auth", tags=["Аутентификация"])

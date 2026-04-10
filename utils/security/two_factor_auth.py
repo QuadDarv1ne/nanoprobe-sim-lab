@@ -8,15 +8,16 @@ TOTP (Time-based One-Time Password) интеграция с Google Authenticator
 - Инвалидация сессий при смене пароля
 """
 
-import pyotp
-import qrcode
-import secrets
-from typing import Dict, Optional, Tuple
-from pathlib import Path
-from datetime import datetime, timezone, timedelta
 import json
 import logging
+import secrets
 import time
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from typing import Dict, Optional, Tuple
+
+import pyotp
+import qrcode
 
 logger = logging.getLogger(__name__)
 

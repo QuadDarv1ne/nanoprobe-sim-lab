@@ -1,11 +1,12 @@
 """Модуль форматов обмена данными для проекта Лаборатория моделирования нанозонда."""
 
-import numpy as np
-import logging
-from typing import Dict, Any, List, Tuple
-from datetime import datetime, timezone
 import base64
+import logging
 from abc import ABC, abstractmethod
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Tuple
+
+import numpy as np
 
 logger = logging.getLogger(__name__)
 

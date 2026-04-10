@@ -4,12 +4,12 @@ Base Widget Class
 Базовый класс для всех виджетов dashboard.
 """
 
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Optional, Any, Dict
-from enum import Enum
 from datetime import datetime, timezone
-import logging
+from enum import Enum
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 

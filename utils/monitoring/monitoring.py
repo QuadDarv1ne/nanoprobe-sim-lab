@@ -3,16 +3,17 @@ Enhanced System Monitor for Nanoprobe Sim Lab
 Расширенный мониторинг системы с аналитикой и алертами
 """
 
+import logging
 import os
 import platform
-import psutil
-import time
 import threading
-from datetime import datetime, timezone
-from typing import Dict, List, Any, Optional, Callable
+import time
 from collections import deque
-from dataclasses import dataclass, asdict
-import logging
+from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
+from typing import Any, Callable, Dict, List, Optional
+
+import psutil
 
 logger = logging.getLogger(__name__)
 

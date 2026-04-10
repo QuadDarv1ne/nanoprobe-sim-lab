@@ -4,8 +4,8 @@ ISS/MKS Tracker - Расчёт пролётов МКС над Москвой
 Использует SGP4 + TLE из CelesTrak
 """
 import sys
-from pathlib import Path
 from datetime import datetime, timezone
+from pathlib import Path
 
 # Добавляем путь к модулям
 sys.path.insert(0, str(Path(__file__).parent / "components" / "py-sstv-groundstation" / "src"))

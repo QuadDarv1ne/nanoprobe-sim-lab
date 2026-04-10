@@ -1,15 +1,15 @@
 """Модуль централизованного логирования для системы оптимизации."""
 
+import json
 import logging
 import logging.handlers
-from pathlib import Path
-from typing import Dict, Any
-from datetime import datetime, timezone
-import json
 import threading
-from enum import Enum
 import traceback
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from enum import Enum
+from pathlib import Path
+from typing import Any, Dict
 
 
 class LogLevel(Enum):

@@ -1,11 +1,12 @@
 """Модуль загрузки и обработки космических снимков."""
 
-import requests
 import json
-from pathlib import Path
-from typing import Dict, List, Optional, Any
 from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 import numpy as np
+import requests
 from PIL import Image
 
 try:

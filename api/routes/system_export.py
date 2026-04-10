@@ -13,7 +13,7 @@ from fastapi import APIRouter, BackgroundTasks
 from fastapi.responses import StreamingResponse
 
 from api.error_handlers import ServiceUnavailableError
-from api.state import get_db_manager, get_app_state
+from api.state import get_app_state, get_db_manager
 
 logger = logging.getLogger(__name__)
 
@@ -126,7 +126,7 @@ async def restart_system(background_tasks: BackgroundTasks):
     Не останавливает сервер, но перезапускает фоновые задачи и очищает кэш.
     """
     from utils.caching.redis_cache import cache
-    
+
     # Очищаем кэш
     try:
         cache.clear_pattern("scans:*")
@@ -170,9 +170,10 @@ async def restart_system(background_tasks: BackgroundTasks):
 )
 async def get_system_status():
     """Получение статуса всех сервисов системы"""
-    import psutil
     import platform
-    
+
+    import psutil
+
     # Основная информация о системе
     cpu_percent = psutil.cpu_percent(interval=0.1)
     memory = psutil.virtual_memory()

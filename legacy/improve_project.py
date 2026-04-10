@@ -1,12 +1,12 @@
 """Скрипт улучшения проекта Nanoprobe Simulation Lab."""
 
-import os
-import sys
 import json
+import os
+import re
 import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
-import re
 
 # Добавляем путь к проекту
 project_root = Path(__file__).parent

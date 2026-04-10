@@ -13,8 +13,8 @@ Extended Health Checks для фоновых задач
 import asyncio
 import logging
 from datetime import datetime, timezone
-from typing import Dict, Any, Optional
 from pathlib import Path
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 

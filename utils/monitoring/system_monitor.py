@@ -1,18 +1,19 @@
 """Модуль мониторинга системы для проекта Лаборатория моделирования нанозонда."""
 
-import psutil
-import time
-import threading
 import json
+import threading
+import time
 import tkinter as tk
-from tkinter import ttk
+from collections import deque
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Any
-from collections import deque
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.animation import FuncAnimation
+from tkinter import ttk
+from typing import Any, Dict, List
+
 import matplotlib.pyplot as plt
+import psutil
+from matplotlib.animation import FuncAnimation
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
 class SystemMonitor:

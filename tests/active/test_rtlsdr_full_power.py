@@ -6,9 +6,10 @@
 
 import sys
 import time
-import numpy as np
-from pathlib import Path
 from datetime import datetime, timezone
+from pathlib import Path
+
+import numpy as np
 
 print("=" * 70)
 print("  🚀 RTL-SDR V4 FULL POWER TEST")
@@ -27,8 +28,8 @@ except ImportError as e:
 # Тест 2: Проверка pysstv
 print("\n[2/8] Проверка pysstv...")
 try:
-    from pysstv.sstv import SSTV
     from pysstv.color import PD120, MartinM1
+    from pysstv.sstv import SSTV
     print("✅ pysstv импортирован (0.5.7)")
     print(f"   Доступные режимы: PD120, MartinM1, ScottieS1, Robot36")
 except ImportError as e:

@@ -3,19 +3,19 @@
 Автоматизация обработки множественных файлов и заданий
 """
 
-import json
-import time
 import asyncio
+import json
 import logging
 import threading
-from pathlib import Path
-from datetime import datetime, timezone
-from typing import Dict, List, Any, Callable, Optional, Union
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
-from queue import Queue, Empty
+import time
 import traceback
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from enum import Enum
+from pathlib import Path
+from queue import Empty, Queue
+from typing import Any, Callable, Dict, List, Optional, Union
 
 logger = logging.getLogger(__name__)
 

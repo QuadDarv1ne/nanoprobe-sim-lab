@@ -2,20 +2,17 @@
 API роуты для генерации PDF отчётов
 """
 
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import FileResponse
-from datetime import datetime, timezone
-import uuid
 import logging
+import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 
-from api.schemas import (
-    PDFReportRequest,
-    PDFReportResponse,
-    ReportType,
-)
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import FileResponse
+
 from api.dependencies import get_db
-from api.error_handlers import ValidationError, DatabaseError, NotFoundError
+from api.error_handlers import DatabaseError, NotFoundError, ValidationError
+from api.schemas import PDFReportRequest, PDFReportResponse, ReportType
 from utils.database import DatabaseManager
 
 logger = logging.getLogger(__name__)
@@ -35,8 +32,8 @@ async def generate_pdf_report(
 ):
     """Сгенерировать PDF отчёт"""
     # Lazy import - reportlab
-    from utils.reporting.pdf_report_generator import ScientificPDFReport
     from api.metrics import BusinessMetrics
+    from utils.reporting.pdf_report_generator import ScientificPDFReport
 
     try:
         # Создание генератора отчётов

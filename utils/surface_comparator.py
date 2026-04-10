@@ -1,10 +1,11 @@
 """Surface image comparison module for Nanoprobe Simulation Lab"""
 
-import numpy as np
-from pathlib import Path
-from datetime import datetime, timezone
-from typing import Dict, Any, Optional, Tuple, List
 import json
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
 
 try:
     from PIL import Image

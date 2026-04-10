@@ -1,22 +1,23 @@
 """Модуль профилирования производительности для проекта Лаборатория моделирования нанозонда."""
 
 import cProfile
-import pstats
 import io
-import time
-import threading
-import psutil
-import os
-from pathlib import Path
-from typing import Dict, Any, Callable
-from datetime import datetime, timezone
 import json
-import matplotlib.pyplot as plt
-from dataclasses import dataclass
-from contextlib import contextmanager
-from functools import wraps
-import line_profiler
+import os
+import pstats
+import threading
+import time
 import tracemalloc
+from contextlib import contextmanager
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from functools import wraps
+from pathlib import Path
+from typing import Any, Callable, Dict
+
+import line_profiler
+import matplotlib.pyplot as plt
+import psutil
 
 
 @dataclass

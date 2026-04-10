@@ -1,9 +1,9 @@
 """Основной скрипт запуска проекта с мониторингом и улучшениями."""
 
 import os
+import subprocess
 import sys
 import time
-import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -12,7 +12,9 @@ project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
 from monitor_errors import ProjectMonitor
+
 from improve_project import ProjectImprover
+
 
 def run_project_monitoring():
     """Запуск мониторинга проекта"""

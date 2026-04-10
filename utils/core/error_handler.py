@@ -6,18 +6,18 @@
 логирования и восстановления для всего проекта.
 """
 
-import logging
-import traceback
 import json
-from pathlib import Path
-from datetime import datetime, timedelta, timezone
-from typing import Dict, Any, Optional, Callable, List
-from functools import wraps
-import threading
+import logging
 import queue
+import threading
 import time
-from enum import Enum
+import traceback
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
+from enum import Enum
+from functools import wraps
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional
 
 
 class ErrorSeverity(Enum):

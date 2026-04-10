@@ -5,11 +5,11 @@ CLI утилита для администратора Nanoprobe Sim Lab
 """
 
 import argparse
-import sys
 import json
-from pathlib import Path
-from datetime import datetime, timezone
 import shutil
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
 
 
 def print_header(text: str):

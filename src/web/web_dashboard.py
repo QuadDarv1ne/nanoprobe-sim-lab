@@ -10,6 +10,7 @@
 
 # Проверка версии Python (требуется 3.11 - 3.14)
 import sys
+
 MIN_PYTHON_VERSION = (3, 11)
 MAX_PYTHON_VERSION = (3, 14)
 if sys.version_info < MIN_PYTHON_VERSION or sys.version_info >= (MAX_PYTHON_VERSION[0], MAX_PYTHON_VERSION[1] + 1):
@@ -20,13 +21,13 @@ if sys.version_info < MIN_PYTHON_VERSION or sys.version_info >= (MAX_PYTHON_VERS
 
 import os
 import platform
-import time
-import threading
-import webbrowser
 import subprocess
+import threading
+import time
+import webbrowser
 from datetime import datetime, timezone
-from typing import Dict, Any
 from pathlib import Path
+from typing import Any, Dict
 
 
 def _get_disk_usage():
@@ -45,7 +46,7 @@ if sys.platform == "win32":
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
         sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, jsonify, render_template, request
 from flask_socketio import SocketIO, emit
 
 # Добавляем путь к utils для импорта служебных модулей
@@ -54,17 +55,17 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 # Project root for component paths
 project_root = Path(__file__).parent.parent.parent
 
-from utils.logger import NanoprobeLogger
-from utils.core.error_handler import ErrorHandler
-from utils.performance_monitor import PerformanceMonitor
-from utils.system_monitor import SystemMonitor
-from utils.config.config_manager import ConfigManager
-from utils.caching.cache_manager import CacheManager
-from utils.data.data_manager import DataManager
-from utils.data.data_exporter import DataExporter
-from utils.database import DatabaseManager, get_database
-from utils.surface_comparator import compare_surfaces as compare_surfaces_util
 from utils.ai.defect_analyzer import analyze_defects as analyze_defects_util
+from utils.caching.cache_manager import CacheManager
+from utils.config.config_manager import ConfigManager
+from utils.core.error_handler import ErrorHandler
+from utils.data.data_exporter import DataExporter
+from utils.data.data_manager import DataManager
+from utils.database import DatabaseManager, get_database
+from utils.logger import NanoprobeLogger
+from utils.performance_monitor import PerformanceMonitor
+from utils.surface_comparator import compare_surfaces as compare_surfaces_util
+from utils.system_monitor import SystemMonitor
 
 # Интеграция с Backend (FastAPI)
 try:

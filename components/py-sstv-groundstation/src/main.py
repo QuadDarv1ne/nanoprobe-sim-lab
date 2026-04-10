@@ -1,15 +1,15 @@
 """Наземная станция SSTV для приема и декодирования сигналов."""
 
-import sys
-import os
 import argparse
+import os
+import sys
 import time
 from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from sstv_decoder import SSTVDecoder, detect_sstv_signal
 from sdr_interface import SDRInterface, SDRScanner, create_sdr
+from sstv_decoder import SSTVDecoder, detect_sstv_signal
 
 
 def show_banner():
@@ -214,8 +214,9 @@ def mode_demo(args):
 
 def mode_waterfall(args):
     """Waterfall дисплей спектра."""
-    from waterfall_display import WaterfallDisplay, WaterfallRecorder
     from datetime import datetime, timezone
+
+    from waterfall_display import WaterfallDisplay, WaterfallRecorder
 
     print(f"\nWATERFALL ДИСПЛЕЙ")
     print(f"Частота: {args.frequency} МГц")
@@ -399,8 +400,9 @@ def mode_realtime_sstv(args):
 
 def mode_auto_record(args):
     """Автоматическая запись при пролёте спутника."""
-    from auto_recorder import AutoRecordingScheduler
     from datetime import datetime
+
+    from auto_recorder import AutoRecordingScheduler
 
     print(f"\nАВТОЗАПИСЬ СПУТНИКОВ")
     print(f"Наземная станция: {args.lat}°N, {args.lon}°E")

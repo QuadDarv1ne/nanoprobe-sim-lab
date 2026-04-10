@@ -3,18 +3,18 @@
 Хранение результатов сканирований, истории симуляций, метаданных
 """
 
-import sqlite3
+import asyncio
+import hashlib
 import json
 import logging
-from pathlib import Path
-from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Optional, Any, Tuple, Callable
-from contextlib import contextmanager, asynccontextmanager
-from queue import Queue
+import sqlite3
 import threading
-import asyncio
+from contextlib import asynccontextmanager, contextmanager
+from datetime import datetime, timedelta, timezone
 from functools import wraps
-import hashlib
+from pathlib import Path
+from queue import Queue
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 

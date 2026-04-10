@@ -7,6 +7,7 @@ Log Viewer Widget
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import List
+
 from .base import Widget, WidgetData, WidgetPriority
 
 

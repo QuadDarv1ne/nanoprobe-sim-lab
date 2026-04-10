@@ -1,10 +1,11 @@
 """Модуль декодирования SSTV."""
 
-import numpy as np
-from typing import Optional, Tuple, List, Dict
-from PIL import Image
-from pathlib import Path
 from datetime import datetime, timezone
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
+import numpy as np
+from PIL import Image
 
 
 class SSTVDecoder:
@@ -104,8 +105,8 @@ class SSTVDecoder:
         Returns:
             Image.Image: Декодированное изображение или None
         """
-        import tempfile
         import os
+        import tempfile
         
         temp_path = None
         try:
@@ -123,8 +124,10 @@ class SSTVDecoder:
                 # Ресемплинг: input_sample_rate -> sample_rate
                 src_rate = int(input_sample_rate or 2400000)  # RTL-SDR V4 default
                 if src_rate != sample_rate:
-                    from scipy.signal import resample_poly, firwin, lfilter
                     from math import gcd
+
+                    from scipy.signal import firwin, lfilter, resample_poly
+
                     # Low-pass фильтр перед ресемплингом (anti-aliasing)
                     nyq = src_rate / 2
                     cutoff = min(sample_rate / 2 * 0.9, nyq * 0.9)
@@ -428,6 +431,7 @@ def detect_sstv_signal(
     """
     try:
         import wave
+
         from scipy.signal import spectrogram
 
         with wave.open(audio_file, "r") as wav:
@@ -535,7 +539,7 @@ def detect_sstv_signal_from_samples(
 
     try:
         from scipy.signal import welch
-        
+
         # Используем Welch's method для эффективного спектрального анализа
         f, Pxx = welch(audio_data[:fft_size].astype(np.float64), sample_rate, nperseg=4096)
         

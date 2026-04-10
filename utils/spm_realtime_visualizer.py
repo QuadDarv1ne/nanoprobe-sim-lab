@@ -3,21 +3,22 @@
 Интерактивная визуализация в реальном времени с поддержкой анимации
 """
 
-import numpy as np
-from pathlib import Path
-from datetime import datetime, timezone
-from typing import Dict, List, Any, Optional, Tuple, Callable
-from threading import Lock
+import base64
 import json
 import time
-import base64
+from datetime import datetime, timezone
 from io import BytesIO
+from pathlib import Path
+from threading import Lock
+from typing import Any, Callable, Dict, List, Optional, Tuple
+
+import numpy as np
 
 try:
-    import matplotlib.pyplot as plt
     import matplotlib.animation as animation
+    import matplotlib.pyplot as plt
     from matplotlib.colors import Normalize
-    from matplotlib.widgets import Slider, Button
+    from matplotlib.widgets import Button, Slider
     MATPLOTLIB_AVAILABLE = True
 except ImportError:
     MATPLOTLIB_AVAILABLE = False

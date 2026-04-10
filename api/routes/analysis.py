@@ -2,19 +2,16 @@
 API роуты для анализа дефектов и изображений
 """
 
-from fastapi import APIRouter, Depends
-from pathlib import Path
-from datetime import datetime, timezone
-import uuid
 import logging
+import uuid
+from datetime import datetime, timezone
+from pathlib import Path
 
-from api.schemas import (
-    DefectAnalysisRequest,
-    DefectAnalysisResponse,
-    DefectInfo,
-)
+from fastapi import APIRouter, Depends
+
 from api.dependencies import get_db
 from api.error_handlers import NotFoundError, ValidationError
+from api.schemas import DefectAnalysisRequest, DefectAnalysisResponse, DefectInfo
 from utils.database import DatabaseManager
 
 logger = logging.getLogger(__name__)
@@ -34,8 +31,8 @@ async def analyze_image_defects(
 ):
     """Анализ дефектов на изображении"""
     # Lazy import - ML model loading
-    from utils.ai.defect_analyzer import DefectAnalysisPipeline
     from api.metrics import BusinessMetrics
+    from utils.ai.defect_analyzer import DefectAnalysisPipeline
 
     try:
         # Проверка существования файла
@@ -182,7 +179,8 @@ async def export_defect_analysis(
         raise NotFoundError(f"Анализ с ID {analysis_id} не найден", resource_type="analysis")
 
     if fmt == "csv":
-        import csv, io
+        import csv
+        import io
         output = io.StringIO()
         writer = csv.DictWriter(output, fieldnames=analysis.keys())
         writer.writeheader()

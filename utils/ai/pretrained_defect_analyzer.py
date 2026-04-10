@@ -3,11 +3,12 @@ AI/ML улучшения для анализа дефектов
 Pre-trained модели и transfer learning
 """
 
-import numpy as np
-from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
-from datetime import datetime, timezone
 import logging
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -187,9 +188,9 @@ class PretrainedDefectAnalyzer:
                 }
 
         try:
+            import cv2
             import tensorflow as tf
             from tensorflow import keras
-            import cv2
 
             # Загрузка и предобработка изображения
             image = cv2.imread(str(image_path))

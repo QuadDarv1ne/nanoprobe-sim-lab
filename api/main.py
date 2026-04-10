@@ -3,26 +3,25 @@ FastAPI REST API для Nanoprobe Simulation Lab
 Совместная работа с Flask веб-интерфейсом
 """
 
-from contextlib import asynccontextmanager
-from datetime import datetime, timezone
-
 import asyncio
 import json
 import logging
 import os
+from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 
 import uvicorn
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
-from api.error_handlers import register_error_handlers, ValidationError
+from api.error_handlers import ValidationError, register_error_handlers
+from api.router_config import register_routes
+from api.state import init_app_state
+from utils.caching.redis_cache import RedisCache
 
 # Импорт существующих утилит
 from utils.database import DatabaseManager
-from utils.caching.redis_cache import RedisCache
-from api.state import init_app_state
-from api.router_config import register_routes
 
 logger = logging.getLogger(__name__)
 
@@ -63,8 +62,8 @@ async def lifespan(app: FastAPI):
     # Инициализация ресурсов при старте
     try:
         from api.state import init_app_state, set_db_manager, set_redis
-        from utils.database import DatabaseManager
         from utils.caching.redis_cache import RedisCache
+        from utils.database import DatabaseManager
 
         # Инициализация БД
         db = DatabaseManager("data/nanoprobe.db")
@@ -297,8 +296,9 @@ async def health_check():
 @app.get("/health/detailed", tags=["Health"])
 async def detailed_health_check():
     """Детальная проверка здоровья системы"""
-    import psutil
     import platform
+
+    import psutil
 
     cpu_percent = psutil.cpu_percent(interval=0.1)
     memory = psutil.virtual_memory()
@@ -528,6 +528,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 elif message.get("type") == "get_metrics":
                     # Отправка текущих метрик
                     import psutil
+
                     from api.state import get_system_disk_usage
                     metrics = {
                         "type": "metrics",
@@ -568,8 +569,9 @@ async def websocket_endpoint(websocket: WebSocket):
 async def push_realtime_updates():
     """Периодическая отправка метрик подписчикам канала 'metrics'"""
     import psutil
-    from api.websocket_manager import get_connection_manager
+
     from api.state import get_system_disk_usage
+    from api.websocket_manager import get_connection_manager
 
     while True:
         try:

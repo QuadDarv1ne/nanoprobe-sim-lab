@@ -3,13 +3,14 @@
 Обеспечивает взаимодействие между Flask веб-интерфейсом и FastAPI REST API
 """
 
+import json
 import logging
 import os
-import requests
-from typing import Optional, Dict, Any, List
 from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
+
 import jwt
-import json
+import requests
 
 logger = logging.getLogger(__name__)
 

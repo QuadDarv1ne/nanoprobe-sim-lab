@@ -5,7 +5,8 @@ Timeline активности проекта.
 """
 
 from datetime import datetime, timedelta, timezone
-from typing import List, Dict
+from typing import Dict, List
+
 from .base import Widget, WidgetData, WidgetPriority
 
 

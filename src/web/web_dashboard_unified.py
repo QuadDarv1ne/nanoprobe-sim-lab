@@ -20,6 +20,7 @@
 
 # Проверка версии Python
 import sys
+
 MIN_PYTHON_VERSION = (3, 11)
 MAX_PYTHON_VERSION = (3, 14)
 if sys.version_info < MIN_PYTHON_VERSION or sys.version_info >= (MAX_PYTHON_VERSION[0], MAX_PYTHON_VERSION[1] + 1):
@@ -27,12 +28,12 @@ if sys.version_info < MIN_PYTHON_VERSION or sys.version_info >= (MAX_PYTHON_VERS
     sys.exit(1)
 
 import os
-import time
 import threading
+import time
 import webbrowser
 from datetime import datetime, timezone
-from typing import List
 from pathlib import Path
+from typing import List
 
 # UTF-8 для Windows
 if sys.platform == "win32":
@@ -45,10 +46,11 @@ if sys.platform == "win32":
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
         sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
-from flask_socketio import SocketIO, emit
 from functools import wraps
+
 import requests
+from flask import Flask, jsonify, redirect, render_template, request, session, url_for
+from flask_socketio import SocketIO, emit
 
 # Добавляем путь к utils
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -56,22 +58,23 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 # Project root
 project_root = Path(__file__).parent.parent.parent
 
+from utils.ai.defect_analyzer import analyze_defects as analyze_defects_util
+from utils.caching.cache_manager import CacheManager
+from utils.config.config_manager import ConfigManager
+from utils.core.error_handler import ErrorHandler
+from utils.data.data_exporter import DataExporter
+from utils.data.data_manager import DataManager
+from utils.database import DatabaseManager
+
 # Импорт утилит
 from utils.logger import NanoprobeLogger
-from utils.core.error_handler import ErrorHandler
 from utils.performance_monitor import PerformanceMonitor
-from utils.system_monitor import SystemMonitor
-from utils.config.config_manager import ConfigManager
-from utils.caching.cache_manager import CacheManager
-from utils.data.data_manager import DataManager
-from utils.data.data_exporter import DataExporter
-from utils.database import DatabaseManager
 from utils.surface_comparator import compare_surfaces as compare_surfaces_util
-from utils.ai.defect_analyzer import analyze_defects as analyze_defects_util
+from utils.system_monitor import SystemMonitor
 
 # Reverse proxy интеграция
 try:
-    from api.reverse_proxy import register_proxy, FASTAPI_URL, JWT_SECRET
+    from api.reverse_proxy import FASTAPI_URL, JWT_SECRET, register_proxy
     PROXY_AVAILABLE = True
 except ImportError:
     PROXY_AVAILABLE = False

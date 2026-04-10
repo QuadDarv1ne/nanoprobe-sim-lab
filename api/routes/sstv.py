@@ -6,19 +6,19 @@ API для управления SSTV станцией и расписанием 
 import asyncio
 import logging
 import os
-import sys
-import subprocess
 import signal
-from subprocess import DEVNULL
+import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional, Dict, Any
+from subprocess import DEVNULL
+from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, BackgroundTasks, WebSocket, WebSocketDisconnect, Query, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 
-from api.error_handlers import ServiceUnavailableError, NotFoundError, ValidationError
-from api.state import get_redis, get_app_state, set_app_state
+from api.error_handlers import NotFoundError, ServiceUnavailableError, ValidationError
+from api.state import get_app_state, get_redis, set_app_state
 
 logger = logging.getLogger(__name__)
 
@@ -586,8 +586,8 @@ async def refresh_tle():
 @router.get("/tle/status")
 async def get_tle_status():
     """Статус TLE данных (возраст, источник)."""
-    from pathlib import Path
     import time
+    from pathlib import Path
     
     tle_file = Path("data/tle_data.json")
     
@@ -623,8 +623,8 @@ async def sstv_health_check():
     rtl_fm_available = shutil.which("rtl_fm") is not None
 
     # Проверяем TLE возраст
-    from pathlib import Path as _Path
     import time as _time
+    from pathlib import Path as _Path
     tle_file = _Path("data/tle_data.json")
     tle_age_hours = None
     if tle_file.exists():
@@ -662,8 +662,9 @@ async def sstv_extended_health_check():
     - Graceful degradation status
     """
     import shutil
-    import psutil
     from pathlib import Path as _Path
+
+    import psutil
 
     recording_process = get_app_state("recording_process")
 
@@ -1240,8 +1241,8 @@ async def decode_existing_recording(filename: str, mode: str = "auto"):
 
         # Сохраняем в БД
         try:
-            from utils.database import get_database
             from api.state import get_db_manager
+            from utils.database import get_database
             db = get_db_manager()
             db.add_scan_result(
                 scan_type="sstv",

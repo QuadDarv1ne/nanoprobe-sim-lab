@@ -1,11 +1,12 @@
 """Модуль управления данными для проекта Лаборатория моделирования нанозонда."""
 
 import json
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
-from typing import Union, Dict, List, Any, Optional
-from datetime import datetime, timezone
 
 
 class DataManager:

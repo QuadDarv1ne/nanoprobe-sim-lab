@@ -13,11 +13,11 @@
 
 import argparse
 import logging
+import sqlite3
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List
-import sqlite3
 
 try:
     import psycopg2

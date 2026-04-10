@@ -2,15 +2,16 @@
 Тесты для модульного CLI Dashboard
 """
 
-import pytest
 from datetime import datetime, timezone
 
-from src.cli.dashboard.widgets.base import Widget, WidgetPriority, WidgetMode, WidgetData
-from src.cli.dashboard.widgets.system_monitor import SystemMonitorWidget
+import pytest
+
+from src.cli.dashboard.core import DashboardTheme, UnifiedDashboard
+from src.cli.dashboard.widgets.base import Widget, WidgetData, WidgetMode, WidgetPriority
 from src.cli.dashboard.widgets.component_status import ComponentStatusWidget
 from src.cli.dashboard.widgets.log_viewer import LogViewerWidget
 from src.cli.dashboard.widgets.metrics import MetricsWidget
-from src.cli.dashboard.core import UnifiedDashboard, DashboardTheme
+from src.cli.dashboard.widgets.system_monitor import SystemMonitorWidget
 
 
 # Тесты базового виджета

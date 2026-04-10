@@ -4,8 +4,8 @@ SSTV Ground Station - Главный CLI для управления RTL-SDR и 
 Удобный интерфейс для всех функций SSTV Ground Station
 """
 
-import sys
 import os
+import sys
 
 # Добавляем пути
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "components", "py-sstv-groundstation", "src"))
@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "components", "py-sst
 import argparse
 from datetime import datetime, timezone
 from pathlib import Path
+
 
 def cmd_check(args):
     """Проверка RTL-SDR устройства"""
@@ -111,7 +112,7 @@ def cmd_record(args):
     print("=" * 60)
     
     from sstv_decoder import SSTVDecoder, detect_sstv_signal
-    
+
     # Создаём директорию
     output_dir = Path(__file__).parent / "sstv_recordings"
     output_dir.mkdir(exist_ok=True)
@@ -168,8 +169,9 @@ def cmd_decode(args):
 
 def cmd_auto_record(args):
     """Автоматическая запись при пролёте"""
-    from satellite_tracker import SatelliteTracker
     import time
+
+    from satellite_tracker import SatelliteTracker
     
     print("=" * 60)
     print("АВТОМАТИЧЕСКАЯ ЗАПИСЬ SSTV")

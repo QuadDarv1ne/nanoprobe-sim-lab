@@ -1,19 +1,22 @@
 """Unit-тесты для модуля обработки ошибок."""
 
-import unittest
-import tempfile
-import shutil
 import json
+import shutil
 import sys
-from pathlib import Path
+import tempfile
+import unittest
 from datetime import datetime, timezone
+from pathlib import Path
 
 # Добавляем путь к модулям
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from utils.core.error_handler import (
-    ErrorHandler, ErrorSeverity, ErrorInfo,
-    RecoveryManager, SafeExecutor
+    ErrorHandler,
+    ErrorInfo,
+    ErrorSeverity,
+    RecoveryManager,
+    SafeExecutor,
 )
 
 

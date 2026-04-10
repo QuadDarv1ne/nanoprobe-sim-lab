@@ -10,14 +10,15 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from api.state import get_app_state
+import asyncio
+
 from api.routes.sstv import (
+    get_recording_status,
+    list_recordings,
     start_sstv_recording,
     stop_sstv_recording,
-    get_recording_status,
-    list_recordings
 )
-import asyncio
+from api.state import get_app_state
 
 
 def test_recording_init():

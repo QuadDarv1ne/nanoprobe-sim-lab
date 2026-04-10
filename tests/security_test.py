@@ -26,24 +26,24 @@ Security Testing для Nanoprobe Sim Lab API
     pip install requests
 """
 
-import sys
-import os
-import json
-import time
-import re
-from pathlib import Path
-from datetime import datetime, timezone
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, field
-from enum import Enum
 import argparse
+import json
+import os
+import re
+import sys
+import time
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 # Добавляем путь к проекту
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 try:
     import requests
-    from requests.exceptions import RequestException, Timeout, ConnectionError
+    from requests.exceptions import ConnectionError, RequestException, Timeout
 except ImportError:
     print("❌ Установите requests: pip install requests")
     sys.exit(1)

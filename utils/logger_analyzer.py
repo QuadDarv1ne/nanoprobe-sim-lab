@@ -1,18 +1,19 @@
 """Модуль продвинутого анализа логов для проекта Лаборатория моделирования нанозонда."""
 
-import re
-import json
 import csv
-from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
-from datetime import datetime, timedelta, timezone
-from dataclasses import dataclass
-import pandas as pd
-import matplotlib.pyplot as plt
-from collections import Counter, defaultdict
+import json
+import re
 import statistics
 import threading
 import time
+from collections import Counter, defaultdict
+from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+import matplotlib.pyplot as plt
+import pandas as pd
 
 
 @dataclass

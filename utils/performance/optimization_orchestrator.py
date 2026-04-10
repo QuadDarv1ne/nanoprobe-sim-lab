@@ -1,22 +1,22 @@
 """Модуль оркестратора оптимизации для проекта Лаборатория моделирования нанозонда."""
 
+import json
 import os
 import sys
 import time
-import json
-from pathlib import Path
 from datetime import datetime, timezone
-from typing import Dict, Any, List
+from pathlib import Path
+from typing import Any, Dict, List
 
 import psutil
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils.performance_profiler import PerformanceProfiler
-from utils.resource_optimizer import ResourceManager
 from utils.logger_analyzer import AdvancedLoggerAnalyzer
 from utils.memory_tracker import MemoryTracker
 from utils.performance_benchmark import PerformanceBenchmarkSuite
+from utils.performance_profiler import PerformanceProfiler
+from utils.resource_optimizer import ResourceManager
 
 
 class OptimizationOrchestrator:

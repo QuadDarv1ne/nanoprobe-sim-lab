@@ -1,13 +1,14 @@
 """SDR интерфейс для приема SSTV сигналов."""
 
-import numpy as np
-from typing import Optional, Tuple, List, Dict, Callable
-from pathlib import Path
-from datetime import datetime, timezone
-import threading
-import queue
-import time
 import platform
+import queue
+import threading
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Callable, Dict, List, Optional, Tuple
+
+import numpy as np
 
 
 class SDRInterface:
@@ -613,8 +614,8 @@ class SDRInterface:
             all_samples = np.concatenate(self.recorded_samples)
 
             # Сохраняем как WAV
-            import wave
             import struct
+            import wave
 
             # Нормализуем и конвертируем в 16-bit
             normalized = np.int16(all_samples.real / np.max(np.abs(all_samples)) * 32767)

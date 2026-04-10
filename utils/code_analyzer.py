@@ -1,11 +1,11 @@
 """Модуль анализа кода для проекта Лаборатория моделирования нанозонда."""
 
-from pathlib import Path
-from typing import Dict, List, Any
-from datetime import datetime, timezone
 import json
 import re
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, List
 
 
 @dataclass

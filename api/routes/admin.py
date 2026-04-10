@@ -3,18 +3,17 @@
 Управление пользователями, системные настройки, мониторинг
 """
 
-from fastapi import APIRouter, Depends
-from datetime import datetime, timezone
-import psutil
-import os
 import logging
+import os
+from datetime import datetime, timezone
 from pathlib import Path
 
-from api.dependencies import get_current_user, require_admin
-from api.dependencies import get_redis_cache
+import psutil
+from fastapi import APIRouter, Depends
+
+from api.dependencies import get_current_user, get_redis_cache, require_admin
 from api.error_handlers import AuthorizationError, NotFoundError, ValidationError
-from api.state import get_system_disk_usage
-from api.state import get_db_manager
+from api.state import get_db_manager, get_system_disk_usage
 
 logger = logging.getLogger(__name__)
 

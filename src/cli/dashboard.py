@@ -1,20 +1,20 @@
 """Интерактивная панель управления проектом Лаборатория моделирования нанозонда."""
 
-import tkinter as tk
-from tkinter import ttk, scrolledtext, messagebox, filedialog
 import threading
+import tkinter as tk
 from datetime import datetime, timezone
+from tkinter import filedialog, messagebox, scrolledtext, ttk
 from typing import Optional
 
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from utils.config.config_manager import ConfigManager
-from utils.logger import NanoprobeLogger, setup_project_logging
 from utils.data.data_manager import DataManager
-from utils.visualizer import ProjectVisualizer
+from utils.logger import NanoprobeLogger, setup_project_logging
 from utils.simulator_orchestrator import SimulationOrchestrator
+from utils.visualizer import ProjectVisualizer
 
 
 class NanoprobeDashboard:

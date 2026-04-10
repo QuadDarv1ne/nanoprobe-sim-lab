@@ -1,15 +1,16 @@
 """Модуль тестовой платформы для проекта Лаборатория моделирования нанозонда."""
 
-import unittest
-import coverage
-import time
+import json
 import os
 import subprocess
-from pathlib import Path
-from typing import Dict, List, Any, Callable
-from datetime import datetime, timezone
-import json
+import time
+import unittest
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Callable, Dict, List
+
+import coverage
 
 
 class TestFramework:
@@ -297,8 +298,8 @@ class TestFramework:
         """Тестирует компонент СЗМ"""
         try:
             from cpp_spm_hardware_sim.src.spm_simulator import (  # noqa: F401
-                SurfaceModel,
                 SPMController,
+                SurfaceModel,
             )
 
             # Создаем тестовую поверхность

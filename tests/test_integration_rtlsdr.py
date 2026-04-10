@@ -8,13 +8,14 @@
 - Graceful degradation при отключении устройства
 """
 
-import pytest
-import numpy as np
-from pathlib import Path
-from unittest.mock import Mock, MagicMock, patch
-from datetime import datetime, timezone
-import tempfile
 import os
+import tempfile
+from datetime import datetime, timezone
+from pathlib import Path
+from unittest.mock import MagicMock, Mock, patch
+
+import numpy as np
+import pytest
 
 
 @pytest.fixture
@@ -112,8 +113,8 @@ class TestSSTVPipeline:
         sstv_path = project_root / "components" / "py-sstv-groundstation" / "src"
         sys.path.insert(0, str(sstv_path))
 
-        from sstv_decoder import SSTVDecoder
         from sdr_interface import SDRInterface
+        from sstv_decoder import SSTVDecoder
 
         # 1. Чтение I/Q
         sdr_interface = SDRInterface(

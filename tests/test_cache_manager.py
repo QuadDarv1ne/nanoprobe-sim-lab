@@ -1,13 +1,13 @@
 """Тесты для модуля управления кэшем."""
 
-import unittest
-import tempfile
 import sys
+import tempfile
+import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from utils.caching.cache_manager import CacheManager, CacheInfo
+from utils.caching.cache_manager import CacheInfo, CacheManager
 
 
 class TestCacheManager(unittest.TestCase):

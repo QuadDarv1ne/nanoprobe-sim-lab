@@ -3,16 +3,13 @@ Production логирование для Nanoprobe Simulation Lab
 Структурированное логирование с ротацией и различными уровнями
 """
 
+import json
 import logging
 import sys
-from pathlib import Path
-from datetime import datetime, timezone
-from logging.handlers import (
-    RotatingFileHandler,
-    TimedRotatingFileHandler
-)
-import json
 import traceback
+from datetime import datetime, timezone
+from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
+from pathlib import Path
 
 
 class JSONFormatter(logging.Formatter):

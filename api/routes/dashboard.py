@@ -16,30 +16,24 @@ Unified Dashboard API for Nanoprobe Sim Lab
 - FastAPI, Redis (опционально)
 """
 
-from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect, status, Depends
-from fastapi.responses import JSONResponse
-from fastapi import Header
-from api.state import get_system_disk_usage
-from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Optional, Any
-import psutil
-import os
 import asyncio
 import logging
+import os
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
-from api.schemas import (
-    DashboardStats,
-    SystemHealth,
-    RealtimeMetrics,
-    ErrorResponse,
-)
-from api.error_handlers import DatabaseError, ValidationError, ServiceUnavailableError
-from api.state import get_app_state, set_app_state
+import psutil
+from fastapi import APIRouter, Depends, Header, Query, WebSocket, WebSocketDisconnect, status
+from fastapi.responses import JSONResponse
+
 from api.dependencies import get_db
-from utils.monitoring.monitoring import get_monitor, format_uptime
-from utils.database import DatabaseManager
+from api.error_handlers import DatabaseError, ServiceUnavailableError, ValidationError
+from api.schemas import DashboardStats, ErrorResponse, RealtimeMetrics, SystemHealth
+from api.state import get_app_state, get_system_disk_usage, set_app_state
 from utils.caching.redis_cache import cache, cached
+from utils.database import DatabaseManager
+from utils.monitoring.monitoring import format_uptime, get_monitor
 
 logger = logging.getLogger(__name__)
 

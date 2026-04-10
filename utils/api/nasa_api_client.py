@@ -12,11 +12,12 @@ NASA API Client
 Требуется API ключ: https://api.nasa.gov/
 """
 
-import aiohttp
-from typing import Optional, List, Dict, Any
-from datetime import datetime, timedelta, timezone
 import logging
 import os
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional
+
+import aiohttp
 
 logger = logging.getLogger(__name__)
 

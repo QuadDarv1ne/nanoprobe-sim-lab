@@ -3,11 +3,11 @@ Weather API for Nanoprobe Sim Lab
 Provides weather forecasts for any location using Open-Meteo (free, no API key).
 """
 
-import httpx
 import logging
 from datetime import datetime, timezone
-from typing import Optional, Dict, Any, List
+from typing import Any, Dict, List, Optional
 
+import httpx
 from fastapi import APIRouter, Query
 
 from api.error_handlers import ServiceUnavailableError

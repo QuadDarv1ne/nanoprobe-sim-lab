@@ -6,9 +6,10 @@
 
 import sys
 import time
-import requests
 from datetime import datetime, timezone
 from pathlib import Path
+
+import requests
 
 # Добавляем путь к проекту
 sys.path.insert(0, str(Path(__file__).parent.parent))
