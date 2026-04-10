@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
-FM Radio Scanner using rtl_fm (RTL-SDR Blog V4)
-Scans FM band (88-108 MHz), finds strongest stations, and captures audio
+⚠️  DEPRECATED: Используйте fm_radio_unified.py scan
 """
 
 import os

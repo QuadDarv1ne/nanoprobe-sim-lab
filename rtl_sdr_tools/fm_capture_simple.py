@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Direct FM radio capture using rtl_fm"""
+"""
+⚠️  DEPRECATED: Используйте fm_radio_unified.py capture
+"""
 import os
 import subprocess
 from datetime import datetime

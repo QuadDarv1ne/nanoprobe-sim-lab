@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """
-FM Радио приёмник через RTL-SDR
+⚠️  DEPRECATED: Этот файл устарел.
+Используйте новый универсальный модуль: fm_radio_unified.py
 
-Позволяет слушать FM радио (88-108 МГц) через наушники.
+Примеры:
+    python fm_radio_unified.py listen --freq 106.0
+    python fm_radio_unified.py capture --freq 106.0 -d 10
+    python fm_radio_unified.py scan
+    python fm_radio_unified.py multi --freqs 106.0 100.5
 
-Использование:
-    python fm_radio.py --freq 106.0        # Европа Плюс
-    python fm_radio.py --freq 101.7        # Другая станция
-    python fm_radio.py --freq 88.3 --scan  # Сканирование
+Оригинальный FM радио приёмник через RTL-SDR
 """
 
 import argparse

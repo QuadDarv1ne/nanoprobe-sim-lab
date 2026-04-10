@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Capture multiple FM stations"""
+"""
+⚠️  DEPRECATED: Используйте fm_radio_unified.py multi
+"""
 import os
 import subprocess
 import wave

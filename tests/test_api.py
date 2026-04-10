@@ -2,17 +2,19 @@
 Тесты для FastAPI API
 """
 
+import os
+
 import pytest
 from fastapi.testclient import TestClient
-import os
 
 # Создаём тестовую директорию для БД
 os.makedirs("data", exist_ok=True)
 
+import api.main
+import api.state
+
 # Инициализируем БД ДО импорта app
 from utils.database import DatabaseManager
-import api.state
-import api.main
 
 # Устанавливаем db_manager в api.state
 test_db_manager = DatabaseManager("data/nanoprobe.db")
@@ -20,7 +22,6 @@ api.state.set_db_manager(test_db_manager)
 api.main.db_manager = test_db_manager
 
 from api.main import app
-
 
 client = TestClient(app)
 
@@ -55,7 +56,7 @@ class TestAuth:
         # Читаем пароль из файла или используем ENV
         import os
         from pathlib import Path
-        
+
         admin_password = os.getenv("ADMIN_PASSWORD")
         if not admin_password:
             password_file = Path("data/.admin_password")
@@ -64,8 +65,9 @@ class TestAuth:
             else:
                 # Если пароль не найдено, пропускаем тест
                 import pytest
+
                 pytest.skip("Admin password not configured")
-        
+
         response = client.post(
             "/api/v1/auth/login",
             json={"username": "admin", "password": admin_password},
@@ -98,8 +100,6 @@ class TestScans:
 
     def test_get_scans_empty(self):
         """Получение пустого списка сканирований"""
-        # TODO: Исправить created_at в БД (возвращает None)
-        pytest.skip("created_at field bug in database")
         response = client.get("/api/v1/scans")
         assert response.status_code == 200
         data = response.json()
@@ -110,8 +110,6 @@ class TestScans:
 
     def test_create_scan(self):
         """Создание сканирования"""
-        # TODO: Исправить created_at в БД (возвращает None)
-        pytest.skip("created_at field bug in database")
         scan_data = {
             "scan_type": "spm",
             "surface_type": "graphite",
@@ -138,8 +136,6 @@ class TestSimulations:
 
     def test_get_simulations(self):
         """Получение списка симуляций"""
-        # TODO: Исправить created_at в БД (возвращает None)
-        pytest.skip("created_at field bug in database")
         response = client.get("/api/v1/simulations")
         assert response.status_code == 200
         data = response.json()
@@ -148,8 +144,6 @@ class TestSimulations:
 
     def test_create_simulation(self):
         """Создание симуляции"""
-        # TODO: Исправить created_at в БД (возвращает None)
-        pytest.skip("created_at field bug in database")
         sim_data = {
             "simulation_type": "spm_scan",
             "parameters": {"resolution": 256, "scan_size": 100},

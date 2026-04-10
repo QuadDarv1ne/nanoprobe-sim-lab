@@ -1,0 +1,103 @@
+# Nanoprobe Sim Lab - Git Attributes
+
+# Бинарные файлы (не диффить)
+*.exe binary
+*.dll binary
+*.pyd binary
+*.so binary
+*.dylib binary
+
+# Изображения
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.bmp binary
+*.ico binary
+*.svg binary
+*.webp binary
+
+# Аудио/Видео записи
+*.wav binary
+*.mp3 binary
+*.mp4 binary
+*.avi binary
+*.raw binary
+*.flac binary
+
+# SDR записи
+*.cs16 binary
+*.cu8 binary
+*.sigmf-meta text
+*.sigmf-data binary
+
+# Данные
+*.db binary
+*.sqlite binary
+*.sqlite3 binary
+*.pickle binary
+*.pkl binary
+*.npy binary
+*.npz binary
+
+# Архивы
+*.zip binary
+*.tar binary
+*.gz binary
+*.7z binary
+*.rar binary
+
+# Шрифты
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+
+# Документы
+*.pdf binary
+
+# JSON/YAML (текст)
+*.json text
+*.yaml text
+*.yml text
+
+# Python (текст, LF)
+*.py text diff=python
+*.pyi text diff=python
+
+# C/C++ (текст)
+*.c text diff=c
+*.cpp text diff=c
+*.h text diff=c
+*.hpp text diff=c
+
+# JavaScript/TypeScript
+*.js text
+*.ts text
+*.tsx text
+*.jsx text
+
+# CSS/HTML
+*.css text
+*.html text
+*.scss text
+
+# Markdown
+*.md text
+
+# Конфигурация
+*.toml text
+*.ini text
+*.cfg text
+*.txt text
+
+# Shell scripts
+*.sh text eol=lf
+*.bat text eol=crlf
+
+# Docker
+Dockerfile text
+docker-compose*.yml text
+
+# Makefile
+Makefile text

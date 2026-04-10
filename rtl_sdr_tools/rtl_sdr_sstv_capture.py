@@ -22,6 +22,7 @@ import numpy as np
 # RTL-SDR
 try:
     from rtlsdr import RtlSdr
+
     RTLSDR_AVAILABLE = True
 except ImportError:
     RTLSDR_AVAILABLE = False
@@ -31,6 +32,7 @@ except ImportError:
 # SSTV Decoder
 try:
     from pysstv.sstv import SSTV
+
     SSTV_AVAILABLE = True
 except ImportError:
     SSTV_AVAILABLE = False
@@ -55,7 +57,7 @@ def save_wav(audio: np.ndarray, output_file: str, sample_rate: int = 44100):
     Path(output_file).parent.mkdir(parents=True, exist_ok=True)
     pcm = (audio * 32767).clip(-32768, 32767).astype(np.int16)
 
-    with wave.open(output_file, 'w') as wf:
+    with wave.open(output_file, "w") as wf:
         wf.setnchannels(1)
         wf.setsampwidth(2)
         wf.setframerate(sample_rate)
@@ -78,7 +80,7 @@ def try_decode_sstv(wav_file: str, output_image: str) -> bool:
 
     try:
         # Читаем WAV
-        with wave.open(wav_file, 'r') as wf:
+        with wave.open(wav_file, "r") as wf:
             frames = wf.readframes(wf.getnframes())
             audio_int16 = np.frombuffer(frames, dtype=np.int16)
 
@@ -92,7 +94,7 @@ def try_decode_sstv(wav_file: str, output_image: str) -> bool:
         print("   Декодирование... (может занять 10-60 сек)")
         img = sstv.decode()
 
-        if img and hasattr(img, 'size') and img.size[0] > 0:
+        if img and hasattr(img, "size") and img.size[0] > 0:
             # Сохраняем изображение
             Path(output_image).parent.mkdir(parents=True, exist_ok=True)
             img.save(output_image)
@@ -119,10 +121,10 @@ def record_sstv(
     """Запись SSTV с МКС."""
 
     if output_wav is None:
-        timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         output_wav = f"data/sstv/iss_{timestamp}.wav"
 
-    output_image = output_wav.replace('.wav', '.png')
+    output_image = output_wav.replace(".wav", ".png")
 
     print("=" * 60)
     print("🛰️  RTL-SDR V4 SSTV Capture - МКС")
@@ -157,6 +159,7 @@ def record_sstv(
     buf_size = 256 * 1024  # 256k chunks
 
     try:
+
         def callback(samples, ctx):
             elapsed = time.time() - start_time
             iq_chunks.append(samples.copy())
@@ -164,7 +167,7 @@ def record_sstv(
             # Прогресс
             progress = min(100, (elapsed / duration) * 100)
             if int(progress) % 10 == 0:
-                print(f"   📊 {progress:.0f}% ({elapsed:.0f}/{duration:.0f} сек)", end='\r')
+                print(f"   📊 {progress:.0f}% ({elapsed:.0f}/{duration:.0f} сек)", end="\r")
 
             if elapsed >= duration:
                 raise StopIteration
@@ -214,7 +217,7 @@ def record_sstv(
 def decode_only(wav_file: str, output_image: str = None):
     """Декодирование SSTV из существующего WAV."""
     if output_image is None:
-        output_image = wav_file.replace('.wav', '.png')
+        output_image = wav_file.replace(".wav", ".png")
 
     print(f"🔍 Декодирование: {wav_file}")
     success = try_decode_sstv(wav_file, output_image)
@@ -222,19 +225,21 @@ def decode_only(wav_file: str, output_image: str = None):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='RTL-SDR SSTV Capture - Приём изображений с МКС')
-    parser.add_argument('-f', '--frequency', type=float, default=145.800,
-                        help='Частота MHz (default: 145.800 ISS)')
-    parser.add_argument('-g', '--gain', type=float, default=20.0,
-                        help='Усиление dB (default: 20)')
-    parser.add_argument('-d', '--duration', type=float, default=120.0,
-                        help='Длительность записи сек (default: 120)')
-    parser.add_argument('-o', '--output', type=str, default=None,
-                        help='Выходной WAV файл')
-    parser.add_argument('--no-decode', action='store_true',
-                        help='Только запись, без SSTV декодирования')
-    parser.add_argument('--decode-only', type=str, metavar='WAV_FILE',
-                        help='Декодировать существующий WAV файл')
+    parser = argparse.ArgumentParser(description="RTL-SDR SSTV Capture - Приём изображений с МКС")
+    parser.add_argument(
+        "-f", "--frequency", type=float, default=145.800, help="Частота MHz (default: 145.800 ISS)"
+    )
+    parser.add_argument("-g", "--gain", type=float, default=20.0, help="Усиление dB (default: 20)")
+    parser.add_argument(
+        "-d", "--duration", type=float, default=120.0, help="Длительность записи сек (default: 120)"
+    )
+    parser.add_argument("-o", "--output", type=str, default=None, help="Выходной WAV файл")
+    parser.add_argument(
+        "--no-decode", action="store_true", help="Только запись, без SSTV декодирования"
+    )
+    parser.add_argument(
+        "--decode-only", type=str, metavar="WAV_FILE", help="Декодировать существующий WAV файл"
+    )
 
     args = parser.parse_args()
 
@@ -257,5 +262,5 @@ def main():
     sys.exit(0 if success else 1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

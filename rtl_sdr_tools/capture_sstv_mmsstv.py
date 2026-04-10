@@ -2,6 +2,7 @@
 Конвертер сырых I/Q данных в WAV для MMSSTV
 Записывает сигнал с МКС и конвертирует в формат, понятный MMSSTV
 """
+
 import subprocess
 import time
 from datetime import datetime, timezone
@@ -47,13 +48,20 @@ print()
 
 cmd = [
     str(rtl_fm_path),
-    "-f", f"{FREQUENCY}M",
-    "-M", "fm",
-    "-s", str(SAMPLE_RATE),
-    "-r", str(SAMPLE_RATE),
-    "-g", str(GAIN),
-    "-d", "0",
-    "-l", "0",  # squelch off
+    "-f",
+    f"{FREQUENCY}M",
+    "-M",
+    "fm",
+    "-s",
+    str(SAMPLE_RATE),
+    "-r",
+    str(SAMPLE_RATE),
+    "-g",
+    str(GAIN),
+    "-d",
+    "0",
+    "-l",
+    "0",  # squelch off
 ]
 
 print(f"Command: {' '.join(cmd)} > {output_wav}")
@@ -63,20 +71,16 @@ print()
 
 start_time = time.time()
 
-with open(output_wav, 'wb') as f:
-    process = subprocess.Popen(
-        cmd,
-        stdout=f,
-        stderr=subprocess.PIPE
-    )
-    
+with open(output_wav, "wb") as f:
+    process = subprocess.Popen(cmd, stdout=f, stderr=subprocess.PIPE)
+
     try:
         # Показываем прогресс
         for i in range(DURATION):
             time.sleep(1)
             elapsed = int(time.time() - start_time)
             print(f"\r  [{elapsed}/{DURATION}s]", end="", flush=True)
-        
+
         # Время вышло - останавливаем
         print(f"\n  Stopping...")
         process.terminate()
@@ -85,7 +89,7 @@ with open(output_wav, 'wb') as f:
         except:
             process.kill()
             process.wait()
-            
+
     except KeyboardInterrupt:
         print(f"\n  User stopped!")
         process.kill()
@@ -100,7 +104,7 @@ if output_wav.exists() and output_wav.stat().st_size > 0:
     print(f"1. Open MMSSTV: {mmsstv_path}")
     print(f"2. Menu -> RxAudio -> Load File -> {output_wav}")
     print(f"3. MMSSTV will auto-detect SSTV mode and decode")
-    
+
     # Автооткрытие MMSSTV (опционально)
     if mmsstv_path.exists():
         print(f"\nMMSSTV found! Opening...")

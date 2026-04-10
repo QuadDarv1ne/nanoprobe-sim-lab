@@ -1,11 +1,11 @@
 """Скрипт сборки C++ компонентов для проекта Nanoprobe Simulation Lab."""
 
 import os
-import sys
-import subprocess
 import shutil
+import subprocess
+import sys
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict
 
 
 class CPPBuilder:
@@ -35,11 +35,7 @@ class CPPBuilder:
     def _check_command(self, cmd: str) -> bool:
         """Проверка доступности команды"""
         try:
-            subprocess.run(
-                [cmd, "--version"],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
+            subprocess.run([cmd, "--version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             return True
         except (FileNotFoundError, subprocess.CalledProcessError):
             return False
@@ -52,11 +48,11 @@ class CPPBuilder:
             Словарь с доступностью инструментов
         """
         return {
-            'cmake': self.cmake_available,
-            'make_or_ninja': self.make_available,
-            'msbuild': self.msbuild_available,
-            'cpp_component_exists': self.cpp_component_dir.exists(),
-            'cmakelists_exists': (self.cpp_component_dir / "CMakeLists.txt").exists(),
+            "cmake": self.cmake_available,
+            "make_or_ninja": self.make_available,
+            "msbuild": self.msbuild_available,
+            "cpp_component_exists": self.cpp_component_dir.exists(),
+            "cmakelists_exists": (self.cpp_component_dir / "CMakeLists.txt").exists(),
         }
 
     def clean_build(self) -> bool:
@@ -107,7 +103,9 @@ class CPPBuilder:
         print(f"Команда: {' '.join(cmd)}")
 
         try:
-            result = subprocess.run(cmd, cwd=self.build_dir, check=True, capture_output=True, text=True)
+            result = subprocess.run(
+                cmd, cwd=self.build_dir, check=True, capture_output=True, text=True
+            )
             print(result.stdout)
             print("✓ Конфигурация завершена успешно")
             return True
@@ -151,7 +149,9 @@ class CPPBuilder:
         print(f"Команда: {' '.join(cmd)}")
 
         try:
-            result = subprocess.run(cmd, cwd=self.build_dir, check=True, capture_output=True, text=True)
+            result = subprocess.run(
+                cmd, cwd=self.build_dir, check=True, capture_output=True, text=True
+            )
             print(result.stdout)
             print("✓ Сборка завершена успешно")
             return True
@@ -181,7 +181,9 @@ class CPPBuilder:
         print(f"Установка в {install_prefix or 'систему'}...")
 
         try:
-            result = subprocess.run(cmd, cwd=self.build_dir, check=True, capture_output=True, text=True)
+            result = subprocess.run(
+                cmd, cwd=self.build_dir, check=True, capture_output=True, text=True
+            )
             print(result.stdout)
             print("✓ Установка завершена")
             return True
@@ -236,25 +238,25 @@ class CPPBuilder:
             Результаты сборки
         """
         results = {
-            'success': False,
-            'steps': {},
-            'executable_path': None,
+            "success": False,
+            "steps": {},
+            "executable_path": None,
         }
 
         # Очистка
         if clean:
-            results['steps']['clean'] = self.clean_build()
+            results["steps"]["clean"] = self.clean_build()
 
         # Конфигурация
-        results['steps']['configure'] = self.configure(build_type)
+        results["steps"]["configure"] = self.configure(build_type)
 
-        if not results['steps']['configure']:
+        if not results["steps"]["configure"]:
             return results
 
         # Сборка
-        results['steps']['build'] = self.build()
+        results["steps"]["build"] = self.build()
 
-        if not results['steps']['build']:
+        if not results["steps"]["build"]:
             return results
 
         # Поиск исполняемого файла
@@ -264,8 +266,8 @@ class CPPBuilder:
             exe_path = self.build_dir / "bin" / "spm-simulator"
 
         if exe_path.exists():
-            results['executable_path'] = str(exe_path)
-            results['success'] = True
+            results["executable_path"] = str(exe_path)
+            results["success"] = True
             print(f"\n✓ Исполняемый файл: {exe_path}")
         else:
             print("\n⚠ Исполняемый файл не найден")
@@ -289,7 +291,7 @@ def main():
         status = "✓" if available else "❌"
         print(f"  {status} {tool}: {'доступен' if available else 'не доступен'}")
 
-    if not prereqs['cmake']:
+    if not prereqs["cmake"]:
         print("\n❌ CMake не найден. Установите CMake 3.15+")
         print("   https://cmake.org/download/")
         sys.exit(1)
@@ -302,11 +304,11 @@ def main():
     print("РЕЗУЛЬТАТЫ СБОРКИ")
     print("=" * 60)
 
-    for step, success in results['steps'].items():
+    for step, success in results["steps"].items():
         status = "✓" if success else "❌"
         print(f"  {status} {step}: {'успешно' if success else 'ошибка'}")
 
-    if results['success']:
+    if results["success"]:
         print(f"\n✓ Сборка завершена успешно!")
         print(f"  Исполняемый файл: {results['executable_path']}")
         print("\nДля запуска используйте:")

@@ -1,3 +1,5 @@
+﻿# ⚠️  DEPRECATED: Используйте scripts/project.py
+
 #!/usr/bin/env python3
 """
 Скрипт сортировки проекта Nanoprobe Sim Lab
@@ -13,7 +15,6 @@ import os
 import shutil
 from pathlib import Path
 from typing import Dict, List
-
 
 PROJECT_ROOT = Path(__file__).parent
 
@@ -42,8 +43,8 @@ CATEGORIES: Dict[str, List[str]] = {
         "capture_sstv_mmsstv.py",  # старый SSTV скрипт
         "build_cpp.py",  # не используется
         "format_code.py",  # есть pre-commit
-        "cleanup_project.py",  #已完成
-        "improve_project.py",  #已完成
+        "cleanup_project.py",  # 已完成
+        "improve_project.py",  # 已完成
         "validate_project.py",  # есть check_cyclic_imports.py
         "run_api_no_redis.py",  # не используется
         "run_monitoring_and_improvements.py",  # одноразовый
@@ -96,7 +97,9 @@ def sort_files():
     # Показать что осталось в корне
     print("\n📋 Оставшиеся .py файлы в корне:")
     remaining = [
-        f for f in PROJECT_ROOT.glob("*.py") if f.name not in [p for files in CATEGORIES.values() for p in files]
+        f
+        for f in PROJECT_ROOT.glob("*.py")
+        if f.name not in [p for files in CATEGORIES.values() for p in files]
     ]
     for f in sorted(remaining):
         print(f"  📄 {f.name}")

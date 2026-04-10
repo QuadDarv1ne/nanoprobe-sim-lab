@@ -10,14 +10,16 @@ RTL-SDR V4 Real-time Spectrum Visualizer
 
 import sys
 import time
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-from matplotlib.colors import LogNorm
 from collections import deque
+
+import matplotlib.animation as animation
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.colors import LogNorm
 
 try:
     from rtlsdr import RtlSdr
+
     RTLSDR_AVAILABLE = True
 except ImportError:
     RTLSDR_AVAILABLE = False
@@ -50,53 +52,52 @@ class RTLSDRVisualizer:
         self.waterfall_data = deque(maxlen=history)
 
         # Настройка графика
-        self.fig = plt.figure(figsize=(14, 8), facecolor='#1a1a2e')
-        self.fig.canvas.manager.set_window_title(f'RTL-SDR V4 Spectrum — {frequency} MHz')
-        plt.style.use('dark_background')
+        self.fig = plt.figure(figsize=(14, 8), facecolor="#1a1a2e")
+        self.fig.canvas.manager.set_window_title(f"RTL-SDR V4 Spectrum — {frequency} MHz")
+        plt.style.use("dark_background")
 
         # Создаём subplot'ы
         gs = self.fig.add_gridspec(3, 1, height_ratios=[2, 2, 0.3])
         self.ax_spectrum = self.fig.add_subplot(gs[0])
         self.ax_waterfall = self.fig.add_subplot(gs[1])
         self.ax_info = self.fig.add_subplot(gs[2])
-        self.ax_info.axis('off')
+        self.ax_info.axis("off")
 
         self._setup_plots()
 
     def _setup_plots(self):
         """Настройка осей и стилей."""
         # Спектр
-        self.ax_spectrum.set_title('Spectrum', fontsize=14, color='white', pad=10)
-        self.ax_spectrum.set_ylabel('Power (dB)', fontsize=10, color='white')
-        self.ax_spectrum.tick_params(colors='white')
+        self.ax_spectrum.set_title("Spectrum", fontsize=14, color="white", pad=10)
+        self.ax_spectrum.set_ylabel("Power (dB)", fontsize=10, color="white")
+        self.ax_spectrum.tick_params(colors="white")
         self.ax_spectrum.grid(True, alpha=0.3)
-        self.ax_spectrum.set_facecolor('#16213e')
+        self.ax_spectrum.set_facecolor("#16213e")
 
         # X-axis: частота в MHz
         freqs = np.fft.fftshift(np.fft.fftfreq(self.fft_size, 1.0 / self.sample_rate))
         self.freq_offset = freqs  # Hz
         self.freq_mhz = (freqs / 1e6) + self.frequency  # MHz
 
-        self.line_spectrum, = self.ax_spectrum.plot(
-            self.freq_mhz, np.zeros_like(freqs),
-            color='#00ff88', linewidth=0.8, alpha=0.9
+        (self.line_spectrum,) = self.ax_spectrum.plot(
+            self.freq_mhz, np.zeros_like(freqs), color="#00ff88", linewidth=0.8, alpha=0.9
         )
 
         xlim = (self.frequency - self.sample_rate / 2e6, self.frequency + self.sample_rate / 2e6)
         self.ax_spectrum.set_xlim(xlim)
 
         # Waterfall
-        self.ax_waterfall.set_title('Waterfall', fontsize=14, color='white', pad=10)
-        self.ax_waterfall.set_ylabel('Time', fontsize=10, color='white')
-        self.ax_waterfall.set_xlabel('Frequency (MHz)', fontsize=10, color='white')
-        self.ax_waterfall.tick_params(colors='white')
-        self.ax_waterfall.set_facecolor('#16213e')
+        self.ax_waterfall.set_title("Waterfall", fontsize=14, color="white", pad=10)
+        self.ax_waterfall.set_ylabel("Time", fontsize=10, color="white")
+        self.ax_waterfall.set_xlabel("Frequency (MHz)", fontsize=10, color="white")
+        self.ax_waterfall.tick_params(colors="white")
+        self.ax_waterfall.set_facecolor("#16213e")
 
         # Инициализация waterfall
         self.waterfall_img = self.ax_waterfall.imshow(
             np.zeros((self.history, self.fft_size)),
-            aspect='auto',
-            cmap='viridis',
+            aspect="auto",
+            cmap="viridis",
             extent=[xlim[0], xlim[1], self.history, 0],
             vmin=-80,
             vmax=-20,
@@ -104,8 +105,13 @@ class RTLSDRVisualizer:
 
         # Info text
         self.info_text = self.ax_info.text(
-            0.02, 0.5, '', transform=self.ax_info.transAxes,
-            fontsize=10, color='#00ff88', family='monospace'
+            0.02,
+            0.5,
+            "",
+            transform=self.ax_info.transAxes,
+            fontsize=10,
+            color="#00ff88",
+            family="monospace",
         )
 
     def capture_spectrum(self) -> tuple:
@@ -158,16 +164,16 @@ class RTLSDRVisualizer:
         # Info
         signal_strength = np.mean(power_db)
         peak_freq = freq_mhz[np.argmax(power_db)]
-        timestamp = time.strftime('%H:%M:%S')
+        timestamp = time.strftime("%H:%M:%S")
 
         self.info_text.set_text(
-            f'  Time: {timestamp}  |  '
-            f'Freq: {self.frequency} MHz  |  '
-            f'SR: {self.sample_rate / 1e6:.1f} MSPS  |  '
-            f'Gain: {self.gain} dB  |  '
-            f'Signal: {signal_strength:.1f} dB  |  '
-            f'Peak: {peak_freq:.3f} MHz  |  '
-            f'Frames: {len(self.waterfall_data)}'
+            f"  Time: {timestamp}  |  "
+            f"Freq: {self.frequency} MHz  |  "
+            f"SR: {self.sample_rate / 1e6:.1f} MSPS  |  "
+            f"Gain: {self.gain} dB  |  "
+            f"Signal: {signal_strength:.1f} dB  |  "
+            f"Peak: {peak_freq:.3f} MHz  |  "
+            f"Frames: {len(self.waterfall_data)}"
         )
 
         return self.line_spectrum, self.waterfall_img, self.info_text
@@ -231,15 +237,21 @@ class RTLSDRVisualizer:
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description='RTL-SDR V4 Spectrum Visualizer')
-    parser.add_argument('-f', '--frequency', type=float, default=145.800,
-                        help='Частота в MHz (default: 145.800 ISS)')
-    parser.add_argument('-g', '--gain', type=float, default=20.0,
-                        help='Усиление в dB (default: 20)')
-    parser.add_argument('-s', '--sample-rate', type=float, default=2.4e6,
-                        help='Sample rate в Hz (default: 2.4e6)')
-    parser.add_argument('--fft-size', type=int, default=4096,
-                        help='FFT size (default: 4096)')
+    parser = argparse.ArgumentParser(description="RTL-SDR V4 Spectrum Visualizer")
+    parser.add_argument(
+        "-f",
+        "--frequency",
+        type=float,
+        default=145.800,
+        help="Частота в MHz (default: 145.800 ISS)",
+    )
+    parser.add_argument(
+        "-g", "--gain", type=float, default=20.0, help="Усиление в dB (default: 20)"
+    )
+    parser.add_argument(
+        "-s", "--sample-rate", type=float, default=2.4e6, help="Sample rate в Hz (default: 2.4e6)"
+    )
+    parser.add_argument("--fft-size", type=int, default=4096, help="FFT size (default: 4096)")
 
     args = parser.parse_args()
 
@@ -252,5 +264,5 @@ def main():
     visualizer.run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

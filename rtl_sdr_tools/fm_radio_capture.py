@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
-FM Radio capture using RTL-SDR V4
-Demodulates FM broadcast band (88-108 MHz) to audio
+⚠️  DEPRECATED: Используйте fm_radio_unified.py capture
 """
 
 import wave

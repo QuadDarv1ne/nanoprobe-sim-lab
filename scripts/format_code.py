@@ -22,11 +22,7 @@ class CodeFormatter:
     def log_message(self, message: str, level: str = "INFO"):
         """Логирование сообщений"""
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-        log_entry = {
-            "timestamp": timestamp,
-            "level": level,
-            "message": message
-        }
+        log_entry = {"timestamp": timestamp, "level": level, "message": message}
         self.log_messages.append(log_entry)
         print(f"[{level}] {timestamp}: {message}")
 
@@ -34,9 +30,17 @@ class CodeFormatter:
         """Находит все Python файлы в проекте"""
         python_files = []
         excluded_dirs = {
-            '.git', '.svn', '__pycache__', '.pytest_cache',
-            'venv', 'env', '.venv', 'node_modules',
-            'build', 'dist', '.eggs'
+            ".git",
+            ".svn",
+            "__pycache__",
+            ".pytest_cache",
+            "venv",
+            "env",
+            ".venv",
+            "node_modules",
+            "build",
+            "dist",
+            ".eggs",
         }
 
         for root, dirs, files in os.walk(self.project_root):
@@ -44,7 +48,7 @@ class CodeFormatter:
             dirs[:] = [d for d in dirs if d not in excluded_dirs]
 
             for file in files:
-                if file.endswith('.py'):
+                if file.endswith(".py"):
                     python_files.append(Path(root) / file)
 
         return python_files
@@ -52,31 +56,31 @@ class CodeFormatter:
     def fix_common_formatting_issues(self, file_path: Path) -> bool:
         """Исправление распространенных проблем форматирования"""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 original_content = f.read()
 
             content = original_content
 
             # 1. Убедиться, что файл заканчивается новой строкой
-            if not content.endswith('\n'):
-                content += '\n'
+            if not content.endswith("\n"):
+                content += "\n"
 
             # 2. Удалить лишние пробелы в конце строк
-            lines = content.split('\n')
+            lines = content.split("\n")
             cleaned_lines = [line.rstrip() for line in lines]
-            content = '\n'.join(cleaned_lines)
+            content = "\n".join(cleaned_lines)
 
             # 3. Удалить лишние пустые строки (не более 2 подряд)
-            content = re.sub(r'\n{3,}', '\n\n\n', content)
+            content = re.sub(r"\n{3,}", "\n\n\n", content)
 
             # 4. Убедиться, что импорты находятся в начале файла
-            lines = content.split('\n')
+            lines = content.split("\n")
             import_lines = []
             non_import_lines = []
 
             for i, line in enumerate(lines):
                 stripped = line.strip()
-                if stripped.startswith('import ') or stripped.startswith('from '):
+                if stripped.startswith("import ") or stripped.startswith("from "):
                     import_lines.append(line)
                 else:
                     non_import_lines.extend(lines[i:])
@@ -88,7 +92,12 @@ class CodeFormatter:
                 first_non_import_idx = 0
                 for i, line in enumerate(non_import_lines):
                     stripped = line.strip()
-                    if stripped and not stripped.startswith('#') and not stripped.startswith('"""') and not stripped.startswith("'''"):
+                    if (
+                        stripped
+                        and not stripped.startswith("#")
+                        and not stripped.startswith('"""')
+                        and not stripped.startswith("'''")
+                    ):
                         first_non_import_idx = i
                         break
 
@@ -99,24 +108,23 @@ class CodeFormatter:
                 # Формируем новый контент
                 new_lines = []
                 new_lines.extend(header_lines)
-                if header_lines and header_lines[-1].strip() != '':
-                    new_lines.append('')
+                if header_lines and header_lines[-1].strip() != "":
+                    new_lines.append("")
                 new_lines.extend(import_lines)
                 if import_lines:
-                    new_lines.append('')
+                    new_lines.append("")
                 new_lines.extend(body_lines)
 
-                content = '\n'.join(new_lines)
+                content = "\n".join(new_lines)
 
             # Если были изменения, записываем обратно
             if content != original_content:
-                with open(file_path, 'w', encoding='utf-8') as f:
+                with open(file_path, "w", encoding="utf-8") as f:
                     f.write(content)
 
-                self.changes_made.append({
-                    "file": str(file_path),
-                    "change": "Fixed common formatting issues"
-                })
+                self.changes_made.append(
+                    {"file": str(file_path), "change": "Fixed common formatting issues"}
+                )
                 return True
 
             return False
@@ -128,7 +136,7 @@ class CodeFormatter:
     def apply_black_formatting(self, file_path: Path) -> bool:
         """Применение форматирования Black"""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 original_content = f.read()
 
             # Простое форматирование с использованием встроенных возможностей
@@ -136,13 +144,12 @@ class CodeFormatter:
 
             # Если были изменения, записываем обратно
             if formatted_content != original_content:
-                with open(file_path, 'w', encoding='utf-8') as f:
+                with open(file_path, "w", encoding="utf-8") as f:
                     f.write(formatted_content)
 
-                self.changes_made.append({
-                    "file": str(file_path),
-                    "change": "Applied basic formatting"
-                })
+                self.changes_made.append(
+                    {"file": str(file_path), "change": "Applied basic formatting"}
+                )
                 return True
 
             return False
@@ -154,47 +161,49 @@ class CodeFormatter:
     def fix_encoding_declarations(self, file_path: Path) -> bool:
         """Исправление деклараций кодировки"""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
             original_content = content
 
             # Проверяем, есть ли декларация кодировки в начале файла
-            lines = content.split('\n')
+            lines = content.split("\n")
             has_encoding = False
 
             for i, line in enumerate(lines[:3]):  # Проверяем первые 3 строки
-                if '# -*- coding:' in line or '# coding:' in line or '#coding:' in line:
-#!/usr/bin/env python3
+                if "# -*- coding:" in line or "# coding:" in line or "#coding:" in line:
+                    #!/usr/bin/env python3
                     has_encoding = True
                     break
 
             # Если декларация кодировки отсутствует, добавляем её
             if not has_encoding:
-                content = '\n'.join(lines)
+                content = "\n".join(lines)
 
             # Также проверяем наличие shebang в исполняемых файлах
-            is_executable = any(keyword in content.lower() for keyword in ['main()', 'if __name__ == "__main__"', 'start', 'run'])
-            has_shebang = content.startswith('#!')
+            is_executable = any(
+                keyword in content.lower()
+                for keyword in ["main()", 'if __name__ == "__main__"', "start", "run"]
+            )
+            has_shebang = content.startswith("#!")
 
             if is_executable and not has_shebang:
-                lines = content.split('\n')
+                lines = content.split("\n")
                 # Вставляем после декларации кодировки
                 for i, line in enumerate(lines):
-                    if '# -*- coding:' in line or '# coding:' in line or '#coding:' in line:
-                        lines.insert(i + 1, '#!/usr/bin/env python3')
+                    if "# -*- coding:" in line or "# coding:" in line or "#coding:" in line:
+                        lines.insert(i + 1, "#!/usr/bin/env python3")
                         break
-                content = '\n'.join(lines)
+                content = "\n".join(lines)
 
             # Если были изменения, записываем обратно
             if content != original_content:
-                with open(file_path, 'w', encoding='utf-8') as f:
+                with open(file_path, "w", encoding="utf-8") as f:
                     f.write(content)
 
-                self.changes_made.append({
-                    "file": str(file_path),
-                    "change": "Fixed encoding declaration"
-                })
+                self.changes_made.append(
+                    {"file": str(file_path), "change": "Fixed encoding declaration"}
+                )
                 return True
 
             return False
@@ -206,7 +215,7 @@ class CodeFormatter:
     def add_missing_docstrings(self, file_path: Path) -> bool:
         """Добавление недостающих docstrings"""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 lines = f.readlines()
 
             modified = False
@@ -216,10 +225,12 @@ class CodeFormatter:
                 line = lines[i].rstrip()
 
                 # Проверяем, является ли строка объявлением функции или класса
-                if (line.strip().startswith('def ') or line.strip().startswith('class ')) and not line.strip().endswith(':'):
+                if (
+                    line.strip().startswith("def ") or line.strip().startswith("class ")
+                ) and not line.strip().endswith(":"):
                     # Проверяем, продолжается ли определение на следующих строках
                     j = i + 1
-                    while j < len(lines) and not lines[j].strip().endswith(':'):
+                    while j < len(lines) and not lines[j].strip().endswith(":"):
                         j += 1
                         if j >= len(lines):
                             break
@@ -227,12 +238,14 @@ class CodeFormatter:
                         i = j  # Переходим к строке с ':'
                         line = lines[i].rstrip()
 
-                if line.strip().endswith(':'):
-                    if line.strip().startswith('def '):
+                if line.strip().endswith(":"):
+                    if line.strip().startswith("def "):
                         # Проверяем, есть ли docstring в следующих строках
                         j = i + 1
                         # Пропускаем пустые строки и комментарии
-                        while j < len(lines) and (lines[j].strip() == '' or lines[j].strip().startswith('#')):
+                        while j < len(lines) and (
+                            lines[j].strip() == "" or lines[j].strip().startswith("#")
+                        ):
                             j += 1
 
                         if j < len(lines):
@@ -241,17 +254,19 @@ class CodeFormatter:
                             if not (next_line.startswith('"""') or next_line.startswith("'''")):
                                 # Определяем отступ
                                 indent = len(lines[i]) - len(lines[i].lstrip())
-                                docstring_indent = ' ' * (indent + 4)
+                                docstring_indent = " " * (indent + 4)
 
                                 # Добавляем docstring
                                 docstring_line = f'{docstring_indent}"""TODO: Add description"""\n'
                                 lines.insert(j, docstring_line)
                                 modified = True
-                    elif line.strip().startswith('class '):
+                    elif line.strip().startswith("class "):
                         # Проверяем, есть ли docstring у класса
                         j = i + 1
                         # Пропускаем пустые строки и комментарии
-                        while j < len(lines) and (lines[j].strip() == '' or lines[j].strip().startswith('#')):
+                        while j < len(lines) and (
+                            lines[j].strip() == "" or lines[j].strip().startswith("#")
+                        ):
                             j += 1
 
                         if j < len(lines):
@@ -260,7 +275,7 @@ class CodeFormatter:
                             if not (next_line.startswith('"""') or next_line.startswith("'''")):
                                 # Определяем отступ
                                 indent = len(lines[i]) - len(lines[i].lstrip())
-                                docstring_indent = ' ' * (indent + 4)
+                                docstring_indent = " " * (indent + 4)
 
                                 # Добавляем docstring
                                 docstring_line = f'{docstring_indent}"""TODO: Add description"""\n'
@@ -271,13 +286,12 @@ class CodeFormatter:
 
             # Если были изменения, записываем обратно
             if modified:
-                with open(file_path, 'w', encoding='utf-8') as f:
+                with open(file_path, "w", encoding="utf-8") as f:
                     f.writelines(lines)
 
-                self.changes_made.append({
-                    "file": str(file_path),
-                    "change": "Added missing docstrings"
-                })
+                self.changes_made.append(
+                    {"file": str(file_path), "change": "Added missing docstrings"}
+                )
                 return True
 
             return False
@@ -304,9 +318,9 @@ class CodeFormatter:
 
     def format_all_code(self) -> dict:
         """Форматирование всего кода проекта"""
-        self.log_message("="*60, "INFO")
+        self.log_message("=" * 60, "INFO")
         self.log_message("ЗАПУСК ФОРМАТИРОВАНИЯ КОДА ПРОЕКТА", "INFO")
-        self.log_message("="*60, "INFO")
+        self.log_message("=" * 60, "INFO")
 
         python_files = self.find_python_files()
         self.log_message(f"Найдено Python файлов: {len(python_files)}")
@@ -315,7 +329,7 @@ class CodeFormatter:
         processed_files = 0
 
         for i, file_path in enumerate(python_files, 1):
-            if 'venv' not in str(file_path) and '.git' not in str(file_path):
+            if "venv" not in str(file_path) and ".git" not in str(file_path):
                 changes_in_file = self.run_formatting_pass(file_path)
                 if changes_in_file > 0:
                     total_changes += changes_in_file
@@ -324,9 +338,9 @@ class CodeFormatter:
                 if i % 50 == 0:  # Показываем прогресс каждые 50 файлов
                     self.log_message(f"Обработано {i}/{len(python_files)} файлов...")
 
-        self.log_message("="*60, "INFO")
+        self.log_message("=" * 60, "INFO")
         self.log_message("СВОДКА ФОРМАТИРОВАНИЯ", "INFO")
-        self.log_message("="*60, "INFO")
+        self.log_message("=" * 60, "INFO")
 
         self.log_message(f"Обработано файлов: {processed_files}")
         self.log_message(f"Всего изменений: {total_changes}")
@@ -338,7 +352,7 @@ class CodeFormatter:
         return {
             "processed_files": processed_files,
             "total_changes": total_changes,
-            "changes_made": self.changes_made
+            "changes_made": self.changes_made,
         }
 
     def save_formatting_report(self):
@@ -362,13 +376,13 @@ class CodeFormatter:
                 "processed_files": len(set(change["file"] for change in self.changes_made)),
                 "total_changes": len(self.changes_made),
                 "total_logs": len(self.log_messages),
-                "errors": len([log for log in self.log_messages if log['level'] == 'ERROR']),
-                "warnings": len([log for log in self.log_messages if log['level'] == 'WARNING']),
-                "infos": len([log for log in self.log_messages if log['level'] == 'INFO'])
-            }
+                "errors": len([log for log in self.log_messages if log["level"] == "ERROR"]),
+                "warnings": len([log for log in self.log_messages if log["level"] == "WARNING"]),
+                "infos": len([log for log in self.log_messages if log["level"] == "INFO"]),
+            },
         }
 
-        with open(report_path, 'w', encoding='utf-8') as f:
+        with open(report_path, "w", encoding="utf-8") as f:
             json.dump(report_data, f, indent=2, ensure_ascii=False)
 
         self.log_message(f"Отчет о форматировании сохранен: {report_path}", "INFO")
@@ -386,10 +400,10 @@ def main():
     print(f"Всего внесено изменений: {len(results['changes_made'])}")
 
     print("\nПервые 5 изменений:")
-    for i, change in enumerate(results['changes_made'][:5], 1):
+    for i, change in enumerate(results["changes_made"][:5], 1):
         print(f"{i}. {change['file']}: {change['change']}")
 
-    if len(results['changes_made']) > 5:
+    if len(results["changes_made"]) > 5:
         print(f"... и еще {len(results['changes_made']) - 5} изменений")
 
 

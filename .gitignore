@@ -1,45 +1,4 @@
-# Файлы с пробелами в именах (проблемные)
-tests/test_sp realtime_visualizer.py
-
-# Временные файлы
-*.tmp
-*.log
-*.pyc
-__pycache__/
-*.py[cod]
-*$py.class
-
-# Ошибки
-error_report_*.json
-
-# Сборка
-build/
-dist/
-*.egg-info/
-.eggs/
-
-# Тесты
-.pytest_cache/
-.coverage
-htmlcov/
-*.cover
-*.py,cover
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Логи
-logs/
-
-# Данные
+# Данные (большие файлы)
 data/*.db
 data/*.sqlite
 data/*.db-shm
@@ -49,36 +8,29 @@ data/.admin_password
 data/.user_password
 data/.password_hashes.json
 data/2fa_secrets.json
+data/adsb/*.npy
+data/adsb/*.txt
+data/airband/*.dat
+data/airband/*.csv
+data/fm_radio/*.raw
+data/fm_radio/*.wav
+data/noaa/*.wav
+data/rtl433/*.jsonl
+data/rtl433/*.log
+data/sstv/*.raw
+data/sstv/*.wav
+data/tle_data.json
+
+# Логи
+logs/*.log
 
 # Временные файлы разработки
-adsb_output.txt
-adsb_samples_*.npy
-fm_*.raw
-fm_*.wav
 tools/
+output/
 output/test_export/
 docs/cyclic_imports_report.txt
 config/device_calibration.json
-data/noaa/*.wav
-
-# RTL-SDR данные (большие файлы)
-data/adsb/*.npy
-data/fm_radio/*.raw
-data/fm_radio/*.wav
-data/sstv/*.wav
 *.whl
-*_samples.dat
-*_test.raw
-*_5sec.raw
-listen_*.py
-listen_*.bat
-scan_*.bat
-quick_scan_*.py
-aviation_scan.csv
-reports/pdf/
-data/2fa_secrets.json
-data/tle_data.json
-output/
 
 # SSTV recordings
 sstv_recordings/
@@ -90,9 +42,39 @@ sstv_recordings/
 venv/
 ENV/
 
-# RTL-SDR binary tools (downloaded via setup_rtlsdr.bat)
-zadig.exe
-zadig-2.9.exe
-rtl-sdr-bin/
+# RTL-SDR бинарники (устанавливаются через scripts/setup_rtlsdr.bat)
+zadig*.exe
 rtl-sdr-blog*.zip
+rtl_433*.zip
+dump1090*.zip
+
+# Тестовые файлы
 test_*.raw
+*_5sec.raw
+
+# Reports
+reports/pdf/
+
+# Бинарные файлы (большие)
+bin/*.exe
+bin/*.dll
+
+# Большие данные
+*.zip
+*.tar.gz
+*.7z
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# External tools binaries (большие файлы)
+tools/dump1090/
+tools/rtl_433/
+tools/rtl-sdr-blog/
+# Оставляем только документацию
+!tools/README.md
+
+# Archived utils (не используются)
+utils/archived/

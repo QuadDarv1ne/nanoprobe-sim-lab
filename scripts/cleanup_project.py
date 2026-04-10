@@ -1,3 +1,5 @@
+﻿# ⚠️  DEPRECATED: Используйте scripts/project.py
+
 """Скрипт очистки и организации проекта Nanoprobe Simulation Lab."""
 
 import json
@@ -19,11 +21,7 @@ class ProjectCleaner:
     def log_message(self, message: str, level: str = "INFO"):
         """Логирование сообщений"""
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-        log_entry = {
-            "timestamp": timestamp,
-            "level": level,
-            "message": message
-        }
+        log_entry = {"timestamp": timestamp, "level": level, "message": message}
         self.log_messages.append(log_entry)
         print(f"[{level}] {timestamp}: {message}")
 
@@ -47,7 +45,7 @@ class ProjectCleaner:
             "**/*.temp",
             "build/temp.*",
             "**/.coverage",
-            "**/htmlcov/"
+            "**/htmlcov/",
         ]
 
         removed_count = 0
@@ -58,17 +56,15 @@ class ProjectCleaner:
                     if path.is_file():
                         path.unlink()
                         removed_count += 1
-                        self.changes_made.append({
-                            "file": str(path),
-                            "change": "Removed temporary file"
-                        })
+                        self.changes_made.append(
+                            {"file": str(path), "change": "Removed temporary file"}
+                        )
                     elif path.is_dir():
                         shutil.rmtree(path)
                         removed_count += 1
-                        self.changes_made.append({
-                            "file": str(path),
-                            "change": "Removed temporary directory"
-                        })
+                        self.changes_made.append(
+                            {"file": str(path), "change": "Removed temporary directory"}
+                        )
                 except (OSError, PermissionError) as e:
                     self.log_message(f"Ошибка удаления {path}: {str(e)}", "WARNING")
 
@@ -93,7 +89,7 @@ class ProjectCleaner:
             "docs/user_guide",
             "backup/configs",
             "profiles/memory",
-            "profiles/performance"
+            "profiles/performance",
         ]
 
         created_dirs = 0
@@ -102,10 +98,7 @@ class ProjectCleaner:
             if not full_path.exists():
                 full_path.mkdir(parents=True, exist_ok=True)
                 created_dirs += 1
-                self.changes_made.append({
-                    "file": str(full_path),
-                    "change": "Created directory"
-                })
+                self.changes_made.append({"file": str(full_path), "change": "Created directory"})
 
         # Перемещаем файлы в соответствующие директории
         moved_files = 0
@@ -114,7 +107,7 @@ class ProjectCleaner:
         profiles_to_move = list((self.project_root / "profiles").glob("*"))
         for profile_file in profiles_to_move:
             if profile_file.is_file():  # Обрабатываем только файлы, не директории
-                if "memory" in str(profile_file) or profile_file.suffix in ['.txt']:
+                if "memory" in str(profile_file) or profile_file.suffix in [".txt"]:
                     target_dir = self.project_root / "profiles" / "memory"
                 elif "profile" in str(profile_file) or "performance" in str(profile_file):
                     target_dir = self.project_root / "profiles" / "performance"
@@ -123,17 +116,18 @@ class ProjectCleaner:
 
                 target_path = target_dir / profile_file.name
                 if profile_file != target_path:
-                    target_dir.mkdir(parents=True, exist_ok=True)  # Убедимся, что целевая директория существует
+                    target_dir.mkdir(
+                        parents=True, exist_ok=True
+                    )  # Убедимся, что целевая директория существует
                     shutil.move(str(profile_file), str(target_path))
                     moved_files += 1
-                    self.changes_made.append({
-                        "file": str(profile_file),
-                        "change": f"Moved to {target_path}"
-                    })
+                    self.changes_made.append(
+                        {"file": str(profile_file), "change": f"Moved to {target_path}"}
+                    )
 
         # Перемещаем отчеты
         reports_to_move = []
-        for ext in ['.json', '.txt', '.log']:
+        for ext in [".json", ".txt", ".log"]:
             reports_to_move.extend(list(self.project_root.glob(f"*.{ext}")))
 
         for report_file in reports_to_move:
@@ -149,18 +143,16 @@ class ProjectCleaner:
 
                 target_path = target_dir / report_file.name
                 if report_file != target_path:
-                    target_dir.mkdir(parents=True, exist_ok=True)  # Убедимся, что целевая директория существует
+                    target_dir.mkdir(
+                        parents=True, exist_ok=True
+                    )  # Убедимся, что целевая директория существует
                     shutil.move(str(report_file), str(target_path))
                     moved_files += 1
-                    self.changes_made.append({
-                        "file": str(report_file),
-                        "change": f"Moved to {target_path}"
-                    })
+                    self.changes_made.append(
+                        {"file": str(report_file), "change": f"Moved to {target_path}"}
+                    )
 
-        result = {
-            "created_dirs": created_dirs,
-            "moved_files": moved_files
-        }
+        result = {"created_dirs": created_dirs, "moved_files": moved_files}
 
         self.log_message(f"Создано директорий: {created_dirs}, перемещено файлов: {moved_files}")
         return result
@@ -174,7 +166,7 @@ class ProjectCleaner:
         for py_file in self.project_root.rglob("*.py"):
             try:
                 # Проверяем, можно ли открыть файл на чтение
-                with open(py_file, 'r', encoding='utf-8'):
+                with open(py_file, "r", encoding="utf-8"):
                     pass
                 fixed_count += 1
             except (PermissionError, OSError):
@@ -200,7 +192,7 @@ class ProjectCleaner:
             "data",
             "logs",
             "output",
-            "templates"
+            "templates",
         ]
 
         missing_dirs = []
@@ -214,7 +206,7 @@ class ProjectCleaner:
             "requirements.txt",
             "src/cli/main.py",
             "src/cli/project_manager.py",
-            "src/web/web_dashboard_unified.py"
+            "src/web/web_dashboard_unified.py",
         ]
 
         missing_files = []
@@ -225,7 +217,7 @@ class ProjectCleaner:
         result = {
             "missing_directories": missing_dirs,
             "missing_files": missing_files,
-            "structure_valid": len(missing_dirs) == 0 and len(missing_files) == 0
+            "structure_valid": len(missing_dirs) == 0 and len(missing_files) == 0,
         }
 
         if missing_dirs:
@@ -247,27 +239,26 @@ class ProjectCleaner:
         config_files = [
             self.project_root / "config" / "cache_config.json",
             self.project_root / "config" / "config.json",
-            self.project_root / "config" / "optimization_config.json"
+            self.project_root / "config" / "optimization_config.json",
         ]
 
         optimized_configs = 0
         for config_file in config_files:
             if config_file.exists():
                 try:
-                    with open(config_file, 'r', encoding='utf-8') as f:
+                    with open(config_file, "r", encoding="utf-8") as f:
                         config_data = json.load(f)
 
                     # Форматируем JSON красиво
                     formatted_config = json.dumps(config_data, indent=2, ensure_ascii=False)
 
-                    with open(config_file, 'w', encoding='utf-8') as f:
+                    with open(config_file, "w", encoding="utf-8") as f:
                         f.write(formatted_config)
 
                     optimized_configs += 1
-                    self.changes_made.append({
-                        "file": str(config_file),
-                        "change": "Optimized configuration file format"
-                    })
+                    self.changes_made.append(
+                        {"file": str(config_file), "change": "Optimized configuration file format"}
+                    )
                 except (json.JSONDecodeError, OSError) as e:
                     self.log_message(f"Ошибка обработки конфига {config_file}: {str(e)}", "ERROR")
 
@@ -283,7 +274,7 @@ class ProjectCleaner:
             "improve_project.py",
             "optimize_all.py",
             "test_optimizations.py",
-            "run_monitoring_and_improvements.py"
+            "run_monitoring_and_improvements.py",
         ]
 
         cleaned_count = 0
@@ -292,12 +283,16 @@ class ProjectCleaner:
             if script_path.exists():
                 # Проверим размер файла - если он больше 10KB, возможно это полноценный скрипт
                 if script_path.stat().st_size > 10 * 1024:  # > 10KB
-                    self.log_message(f"Найден большой скрипт улучшения: {script_name} ({script_path.stat().st_size} bytes)")
+                    self.log_message(
+                        f"Найден большой скрипт улучшения: {script_name} ({script_path.stat().st_size} bytes)"
+                    )
 
         # Найдем дубликаты в deployment
         deployment_dirs = list(self.project_root.glob("deployment/nanoprobe-lab-*"))
         if len(deployment_dirs) > 1:
-            self.log_message(f"Найдено несколько директорий развертывания: {len(deployment_dirs)}", "INFO")
+            self.log_message(
+                f"Найдено несколько директорий развертывания: {len(deployment_dirs)}", "INFO"
+            )
             # Оставим только самую новую, остальные пометим как устаревшие
             sorted_dirs = sorted(deployment_dirs, key=lambda x: x.name, reverse=True)
             for old_dir in sorted_dirs[1:]:
@@ -307,9 +302,9 @@ class ProjectCleaner:
 
     def run_comprehensive_cleanup(self) -> Dict:
         """Запуск комплексной очистки проекта"""
-        self.log_message("="*60, "INFO")
+        self.log_message("=" * 60, "INFO")
         self.log_message("ЗАПУСК КОМПЛЕКСНОЙ ОЧИСТКИ ПРОЕКТА", "INFO")
-        self.log_message("="*60, "INFO")
+        self.log_message("=" * 60, "INFO")
 
         # Выполняем все этапы очистки
         temp_removed = self.remove_temporary_files()
@@ -320,9 +315,9 @@ class ProjectCleaner:
         duplicates_cleaned = self.clean_up_duplicate_scripts()
 
         # Сводка
-        self.log_message("="*60, "INFO")
+        self.log_message("=" * 60, "INFO")
         self.log_message("СВОДКА ОЧИСТКИ", "INFO")
-        self.log_message("="*60, "INFO")
+        self.log_message("=" * 60, "INFO")
 
         self.log_message(f"Удалено временных файлов/директорий: {temp_removed}", "INFO")
         self.log_message(f"Создано директорий: {dir_result['created_dirs']}", "INFO")
@@ -337,13 +332,13 @@ class ProjectCleaner:
 
         return {
             "temp_files_removed": temp_removed,
-            "directories_created": dir_result['created_dirs'],
-            "files_moved": dir_result['moved_files'],
+            "directories_created": dir_result["created_dirs"],
+            "files_moved": dir_result["moved_files"],
             "permissions_fixed": perms_fixed,
             "structure_validation": structure_valid,
             "configs_optimized": configs_optimized,
             "duplicates_handled": duplicates_cleaned,
-            "changes_made": self.changes_made
+            "changes_made": self.changes_made,
         }
 
     def save_cleanup_report(self):
@@ -363,13 +358,13 @@ class ProjectCleaner:
             "summary": {
                 "total_changes": len(self.changes_made),
                 "total_logs": len(self.log_messages),
-                "errors": len([log for log in self.log_messages if log['level'] == 'ERROR']),
-                "warnings": len([log for log in self.log_messages if log['level'] == 'WARNING']),
-                "infos": len([log for log in self.log_messages if log['level'] == 'INFO'])
-            }
+                "errors": len([log for log in self.log_messages if log["level"] == "ERROR"]),
+                "warnings": len([log for log in self.log_messages if log["level"] == "WARNING"]),
+                "infos": len([log for log in self.log_messages if log["level"] == "INFO"]),
+            },
         }
 
-        with open(report_path, 'w', encoding='utf-8') as f:
+        with open(report_path, "w", encoding="utf-8") as f:
             json.dump(report_data, f, indent=2, ensure_ascii=False)
 
         self.log_message(f"Отчет об очистке сохранен: {report_path}", "INFO")
@@ -389,20 +384,22 @@ def main():
     print(f"Перемещено файлов: {results['files_moved']}")
 
     print("\nПервые 5 изменений:")
-    for i, change in enumerate(results['changes_made'][:5], 1):
+    for i, change in enumerate(results["changes_made"][:5], 1):
         print(f"{i}. {change['file']}: {change['change']}")
 
-    if len(results['changes_made']) > 5:
+    if len(results["changes_made"]) > 5:
         print(f"... и еще {len(results['changes_made']) - 5} изменений")
 
     print("\nСтруктура проекта проверена.")
-    if results['structure_validation']['structure_valid']:
+    if results["structure_validation"]["structure_valid"]:
         print("✓ Структура проекта корректна")
     else:
         print("⚠ Обнаружены проблемы со структурой проекта:")
-        if results['structure_validation']['missing_directories']:
-            print(f"  - Отсутствующие директории: {results['structure_validation']['missing_directories']}")
-        if results['structure_validation']['missing_files']:
+        if results["structure_validation"]["missing_directories"]:
+            print(
+                f"  - Отсутствующие директории: {results['structure_validation']['missing_directories']}"
+            )
+        if results["structure_validation"]["missing_files"]:
             print(f"  - Отсутствующие файлы: {results['structure_validation']['missing_files']}")
 
 

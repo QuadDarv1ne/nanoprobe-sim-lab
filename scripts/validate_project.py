@@ -1,3 +1,5 @@
+﻿# ⚠️  DEPRECATED: Используйте scripts/project.py
+
 """Скрипт валидации проекта Nanoprobe Simulation Lab."""
 
 import importlib.util
@@ -11,8 +13,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 # Исправление кодировки для Windows
-if sys.platform == 'win32':
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+if sys.platform == "win32":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 
 class ProjectValidator:
@@ -31,15 +33,16 @@ class ProjectValidator:
     def log_message(self, message: str, level: str = "INFO"):
         """Логирование сообщений"""
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-        log_entry = {
-            "timestamp": timestamp,
-            "level": level,
-            "message": message
-        }
+        log_entry = {"timestamp": timestamp, "level": level, "message": message}
         self.log_messages.append(log_entry)
         # Замена Unicode символов на ASCII аналоги для Windows
-        safe_message = message.replace('✓', '[OK]').replace('✗', '[ERR]').replace(
-            '⚠', '[WARN]').replace('🎉', '[DONE]').replace('❌', '[FAIL]')
+        safe_message = (
+            message.replace("✓", "[OK]")
+            .replace("✗", "[ERR]")
+            .replace("⚠", "[WARN]")
+            .replace("🎉", "[DONE]")
+            .replace("❌", "[FAIL]")
+        )
         print(f"[{level}] {timestamp}: {safe_message}")
 
     def check_project_structure(self) -> Dict[str, Any]:
@@ -64,7 +67,7 @@ class ProjectValidator:
             "reports/logs",
             "profiles",
             "profiles/memory",
-            "profiles/performance"
+            "profiles/performance",
         ]
 
         expected_files = [
@@ -73,7 +76,7 @@ class ProjectValidator:
             "requirements.txt",
             "src/cli/main.py",
             "src/cli/project_manager.py",
-            "src/web/web_dashboard_unified.py"
+            "src/web/web_dashboard_unified.py",
         ]
 
         missing_dirs = []
@@ -92,7 +95,7 @@ class ProjectValidator:
             "missing_files": missing_files,
             "structure_valid": len(missing_dirs) == 0 and len(missing_files) == 0,
             "total_directories_checked": len(expected_dirs),
-            "total_files_checked": len(expected_files)
+            "total_files_checked": len(expected_files),
         }
 
         if missing_dirs:
@@ -114,7 +117,16 @@ class ProjectValidator:
         self.log_message("Проверка синтаксиса Python файлов...")
 
         # Исключаем виртуальное окружение и другие ненужные директории
-        excluded_dirs = {'venv', '.venv', 'env', '__pycache__', '.git', '.pytest_cache', '.vscode', '.idea'}
+        excluded_dirs = {
+            "venv",
+            ".venv",
+            "env",
+            "__pycache__",
+            ".git",
+            ".pytest_cache",
+            ".vscode",
+            ".idea",
+        }
         python_files = []
 
         for py_file in self.project_root.rglob("*.py"):
@@ -133,19 +145,16 @@ class ProjectValidator:
 
         for py_file in python_files:
             try:
-                with open(py_file, 'r', encoding='utf-8') as f:
+                with open(py_file, "r", encoding="utf-8") as f:
                     content = f.read()
 
                 # Проверяем синтаксис
-                compile(content, str(py_file), 'exec')
+                compile(content, str(py_file), "exec")
                 valid_files += 1
             except SyntaxError as e:
-                invalid_files.append({
-                    "file": str(py_file),
-                    "error": str(e),
-                    "line": e.lineno,
-                    "text": e.text
-                })
+                invalid_files.append(
+                    {"file": str(py_file), "error": str(e), "line": e.lineno, "text": e.text}
+                )
                 self.log_message(f"Синтаксическая ошибка в {py_file}:{e.lineno}: {e.msg}", "ERROR")
                 self.errors_found.append(f"Syntax error in {py_file}: {e.msg}")
             except Exception as e:
@@ -156,10 +165,12 @@ class ProjectValidator:
             "total_files": total_files,
             "valid_files": valid_files,
             "invalid_files": invalid_files,
-            "syntax_valid": len(invalid_files) == 0
+            "syntax_valid": len(invalid_files) == 0,
         }
 
-        self.log_message(f"Проверено файлов: {total_files}, валидных: {valid_files}, ошибок: {len(invalid_files)}")
+        self.log_message(
+            f"Проверено файлов: {total_files}, валидных: {valid_files}, ошибок: {len(invalid_files)}"
+        )
 
         return result
 
@@ -168,7 +179,16 @@ class ProjectValidator:
         self.log_message("Проверка импортов...")
 
         # Исключаем виртуальное окружение и другие ненужные директории
-        excluded_dirs = {'venv', '.venv', 'env', '__pycache__', '.git', '.pytest_cache', '.vscode', '.idea'}
+        excluded_dirs = {
+            "venv",
+            ".venv",
+            "env",
+            "__pycache__",
+            ".git",
+            ".pytest_cache",
+            ".vscode",
+            ".idea",
+        }
         python_files = []
 
         for py_file in self.project_root.rglob("*.py"):
@@ -200,24 +220,17 @@ class ProjectValidator:
                     spec.loader.exec_module(module)
                     importable_files += 1
                 else:
-                    unimportable_files.append({
-                        "file": str(py_file),
-                        "error": "Could not create module spec"
-                    })
+                    unimportable_files.append(
+                        {"file": str(py_file), "error": "Could not create module spec"}
+                    )
                     self.log_message(f"Невозможно импортировать {py_file}", "WARNING")
                     self.warnings_found.append(f"Import error in {py_file}")
             except ImportError as e:
-                unimportable_files.append({
-                    "file": str(py_file),
-                    "error": str(e)
-                })
+                unimportable_files.append({"file": str(py_file), "error": str(e)})
                 self.log_message(f"Ошибка импорта в {py_file}: {str(e)}", "WARNING")
                 self.warnings_found.append(f"Import error in {py_file}: {str(e)}")
             except Exception as e:
-                unimportable_files.append({
-                    "file": str(py_file),
-                    "error": str(e)
-                })
+                unimportable_files.append({"file": str(py_file), "error": str(e)})
                 self.log_message(f"Ошибка загрузки модуля {py_file}: {str(e)}", "WARNING")
                 self.warnings_found.append(f"Module load error in {py_file}: {str(e)}")
 
@@ -225,10 +238,12 @@ class ProjectValidator:
             "total_files": total_files,
             "importable_files": importable_files,
             "unimportable_files": unimportable_files,
-            "imports_valid": len(unimportable_files) == 0
+            "imports_valid": len(unimportable_files) == 0,
         }
 
-        self.log_message(f"Файлов с успешными импортами: {importable_files}, проблемных: {len(unimportable_files)}")
+        self.log_message(
+            f"Файлов с успешными импортами: {importable_files}, проблемных: {len(unimportable_files)}"
+        )
 
         return result
 
@@ -241,26 +256,32 @@ class ProjectValidator:
             result = {
                 "requirements_exists": False,
                 "dependencies_valid": False,
-                "message": "Файл requirements.txt не найден"
+                "message": "Файл requirements.txt не найден",
             }
             self.log_message("Файл requirements.txt не найден", "WARNING")
             self.warnings_found.append("requirements.txt not found")
             return result
 
         # Читаем зависимости
-        with open(req_file, 'r', encoding='utf-8') as f:
-            requirements = [line.strip() for line in f.readlines() if line.strip() and not line.startswith('#')]
+        with open(req_file, "r", encoding="utf-8") as f:
+            requirements = [
+                line.strip() for line in f.readlines() if line.strip() and not line.startswith("#")
+            ]
 
         # Проверяем, установлены ли зависимости
         try:
-            installed_packages = subprocess.check_output([sys.executable, '-m', 'pip', 'list'], text=True)
+            installed_packages = subprocess.check_output(
+                [sys.executable, "-m", "pip", "list"], text=True
+            )
         except subprocess.CalledProcessError:
             installed_packages = ""
 
         missing_deps = []
         for req in requirements:
             # Извлекаем имя пакета (до знака >=, <=, == и т.д.)
-            pkg_name = req.split('>=')[0].split('<=')[0].split('==')[0].split('>')[0].split('<')[0].strip()
+            pkg_name = (
+                req.split(">=")[0].split("<=")[0].split("==")[0].split(">")[0].split("<")[0].strip()
+            )
             if pkg_name and pkg_name.lower() not in installed_packages.lower():
                 missing_deps.append(pkg_name)
 
@@ -268,7 +289,7 @@ class ProjectValidator:
             "requirements_exists": True,
             "dependencies_valid": len(missing_deps) == 0,
             "missing_dependencies": missing_deps,
-            "total_dependencies": len(requirements)
+            "total_dependencies": len(requirements),
         }
 
         if missing_deps:
@@ -289,7 +310,7 @@ class ProjectValidator:
             ("src/cli/project_manager.py", "Менеджер проекта"),
             ("src/web/web_dashboard_unified.py", "Веб-панель"),
             ("utils/cache_manager.py", "Менеджер кэша"),
-            ("utils/config_manager.py", "Менеджер конфигов")
+            ("utils/config_manager.py", "Менеджер конфигов"),
         ]
 
         working_components = 0
@@ -301,10 +322,7 @@ class ProjectValidator:
                 working_components += 1
                 self.log_message(f"✓ {description} ({component_path}) - OK", "INFO")
             else:
-                broken_components.append({
-                    "path": component_path,
-                    "description": description
-                })
+                broken_components.append({"path": component_path, "description": description})
                 self.log_message(f"✗ {description} ({component_path}) - НЕ НАЙДЕН", "ERROR")
                 self.errors_found.append(f"Missing component: {component_path}")
 
@@ -312,16 +330,16 @@ class ProjectValidator:
             "working_components": working_components,
             "broken_components": broken_components,
             "components_valid": len(broken_components) == 0,
-            "total_components": len(components_to_check)
+            "total_components": len(components_to_check),
         }
 
         return result
 
     def run_all_validations(self) -> Dict[str, Any]:
         """Запуск всех проверок проекта"""
-        self.log_message("="*60, "INFO")
+        self.log_message("=" * 60, "INFO")
         self.log_message("ЗАПУСК ВАЛИДАЦИИ ПРОЕКТА", "INFO")
-        self.log_message("="*60, "INFO")
+        self.log_message("=" * 60, "INFO")
 
         # Выполняем все проверки
         structure_result = self.check_project_structure()
@@ -331,15 +349,25 @@ class ProjectValidator:
         components_result = self.check_main_components()
 
         # Сводка
-        self.log_message("="*60, "INFO")
+        self.log_message("=" * 60, "INFO")
         self.log_message("СВОДКА ВАЛИДАЦИИ", "INFO")
-        self.log_message("="*60, "INFO")
+        self.log_message("=" * 60, "INFO")
 
-        self.log_message(f"Структура проекта: {'✓' if structure_result['structure_valid'] else '✗'}")
-        self.log_message(f"Синтаксис Python: {'✓' if syntax_result['syntax_valid'] else '✗'} (валидных: {syntax_result['valid_files']}/{syntax_result['total_files']})")
-        self.log_message(f"Импорты: {'✓' if import_result['imports_valid'] else '✗'} (импортируемых: {import_result['importable_files']}/{import_result['total_files']})")
-        self.log_message(f"Зависимости: {'✓' if requirements_result['dependencies_valid'] else '✗'} (отсутствует: {len(requirements_result['missing_dependencies'])})")
-        self.log_message(f"Компоненты: {'✓' if components_result['components_valid'] else '✗'} (работающих: {components_result['working_components']}/{components_result['total_components']})")
+        self.log_message(
+            f"Структура проекта: {'✓' if structure_result['structure_valid'] else '✗'}"
+        )
+        self.log_message(
+            f"Синтаксис Python: {'✓' if syntax_result['syntax_valid'] else '✗'} (валидных: {syntax_result['valid_files']}/{syntax_result['total_files']})"
+        )
+        self.log_message(
+            f"Импорты: {'✓' if import_result['imports_valid'] else '✗'} (импортируемых: {import_result['importable_files']}/{import_result['total_files']})"
+        )
+        self.log_message(
+            f"Зависимости: {'✓' if requirements_result['dependencies_valid'] else '✗'} (отсутствует: {len(requirements_result['missing_dependencies'])})"
+        )
+        self.log_message(
+            f"Компоненты: {'✓' if components_result['components_valid'] else '✗'} (работающих: {components_result['working_components']}/{components_result['total_components']})"
+        )
 
         # Подсчет ошибок и предупреждений
         total_errors = len(self.errors_found)
@@ -350,11 +378,11 @@ class ProjectValidator:
 
         # Оценка общего состояния
         all_checks_passed = (
-            structure_result['structure_valid'] and
-            syntax_result['syntax_valid'] and
-            import_result['imports_valid'] and
-            requirements_result['dependencies_valid'] and
-            components_result['components_valid']
+            structure_result["structure_valid"]
+            and syntax_result["syntax_valid"]
+            and import_result["imports_valid"]
+            and requirements_result["dependencies_valid"]
+            and components_result["components_valid"]
         )
 
         if all_checks_passed and total_errors == 0:
@@ -373,16 +401,16 @@ class ProjectValidator:
                 "syntax": syntax_result,
                 "imports": import_result,
                 "requirements": requirements_result,
-                "components": components_result
+                "components": components_result,
             },
             "summary": {
                 "all_checks_passed": all_checks_passed,
                 "total_errors": total_errors,
                 "total_warnings": total_warnings,
                 "errors": self.errors_found,
-                "warnings": self.warnings_found
+                "warnings": self.warnings_found,
             },
-            "validation_log": self.log_messages
+            "validation_log": self.log_messages,
         }
 
         self.save_validation_report(validation_data)
@@ -397,7 +425,7 @@ class ProjectValidator:
         # Создаем папку отчетов если не существует
         report_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(report_path, 'w', encoding='utf-8') as f:
+        with open(report_path, "w", encoding="utf-8") as f:
             json.dump(validation_data, f, indent=2, ensure_ascii=False)
 
         self.log_message(f"Отчет о валидации сохранен: {report_path}", "INFO")
@@ -414,12 +442,12 @@ def main():
     print(f"Всего ошибок: {results['summary']['total_errors']}")
     print(f"Всего предупреждений: {results['summary']['total_warnings']}")
 
-    if results['summary']['total_errors'] == 0:
+    if results["summary"]["total_errors"] == 0:
         print("✅ Проект успешно прошел валидацию!")
     else:
         print("❌ Проект имеет ошибки, требующие внимания.")
 
-    if results['summary']['total_warnings'] > 0:
+    if results["summary"]["total_warnings"] > 0:
         print(f"⚠ Найдено {results['summary']['total_warnings']} предупреждений")
 
     print(f"\nДетали валидации сохранены в: reports/logs/validation_report_*.json")
