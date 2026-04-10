@@ -33,9 +33,9 @@ except ImportError:
     print("⚠️  pyrtlsdr не установлен: pip install pyrtlsdr")
 
 try:
-    import webbrowser
-    import threading
     import http.server
+    import threading
+    import webbrowser
 
     WEB_AVAILABLE = True
 except ImportError:
@@ -458,18 +458,10 @@ def main():
         default=30,
         help="Усиление RTL-SDR dB (по умолчанию: 30)",
     )
-    parser.add_argument(
-        "--device", type=int, default=0, help="Индекс RTL-SDR устройства"
-    )
-    parser.add_argument(
-        "--dump1090", action="store_true", help="Использовать dump1090"
-    )
-    parser.add_argument(
-        "--json", action="store_true", help="JSON вывод данных"
-    )
-    parser.add_argument(
-        "--map", action="store_true", help="Веб-карта самолётов"
-    )
+    parser.add_argument("--device", type=int, default=0, help="Индекс RTL-SDR устройства")
+    parser.add_argument("--dump1090", action="store_true", help="Использовать dump1090")
+    parser.add_argument("--json", action="store_true", help="JSON вывод данных")
+    parser.add_argument("--map", action="store_true", help="Веб-карта самолётов")
 
     args = parser.parse_args()
 

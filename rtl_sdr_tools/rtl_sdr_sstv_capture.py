@@ -10,7 +10,6 @@ RTL-SDR V4 SSTV Capture - Приём изображений с МКС
 """
 
 import argparse
-import os
 import sys
 import time
 import wave

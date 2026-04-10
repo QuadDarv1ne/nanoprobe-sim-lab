@@ -6,10 +6,10 @@ Load Testing для Nanoprobe Sim Lab API
 
 Использование:
     python tests/load_test.py
-    
+
     # Быстрый тест (30 сек)
     python tests/load_test.py --duration 30
-    
+
     # Тест с большим количеством пользователей
     python tests/load_test.py --users 50 --duration 120
 
@@ -19,15 +19,14 @@ Load Testing для Nanoprobe Sim Lab API
 
 import argparse
 import json
-import os
 import statistics
 import sys
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 # Добавляем путь к проекту
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -44,6 +43,7 @@ except ImportError:
 @dataclass
 class LoadTestResult:
     """Результат нагрузочного теста"""
+
     endpoint: str
     method: str
     total_requests: int
@@ -77,7 +77,7 @@ class LoadTester:
         self.timeout = timeout
         self.session = requests.Session()
         self.results: Dict[str, LoadTestResult] = {}
-        
+
         # Тестовые данные
         self.test_scan_data = {
             "surface_type": "graphene",
@@ -90,7 +90,7 @@ class LoadTester:
         """Выполнение одного запроса"""
         url = f"{self.base_url}{endpoint}"
         start_time = time.time()
-        
+
         try:
             if method == "GET":
                 response = self.session.get(url, timeout=self.timeout)
@@ -102,10 +102,10 @@ class LoadTester:
                 response = self.session.delete(url, timeout=self.timeout)
             else:
                 raise ValueError(f"Неизвестный метод: {method}")
-            
+
             response_time = (time.time() - start_time) * 1000  # ms
             return response.status_code, response_time, None
-            
+
         except Timeout:
             return 0, 0, "Timeout"
         except RequestException as e:
@@ -124,19 +124,21 @@ class LoadTester:
         """Рабочий поток для нагрузочного теста"""
         start_time = time.time()
         request_results = []
-        
+
         while time.time() - start_time < self.duration:
             status_code, response_time, error = self._make_request(method, endpoint, data)
-            request_results.append({
-                "status_code": status_code,
-                "response_time": response_time,
-                "error": error,
-                "timestamp": time.time(),
-            })
-            
+            request_results.append(
+                {
+                    "status_code": status_code,
+                    "response_time": response_time,
+                    "error": error,
+                    "timestamp": time.time(),
+                }
+            )
+
             # Небольшая задержка между запросами
             time.sleep(0.1)
-        
+
         if results_dict is not None:
             results_dict[worker_id] = request_results
 
@@ -151,11 +153,11 @@ class LoadTester:
         desc = description or f"{method} {endpoint}"
         print(f"\n🔵 Тест: {desc}")
         print(f"   Пользователей: {self.users}, Длительность: {self.duration}с")
-        
+
         all_results = []
         threads = []
         results_dict = {}
-        
+
         # Запуск потоков
         with ThreadPoolExecutor(max_workers=self.users) as executor:
             for i in range(self.users):
@@ -168,19 +170,19 @@ class LoadTester:
                     i,
                 )
                 threads.append(thread)
-        
+
         # Сбор результатов
         for worker_id, worker_results in results_dict.items():
             all_results.extend(worker_results)
-        
+
         # Анализ результатов
         total = len(all_results)
         successful = sum(1 for r in all_results if 200 <= r["status_code"] < 400)
         failed = total - successful
-        
+
         response_times = [r["response_time"] for r in all_results if r["response_time"] > 0]
         errors = [r["error"] for r in all_results if r["error"]]
-        
+
         # Статистика
         if response_times:
             sorted_times = sorted(response_times)
@@ -188,14 +190,18 @@ class LoadTester:
             max_time = max(response_times)
             avg_time = statistics.mean(response_times)
             median_time = statistics.median(response_times)
-            p95_time = sorted_times[int(len(sorted_times) * 0.95)] if len(sorted_times) > 1 else max_time
-            p99_time = sorted_times[int(len(sorted_times) * 0.99)] if len(sorted_times) > 1 else max_time
+            p95_time = (
+                sorted_times[int(len(sorted_times) * 0.95)] if len(sorted_times) > 1 else max_time
+            )
+            p99_time = (
+                sorted_times[int(len(sorted_times) * 0.99)] if len(sorted_times) > 1 else max_time
+            )
         else:
             min_time = max_time = avg_time = median_time = p95_time = p99_time = 0
-        
+
         success_rate = (successful / total * 100) if total > 0 else 0
         rps = total / self.duration if self.duration > 0 else 0
-        
+
         result = LoadTestResult(
             endpoint=endpoint,
             method=method,
@@ -213,20 +219,22 @@ class LoadTester:
             duration_seconds=self.duration,
             errors=errors[:10],  # Первые 10 ошибок
         )
-        
+
         self.results[f"{method} {endpoint}"] = result
-        
+
         # Вывод результатов
         self._print_result(result)
-        
+
         return result
 
     def _print_result(self, result: LoadTestResult):
         """Вывод результатов теста"""
         status = "✅" if result.success_rate >= 95 else "⚠️" if result.success_rate >= 80 else "❌"
-        
+
         print(f"\n   {status} Результаты:")
-        print(f"      Запросов: {result.total_requests} (успешно: {result.successful_requests}, ошибок: {result.failed_requests})")
+        print(
+            f"      Запросов: {result.total_requests} (успешно: {result.successful_requests}, ошибок: {result.failed_requests})"
+        )
         print(f"      Success Rate: {result.success_rate:.1f}%")
         print(f"      RPS: {result.requests_per_second:.2f} запросов/сек")
         print(f"      Response Time:")
@@ -236,7 +244,7 @@ class LoadTester:
         print(f"         Median: {result.median_response_time:.2f}ms")
         print(f"         P95: {result.p95_response_time:.2f}ms")
         print(f"         P99: {result.p99_response_time:.2f}ms")
-        
+
         if result.errors:
             print(f"      Ошибки ({len(result.errors)}):")
             for error in result.errors[:3]:
@@ -251,7 +259,7 @@ class LoadTester:
         print(f"Users: {self.users}, Duration: {self.duration}с")
         print(f"Start Time: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}")
         print("=" * 70)
-        
+
         # Health check перед тестом
         print("\n📋 Проверка доступности API...")
         try:
@@ -263,7 +271,7 @@ class LoadTester:
         except Exception as e:
             print(f"❌ API недоступен: {e}")
             return {}
-        
+
         # Тестирование эндпоинтов
         endpoints = [
             ("/health", "GET", "Health check"),
@@ -273,10 +281,10 @@ class LoadTester:
             ("/api/v1/simulations/", "GET", "List simulations"),
             ("/metrics/realtime", "GET", "Realtime metrics"),
         ]
-        
+
         # POST тест (создание сканирования)
         # endpoints.append(("/api/v1/scans/", "POST", "Create scan", self.test_scan_data))
-        
+
         for endpoint_info in endpoints:
             if len(endpoint_info) == 3:
                 endpoint, method, description = endpoint_info
@@ -284,10 +292,10 @@ class LoadTester:
             else:
                 endpoint, method, description, data = endpoint_info
                 self.test_endpoint(endpoint, method, data, description)
-        
+
         # Итоговый отчёт
         self._print_summary()
-        
+
         return self.results
 
     def _print_summary(self):
@@ -295,18 +303,20 @@ class LoadTester:
         print("\n" + "=" * 70)
         print("📊 ИТОГОВЫЙ ОТЧЁТ")
         print("=" * 70)
-        
+
         total_requests = sum(r.total_requests for r in self.results.values())
         total_successful = sum(r.successful_requests for r in self.results.values())
         total_failed = sum(r.failed_requests for r in self.results.values())
-        overall_success_rate = (total_successful / total_requests * 100) if total_requests > 0 else 0
-        
+        overall_success_rate = (
+            (total_successful / total_requests * 100) if total_requests > 0 else 0
+        )
+
         all_rps = [r.requests_per_second for r in self.results.values()]
         avg_rps = statistics.mean(all_rps) if all_rps else 0
-        
+
         all_avg_times = [r.avg_response_time for r in self.results.values()]
         overall_avg_time = statistics.mean(all_avg_times) if all_avg_times else 0
-        
+
         print(f"\n📈 Общая статистика:")
         print(f"   Всего запросов: {total_requests}")
         print(f"   Успешно: {total_successful}")
@@ -314,35 +324,39 @@ class LoadTester:
         print(f"   Success Rate: {overall_success_rate:.1f}%")
         print(f"   Средний RPS: {avg_rps:.2f} запросов/сек")
         print(f"   Среднее время ответа: {overall_avg_time:.2f}ms")
-        
+
         print(f"\n📋 Результаты по эндпоинтам:")
         print(f"   {'Endpoint':<40} {'RPS':>8} {'Avg (ms)':>10} {'P95 (ms)':>10} {'Success':>8}")
         print(f"   {'-'*40} {'-'*8} {'-'*10} {'-'*10} {'-'*8}")
-        
+
         for key, result in self.results.items():
             endpoint_name = f"{result.method} {result.endpoint}"
             if len(endpoint_name) > 40:
                 endpoint_name = endpoint_name[:37] + "..."
-            
-            success_status = "✅" if result.success_rate >= 95 else "⚠️" if result.success_rate >= 80 else "❌"
-            
-            print(f"   {endpoint_name:<40} {result.requests_per_second:>8.2f} {result.avg_response_time:>10.2f} {result.p95_response_time:>10.2f} {success_status} {result.success_rate:.0f}%")
-        
+
+            success_status = (
+                "✅" if result.success_rate >= 95 else "⚠️" if result.success_rate >= 80 else "❌"
+            )
+
+            print(
+                f"   {endpoint_name:<40} {result.requests_per_second:>8.2f} {result.avg_response_time:>10.2f} {result.p95_response_time:>10.2f} {success_status} {result.success_rate:.0f}%"
+            )
+
         # Рекомендации
         print(f"\n💡 Рекомендации:")
-        
+
         if overall_success_rate < 95:
             print("   ⚠️  Success Rate ниже 95% - проверьте логи ошибок")
-        
+
         if overall_avg_time > 1000:
             print("   ⚠️  Среднее время ответа > 1с - рассмотрите кэширование")
-        
+
         if overall_avg_time > 5000:
             print("   ❌  Критически высокое время ответа - требуется оптимизация")
-        
+
         if avg_rps < 10:
             print("   ℹ️  Низкий RPS - возможно ограничение на стороне сервера")
-        
+
         print("=" * 70)
 
 
@@ -373,18 +387,18 @@ def main():
         default=10,
         help="Таймаут запроса в секундах (default: 10)",
     )
-    
+
     args = parser.parse_args()
-    
+
     tester = LoadTester(
         base_url=args.url,
         users=args.users,
         duration=args.duration,
         timeout=args.timeout,
     )
-    
+
     results = tester.run_full_test()
-    
+
     # Сохранение результатов в JSON
     if results:
         output_file = Path(__file__).parent / "load_test_results.json"
@@ -410,12 +424,12 @@ def main():
                 for key, r in results.items()
             },
         }
-        
+
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(output_data, f, indent=2, ensure_ascii=False)
-        
+
         print(f"\n💾 Результаты сохранены в: {output_file}")
-    
+
     return 0 if all(r.success_rate >= 95 for r in results.values()) else 1
 
 

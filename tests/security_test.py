@@ -15,10 +15,10 @@ Security Testing для Nanoprobe Sim Lab API
 
 Использование:
     python tests/security_test.py
-    
+
     # Быстрый тест
     python tests/security_test.py --quick
-    
+
     # Полный тест с отчётом
     python tests/security_test.py --full --report
 
@@ -28,7 +28,6 @@ Security Testing для Nanoprobe Sim Lab API
 
 import argparse
 import json
-import os
 import re
 import sys
 import time
@@ -36,7 +35,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 # Добавляем путь к проекту
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -51,6 +50,7 @@ except ImportError:
 
 class Severity(Enum):
     """Уровень критичности уязвимости"""
+
     CRITICAL = "CRITICAL"
     HIGH = "HIGH"
     MEDIUM = "MEDIUM"
@@ -61,6 +61,7 @@ class Severity(Enum):
 @dataclass
 class SecurityFinding:
     """Найденная уязвимость"""
+
     test_name: str
     severity: Severity
     endpoint: str
@@ -74,6 +75,7 @@ class SecurityFinding:
 @dataclass
 class SecurityTestResult:
     """Результат теста безопасности"""
+
     test_name: str
     passed: bool
     findings: List[SecurityFinding] = field(default_factory=list)
@@ -85,13 +87,13 @@ class SecurityTester:
     """Тестирование безопасности API"""
 
     def __init__(self, base_url: str = "http://localhost:8000", timeout: int = 10):
-        self.base_url = base_url.rstrip('/')
+        self.base_url = base_url.rstrip("/")
         self.timeout = timeout
         self.session = requests.Session()
         self.results: List[SecurityTestResult] = []
         self.findings: List[SecurityFinding] = []
         self.access_token: Optional[str] = None
-        
+
         # SQL Injection payloads
         self.sql_injection_payloads = [
             "' OR '1'='1",
@@ -104,7 +106,7 @@ class SecurityTester:
             "' OR 1=1 --",
             "1' OR '1'='1",
         ]
-        
+
         # XSS payloads
         self.xss_payloads = [
             "<script>alert('XSS')</script>",
@@ -114,7 +116,7 @@ class SecurityTester:
             "<body onload=alert('XSS')>",
             "'\"><script>alert('XSS')</script>",
         ]
-        
+
         # Path traversal payloads
         self.path_traversal_payloads = [
             "../../../etc/passwd",
@@ -126,20 +128,15 @@ class SecurityTester:
     def _make_request(self, method: str, endpoint: str, **kwargs) -> Optional[requests.Response]:
         """Выполнение HTTP запроса"""
         url = f"{self.base_url}{endpoint}"
-        
+
         # Добавляем токен если есть
-        if self.access_token and 'headers' not in kwargs:
-            kwargs['headers'] = {}
+        if self.access_token and "headers" not in kwargs:
+            kwargs["headers"] = {}
         if self.access_token:
-            kwargs['headers']['Authorization'] = f"Bearer {self.access_token}"
-        
+            kwargs["headers"]["Authorization"] = f"Bearer {self.access_token}"
+
         try:
-            response = self.session.request(
-                method,
-                url,
-                timeout=self.timeout,
-                **kwargs
-            )
+            response = self.session.request(method, url, timeout=self.timeout, **kwargs)
             return response
         except Timeout:
             return None
@@ -150,14 +147,14 @@ class SecurityTester:
     def _login(self) -> bool:
         """Получение токена доступа"""
         print("\n🔐 Аутентификация...")
-        
+
         # Пробуем стандартные учётные данные
         credentials = [
             {"username": "admin", "password": "Admin123!"},
             {"username": "admin", "password": "admin"},
             {"username": "test", "password": "Test123!"},
         ]
-        
+
         for creds in credentials:
             response = self._make_request("POST", "/api/v1/auth/login", json=creds)
             if response and response.status_code == 200:
@@ -165,32 +162,34 @@ class SecurityTester:
                 self.access_token = data.get("access_token")
                 print(f"  ✅ Успешный вход как {creds['username']}")
                 return True
-        
+
         print("  ℹ️  Аутентификация не удалась (тесты без токена)")
         return False
 
     def test_security_headers(self) -> SecurityTestResult:
         """Тест 1: Проверка Security Headers"""
         print("\n📋 Тест 1: Security Headers")
-        
+
         result = SecurityTestResult(test_name="Security Headers", passed=True)
         start_time = time.time()
-        
+
         response = self._make_request("GET", "/health")
         result.requests_made += 1
-        
+
         if not response:
             result.passed = False
-            result.findings.append(SecurityFinding(
-                test_name="Security Headers",
-                severity=Severity.HIGH,
-                endpoint="/health",
-                description="API недоступен",
-                evidence="No response",
-                recommendation="Проверьте доступность API"
-            ))
+            result.findings.append(
+                SecurityFinding(
+                    test_name="Security Headers",
+                    severity=Severity.HIGH,
+                    endpoint="/health",
+                    description="API недоступен",
+                    evidence="No response",
+                    recommendation="Проверьте доступность API",
+                )
+            )
             return result
-        
+
         # Проверка headers
         required_headers = {
             "X-Frame-Options": ("Clickjacking защита", Severity.MEDIUM, "CWE-1021"),
@@ -200,13 +199,13 @@ class SecurityTester:
             "Content-Security-Policy": ("CSP защита", Severity.MEDIUM, "CWE-79"),
             "Strict-Transport-Security": ("HSTS (только HTTPS)", Severity.HIGH, "CWE-319"),
         }
-        
+
         missing_headers = []
         for header, (desc, severity, cwe) in required_headers.items():
             if header not in response.headers:
                 missing_headers.append((header, desc, severity, cwe))
                 result.passed = False
-        
+
         if missing_headers:
             for header, desc, severity, cwe in missing_headers:
                 finding = SecurityFinding(
@@ -216,13 +215,13 @@ class SecurityTester:
                     description=f"Отсутствует заголовок {header}: {desc}",
                     evidence=f"Headers: {dict(response.headers)}",
                     recommendation=f"Добавьте заголовок {header}",
-                    cwe_id=cwe
+                    cwe_id=cwe,
                 )
                 result.findings.append(finding)
                 self.findings.append(finding)
         else:
             print("  ✅ Все security headers присутствуют")
-        
+
         # Проверка на утечку информации
         if "Server" in response.headers or "X-Powered-By" in response.headers:
             finding = SecurityFinding(
@@ -232,43 +231,50 @@ class SecurityTester:
                 description="Утечка информации о сервере",
                 evidence=f"Server: {response.headers.get('Server', 'N/A')}",
                 recommendation="Удалите заголовки Server и X-Powered-By",
-                cwe_id="CWE-200"
+                cwe_id="CWE-200",
             )
             result.findings.append(finding)
             self.findings.append(finding)
             print("  ⚠️  Заголовки сервера не удалены")
-        
+
         result.duration_seconds = time.time() - start_time
         self.results.append(result)
-        
+
         return result
 
     def test_sql_injection(self) -> SecurityTestResult:
         """Тест 2: SQL Injection"""
         print("\n📋 Тест 2: SQL Injection")
-        
+
         result = SecurityTestResult(test_name="SQL Injection", passed=True)
         start_time = time.time()
-        
+
         # Тестовые эндпоинты с параметрами
         test_endpoints = [
             ("/api/v1/scans/", "POST", {"surface_type": "PAYLOAD", "resolution": 128}),
             ("/api/v1/simulations/", "POST", {"surface_type": "PAYLOAD", "resolution": 64}),
         ]
-        
+
         sql_errors = [
-            "SQL", "syntax", "database", "mysql", "postgresql", "sqlite",
-            "ORA-", "Microsoft SQL Server", "Unclosed quotation mark"
+            "SQL",
+            "syntax",
+            "database",
+            "mysql",
+            "postgresql",
+            "sqlite",
+            "ORA-",
+            "Microsoft SQL Server",
+            "Unclosed quotation mark",
         ]
-        
+
         for endpoint, method, template in test_endpoints:
             for payload in self.sql_injection_payloads[:5]:  # Первые 5 payload
                 test_data = template.copy()
                 test_data["surface_type"] = payload
-                
+
                 response = self._make_request(method, endpoint, json=test_data)
                 result.requests_made += 1
-                
+
                 if response and response.status_code >= 500:
                     response_text = response.text.lower()
                     if any(err.lower() in response_text for err in sql_errors):
@@ -281,33 +287,33 @@ class SecurityTester:
                             evidence=f"Payload: {payload}\nResponse: {response.text[:200]}",
                             recommendation="Используйте параметризованные запросы",
                             cwe_id="CWE-89",
-                            cvss_score=9.8
+                            cvss_score=9.8,
                         )
                         result.findings.append(finding)
                         self.findings.append(finding)
                         print(f"  ❌ Возможна SQL Injection: {endpoint}")
-        
+
         if result.passed:
             print("  ✅ SQL Injection уязвимостей не найдено")
-        
+
         result.duration_seconds = time.time() - start_time
         self.results.append(result)
-        
+
         return result
 
     def test_xss(self) -> SecurityTestResult:
         """Тест 3: XSS (Cross-Site Scripting)"""
         print("\n📋 Тест 3: XSS (Cross-Site Scripting)")
-        
+
         result = SecurityTestResult(test_name="XSS", passed=True)
         start_time = time.time()
-        
+
         # Тестовые эндпоинты
         test_endpoints = [
             ("/api/v1/scans/", "POST"),
             ("/api/v1/simulations/", "POST"),
         ]
-        
+
         for endpoint, method in test_endpoints:
             for payload in self.xss_payloads[:3]:  # Первые 3 payload
                 test_data = {
@@ -315,15 +321,15 @@ class SecurityTester:
                     "resolution": 128,
                     "scan_size": 1.0,
                 }
-                
+
                 response = self._make_request(method, endpoint, json=test_data)
                 result.requests_made += 1
-                
+
                 if response and response.status_code == 200:
                     try:
                         data = response.json()
                         response_text = json.dumps(data)
-                        
+
                         # Проверка на отражение payload
                         if payload in response_text or payload.replace("'", "%27") in response_text:
                             # Проверка на отсутствие экранирования
@@ -337,28 +343,28 @@ class SecurityTester:
                                     evidence=f"Payload: {payload}",
                                     recommendation="Экранируйте пользовательские данные",
                                     cwe_id="CWE-79",
-                                    cvss_score=7.5
+                                    cvss_score=7.5,
                                 )
                                 result.findings.append(finding)
                                 self.findings.append(finding)
                     except (json.JSONDecodeError, KeyError):
                         pass
-        
+
         if result.passed:
             print("  ✅ XSS уязвимостей не найдено")
-        
+
         result.duration_seconds = time.time() - start_time
         self.results.append(result)
-        
+
         return result
 
     def test_authentication_bypass(self) -> SecurityTestResult:
         """Тест 4: Authentication Bypass"""
         print("\n📋 Тест 4: Authentication Bypass")
-        
+
         result = SecurityTestResult(test_name="Authentication Bypass", passed=True)
         start_time = time.time()
-        
+
         # Защищённые эндпоинты (требуют аутентификации)
         protected_endpoints = [
             "/api/v1/admin/users",
@@ -366,12 +372,12 @@ class SecurityTester:
             "/api/v1/scans/",
             "/api/v1/simulations/",
         ]
-        
+
         for endpoint in protected_endpoints:
             # Попытка доступа без токена
             response = self._make_request("GET", endpoint)
             result.requests_made += 1
-            
+
             if response and response.status_code == 200:
                 result.passed = False
                 finding = SecurityFinding(
@@ -382,63 +388,61 @@ class SecurityTester:
                     evidence=f"Status: {response.status_code}",
                     recommendation="Требуйте аутентификацию для защищённых ресурсов",
                     cwe_id="CWE-287",
-                    cvss_score=9.0
+                    cvss_score=9.0,
                 )
                 result.findings.append(finding)
                 self.findings.append(finding)
                 print(f"  ❌ Доступ без аутентификации: {endpoint}")
             elif response and response.status_code in [401, 403]:
                 print(f"  ✅ Защищено: {endpoint} ({response.status_code})")
-        
+
         result.duration_seconds = time.time() - start_time
         self.results.append(result)
-        
+
         return result
 
     def test_rate_limiting(self) -> SecurityTestResult:
         """Тест 5: Rate Limiting"""
         print("\n📋 Тест 5: Rate Limiting")
-        
+
         result = SecurityTestResult(test_name="Rate Limiting", passed=True)
         start_time = time.time()
-        
+
         endpoint = "/health"
         rate_limit_detected = False
         status_codes = []
-        
+
         # Быстрые запросы (20 за 5 секунд)
         for i in range(20):
             response = self._make_request("GET", endpoint)
             result.requests_made += 1
-            
+
             if response:
                 status_codes.append(response.status_code)
-                
+
                 # Проверка на 429 Too Many Requests
                 if response.status_code == 429:
                     rate_limit_detected = True
                     print(f"  ✅ Rate Limiting обнаружен после {i+1} запросов")
                     break
-            
+
             time.sleep(0.25)
-        
+
         if not rate_limit_detected:
             # Проверка на наличие заголовков rate limiting
             if status_codes:
                 response = self._make_request("GET", endpoint)
                 result.requests_made += 1
-                
+
                 rate_limit_headers = [
                     "X-RateLimit-Limit",
                     "X-RateLimit-Remaining",
                     "X-RateLimit-Reset",
-                    "Retry-After"
+                    "Retry-After",
                 ]
-                
-                has_rate_limit_headers = any(
-                    h in response.headers for h in rate_limit_headers
-                )
-                
+
+                has_rate_limit_headers = any(h in response.headers for h in rate_limit_headers)
+
                 if not has_rate_limit_headers:
                     result.passed = False
                     finding = SecurityFinding(
@@ -448,7 +452,7 @@ class SecurityTester:
                         description="Rate Limiting не обнаружен",
                         evidence=f"20 запросов без ограничений (статусы: {set(status_codes)})",
                         recommendation="Внедрите rate limiting для защиты от DDoS/bruteforce",
-                        cwe_id="CWE-770"
+                        cwe_id="CWE-770",
                     )
                     result.findings.append(finding)
                     self.findings.append(finding)
@@ -457,40 +461,40 @@ class SecurityTester:
                     print("  ✅ Rate Limiting заголовки присутствуют")
         else:
             print("  ✅ Rate Limiting работает")
-        
+
         result.duration_seconds = time.time() - start_time
         self.results.append(result)
-        
+
         return result
 
     def test_cors(self) -> SecurityTestResult:
         """Тест 6: CORS Configuration"""
         print("\n📋 Тест 6: CORS Configuration")
-        
+
         result = SecurityTestResult(test_name="CORS", passed=True)
         start_time = time.time()
-        
+
         endpoint = "/health"
-        
+
         # Проверка CORS с malicious origin
         malicious_origins = [
             "https://evil.com",
             "https://attacker.com",
             "null",
         ]
-        
+
         for origin in malicious_origins:
             headers = {"Origin": origin}
             response = self._make_request("GET", endpoint, headers=headers)
             result.requests_made += 1
-            
+
             if response:
                 acao = response.headers.get("Access-Control-Allow-Origin")
-                
+
                 # Проверка на wildcard или отражение malicious origin
                 if acao == "*" or acao == origin:
                     acac = response.headers.get("Access-Control-Allow-Credentials")
-                    
+
                     if acac == "true":
                         result.passed = False
                         finding = SecurityFinding(
@@ -500,33 +504,33 @@ class SecurityTester:
                             description=f"Небезопасная CORS конфигурация: {origin}",
                             evidence=f"Access-Control-Allow-Origin: {acao}\nAccess-Control-Allow-Credentials: {acac}",
                             recommendation="Ограничьте CORS доверенными доменами",
-                            cwe_id="CWE-942"
+                            cwe_id="CWE-942",
                         )
                         result.findings.append(finding)
                         self.findings.append(finding)
                         print(f"  ❌ Небезопасный CORS: {origin}")
-        
+
         if result.passed:
             print("  ✅ CORS конфигурация безопасна")
-        
+
         result.duration_seconds = time.time() - start_time
         self.results.append(result)
-        
+
         return result
 
     def test_sensitive_data_exposure(self) -> SecurityTestResult:
         """Тест 7: Sensitive Data Exposure"""
         print("\n📋 Тест 7: Sensitive Data Exposure")
-        
+
         result = SecurityTestResult(test_name="Sensitive Data Exposure", passed=True)
         start_time = time.time()
-        
+
         endpoints_to_check = [
             "/health",
             "/health/detailed",
             "/api/v1/dashboard/stats",
         ]
-        
+
         sensitive_patterns = [
             (r"password", "Пароли в ответе"),
             (r"secret", "Секреты в ответе"),
@@ -534,15 +538,15 @@ class SecurityTester:
             (r"token", "Токены в ответе"),
             (r"private[_-]?key", "Приватные ключи"),
         ]
-        
+
         for endpoint in endpoints_to_check:
             response = self._make_request("GET", endpoint)
             result.requests_made += 1
-            
+
             if response and response.status_code == 200:
                 try:
                     response_text = response.text.lower()
-                    
+
                     for pattern, description in sensitive_patterns:
                         if re.search(pattern, response_text, re.IGNORECASE):
                             # Проверяем, не является ли это просто названием поля
@@ -554,20 +558,20 @@ class SecurityTester:
                                     description=f"Возможная утечка данных: {description}",
                                     evidence=f"Pattern: {pattern}",
                                     recommendation="Удалите чувствительные данные из ответов API",
-                                    cwe_id="CWE-200"
+                                    cwe_id="CWE-200",
                                 )
                                 result.findings.append(finding)
                                 self.findings.append(finding)
                                 print(f"  ⚠️  Возможная утечка: {description} в {endpoint}")
                 except Exception:
                     pass
-        
+
         if not result.findings:
             print("  ✅ Утечек чувствительных данных не найдено")
-        
+
         result.duration_seconds = time.time() - start_time
         self.results.append(result)
-        
+
         return result
 
     def run_full_test(self) -> List[SecurityTestResult]:
@@ -578,10 +582,10 @@ class SecurityTester:
         print(f"Base URL: {self.base_url}")
         print(f"Start Time: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}")
         print("=" * 70)
-        
+
         # Попытка аутентификации
         self._login()
-        
+
         # Запуск тестов
         tests = [
             self.test_security_headers,
@@ -592,7 +596,7 @@ class SecurityTester:
             self.test_cors,
             self.test_sensitive_data_exposure,
         ]
-        
+
         for test in tests:
             try:
                 test()
@@ -601,20 +605,22 @@ class SecurityTester:
                 result = SecurityTestResult(
                     test_name=test.__name__,
                     passed=False,
-                    findings=[SecurityFinding(
-                        test_name=test.__name__,
-                        severity=Severity.HIGH,
-                        endpoint="N/A",
-                        description=f"Ошибка выполнения теста: {e}",
-                        evidence=str(e),
-                        recommendation="Проверьте логи API"
-                    )]
+                    findings=[
+                        SecurityFinding(
+                            test_name=test.__name__,
+                            severity=Severity.HIGH,
+                            endpoint="N/A",
+                            description=f"Ошибка выполнения теста: {e}",
+                            evidence=str(e),
+                            recommendation="Проверьте логи API",
+                        )
+                    ],
                 )
                 self.results.append(result)
-        
+
         # Итоговый отчёт
         self._print_summary()
-        
+
         return self.results
 
     def _print_summary(self):
@@ -622,20 +628,20 @@ class SecurityTester:
         print("\n" + "=" * 70)
         print("📊 ИТОГОВЫЙ ОТЧЁТ ПО БЕЗОПАСНОСТИ")
         print("=" * 70)
-        
+
         total_tests = len(self.results)
         passed_tests = sum(1 for r in self.results if r.passed)
-        failed_tests = total_tests - passed_tests
-        
+        _ = total_tests - passed_tests  # failed_tests, можно использовать в отчёте
+
         total_findings = len(self.findings)
         critical = sum(1 for f in self.findings if f.severity == Severity.CRITICAL)
         high = sum(1 for f in self.findings if f.severity == Severity.HIGH)
         medium = sum(1 for f in self.findings if f.severity == Severity.MEDIUM)
         low = sum(1 for f in self.findings if f.severity == Severity.LOW)
-        
+
         total_requests = sum(r.requests_made for r in self.results)
         total_duration = sum(r.duration_seconds for r in self.results)
-        
+
         print(f"\n📈 Статистика:")
         print(f"   Тестов пройдено: {passed_tests}/{total_tests}")
         print(f"   Найдено уязвимостей: {total_findings}")
@@ -645,7 +651,7 @@ class SecurityTester:
         print(f"      🟢 Low: {low}")
         print(f"   Всего запросов: {total_requests}")
         print(f"   Длительность: {total_duration:.2f}с")
-        
+
         # Оценка безопасности
         if critical > 0:
             security_score = "❌ CRITICAL"
@@ -662,10 +668,10 @@ class SecurityTester:
         else:
             security_score = "✅ SECURE"
             recommendation = "Отличный уровень безопасности!"
-        
+
         print(f"\n🎯 Оценка безопасности: {security_score}")
         print(f"💡 Рекомендация: {recommendation}")
-        
+
         # Детали по уязвимостям
         if self.findings:
             print(f"\n📋 Найденные уязвимости:")
@@ -675,15 +681,15 @@ class SecurityTester:
                     Severity.HIGH: "🟠",
                     Severity.MEDIUM: "🟡",
                     Severity.LOW: "🟢",
-                    Severity.INFO: "ℹ️"
+                    Severity.INFO: "ℹ️",
                 }.get(finding.severity, "•")
-                
+
                 print(f"\n   {i}. {severity_icon} [{finding.severity.value}] {finding.test_name}")
                 print(f"      Endpoint: {finding.endpoint}")
                 print(f"      Описание: {finding.description}")
                 print(f"      CWE: {finding.cwe_id or 'N/A'}")
                 print(f"      Рекомендация: {finding.recommendation}")
-        
+
         print("=" * 70)
 
     def save_report(self, filename: str = "security_report.json"):
@@ -723,11 +729,11 @@ class SecurityTester:
                 for r in self.results
             ],
         }
-        
+
         output_path = Path(__file__).parent / filename
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(report, f, indent=2, ensure_ascii=False)
-        
+
         print(f"\n💾 Отчёт сохранён: {output_path}")
 
 
@@ -761,26 +767,25 @@ def main():
         action="store_true",
         help="Сохранить отчёт в JSON",
     )
-    
+
     args = parser.parse_args()
-    
+
     tester = SecurityTester(
         base_url=args.url,
         timeout=args.timeout,
     )
-    
-    results = tester.run_full_test()
-    
+
+    _ = tester.run_full_test()  # results, можно использовать в отчёте
+
     # Сохранение отчёта
     if args.report:
         tester.save_report()
-    
+
     # Возвращаем код выхода
     critical_or_high = sum(
-        1 for f in tester.findings
-        if f.severity in [Severity.CRITICAL, Severity.HIGH]
+        1 for f in tester.findings if f.severity in [Severity.CRITICAL, Severity.HIGH]
     )
-    
+
     return 1 if critical_or_high > 0 else 0
 
 

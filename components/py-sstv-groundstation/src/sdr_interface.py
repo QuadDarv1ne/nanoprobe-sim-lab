@@ -1,9 +1,9 @@
 """SDR интерфейс для приема SSTV сигналов."""
 
-import platform
 import queue
 import threading
 import time
+import wave
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
@@ -16,26 +16,26 @@ class SDRInterface:
 
     # Частоты для приема SSTV (МГц)
     FREQUENCIES = {
-        'iss': 145.800,      # МКС
-        'noaa_15': 137.620,  # NOAA 15
-        'noaa_18': 137.9125, # NOAA 18
-        'noaa_19': 137.100,  # NOAA 19
-        'meteor_m2': 137.900,# Метеор-М2
-        'vhf_2m': 144.000,   # 2m диапазон
-        'uhf_70cm': 430.000, # 70cm диапазон
+        "iss": 145.800,  # МКС
+        "noaa_15": 137.620,  # NOAA 15
+        "noaa_18": 137.9125,  # NOAA 18
+        "noaa_19": 137.100,  # NOAA 19
+        "meteor_m2": 137.900,  # Метеор-М2
+        "vhf_2m": 144.000,  # 2m диапазон
+        "uhf_70cm": 430.000,  # 70cm диапазон
     }
 
     # Поддерживаемые устройства
     SUPPORTED_DEVICES = {
-        'rtl2832u': 'RTL-SDR (RTL2832U)',
-        'rtl2838': 'RTL-SDR (RTL2838)',
-        'r820t': 'RTL-SDR (R820T)',
-        'r828d': 'RTL-SDR V4 (R828D)',
-        'airspy': 'Airspy',
-        'hackrf': 'HackRF',
-        'sdrplay': 'SDRplay',
-        'bladerf': 'bladeRF',
-        'unknown': 'Unknown SDR',
+        "rtl2832u": "RTL-SDR (RTL2832U)",
+        "rtl2838": "RTL-SDR (RTL2838)",
+        "r820t": "RTL-SDR (R820T)",
+        "r828d": "RTL-SDR V4 (R828D)",
+        "airspy": "Airspy",
+        "hackrf": "HackRF",
+        "sdrplay": "SDRplay",
+        "bladerf": "bladeRF",
+        "unknown": "Unknown SDR",
     }
 
     def __init__(
@@ -44,7 +44,7 @@ class SDRInterface:
         sample_rate: int = 2400000,  # 2.4 MSPS для RTL-SDR V4
         center_freq: float = 145.800,
         gain: int = 30,
-        device_type: str = 'auto'
+        device_type: str = "auto",
     ):
         """
         Инициализирует SDR интерфейс.
@@ -91,26 +91,28 @@ class SDRInterface:
             # Настраиваем параметры в зависимости от устройства
             self._configure_device()
 
-            self.metadata['device'] = self.device_name or f"SDR #{self.device_index}"
-            self.metadata['sample_rate'] = self.sample_rate
-            self.metadata['center_freq'] = self.center_freq
-            self.metadata['gain'] = self.gain
-            self.metadata['initialized'] = True
-            self.metadata['device_type'] = self.device_type
+            self.metadata["device"] = self.device_name or f"SDR #{self.device_index}"
+            self.metadata["sample_rate"] = self.sample_rate
+            self.metadata["center_freq"] = self.center_freq
+            self.metadata["gain"] = self.gain
+            self.metadata["initialized"] = True
+            self.metadata["device_type"] = self.device_type
 
             print(f"✓ SDR инициализирован: {self.device_name}")
-            print(f"  Частота: {self.center_freq} МГц, Sample Rate: {self.sample_rate} sps, Gain: {self.gain} dB")
+            print(
+                f"  Частота: {self.center_freq} МГц, Sample Rate: {self.sample_rate} sps, Gain: {self.gain} dB"
+            )
             return True
 
         except ImportError:
             print("rtlsdr не установлен. Установите: pip install rtlsdr")
             print("Также установите librtlsdr драйверы")
-            self.metadata['error'] = 'rtlsdr not installed'
+            self.metadata["error"] = "rtlsdr not installed"
             return False
 
         except Exception as e:
             print(f"Ошибка инициализации SDR: {e}")
-            self.metadata['error'] = str(e)
+            self.metadata["error"] = str(e)
             return False
 
     def _detect_device_type(self) -> str:
@@ -120,7 +122,7 @@ class SDRInterface:
         Returns:
             str: Тип устройства
         """
-        if self.device_type != 'auto':
+        if self.device_type != "auto":
             self.device_name = self.SUPPORTED_DEVICES.get(
                 self.device_type, f"Unknown ({self.device_type})"
             )
@@ -128,43 +130,43 @@ class SDRInterface:
 
         try:
             # Получаем информацию об устройстве
-            if hasattr(self.sdr, 'device_name'):
+            if hasattr(self.sdr, "device_name"):
                 device_name = self.sdr.device_name.lower()
-            elif hasattr(self.sdr, 'get_device_name'):
+            elif hasattr(self.sdr, "get_device_name"):
                 device_name = self.sdr.get_device_name().lower()
             else:
-                device_name = ''
+                device_name = ""
 
             # Определяем тип по имени
-            if 'r828d' in device_name or 'v4' in device_name:
-                self.device_type = 'r828d'
-                self.device_name = 'RTL-SDR V4 (R828D)'
-            elif 'r820t' in device_name or 'r820t2' in device_name:
-                self.device_type = 'r820t'
-                self.device_name = 'RTL-SDR (R820T/R820T2)'
-            elif 'rtl2838' in device_name:
-                self.device_type = 'rtl2838'
-                self.device_name = 'RTL-SDR (RTL2838)'
-            elif 'rtl2832' in device_name or 'rtl2832u' in device_name:
-                self.device_type = 'rtl2832u'
-                self.device_name = 'RTL-SDR (RTL2832U)'
-            elif 'airspy' in device_name:
-                self.device_type = 'airspy'
-                self.device_name = 'Airspy'
-            elif 'hackrf' in device_name:
-                self.device_type = 'hackrf'
-                self.device_name = 'HackRF'
+            if "r828d" in device_name or "v4" in device_name:
+                self.device_type = "r828d"
+                self.device_name = "RTL-SDR V4 (R828D)"
+            elif "r820t" in device_name or "r820t2" in device_name:
+                self.device_type = "r820t"
+                self.device_name = "RTL-SDR (R820T/R820T2)"
+            elif "rtl2838" in device_name:
+                self.device_type = "rtl2838"
+                self.device_name = "RTL-SDR (RTL2838)"
+            elif "rtl2832" in device_name or "rtl2832u" in device_name:
+                self.device_type = "rtl2832u"
+                self.device_name = "RTL-SDR (RTL2832U)"
+            elif "airspy" in device_name:
+                self.device_type = "airspy"
+                self.device_name = "Airspy"
+            elif "hackrf" in device_name:
+                self.device_type = "hackrf"
+                self.device_name = "HackRF"
             else:
-                self.device_type = 'unknown'
-                self.device_name = self.SUPPORTED_DEVICES.get('unknown', 'Unknown SDR')
+                self.device_type = "unknown"
+                self.device_name = self.SUPPORTED_DEVICES.get("unknown", "Unknown SDR")
 
             print(f"Обнаружено устройство: {self.device_name}")
             return self.device_type
 
         except Exception as e:
             print(f"Не удалось определить тип устройства: {e}")
-            self.device_type = 'unknown'
-            self.device_name = 'Unknown SDR'
+            self.device_type = "unknown"
+            self.device_name = "Unknown SDR"
             return self.device_type
 
     def _configure_device(self):
@@ -172,12 +174,12 @@ class SDRInterface:
         Настраивает параметры устройства в зависимости от типа.
         """
         # RTL-SDR V4 (R828D) требует sample rate 2.4 MSPS
-        if self.device_type == 'r828d':
+        if self.device_type == "r828d":
             self.sample_rate = 2400000  # 2.4 MSPS
             print("  Оптимизировано для RTL-SDR V4")
 
         # Классические RTL-SDR работают на 1-3 MSPS
-        elif self.device_type in ['rtl2832u', 'rtl2838', 'r820t']:
+        elif self.device_type in ["rtl2832u", "rtl2838", "r820t"]:
             if self.sample_rate < 1000000:
                 self.sample_rate = 2000000  # 2 MSPS по умолчанию
             print("  Оптимизировано для классического RTL-SDR")
@@ -188,7 +190,7 @@ class SDRInterface:
         self.sdr.gain = self.gain
 
         # Для RTL-SDR V4 включаем прямой режим (direct sampling) если нужно
-        if self.device_type == 'r828d':
+        if self.device_type == "r828d":
             try:
                 # Пробуем включить прямой режим для УКВ
                 if self.center_freq < 24:  # Если частота < 24 МГц
@@ -204,16 +206,16 @@ class SDRInterface:
         Returns:
             Tuple[float, float]: (min_freq_hz, max_freq_hz)
         """
-        if self.device_type == 'r828d':
+        if self.device_type == "r828d":
             # RTL-SDR V4: 24 МГц - 1766 МГц (с прямым режимом до 28 МГц)
             return (24e6, 1766e6)
-        elif self.device_type in ['rtl2832u', 'rtl2838', 'r820t']:
+        elif self.device_type in ["rtl2832u", "rtl2838", "r820t"]:
             # Классические RTL-SDR: 24 МГц - 1766 МГц
             return (24e6, 1766e6)
-        elif self.device_type == 'airspy':
+        elif self.device_type == "airspy":
             # Airspy: 24 МГц - 1800 МГц
             return (24e6, 1800e6)
-        elif self.device_type == 'hackrf':
+        elif self.device_type == "hackrf":
             # HackRF: 1 МГц - 6000 МГц
             return (1e6, 6000e6)
         else:
@@ -235,7 +237,7 @@ class SDRInterface:
             return False
 
         # Проверка диапазона частот для разных устройств
-        if self.device_type == 'r828d':
+        if self.device_type == "r828d":
             # RTL-SDR V4: 24 МГц - 1766 МГц (с прямым режимом до 28 МГц)
             if freq_mhz < 24 or freq_mhz > 1766:
                 if freq_mhz >= 1.5 and freq_mhz < 24:
@@ -243,7 +245,7 @@ class SDRInterface:
                 else:
                     print(f"Частота {freq_mhz} МГц вне диапазона устройства")
                     return False
-        elif self.device_type in ['rtl2832u', 'rtl2838', 'r820t']:
+        elif self.device_type in ["rtl2832u", "rtl2838", "r820t"]:
             # Классические RTL-SDR: 24 МГц - 1766 МГц
             if freq_mhz < 24 or freq_mhz > 1766:
                 print(f"Частота {freq_mhz} МГц вне диапазона устройства")
@@ -277,20 +279,34 @@ class SDRInterface:
                 try:
                     device = RtlSdr(device_index=i)
                     device_info = {
-                        'index': i,
-                        'name': device.get_device_name() if hasattr(device, 'get_device_name') else 'Unknown',
-                        'serial': device.get_serial_number() if hasattr(device, 'get_serial_number') else 'Unknown',
-                        'manufacturer': device.get_manufacturer() if hasattr(device, 'get_manufacturer') else 'Unknown',
+                        "index": i,
+                        "name": (
+                            device.get_device_name()
+                            if hasattr(device, "get_device_name")
+                            else "Unknown"
+                        ),
+                        "serial": (
+                            device.get_serial_number()
+                            if hasattr(device, "get_serial_number")
+                            else "Unknown"
+                        ),
+                        "manufacturer": (
+                            device.get_manufacturer()
+                            if hasattr(device, "get_manufacturer")
+                            else "Unknown"
+                        ),
                     }
                     devices.append(device_info)
                     device.close()
                 except Exception as e:
-                    devices.append({
-                        'index': i,
-                        'name': f'Error: {e}',
-                        'serial': 'Unknown',
-                        'manufacturer': 'Unknown',
-                    })
+                    devices.append(
+                        {
+                            "index": i,
+                            "name": f"Error: {e}",
+                            "serial": "Unknown",
+                            "manufacturer": "Unknown",
+                        }
+                    )
 
         except ImportError:
             print("rtlsdr не установлен")
@@ -335,7 +351,7 @@ class SDRInterface:
         if self.sdr is None:
             return False
         try:
-            self.sdr.gain = 'auto' if enabled else self.gain
+            self.sdr.gain = "auto" if enabled else self.gain
             print(f"AGC {'включен' if enabled else 'выключен'}")
             return True
         except Exception as e:
@@ -383,7 +399,9 @@ class SDRInterface:
             print(f"Ошибка чтения сэмплов: {e}")
             return None
 
-    def read_samples_batch(self, num_batches: int = 10, batch_size: int = 8192) -> Optional[np.ndarray]:
+    def read_samples_batch(
+        self, num_batches: int = 10, batch_size: int = 8192
+    ) -> Optional[np.ndarray]:
         """
         Читает пакет сэмплов с SDR (для RTL-SDR V4 с высокой скоростью).
 
@@ -426,7 +444,9 @@ class SDRInterface:
             return False
         try:
             self.sdr.direct_sampling = mode if enabled else 0
-            print(f"Direct sampling: {'включен (mode=' + str(mode) + ')' if enabled else 'выключен'}")
+            print(
+                f"Direct sampling: {'включен (mode=' + str(mode) + ')' if enabled else 'выключен'}"
+            )
             return True
         except Exception as e:
             print(f"Direct sampling не поддерживается: {e}")
@@ -468,7 +488,7 @@ class SDRInterface:
             if enabled:
                 self.sdr.gain = self.gain
             else:
-                self.sdr.gain = 'auto'
+                self.sdr.gain = "auto"
             print(f"Режим усиления: {'ручной' if enabled else 'авто'}")
             return True
         except Exception as e:
@@ -476,10 +496,7 @@ class SDRInterface:
             return False
 
     def start_recording(
-        self,
-        duration_seconds: float = 60,
-        output_file: str = None,
-        realtime_callback=None
+        self, duration_seconds: float = 60, output_file: str = None, realtime_callback=None
     ) -> bool:
         """
         Начинает запись сигнала.
@@ -505,7 +522,7 @@ class SDRInterface:
 
         def record_thread():
             """Поток записи: читает сэмплы буферами и вызывает callback для realtime обработки."""
-            start_time = time.time()
+            _ = time.time()  # Для отладки, можно убрать
             num_buffers = int(duration_seconds * self.sample_rate / 1024)
 
             print(f"Начало записи на {duration_seconds}с...")
@@ -550,11 +567,12 @@ class SDRInterface:
         Returns:
             bool: True если успешно
         """
+
         def sstv_callback(event_type, data):
             """Callback для событий SSTV декодера."""
-            if event_type == 'status':
+            if event_type == "status":
                 print(f"SSTV статус: {data}")
-            elif event_type == 'image':
+            elif event_type == "image":
                 print(f"SSTV изображение получено: {data.size}")
                 # Сохраняем изображение
                 output_file = f"sstv_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.png"
@@ -562,10 +580,7 @@ class SDRInterface:
                 print(f"Изображение сохранено: {output_file}")
 
         # Инициализируем real-time декодер
-        decoder.decode_realtime_init(
-            sample_rate=self.sample_rate,
-            callback=sstv_callback
-        )
+        decoder.decode_realtime_init(sample_rate=self.sample_rate, callback=sstv_callback)
 
         # Callback для обработки сэмплов
         def sample_callback(samples):
@@ -576,8 +591,7 @@ class SDRInterface:
 
         # Запускаем запись с real-time обработкой
         return self.start_recording(
-            duration_seconds=duration_seconds,
-            realtime_callback=sample_callback
+            duration_seconds=duration_seconds, realtime_callback=sample_callback
         )
 
     def stop_recording(self) -> List[np.ndarray]:
@@ -614,20 +628,18 @@ class SDRInterface:
             all_samples = np.concatenate(self.recorded_samples)
 
             # Сохраняем как WAV
-            import struct
-            import wave
 
             # Нормализуем и конвертируем в 16-bit
             normalized = np.int16(all_samples.real / np.max(np.abs(all_samples)) * 32767)
 
-            with wave.open(str(output_path), 'w') as wav_file:
+            with wave.open(str(output_path), "w") as wav_file:
                 wav_file.setnchannels(1)
                 wav_file.setsampwidth(2)
                 wav_file.setframerate(self.sample_rate)
                 wav_file.writeframes(normalized.tobytes())
 
             print(f"Запись сохранена: {output_file}")
-            self.metadata['saved_file'] = str(output_path)
+            self.metadata["saved_file"] = str(output_path)
             return True
 
         except Exception as e:
@@ -663,30 +675,31 @@ class SDRInterface:
             else:
                 normalized = np.int16(all_samples.real * 32767)
 
-            with wave.open(str(output_path), 'w') as wav_file:
+            with wave.open(str(output_path), "w") as wav_file:
                 wav_file.setnchannels(1)
                 wav_file.setsampwidth(2)  # 16-bit
                 wav_file.setframerate(sr)
                 wav_file.writeframes(normalized.tobytes())
 
             # Сохраняем метаданные
-            metadata_file = output_path.with_suffix('.json')
+            metadata_file = output_path.with_suffix(".json")
             import json
+
             metadata = {
-                'sample_rate': sr,
-                'duration_seconds': len(all_samples) / sr,
-                'device': self.device_name,
-                'center_freq_mhz': self.center_freq,
-                'gain_db': self.gain,
-                'samples_count': len(all_samples),
-                'timestamp': datetime.now(timezone.utc).isoformat()
+                "sample_rate": sr,
+                "duration_seconds": len(all_samples) / sr,
+                "device": self.device_name,
+                "center_freq_mhz": self.center_freq,
+                "gain_db": self.gain,
+                "samples_count": len(all_samples),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
-            with open(metadata_file, 'w') as f:
+            with open(metadata_file, "w") as f:
                 json.dump(metadata, f, indent=2)
 
             print(f"Запись сохранена: {output_file} ({metadata['duration_seconds']:.1f}с)")
             print(f"Метаданные: {metadata_file}")
-            self.metadata['saved_file'] = str(output_path)
+            self.metadata["saved_file"] = str(output_path)
             return True
 
         except Exception as e:
@@ -697,7 +710,7 @@ class SDRInterface:
         self,
         freq_range: Tuple[float, float] = (137, 146),
         step_mhz: float = 0.1,
-        dwell_time_ms: int = 100
+        dwell_time_ms: int = 100,
     ) -> bool:
         """
         Запускает сканирование диапазона частот.
@@ -735,11 +748,13 @@ class SDRInterface:
                 samples = self.read_samples(1024)
                 if samples is not None and self.callback:
                     signal_strength = np.mean(np.abs(samples))
-                    self.callback({
-                        'frequency': current_freq,
-                        'signal_strength': signal_strength,
-                        'timestamp': datetime.now(timezone.utc).isoformat()
-                    })
+                    self.callback(
+                        {
+                            "frequency": current_freq,
+                            "signal_strength": signal_strength,
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                        }
+                    )
 
                 current_freq += step_mhz
 
@@ -804,7 +819,7 @@ class SDRInterface:
             magnitudes = np.abs(fft_shifted)
 
             # Частоты
-            frequencies = np.fft.fftfreq(len(samples), 1/self.sample_rate)
+            frequencies = np.fft.fftfreq(len(samples), 1 / self.sample_rate)
             frequencies = np.fft.fftshift(frequencies) + self.center_freq * 1e6
 
             return frequencies, magnitudes
@@ -845,15 +860,15 @@ class SDRInterface:
     def get_status(self) -> Dict:
         """Получает текущий статус SDR."""
         return {
-            'initialized': self.sdr is not None,
-            'is_recording': self.is_recording,
-            'is_scanning': self.is_scanning,
-            'center_freq': self.center_freq,
-            'sample_rate': self.sample_rate,
-            'gain': self.gain,
-            'device_index': self.device_index,
-            'recorded_buffers': len(self.recorded_samples),
-            'metadata': self.metadata
+            "initialized": self.sdr is not None,
+            "is_recording": self.is_recording,
+            "is_scanning": self.is_scanning,
+            "center_freq": self.center_freq,
+            "sample_rate": self.sample_rate,
+            "gain": self.gain,
+            "device_index": self.device_index,
+            "recorded_buffers": len(self.recorded_samples),
+            "metadata": self.metadata,
         }
 
     def __enter__(self):
@@ -881,10 +896,7 @@ class SDRScanner:
         self.scan_results: Dict = {}
 
     def scan_frequencies(
-        self,
-        freq_range: Tuple[float, float],
-        step_mhz: float = 0.05,
-        threshold_db: float = -80
+        self, freq_range: Tuple[float, float], step_mhz: float = 0.05, threshold_db: float = -80
     ) -> List[Dict]:
         """
         Сканирует диапазон для поиска сигналов.
@@ -914,9 +926,9 @@ class SDRScanner:
 
             if signal_strength > threshold_db:
                 signal_info = {
-                    'frequency': current_freq,
-                    'strength_db': signal_strength,
-                    'timestamp': datetime.now(timezone.utc).isoformat()
+                    "frequency": current_freq,
+                    "strength_db": signal_strength,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                 }
                 self.found_signals.append(signal_info)
                 print(f"  Сигнал найден: {current_freq} МГц, {signal_strength:.1f} dB")
@@ -930,7 +942,7 @@ class SDRScanner:
         """Получает самый сильный сигнал."""
         if not self.found_signals:
             return None
-        return max(self.found_signals, key=lambda x: x['strength_db'])
+        return max(self.found_signals, key=lambda x: x["strength_db"])
 
     def plot_spectrum(self, output_file: str = "spectrum.png") -> bool:
         """
@@ -953,12 +965,12 @@ class SDRScanner:
             strengths = list(self.scan_results.values())
 
             plt.figure(figsize=(12, 6))
-            plt.plot(frequencies, strengths, 'b-', linewidth=1)
-            plt.xlabel('Частота (МГц)')
-            plt.ylabel('Сила сигнала (dB)')
-            plt.title('Спектр частот')
+            plt.plot(frequencies, strengths, "b-", linewidth=1)
+            plt.xlabel("Частота (МГц)")
+            plt.ylabel("Сила сигнала (dB)")
+            plt.title("Спектр частот")
             plt.grid(True, alpha=0.3)
-            plt.savefig(output_file, dpi=150, bbox_inches='tight')
+            plt.savefig(output_file, dpi=150, bbox_inches="tight")
             plt.close()
 
             print(f"Спектр сохранен: {output_file}")
@@ -971,11 +983,11 @@ class SDRScanner:
 
 def create_sdr(
     device_index: int = 0,
-    frequency: str = 'iss',
+    frequency: str = "iss",
     sample_rate: int = 2400000,
     gain: int = 30,
     bias_tee: bool = False,
-    agc: bool = False
+    agc: bool = False,
 ) -> Optional[SDRInterface]:
     """
     Создает и инициализирует SDR интерфейс.
@@ -994,9 +1006,13 @@ def create_sdr(
     sdr = SDRInterface(
         device_index=device_index,
         sample_rate=sample_rate,
-        center_freq=145.8 if frequency not in SDRInterface.FREQUENCIES else SDRInterface.FREQUENCIES[frequency],
+        center_freq=(
+            145.8
+            if frequency not in SDRInterface.FREQUENCIES
+            else SDRInterface.FREQUENCIES[frequency]
+        ),
         gain=gain,
-        device_type='auto'
+        device_type="auto",
     )
 
     # Устанавливаем частоту
@@ -1021,11 +1037,11 @@ def create_sdr(
 
 
 # Пример использования
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("=== SDR интерфейс для SSTV ===")
 
     # Создаем SDR
-    sdr = create_sdr(device_index=0, frequency='iss')
+    sdr = create_sdr(device_index=0, frequency="iss")
 
     if sdr:
         print(f"Частота: {sdr.center_freq} МГц")

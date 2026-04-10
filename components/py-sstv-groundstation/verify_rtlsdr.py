@@ -5,7 +5,6 @@ RTL-SDR V4 Verification Script
 """
 
 import sys
-import subprocess
 
 
 def check_rtlsdr_library():
@@ -16,6 +15,7 @@ def check_rtlsdr_library():
 
     try:
         import rtlsdr
+
         print("✓ rtlsdr установлен")
         print(f"  Версия: {rtlsdr.__version__ if hasattr(rtlsdr, '__version__') else 'unknown'}")
         return True
@@ -41,9 +41,9 @@ def check_devices():
 
         # Пробуем разные методы получения количества устройств
         num_devices = 0
-        
+
         # Метод 1: через RtlSdr (older API)
-        if hasattr(RtlSdr, 'get_device_count'):
+        if hasattr(RtlSdr, "get_device_count"):
             num_devices = RtlSdr.get_device_count()
         # Метод 2: через создание устройства (newer API)
         else:
@@ -69,6 +69,7 @@ def check_devices():
     except Exception as e:
         print(f"✗ Ошибка: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -79,41 +80,42 @@ def identify_devices(num_devices):
     print("3. Идентификация устройств")
     print("-" * 60)
 
-    from rtlsdr import RtlSdr
     from io import StringIO
+
+    from rtlsdr import RtlSdr
 
     v4_found = False
 
     for i in range(num_devices):
         sdr = None
         device_type = "Unknown"
-        
+
         try:
             # Перехватываем stdout для получения информации об устройстве
             old_stdout = sys.stdout
             sys.stdout = StringIO()
-            
+
             sdr = RtlSdr(device_index=i)
-            
+
             # Возвращаем stdout
             output = sys.stdout.getvalue()
             sys.stdout = old_stdout
-            
+
             # Анализируем вывод для определения типа
             output_upper = output.upper()
-            
-            if 'R828D' in output_upper or 'V4' in output_upper or 'RTL-SDR BLOG V4' in output_upper:
+
+            if "R828D" in output_upper or "V4" in output_upper or "RTL-SDR BLOG V4" in output_upper:
                 device_type = "RTL-SDR V4 (R828D)"
                 v4_found = True
-            elif 'R820T' in output_upper or 'R820T2' in output_upper:
+            elif "R820T" in output_upper or "R820T2" in output_upper:
                 device_type = "RTL-SDR V3 (R820T/R820T2)"
             else:
                 device_type = "RTL-SDR (классический)"
-            
+
             print(f"\nУстройство #{i}:")
             print(f"  Тип: {device_type}")
             print(f"  Индекс: {i}")
-            
+
             if v4_found:
                 print(f"  ✓✓✓ RTL-SDR V4 ОБНАРУЖЕН ✓✓✓")
 
@@ -138,15 +140,15 @@ def test_basic_functionality(device_index=0):
 
     sdr = None
     try:
-        from rtlsdr import RtlSdr
         import numpy as np
+        from rtlsdr import RtlSdr
 
         sdr = RtlSdr(device_index=device_index)
 
         # Настройка
         sdr.sample_rate = 2.4e6  # 2.4 MSPS для V4
         sdr.center_freq = 145.8e6  # ISS частота
-        sdr.gain = 'auto'  # Автоматический gain
+        sdr.gain = "auto"  # Автоматический gain
 
         print(f"✓ Устройство инициализировано")
         print(f"  Sample Rate: {sdr.sample_rate / 1e6:.1f} MSPS")
@@ -161,7 +163,7 @@ def test_basic_functionality(device_index=0):
             power = np.mean(np.abs(samples) ** 2)
             print(f"✓ Сэмплы получены: {len(samples)}")
             print(f"  Средняя мощность: {10 * np.log10(power + 1e-10):.1f} dB")
-            
+
             if power > 0.001:
                 print(f"  ✓ Сигнал обнаружен")
             else:
@@ -176,6 +178,7 @@ def test_basic_functionality(device_index=0):
     except Exception as e:
         print(f"✗ Ошибка теста: {e}")
         import traceback
+
         traceback.print_exc()
         return False
     finally:

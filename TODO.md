@@ -1,19 +1,56 @@
 # Nanoprobe Sim Lab — TODO
 
-**Последнее обновление:** 2026-04-10 19:00
+**Последнее обновление:** 2026-04-10 19:30
 
 ## Статус проекта
 
 - **Ветка:** `dev` (активная разработка) → `main` (стабильная)
 - **Тесты:** 66/66 core passing (100%) ✅
-- **Качество кода:** 253+ исправлений, pre-commit hooks проходят ✅
+- **Качество кода:** 280+ исправлений, pre-commit hooks проходят ✅
 - **RTL-SDR V4:** подключён и работает ✅
 - **Очистка:** удалено 12 дублирующих файлов (-1133 строк) ✅
 - **E501:** исправлено 13 длинных строк (210 → 197 осталось)
+- **Python:** 3.11+ (обновлено с 3.8) ✅
+
+## 📝 Анализ проекта (2026-04-10)
+
+### ✅ Сильные стороны
+- Полная тестовая база: 66 core + 89 integration тестов
+- Pre-commit hooks настроены (black, isort, flake8)
+- CI/CD pipeline (12 workflows): security, tests, deploy
+- Modern frontend (Next.js 14 + TypeScript) + legacy Flask
+- JWT + 2FA TOTP аутентификация
+- WebSocket real-time updates
+- GraphQL API
+- RTL-SDR V4 полностью интегрирован
+- Alembic migrations для БД
+- Redis integration для кэширования
+
+### ⚠️ Требует внимания
+- **E501:** 197 длинных строк остались (HTML/CSS, SQL, config dicts) - low priority
+- **pysstv:** только encoder, нет декодера SSTV
+- **PostgreSQL:** сервис в docker-compose.prod.yml, но API использует SQLite
+- **legacy code:** `security/auth_manager.py` (Flask, не используется)
+- **FM radio:** 5 файлов deprecated в пользу `fm_radio_unified.py`
+
+### 🔍 Потенциальные улучшения
+- Миграция SQLite → PostgreSQL (10-15 часов, есть guide)
+- Test coverage: увеличить до 80%+
+- Полная миграция frontend на Next.js (убрать Flask)
+- Mobile application (React Native/Flutter)
+- External integrations (NASA, Zenodo, Figshare)
+- Performance monitoring dashboard
 
 ## Последние улучшения (2026-04-10)
 
+### Текущая работа
+- [x] Закоммитить изменения в 3 RTL-SDR файлах (adsb_receiver.py, fm_radio_unified.py, rtl_sdr_noaa_capture.py) ✅ `1c6d3fb`
+- [x] Проверить тесты после коммита ✅ 66/66 passed
+- [ ] Merge dev → main после стабилизации
+
 ### Коммиты (pushed to origin/dev)
+- ✅ `1c6d3fb` chore: update RTL-SDR tools (adsb_receiver, fm_radio_unified, rtl_sdr_noaa_capture)
+- ✅ `05e5c32` fix: resolve 13 E501 line too long errors in core API files
 - ✅ `77d8f48` docs: update TODO.md with cleanup status and fix broken references
 - ✅ `56a00a4` chore: remove duplicate reports, QWEN.md, active_tests, bat scripts
 - ✅ `99959a8` docs: update todo.md with current project status
@@ -54,6 +91,34 @@
   - **Влияние:** pre-commit warning на длинных строках в шаблонах и config
   - **Приоритет:** Low (не критично для функциональности)
   - **Исправлено:** 13 строк в api/, api/routes/, admin_cli.py
+- ⚠️ **3 файла изменены, не закоммичены** — adsb_receiver.py, fm_radio_unified.py, rtl_sdr_noaa_capture.py
+  - **Влияние:** Working directory не чистая
+  - **Действие:** Нужно закоммитить изменения
+- ⚠️ **SQLite vs PostgreSQL** — API использует SQLite, но docker-compose.prod.yml имеет PostgreSQL сервис
+  - **Влияние:** Несоответствие между dev и prod окружением
+  - **Решение:** Либо мигрировать на PostgreSQL (10-15 часов), либо убрать из prod compose
+
+## Deprecated Files (архивированы или заменены)
+
+- 📦 **FM Radio** (5 файлов) → `fm_radio_unified.py`:
+  - `rtl_sdr_tools/fm_radio.py`
+  - `rtl_sdr_tools/fm_capture_simple.py`
+  - `rtl_sdr_tools/fm_multi_capture.py`
+  - `rtl_sdr_tools/fm_radio_capture.py`
+  - `rtl_sdr_tools/fm_radio_scanner.py`
+- 📦 **Scripts** (4 файла) → `scripts/project.py`:
+  - `scripts/validate_project.py`
+  - `scripts/improve_project.py`
+  - `scripts/cleanup_project.py`
+  - `scripts/sort_project.py`
+- 📦 **Utils** (7 файлов) → архивированы в `utils/archived/`:
+  - `utils/predictive_analytics_engine.py`
+  - `utils/code_analyzer.py`
+  - `utils/profiler.py`
+  - `utils/performance/self_healing_system.py`
+  - `utils/performance/automated_optimization_scheduler.py`
+  - `utils/performance/ai_resource_optimizer.py`
+  - `utils/performance/optimization_logging_manager.py`
 
 ---
 
@@ -133,6 +198,44 @@
 
 - [ ] `deployment/docker-compose.prod.yml` — PostgreSQL сервис есть, но API использует SQLite. Либо добавить миграцию на PostgreSQL, либо убрать PostgreSQL из prod compose.
 - [x] `.env` — `ENVIRONMENT=development` для локальной разработки (2026-04-09)
+
+---
+
+## Стратегия разработки
+
+### 🎯 Приоритеты (High → Low)
+
+**HIGH:**
+1. Закоммитить текущие изменения в RTL-SDR файлах
+2. Проверить все тесты (66 core + 89 integration)
+3. Merge dev → main после стабилизации
+4. Решить вопрос SQLite vs PostgreSQL
+
+**MEDIUM:**
+5. Увеличить test coverage до 80%+
+6. Дождаться пролёта МКС для SSTV записи
+7. Настроить bias_tee для активной антенны
+8. Откалибровать TCXO (--freq-correction)
+
+**LOW:**
+9. Исправить оставшиеся 197 E501 строк
+10. Мигрировать frontend на Next.js (убрать Flask)
+11. Создать mobile application
+12. Добавить external integrations (NASA, Zenodo)
+
+### 🔄 Рабочий процесс
+1. Разработка в ветке `dev`
+2. Тестирование всех изменений
+3. Code review (pre-commit hooks проходят)
+4. Merge в `main` только стабильный код
+5. Push в origin/main и origin/dev
+
+### 📊 Метрики качества
+- **Тесты:** 100% core passing (66/66)
+- **Integration:** 43 passed, 26 skipped, 0 failed
+- **Pre-commit:** black, isort, flake8 проходят
+- **Код:** 253+ исправлений качества
+- **Документация:** 30+ файлов в docs/
 
 ---
 

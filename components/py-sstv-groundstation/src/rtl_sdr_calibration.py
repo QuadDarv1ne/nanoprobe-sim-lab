@@ -12,12 +12,9 @@
 import json
 import logging
 import subprocess
-import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, Optional, Tuple
-
-import numpy as np
+from typing import Dict
 
 logger = logging.getLogger(__name__)
 

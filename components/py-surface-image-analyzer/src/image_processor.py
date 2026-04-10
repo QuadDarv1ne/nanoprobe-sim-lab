@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional
 
 import cv2
 import numpy as np
@@ -34,16 +34,16 @@ class ImageProcessor:
                 print(f"Файл не найден: {filepath}")
                 return False
 
-            if path.suffix.lower() not in ['.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif']:
+            if path.suffix.lower() not in [".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif"]:
                 print(f"Неподдерживаемый формат: {path.suffix}")
                 return False
 
             self.image = cv2.imread(filepath)
             if self.image is not None:
                 self.image_path = filepath
-                self.metadata['filepath'] = filepath
-                self.metadata['loaded_at'] = datetime.now(timezone.utc).isoformat()
-                self.metadata['original_shape'] = self.image.shape
+                self.metadata["filepath"] = filepath
+                self.metadata["loaded_at"] = datetime.now(timezone.utc).isoformat()
+                self.metadata["original_shape"] = self.image.shape
                 return True
             else:
                 print(f"Не удалось загрузить изображение: {filepath}")
@@ -82,7 +82,7 @@ class ImageProcessor:
             filtered = cv2.bilateralFilter(self.image, 9, 75, 75)
 
         self.processed_image = filtered
-        self.metadata['filter_applied'] = method
+        self.metadata["filter_applied"] = method
         return filtered
 
     def detect_edges(self, threshold1: int = 100, threshold2: int = 200) -> Optional[np.ndarray]:
@@ -107,8 +107,8 @@ class ImageProcessor:
         try:
             gray = cv2.cvtColor(self.processed_image, cv2.COLOR_BGR2GRAY)
             edges = cv2.Canny(gray, threshold1, threshold2)
-            self.metadata['edges_detected'] = True
-            self.metadata['edge_thresholds'] = (threshold1, threshold2)
+            self.metadata["edges_detected"] = True
+            self.metadata["edge_thresholds"] = (threshold1, threshold2)
             return edges
         except Exception as e:
             print(f"Ошибка обнаружения краев: {e}")
@@ -140,11 +140,11 @@ class ImageProcessor:
 
         gray = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
         return {
-            'mean': float(np.mean(gray)),
-            'std': float(np.std(gray)),
-            'min': float(np.min(gray)),
-            'max': float(np.max(gray)),
-            'shape': self.image.shape
+            "mean": float(np.mean(gray)),
+            "std": float(np.std(gray)),
+            "min": float(np.min(gray)),
+            "max": float(np.max(gray)),
+            "shape": self.image.shape,
         }
 
     def save_image(self, filepath: str, image: np.ndarray = None) -> bool:
@@ -167,7 +167,7 @@ class ImageProcessor:
             path = Path(filepath)
             path.parent.mkdir(parents=True, exist_ok=True)
             cv2.imwrite(str(path), img_to_save)
-            self.metadata['saved_path'] = str(path)
+            self.metadata["saved_path"] = str(path)
             print(f"Изображение сохранено: {filepath}")
             return True
         except Exception as e:
@@ -179,10 +179,7 @@ class ImageProcessor:
         return self.metadata.copy()
 
 
-def calculate_surface_roughness(
-    image: np.ndarray,
-    method: str = "std"
-) -> Dict[str, float]:
+def calculate_surface_roughness(image: np.ndarray, method: str = "std") -> Dict[str, float]:
     """
     Вычисляет шероховатость поверхности на основе статистики изображения
 
@@ -227,13 +224,13 @@ def calculate_surface_roughness(
         rz = np.max(gray_norm) - np.min(gray_norm)
 
     results = {
-        'ra': float(ra),
-        'rq': float(rq),
-        'rz': float(rz),
-        'mean': float(mean_height),
-        'min': float(np.min(gray_norm)),
-        'max': float(np.max(gray_norm)),
-        'std': float(np.std(gray_norm))
+        "ra": float(ra),
+        "rq": float(rq),
+        "rz": float(rz),
+        "mean": float(mean_height),
+        "min": float(np.min(gray_norm)),
+        "max": float(np.max(gray_norm)),
+        "std": float(np.std(gray_norm)),
     }
 
     return results

@@ -12,12 +12,22 @@ class SSTVDecoder:
     """Класс для декодирования SSTV-сигналов."""
 
     SUPPORTED_MODES = [
-        'Martin 1', 'Martin 2', 'Scottie 1', 'Scottie 2',
-        'PD50', 'PD90', 'PD120', 'PD160', 'PD180',
-        'Robot 36', 'Robot 72', 'Wraase SC1', 'Wraase SC2'
+        "Martin 1",
+        "Martin 2",
+        "Scottie 1",
+        "Scottie 2",
+        "PD50",
+        "PD90",
+        "PD120",
+        "PD160",
+        "PD180",
+        "Robot 36",
+        "Robot 72",
+        "Wraase SC1",
+        "Wraase SC2",
     ]
 
-    def __init__(self, mode: str = 'auto'):
+    def __init__(self, mode: str = "auto"):
         """
         Инициализирует декодер SSTV.
 
@@ -46,23 +56,23 @@ class SSTVDecoder:
                 print(f"Ошибка: Файл '{audio_file}' не найден")
                 return None
 
-            if audio_path.suffix.lower() not in ['.wav', '.mp3', '.flac', '.ogg', '.m4a']:
+            if audio_path.suffix.lower() not in [".wav", ".mp3", ".flac", ".ogg", ".m4a"]:
                 print(f"Неподдерживаемый аудиоформат: {audio_path.suffix}")
                 return None
 
             print(f"Декодирование SSTV-сигнала из: {audio_file}")
 
             # Пробуем декодировать с автоматическим определением режима
-            if self.mode == 'auto':
+            if self.mode == "auto":
                 for mode_name in self.SUPPORTED_MODES:
                     try:
                         image = self._decode_with_mode(str(audio_path), mode_name)
                         if image is not None:
                             self.decoded_image = image
                             self.decoded_images.append(image)
-                            self.metadata['mode'] = mode_name
-                            self.metadata['timestamp'] = datetime.now(timezone.utc).isoformat()
-                            self.metadata['source'] = str(audio_path)
+                            self.metadata["mode"] = mode_name
+                            self.metadata["timestamp"] = datetime.now(timezone.utc).isoformat()
+                            self.metadata["source"] = str(audio_path)
                             print(f"✓ Успешно декодировано в режиме: {mode_name}")
                             return image
                     except Exception:
@@ -78,9 +88,9 @@ class SSTVDecoder:
                 if image:
                     self.decoded_image = image
                     self.decoded_images.append(image)
-                    self.metadata['mode'] = self.mode
-                    self.metadata['timestamp'] = datetime.now(timezone.utc).isoformat()
-                    self.metadata['source'] = str(audio_path)
+                    self.metadata["mode"] = self.mode
+                    self.metadata["timestamp"] = datetime.now(timezone.utc).isoformat()
+                    self.metadata["source"] = str(audio_path)
                     return image
                 return None
 
@@ -92,8 +102,9 @@ class SSTVDecoder:
             print(f"Ошибка при декодировании SSTV-сигнала: {e}")
             return self._fallback_decode(audio_file)
 
-    def decode_from_samples(self, samples: np.ndarray, sample_rate: int = 44100,
-                            input_sample_rate: Optional[int] = None) -> Optional[Image.Image]:
+    def decode_from_samples(
+        self, samples: np.ndarray, sample_rate: int = 44100, input_sample_rate: Optional[int] = None
+    ) -> Optional[Image.Image]:
         """
         Декодирует SSTV из numpy массива сэмплов (для RTL-SDR V4).
 
@@ -107,12 +118,12 @@ class SSTVDecoder:
         """
         import os
         import tempfile
-        
+
         temp_path = None
         try:
             import wave
 
-            temp_file = tempfile.NamedTemporaryFile(suffix='.wav', delete=False)
+            temp_file = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
             temp_path = temp_file.name
             temp_file.close()
 
@@ -140,7 +151,7 @@ class SSTVDecoder:
                     audio_data = resample_poly(audio_data, up, down)
             else:
                 audio_data = samples.real
-            
+
             # Нормализация
             max_val = np.max(np.abs(audio_data))
             if max_val > 0:
@@ -148,7 +159,7 @@ class SSTVDecoder:
             else:
                 normalized = np.int16(audio_data * 32767)
 
-            with wave.open(temp_path, 'w') as wav_file:
+            with wave.open(temp_path, "w") as wav_file:
                 wav_file.setnchannels(1)
                 wav_file.setsampwidth(2)
                 wav_file.setframerate(sample_rate)
@@ -195,7 +206,7 @@ class SSTVDecoder:
         Returns:
             Image.Image: Декодированное изображение или None
         """
-        if not hasattr(self, 'rt_buffer'):
+        if not hasattr(self, "rt_buffer"):
             self.decode_realtime_init()
 
         self.rt_buffer.append(samples)
@@ -219,31 +230,33 @@ class SSTVDecoder:
                 print("SSTV сигнал обнаружен, декодирование...")
 
                 if self.rt_callback:
-                    self.rt_callback('status', 'decoding')
+                    self.rt_callback("status", "decoding")
 
                 # Пробуем декодировать
                 try:
                     all_samples = np.concatenate(self.rt_buffer)
-                    input_sr = getattr(self, '_rt_input_sample_rate', None)
+                    input_sr = getattr(self, "_rt_input_sample_rate", None)
                     self.rt_image = self.decode_from_samples(
                         all_samples, self.rt_sample_rate, input_sample_rate=input_sr
                     )
 
                     if self.rt_image:
-                        print(f"✓ SSTV декодировано: {self.rt_image.size[0]}x{self.rt_image.size[1]}")
+                        print(
+                            f"✓ SSTV декодировано: {self.rt_image.size[0]}x{self.rt_image.size[1]}"
+                        )
                         if self.rt_callback:
-                            self.rt_callback('image', self.rt_image)
+                            self.rt_callback("image", self.rt_image)
                         self.rt_is_decoding = False
                         self.rt_buffer = []
                         return self.rt_image
                     else:
                         print("? Не удалось декодировать")
                         if self.rt_callback:
-                            self.rt_callback('status', 'failed')
+                            self.rt_callback("status", "failed")
                 except Exception as e:
                     print(f"Ошибка декодирования: {e}")
                     if self.rt_callback:
-                        self.rt_callback('status', 'error')
+                        self.rt_callback("status", "error")
 
                 self.rt_is_decoding = False
 
@@ -290,17 +303,18 @@ class SSTVDecoder:
         print("Используется резервный режим декодирования...")
         try:
             import wave
+
             with wave.open(audio_file, "r") as wav:
                 n_frames = wav.getnframes()
                 duration = n_frames / wav.getframerate()
-                self.metadata['duration_seconds'] = duration
-                self.metadata['sample_rate'] = wav.getframerate()
+                self.metadata["duration_seconds"] = duration
+                self.metadata["sample_rate"] = wav.getframerate()
         except Exception:
             pass
 
         decoded_img = Image.new("RGB", (320, 240), color=(20, 20, 40))
         self.decoded_image = decoded_img
-        self.metadata['mode'] = 'fallback'
+        self.metadata["mode"] = "fallback"
         return decoded_img
 
     def save_decoded_image(self, filepath: str, quality: int = 95) -> bool:
@@ -324,7 +338,7 @@ class SSTVDecoder:
 
         try:
             path = Path(filepath)
-            valid_formats = ['.jpg', '.jpeg', '.png', '.bmp', '.tiff']
+            valid_formats = [".jpg", ".jpeg", ".png", ".bmp", ".tiff"]
             if path.suffix.lower() not in valid_formats:
                 print(f"Неподдерживаемый формат: {path.suffix}. Доступные: {valid_formats}")
                 return False
@@ -332,18 +346,18 @@ class SSTVDecoder:
             path.parent.mkdir(parents=True, exist_ok=True)
 
             save_kwargs = {}
-            if path.suffix.lower() in ['.jpg', '.jpeg']:
+            if path.suffix.lower() in [".jpg", ".jpeg"]:
                 if not (1 <= quality <= 100):
                     print(f"Качество должно быть от 1 до 100, установлено {quality}")
                     quality = max(1, min(100, quality))
-                save_kwargs['quality'] = quality
-                save_kwargs['optimize'] = True
-            elif path.suffix.lower() == '.png':
-                save_kwargs['optimize'] = True
+                save_kwargs["quality"] = quality
+                save_kwargs["optimize"] = True
+            elif path.suffix.lower() == ".png":
+                save_kwargs["optimize"] = True
 
             self.decoded_image.save(str(path), **save_kwargs)
 
-            self.metadata['saved_path'] = str(path)
+            self.metadata["saved_path"] = str(path)
             print(f"Изображение сохранено: {filepath}")
             return True
         except Exception as e:
@@ -370,10 +384,10 @@ class SSTVDecoder:
 
         saved_paths = []
         for i, img in enumerate(self.decoded_images):
-            timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             filename = f"{prefix}_{timestamp}_{i:03d}.png"
             filepath = output_path / filename
-            img.save(str(filepath), 'png')
+            img.save(str(filepath), "png")
             saved_paths.append(str(filepath))
 
         print(f"Сохранено изображений: {len(saved_paths)}")
@@ -386,17 +400,14 @@ class SSTVDecoder:
     def get_statistics(self) -> Dict:
         """Получает статистику декодирования."""
         return {
-            'total_images': len(self.decoded_images),
-            'last_mode': self.metadata.get('mode', 'unknown'),
-            'last_source': self.metadata.get('source', 'unknown'),
-            'supported_modes': len(self.SUPPORTED_MODES)
+            "total_images": len(self.decoded_images),
+            "last_mode": self.metadata.get("mode", "unknown"),
+            "last_source": self.metadata.get("source", "unknown"),
+            "supported_modes": len(self.SUPPORTED_MODES),
         }
 
 
-def convert_audio_to_image(
-    audio_data: np.ndarray,
-    sample_rate: int
-) -> Optional[Image.Image]:
+def convert_audio_to_image(audio_data: np.ndarray, sample_rate: int) -> Optional[Image.Image]:
     """
     Конвертирует аудиоданные в изображение.
 
@@ -411,12 +422,10 @@ def convert_audio_to_image(
     return decoder.decode_from_samples(audio_data, sample_rate)
 
 
-def detect_sstv_signal(
-    audio_file: str
-) -> Tuple[bool, Dict]:
+def detect_sstv_signal(audio_file: str) -> Tuple[bool, Dict]:
     """
     Обнаруживает SSTV-сигнал в аудиофайле по VIS-тону.
-    
+
     SSTV VIS (Vertical Interval Signal) состоит из:
     - 300ms лидер-тон 1900 Hz
     - 30ms тишина
@@ -442,79 +451,82 @@ def detect_sstv_signal(
             # Читаем первые 2 секунды для анализа VIS
             vis_samples = wav.readframes(min(int(sample_rate * 2), n_frames))
             vis_data = np.frombuffer(vis_samples, dtype=np.int16).astype(np.float32)
-            
+
             # Спектрограмма для анализа частот
             f, t, Sxx = spectrogram(vis_data, sample_rate, nperseg=4096)
-            
+
             # Ищем энергию на 1900 Hz (VIS лидер)
             freq_1900_idx = np.argmin(np.abs(f - 1900))
-            vis_leader_energy = np.mean(Sxx[freq_1900_idx-2:freq_1900_idx+3, :])
-            
+            vis_leader_energy = np.mean(Sxx[freq_1900_idx - 2 : freq_1900_idx + 3, :])
+
             # Ищем энергию на 1200 Hz и 2100 Hz (VIS биты)
             freq_1200_idx = np.argmin(np.abs(f - 1200))
             freq_2100_idx = np.argmin(np.abs(f - 2100))
-            vis_1200_energy = np.mean(Sxx[freq_1200_idx-2:freq_1200_idx+3, :])
-            vis_2100_energy = np.mean(Sxx[freq_2100_idx-2:freq_2100_idx+3, :])
-            
+            # VIS энергия для диагностики (можно использовать позже)
+            _ = np.mean(Sxx[freq_1200_idx - 2 : freq_1200_idx + 3, :])
+            _ = np.mean(Sxx[freq_2100_idx - 2 : freq_2100_idx + 3, :])
+
             # SSTV использует тона в диапазоне 1100-2300 Hz
             sstv_band_mask = (f >= 1100) & (f <= 2300)
             sstv_band_energy = np.mean(Sxx[sstv_band_mask, :])
             total_energy = np.mean(Sxx)
-            
+
             sstv_ratio = sstv_band_energy / (total_energy + 1e-10)
-            
+
             # Анализируем характеристики
             metadata = {
-                'duration_seconds': duration,
-                'sample_rate': sample_rate,
-                'channels': wav.getnchannels(),
-                'sample_width': wav.getsampwidth(),
-                'file': audio_file,
-                'vis_1900_energy': float(vis_leader_energy),
-                'sstv_band_ratio': float(sstv_ratio),
+                "duration_seconds": duration,
+                "sample_rate": sample_rate,
+                "channels": wav.getnchannels(),
+                "sample_width": wav.getsampwidth(),
+                "file": audio_file,
+                "vis_1900_energy": float(vis_leader_energy),
+                "sstv_band_ratio": float(sstv_ratio),
             }
 
             # SSTV сигналы обычно длятся 30-180 секунд И имеют характерные VIS-тоны
             has_duration = 10 <= duration <= 300  # Расширенный диапазон
             has_vis_tones = sstv_ratio > 0.3  # Значительная энергия в SSTV полосе
-            
+
             is_sstv = has_duration and (has_vis_tones or vis_leader_energy > 0)
 
             if is_sstv:
-                print(f"✓ SSTV-сигнал обнаружен (длительность: {duration:.1f}с, VIS ratio: {sstv_ratio:.2f})")
+                print(
+                    f"✓ SSTV-сигнал обнаружен (длительность: {duration:.1f}с, VIS ratio: {sstv_ratio:.2f})"
+                )
             else:
-                print(f"? Сомнительный SSTV-сигнал (длительность: {duration:.1f}с, VIS ratio: {sstv_ratio:.2f})")
+                print(
+                    f"? Сомнительный SSTV-сигнал (длительность: {duration:.1f}с, VIS ratio: {sstv_ratio:.2f})"
+                )
 
             return is_sstv, metadata
 
     except ImportError:
         # Fallback без scipy - только по длительности
         import wave
+
         with wave.open(audio_file, "r") as wav:
             n_frames = wav.getnframes()
             duration = n_frames / wav.getframerate()
             sample_rate = wav.getframerate()
-            
+
             metadata = {
-                'duration_seconds': duration,
-                'sample_rate': sample_rate,
-                'channels': wav.getnchannels(),
-                'sample_width': wav.getsampwidth(),
-                'file': audio_file
+                "duration_seconds": duration,
+                "sample_rate": sample_rate,
+                "channels": wav.getnchannels(),
+                "sample_width": wav.getsampwidth(),
+                "file": audio_file,
             }
-            
+
             is_sstv = 10 <= duration <= 300
             return is_sstv, metadata
-            
+
     except Exception as e:
         print(f"Ошибка обнаружения сигнала: {e}")
-        return False, {'error': str(e)}
+        return False, {"error": str(e)}
 
 
-def detect_sstv_signal_from_samples(
-    audio_data: np.ndarray,
-    sample_rate: int
-) -> Tuple[bool, float]:
+def detect_sstv_signal_from_samples(audio_data: np.ndarray, sample_rate: int) -> Tuple[bool, float]:
     """
     Обнаруживает SSTV-сигнал в аудиоданных по VIS-тону.
 
@@ -529,10 +541,10 @@ def detect_sstv_signal_from_samples(
         return False, 0.0
 
     duration = len(audio_data) / sample_rate
-    
+
     # Ограничиваем размер FFT для производительности
     fft_size = min(len(audio_data), 65536)
-    
+
     # Проверяем длительность (SSTV обычно 10-300 секунд)
     if not (5 <= duration <= 600):
         return False, 0.0
@@ -542,16 +554,16 @@ def detect_sstv_signal_from_samples(
 
         # Используем Welch's method для эффективного спектрального анализа
         f, Pxx = welch(audio_data[:fft_size].astype(np.float64), sample_rate, nperseg=4096)
-        
+
         # SSTV VIS-тон использует 1900 Hz
         freq_1900_idx = np.argmin(np.abs(f - 1900))
         vis_energy = Pxx[freq_1900_idx]
-        
+
         # SSTV полоса 1100-2300 Hz
         sstv_mask = (f >= 1100) & (f <= 2300)
         sstv_energy = np.sum(Pxx[sstv_mask])
         total_energy = np.sum(Pxx)
-        
+
         if total_energy > 0:
             sstv_ratio = sstv_energy / total_energy
             # Комбинированная оценка: VIS-тон + SSTV полоса
@@ -561,13 +573,13 @@ def detect_sstv_signal_from_samples(
         # Fallback - простой FFT
         fft_data = np.fft.rfft(audio_data[:fft_size].astype(np.float64))
         frequencies = np.abs(fft_data)
-        freqs = np.fft.rfftfreq(fft_size, 1.0/sample_rate)
-        
+        freqs = np.fft.rfftfreq(fft_size, 1.0 / sample_rate)
+
         # SSTV использует тона в диапазоне 1100-2300 Гц
         sstv_mask = (freqs >= 1100) & (freqs <= 2300)
         sstv_energy = np.sum(frequencies[sstv_mask])
         total_energy = np.sum(frequencies)
-        
+
         if total_energy > 0:
             ratio = sstv_energy / total_energy
             confidence = min(1.0, ratio * 2)

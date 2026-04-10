@@ -15,7 +15,6 @@ from collections import deque
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.colors import LogNorm
 
 try:
     from rtlsdr import RtlSdr
@@ -208,7 +207,8 @@ class RTLSDRVisualizer:
         print("   Закройте окно для остановки\n")
 
         try:
-            ani = animation.FuncAnimation(
+            # FuncAnimation нужен для обновления, но переменная не используется
+            _ = animation.FuncAnimation(
                 self.fig,
                 self.update_animation,
                 init_func=self.init_animation,

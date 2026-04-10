@@ -3,13 +3,12 @@
 import matplotlib
 import numpy as np
 
-matplotlib.use('Agg')
-import json
+matplotlib.use("Agg")
 import random
 from datetime import datetime, timezone
 from multiprocessing import Pool, cpu_count
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Tuple
 
 import matplotlib.pyplot as plt
 
@@ -18,13 +17,14 @@ try:
     sys_path_added = False
     project_root = Path(__file__).parent.parent.parent.parent
     utils_path = project_root / "utils"
-    if str(utils_path) not in __import__('sys').path:
-        __import__('sys').path.insert(0, str(utils_path))
+    if str(utils_path) not in __import__("sys").path:
+        __import__("sys").path.insert(0, str(utils_path))
         sys_path_added = True
 
     from database import get_database
+
     if sys_path_added:
-        __import__('sys').path.pop(0)
+        __import__("sys").path.pop(0)
     HAS_DB = True
 except (ImportError, Exception):
     HAS_DB = False
@@ -267,8 +267,9 @@ class SPMController:
             print("Ошибка: Модель поверхности не установлена!")
             return
 
-        width = self.surface.width
-        height = self.surface.height
+        # Размеры поверхности используются в методах сканирования
+        _ = self.surface.width
+        _ = self.surface.height
 
         if parallel and num_processes != 1:
             self._scan_surface_parallel(num_processes)
@@ -305,8 +306,7 @@ class SPMController:
 
         # Подготавливаем данные для параллельной обработки
         tasks = [
-            (y, self.surface.width, self.surface.height_map)
-            for y in range(self.surface.height)
+            (y, self.surface.width, self.surface.height_map) for y in range(self.surface.height)
         ]
 
         # Выполняем сканирование параллельно
@@ -344,13 +344,17 @@ class SPMController:
                     db.add_scan_result(
                         scan_type="spm",
                         surface_type="simulated",
-                        width=self.scan_data.shape[1] if len(self.scan_data.shape) > 1 else self.scan_data.shape[0],
+                        width=(
+                            self.scan_data.shape[1]
+                            if len(self.scan_data.shape) > 1
+                            else self.scan_data.shape[0]
+                        ),
                         height=self.scan_data.shape[0],
                         file_path=filename,
                         metadata={
-                            'scan_speed': self.probe.scan_speed,
-                            'timestamp': datetime.now(timezone.utc).isoformat()
-                        }
+                            "scan_speed": self.probe.scan_speed,
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                        },
                     )
                     print("Результаты также сохранены в базу данных")
                 except Exception as e:
@@ -383,11 +387,11 @@ class SPMController:
         plt.colorbar(im1, ax=ax1, label="Высота")
 
         # 3D поверхность
-        ax2 = fig.add_subplot(122, projection='3d')
+        ax2 = fig.add_subplot(122, projection="3d")
         y = np.arange(self.scan_data.shape[0])
         x = np.arange(self.scan_data.shape[1])
         X, Y = np.meshgrid(x, y)
-        ax2.plot_surface(X, Y, self.scan_data, cmap='viridis', alpha=0.8)
+        ax2.plot_surface(X, Y, self.scan_data, cmap="viridis", alpha=0.8)
         ax2.set_title("3D поверхность")
         ax2.set_xlabel("X")
         ax2.set_ylabel("Y")
@@ -398,7 +402,7 @@ class SPMController:
 
         if save_path:
             Path(save_path).parent.mkdir(parents=True, exist_ok=True)
-            plt.savefig(save_path, dpi=150, bbox_inches='tight')
+            plt.savefig(save_path, dpi=150, bbox_inches="tight")
             print(f"Визуализация сохранена: {save_path}")
         else:
             plt.show()
@@ -417,9 +421,17 @@ def main():
     parser.add_argument(
         "--output", "-o", type=str, default="output/scan_results.txt", help="Файл для результатов"
     )
-    parser.add_argument("--image", "-i", type=str, default="output/scan_visualization.png", help="Файл для визуализации")
+    parser.add_argument(
+        "--image",
+        "-i",
+        type=str,
+        default="output/scan_visualization.png",
+        help="Файл для визуализации",
+    )
     parser.add_argument("--no-visualize", action="store_true", help="Отключить визуализацию")
-    parser.add_argument("--parallel", "-p", action="store_true", help="Использовать параллельное сканирование")
+    parser.add_argument(
+        "--parallel", "-p", action="store_true", help="Использовать параллельное сканирование"
+    )
 
     args = parser.parse_args()
 
@@ -449,10 +461,7 @@ def main():
 
     # Визуализация
     if not args.no_visualize:
-        controller.visualize_scan_results(
-            "Результаты сканирования СЗМ",
-            save_path=args.image
-        )
+        controller.visualize_scan_results("Результаты сканирования СЗМ", save_path=args.image)
 
     # Статистика
     if HAS_DB:

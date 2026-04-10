@@ -9,11 +9,10 @@
 """
 
 import logging
-import os
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 import numpy as np
 
@@ -314,7 +313,7 @@ class OptimizedWaterfallDisplay:
             try:
                 self.ffmpeg_process.stdin.close()
                 self.ffmpeg_process.wait(timeout=5)
-            except:
+            except Exception:
                 self.ffmpeg_process.kill()
 
 
