@@ -1712,7 +1712,9 @@ class DatabaseManager:
             cursor.execute(
                 """
                 INSERT INTO surface_comparisons
-                (comparison_id, image1_path, image2_path, similarity_score, difference_map_path, metrics, created_at)
+                (comparison_id, image1_path, image2_path,
+                 similarity_score, difference_map_path,
+                 metrics, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
                 (

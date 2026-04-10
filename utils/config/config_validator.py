@@ -408,8 +408,14 @@ class OptimizationAdvisor:
                 {
                     "category": "cpu",
                     "severity": "high",
-                    "recommendation": "Рассмотрите оптимизацию алгоритмов для снижения загрузки CPU",
-                    "details": f"Средняя загрузка CPU {avg_cpu}% превышает рекомендуемый порог 80%",
+                    "recommendation": (
+                        "Рассмотрите оптимизацию алгоритмов "
+                        "для снижения загрузки CPU"
+                    ),
+                    "details": (
+                        f"Средняя загрузка CPU {avg_cpu}% "
+                        f"превышает рекомендуемый порог 80%"
+                    ),
                 }
             )
         elif avg_cpu > 60:
@@ -417,8 +423,14 @@ class OptimizationAdvisor:
                 {
                     "category": "cpu",
                     "severity": "medium",
-                    "recommendation": "Рассмотрите оптимизацию вычислительно интенсивных операций",
-                    "details": f"Средняя загрузка CPU {avg_cpu}% находится в зоне внимания",
+                    "recommendation": (
+                        "Рассмотрите оптимизацию вычислительно "
+                        "интенсивных операций"
+                    ),
+                    "details": (
+                        f"Средняя загрузка CPU {avg_cpu}% "
+                        f"находится в зоне внимания"
+                    ),
                 }
             )
 
@@ -438,8 +450,13 @@ class OptimizationAdvisor:
                 {
                     "category": "memory",
                     "severity": "medium",
-                    "recommendation": "Рассмотрите оптимизацию использования памяти",
-                    "details": f"Среднее использование памяти {avg_memory}% находится в зоне внимания",
+                    "recommendation": (
+                        "Рассмотрите оптимизацию использования памяти"
+                    ),
+                    "details": (
+                        f"Среднее использование памяти {avg_memory}% "
+                        f"находится в зоне внимания"
+                    ),
                 }
             )
 
@@ -450,20 +467,35 @@ class OptimizationAdvisor:
                 {
                     "category": "performance",
                     "severity": "medium",
-                    "recommendation": "Рассмотрите возможность параллелизации или оптимизации алгоритмов",
-                    "details": f"Время выполнения {execution_time} секунд превышает рекомендуемый порог 60 секунд",
+                    "recommendation": (
+                        "Рассмотрите возможность параллелизации "
+                        "или оптимизации алгоритмов"
+                    ),
+                    "details": (
+                        f"Время выполнения {execution_time} секунд "
+                        f"превышает рекомендуемый порог 60 секунд"
+                    ),
                 }
             )
 
         # Анализ дискового I/O
-        avg_disk_write_rate = performance_metrics.get("avg_disk_write_rate_bps", 0)
+        avg_disk_write_rate = performance_metrics.get(
+            "avg_disk_write_rate_bps", 0
+        )
         if avg_disk_write_rate > 100 * 1024 * 1024:  # Более 100 MB/s
             recommendations.append(
                 {
                     "category": "disk_io",
                     "severity": "medium",
-                    "recommendation": "Рассмотрите оптимизацию записи данных и буферизацию",
-                    "details": f"Средняя скорость записи на диск {avg_disk_write_rate / (1024 * 1024):.2f} MB/s высока",
+                    "recommendation": (
+                        "Рассмотрите оптимизацию записи "
+                        "данных и буферизацию"
+                    ),
+                    "details": (
+                        f"Средняя скорость записи на диск "
+                        f"{avg_disk_write_rate / (1024 * 1024):.2f} MB/s "
+                        f"высока"
+                    ),
                 }
             )
 
