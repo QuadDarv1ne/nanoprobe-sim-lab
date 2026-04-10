@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-#!/usr/bin/env python3
-
 """
 Модуль отслеживания использования памяти для проекта Лаборатория моделирования нанозонда
 Этот модуль предоставляет инструменты для мониторинга, анализа и оптимизации использования памяти.
@@ -177,9 +175,9 @@ class MemoryTracker:
             "vms_mb": memory_info.vms / (1024 * 1024),
             "percent": self.current_process.memory_percent(),
             "num_threads": self.current_process.num_threads(),
-            "num_fds": self.current_process.num_fds()
-            if hasattr(self.current_process, "num_fds")
-            else 0,
+            "num_fds": (
+                self.current_process.num_fds() if hasattr(self.current_process, "num_fds") else 0
+            ),
         }
 
     def detect_memory_leaks(self, threshold_growth: float = 1.0) -> List[MemoryLeakDetection]:
@@ -367,9 +365,9 @@ class MemoryTracker:
             "baseline_avg_mb": baseline_avg,
             "current_avg_mb": current_avg,
             "difference_mb": current_avg - baseline_avg,
-            "difference_percent": ((current_avg - baseline_avg) / baseline_avg) * 100
-            if baseline_avg > 0
-            else 0,
+            "difference_percent": (
+                ((current_avg - baseline_avg) / baseline_avg) * 100 if baseline_avg > 0 else 0
+            ),
         }
 
     def visualize_memory_usage(self, output_path: str = None) -> str:
@@ -388,7 +386,8 @@ class MemoryTracker:
 
         if output_path is None:
             output_path = str(
-                self.output_dir / f"memory_usage_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.png"
+                self.output_dir
+                / f"memory_usage_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.png"
             )
 
         fig, axes = plt.subplots(2, 2, figsize=(15, 10))
@@ -476,7 +475,8 @@ class MemoryTracker:
         """
         if output_path is None:
             output_path = str(
-                self.output_dir / f"memory_report_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
+                self.output_dir
+                / f"memory_report_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
             )
 
         analysis = self.analyze_memory_usage()

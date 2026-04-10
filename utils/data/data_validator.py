@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-#!/usr/bin/env python3
-
 """
 Модуль валидации данных для проекта Лаборатория моделирования нанозонда
 Этот модуль предоставляет инструменты для проверки,
@@ -263,7 +261,9 @@ class DataValidator:
                                 f"Найдены значения вне диапазона [{min_val}, {max_val}] в столбце '{column}': {invalid_values.tolist()}"
                             )
                     except (TypeError, ValueError):
-                        warnings_list.append(f"Не удалось проверить диапазон для столбца '{column}'")
+                        warnings_list.append(
+                            f"Не удалось проверить диапазон для столбца '{column}'"
+                        )
 
                 # Проверяем уникальность
                 if props.get("unique", False):
@@ -461,9 +461,11 @@ class DataValidator:
                 "data_type": "DataFrame",
                 "shape": data.shape,
                 "dtypes": {col: str(dtype) for col, dtype in data.dtypes.items()},
-                "descriptive_stats": data.describe().to_dict()
-                if len(data.select_dtypes(include=[np.number])) > 0
-                else {},
+                "descriptive_stats": (
+                    data.describe().to_dict()
+                    if len(data.select_dtypes(include=[np.number])) > 0
+                    else {}
+                ),
                 "null_counts": data.isnull().sum().to_dict(),
                 "duplicates_count": int(data.duplicated().sum()),
                 "quality_metrics": self.calculate_data_quality_score(data),
@@ -479,14 +481,24 @@ class DataValidator:
                 "itemsize": int(data.itemsize),
                 "nbytes": int(data.nbytes),
                 "quality_metrics": self.calculate_data_quality_score(data),
-                "stats": {
-                    "mean": float(np.mean(data)) if np.issubdtype(data.dtype, np.number) else None,
-                    "std": float(np.std(data)) if np.issubdtype(data.dtype, np.number) else None,
-                    "min": float(np.min(data)) if np.issubdtype(data.dtype, np.number) else None,
-                    "max": float(np.max(data)) if np.issubdtype(data.dtype, np.number) else None,
-                }
-                if np.issubdtype(data.dtype, np.number)
-                else {},
+                "stats": (
+                    {
+                        "mean": (
+                            float(np.mean(data)) if np.issubdtype(data.dtype, np.number) else None
+                        ),
+                        "std": (
+                            float(np.std(data)) if np.issubdtype(data.dtype, np.number) else None
+                        ),
+                        "min": (
+                            float(np.min(data)) if np.issubdtype(data.dtype, np.number) else None
+                        ),
+                        "max": (
+                            float(np.max(data)) if np.issubdtype(data.dtype, np.number) else None
+                        ),
+                    }
+                    if np.issubdtype(data.dtype, np.number)
+                    else {}
+                ),
             }
         else:
             report = {
@@ -640,6 +652,7 @@ def validate_data(validation_level: ValidationLevel = ValidationLevel.STANDARD):
 
     def decorator(func):
         """Декоратор для автоматической валидации данных функции."""
+
         @wraps(func)
         def wrapper(*args, **kwargs):
             """Обертка для валидации входных и выходных данных."""
@@ -649,9 +662,7 @@ def validate_data(validation_level: ValidationLevel = ValidationLevel.STANDARD):
 
             if isinstance(result, (pd.DataFrame, np.ndarray, dict)):
                 if isinstance(result, pd.DataFrame):
-                    validation_result = validator.validate_dataframe(
-                        result, {}
-                    )
+                    validation_result = validator.validate_dataframe(result, {})
                 elif isinstance(result, np.ndarray):
                     validation_result = validator.validate_numpy_array(result)
                 else:
@@ -660,7 +671,9 @@ def validate_data(validation_level: ValidationLevel = ValidationLevel.STANDARD):
                     )
 
                 if not validation_result.is_valid:
-                    warnings.warn(f"Валидация данных не прошла: {validation_result.errors}")
+                    warnings.warn(
+                        f"Валидация данных не прошла: {validation_result.errors}", stacklevel=2
+                    )
 
             return result
 
