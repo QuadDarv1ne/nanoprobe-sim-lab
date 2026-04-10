@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 def register_routes(app: FastAPI):
     """Регистрация всех API роутов"""
-    
+
     # ============================================
     # Основные роуты (обязательные)
     # ============================================
@@ -43,10 +43,10 @@ def register_routes(app: FastAPI):
     app.include_router(comparison.router, prefix="/api/v1/comparison", tags=["Сравнение"])
     app.include_router(reports.router, prefix="/api/v1/reports", tags=["Отчёты"])
     app.include_router(admin.router, prefix="/api/v1", tags=["Администрирование"])
-    
+
     # Экспорт и системные операции (без prefix — роуты сами определяют пути)
     app.include_router(system_export.router, tags=["Экспорт и система"])
-    
+
     # ============================================
     # Health endpoints (алиасы для фронтенда)
     # ============================================
@@ -54,6 +54,7 @@ def register_routes(app: FastAPI):
     async def health_database():
         """Проверка здоровья БД (алиас для фронтенда)"""
         from api.state import get_db_manager
+
         try:
             db = get_db_manager()
             with db.get_connection() as conn:
@@ -65,12 +66,17 @@ def register_routes(app: FastAPI):
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
         except Exception as e:
-            return {"status": "unhealthy", "error": str(e), "timestamp": datetime.now(timezone.utc).isoformat()}
+            return {
+                "status": "unhealthy",
+                "error": str(e),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
 
     @app.post("/api/v1/database/backup", tags=["Health"])
     async def database_backup_alias():
         """Бэкап БД (алиас для фронтенда, без авторизации)"""
         from api.state import get_db_manager
+
         db = get_db_manager()
         backup_dir = Path("data/backups")
         backup_dir.mkdir(parents=True, exist_ok=True)
@@ -79,21 +85,23 @@ def register_routes(app: FastAPI):
         try:
             shutil.copy2(str(db.db_path), str(backup_path))
             return {
-                "status": "success", 
-                "backup_path": str(backup_path), 
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "status": "success",
+                "backup_path": str(backup_path),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
         except Exception as e:
             from api.error_handlers import ValidationError
+
             raise ValidationError(f"Ошибка бэкапа: {str(e)}")
-    
+
     # ============================================
     # Опциональные роуты (с проверкой импорта)
     # ============================================
-    
+
     # Dashboard API
     try:
         from api.routes import dashboard
+
         app.include_router(dashboard.router, prefix="/api/v1/dashboard", tags=["Дашборд"])
         logger.info("Dashboard routes registered")
     except ImportError as e:
@@ -102,6 +110,7 @@ def register_routes(app: FastAPI):
     # Alerting API
     try:
         from api.routes import alerting
+
         app.include_router(alerting.router, prefix="/api/v1/alerting", tags=["Алертинг"])
         logger.info("Alerting routes registered")
     except ImportError as e:
@@ -110,11 +119,12 @@ def register_routes(app: FastAPI):
     # Batch processing API
     try:
         from api.routes import batch
+
         app.include_router(batch.router, prefix="/api/v1/batch", tags=["Пакетная обработка"])
         logger.info("Batch routes registered")
     except ImportError as e:
         logger.warning(f"Batch routes disabled: {e}")
-    
+
     # GraphQL API
     app.include_router(graphql.router, prefix="/api/v1", tags=["GraphQL"])
     logger.info("GraphQL routes registered")
@@ -142,12 +152,30 @@ def register_routes(app: FastAPI):
     # SSTV Ground Station API
     try:
         from api.routes import sstv
+
         app.include_router(sstv.router, prefix="/api/v1/sstv", tags=["SSTV Ground Station"])
         logger.info("SSTV Ground Station routes registered")
-        
+
         # Advanced SSTV endpoints (WebSocket, spectrum, real-time)
         from api.routes import sstv_advanced
+
         app.include_router(sstv_advanced.router, tags=["SSTV Advanced"])
         logger.info("SSTV Advanced routes registered")
     except ImportError as e:
         logger.warning(f"SSTV Ground Station routes disabled: {e}")
+
+    # RTL_433 Weather Sensors
+    try:
+        from api.routes import rtl433
+        from api.state import get_db_manager
+        from utils.caching.cache_manager import get_cache_manager
+
+        db = get_db_manager()
+        cache = get_cache_manager()
+        if db and cache:
+            rtl433.set_managers(db, cache)
+
+        app.include_router(rtl433.router, prefix="/api/v1", tags=["RTL-433 Sensors"])
+        logger.info("RTL_433 Weather Sensor routes registered")
+    except ImportError as e:
+        logger.warning(f"RTL_433 routes disabled: {e}")
