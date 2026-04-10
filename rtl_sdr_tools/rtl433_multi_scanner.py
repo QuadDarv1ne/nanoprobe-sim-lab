@@ -7,7 +7,6 @@ Scans 433/868/915 MHz ISM bands for weather stations and sensors
 import asyncio
 import json
 import logging
-import os
 import subprocess
 import sys
 import time
@@ -18,7 +17,7 @@ from typing import Optional
 # Add parent directory to path for utils
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from utils.database import DatabaseManager
+from utils.database import DatabaseManager  # noqa: E402
 
 logger = logging.getLogger(__name__)
 

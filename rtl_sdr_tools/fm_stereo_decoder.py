@@ -4,9 +4,7 @@ FM Stereo Decoder (88-108 MHz)
 Decodes stereo FM radio with RDS (Radio Data System)
 """
 
-import json
 import logging
-import os
 import subprocess
 import sys
 import time
@@ -20,7 +18,7 @@ import numpy as np
 # Add parent directory to path for utils
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from utils.database import DatabaseManager
+from utils.database import DatabaseManager  # noqa: E402
 
 logger = logging.getLogger(__name__)
 

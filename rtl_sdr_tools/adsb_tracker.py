@@ -6,10 +6,8 @@ Tracks aircraft using RTL-SDR and dump1090/readsb
 
 import json
 import logging
-import os
 import subprocess
 import sys
-import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -17,7 +15,7 @@ from typing import Optional
 # Add parent directory to path for utils
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from utils.database import DatabaseManager
+from utils.database import DatabaseManager  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -133,7 +131,7 @@ class ADSBTracker:
 
         aircraft_data = []
         try:
-            proc = subprocess.run(
+            subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
