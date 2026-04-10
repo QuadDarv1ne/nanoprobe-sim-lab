@@ -43,6 +43,7 @@ zadig*.exe
 rtl-sdr-blog*.zip
 rtl_433*.zip
 dump1090*.zip
+tools/
 
 # Тестовые файлы
 test_*.raw

@@ -97,6 +97,10 @@ class ADSBTracker:
         """
         Decode ADS-B using dump1090/readsb.
 
+        Supports two modes:
+        1. Classic dump1090-mutability/fa: parses aircraft.json
+        2. gvanem/dump1090-win: connects to HTTP API at port 8080
+
         Args:
             duration: Capture duration in seconds
 
@@ -111,7 +115,146 @@ class ADSBTracker:
             return []
 
         print(f"Using decoder: {decoder}")
+
+        # Detect decoder type
+        decoder_type = self._detect_decoder_type(decoder)
+        print(f"Decoder type: {decoder_type}")
+
+        if decoder_type == "gvanem_win":
+            return self._decode_gvanem_win(duration)
+        else:
+            return self._decode_classic(duration)
+
+    def _detect_decoder_type(self, decoder_path: Path) -> str:
+        """Detect decoder type based on path and behavior"""
+        # gvanem/Dump1090 has web_root-Tar1090 and dump1090.cfg nearby
+        cfg_file = decoder_path.parent / "dump1090.cfg"
+        web_dir = decoder_path.parent / "web_root-Tar1090"
+        if cfg_file.exists() or web_dir.exists():
+            return "gvanem_win"
+        return "classic"
+
+    def _decode_gvanem_win(self, duration: int) -> list[dict]:
+        """
+        Start gvanem/dump1090-win and fetch aircraft data via HTTP API.
+        This version runs as a background process with --net --interactive.
+        """
+        decoder = self._find_decoder()
+        if not decoder:
+            return []
+
+        print(f"Starting gvanem/dump1090-win...")
+        print(f"Capture duration: {duration}s")
+
+        # Start dump1090 in background
+        cmd = [
+            str(decoder),
+            "--config", str(decoder.parent / "adsb_tracking.cfg"),
+            "--device", f"0:{RTLSDR_SERIAL}",
+            "--gain", "40",
+            "--net",
+            "--interactive",
+            "--max-messages", "0",  # unlimited
+        ]
+
+        import subprocess
+        import time
+
+        process = None
+        aircraft_data = []
+
+        try:
+            # Start the process
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                cwd=str(decoder.parent),
+            )
+
+            # Wait for server to start
+            print("Waiting for dump1090 to initialize...")
+            time.sleep(3)
+
+            # Fetch aircraft data via HTTP API
+            import urllib.request
+            import json as json_mod
+
+            # Try to fetch from the HTTP API
+            urls_to_try = [
+                "http://localhost:8080/data/aircraft.json",
+                "http://localhost:8080/data.json",
+            ]
+
+            start_time = time.time()
+            while time.time() - start_time < duration:
+                for url in urls_to_try:
+                    try:
+                        req = urllib.request.Request(url)
+                        with urllib.request.urlopen(req, timeout=5) as resp:
+                            data = json_mod.loads(resp.read().decode())
+                            if "aircraft" in data:
+                                aircraft_data = data["aircraft"]
+                                break
+                    except Exception:
+                        continue
+
+                if aircraft_data:
+                    break
+
+                time.sleep(2)
+                elapsed = int(time.time() - start_time)
+                print(f"\r  Waiting for aircraft data... [{elapsed}/{duration}s]", end="", flush=True)
+
+            print()  # newline after progress
+
+        except KeyboardInterrupt:
+            print("\n[*] User interrupted")
+        except Exception as e:
+            print(f"[!] Error: {e}")
+            logger.error(f"ADS-B decode error: {e}")
+        finally:
+            if process:
+                print("Stopping dump1090...")
+                process.terminate()
+                try:
+                    process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait()
+
+        # Process and save
+        if aircraft_data:
+            print(f"\n[+] Found {len(aircraft_data)} aircraft")
+            self._print_aircraft(aircraft_data)
+            self.save_to_database(aircraft_data)
+
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+            json_file = OUTPUT_DIR / f"adsb_{timestamp}.json"
+            with open(json_file, "w") as f:
+                json.dump({"timestamp": timestamp, "aircraft": aircraft_data}, f, indent=2)
+            print(f"[*] Saved to: {json_file}")
+        else:
+            print("\n[-] No aircraft detected")
+            print("    Try:")
+            print("    - Moving near window")
+            print("    - Using external antenna")
+            print("    - Increasing duration")
+
+        return aircraft_data
+
+    def _decode_classic(self, duration: int) -> list[dict]:
+        """
+        Decode ADS-B using classic dump1090-mutability/fa with aircraft.json output.
+        """
+        decoder = self._find_decoder()
+        if not decoder:
+            return []
+
+        print(f"Using decoder: {decoder}")
         print(f"Capturing for {duration}s...")
+
+        import subprocess
 
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         json_file = OUTPUT_DIR / f"adsb_{timestamp}.json"
@@ -343,23 +486,28 @@ class ADSBTracker:
 
     def _find_decoder(self) -> Optional[Path]:
         """Find dump1090 or readsb binary"""
-        # Check common locations
-        candidates = [
-            DUMP1090_PATH / "dump1090",
-            DUMP1090_PATH / "dump1090.exe",
-            Path("C:/Program Files/dump1090/dump1090.exe"),
-            Path("C:/readsb/readsb.exe"),
-        ]
-
-        # Check PATH
         import shutil
 
+        # Check PATH first
         for name in ["dump1090", "readsb"]:
             found = shutil.which(name)
             if found:
                 return Path(found)
 
-        # Check candidates
+        # Check project tools directory
+        project_dump1090 = Path(__file__).parent.parent / "tools" / "Dump1090-main" / "dump1090.exe"
+        if project_dump1090.exists():
+            return project_dump1090
+
+        # Check other common Windows locations
+        candidates = [
+            Path("C:/dump1090/dump1090.exe"),
+            Path("C:/Program Files/dump1090/dump1090.exe"),
+            Path("C:/Program Files (x86)/dump1090/dump1090.exe"),
+            Path("C:/readsb/readsb.exe"),
+            Path.home() / "dump1090" / "dump1090.exe",
+        ]
+
         for path in candidates:
             if path.exists():
                 return path
