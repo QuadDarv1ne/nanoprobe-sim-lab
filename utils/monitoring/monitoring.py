@@ -4,8 +4,6 @@ Enhanced System Monitor for Nanoprobe Sim Lab
 """
 
 import logging
-import os
-import platform
 import threading
 import time
 from collections import deque
@@ -21,12 +19,14 @@ logger = logging.getLogger(__name__)
 def _get_disk_usage():
     """Cross-platform disk usage (использует platform_utils)"""
     from utils.platform_utils import get_system_disk_usage
+
     return get_system_disk_usage()
 
 
 @dataclass
 class SystemMetrics:
     """Структура системных метрик"""
+
     timestamp: str
     cpu_percent: float
     cpu_cores: int
@@ -51,6 +51,7 @@ class SystemMetrics:
 @dataclass
 class Alert:
     """Структура алерта"""
+
     level: str  # info, warning, critical
     component: str
     message: str
@@ -111,9 +112,7 @@ class EnhancedSystemMonitor:
         self.monitoring = True
         self.start_time = datetime.now(timezone.utc)
         self.monitoring_thread = threading.Thread(
-            target=self._monitor_loop,
-            daemon=True,
-            name="SystemMonitor"
+            target=self._monitor_loop, daemon=True, name="SystemMonitor"
         )
         self.monitoring_thread.start()
         logger.info("System monitoring started")
@@ -154,15 +153,15 @@ class EnhancedSystemMonitor:
 
         # Memory
         memory = psutil.virtual_memory()
-        memory_used_gb = memory.used / (1024 ** 3)
-        memory_total_gb = memory.total / (1024 ** 3)
-        memory_available_gb = memory.available / (1024 ** 3)
+        memory_used_gb = memory.used / (1024**3)
+        memory_total_gb = memory.total / (1024**3)
+        memory_available_gb = memory.available / (1024**3)
 
         # Disk
         disk = _get_disk_usage()
-        disk_used_gb = disk.used / (1024 ** 3)
-        disk_total_gb = disk.total / (1024 ** 3)
-        disk_free_gb = disk.free / (1024 ** 3)
+        disk_used_gb = disk.used / (1024**3)
+        disk_total_gb = disk.total / (1024**3)
+        disk_free_gb = disk.free / (1024**3)
 
         # Network
         net_io = psutil.net_io_counters()
@@ -197,43 +196,73 @@ class EnhancedSystemMonitor:
             network_packets_recv=network_packets_recv,
             processes_count=processes_count,
             uptime_seconds=uptime_seconds,
-            boot_time=boot_time
+            boot_time=boot_time_dt.isoformat(),
         )
 
     def _check_alerts(self, metrics: SystemMetrics):
         """Проверка метрик на превышение порогов"""
         # CPU alerts
         if metrics.cpu_percent >= self.thresholds["cpu_critical"]:
-            self._add_alert("critical", "cpu",
-                          f"Критическая загрузка CPU: {metrics.cpu_percent:.1f}%",
-                          metrics.cpu_percent, self.thresholds["cpu_critical"])
+            self._add_alert(
+                "critical",
+                "cpu",
+                f"Критическая загрузка CPU: {metrics.cpu_percent:.1f}%",
+                metrics.cpu_percent,
+                self.thresholds["cpu_critical"],
+            )
         elif metrics.cpu_percent >= self.thresholds["cpu_warning"]:
-            self._add_alert("warning", "cpu",
-                          f"Высокая загрузка CPU: {metrics.cpu_percent:.1f}%",
-                          metrics.cpu_percent, self.thresholds["cpu_warning"])
+            self._add_alert(
+                "warning",
+                "cpu",
+                f"Высокая загрузка CPU: {metrics.cpu_percent:.1f}%",
+                metrics.cpu_percent,
+                self.thresholds["cpu_warning"],
+            )
 
         # Memory alerts
         if metrics.memory_percent >= self.thresholds["memory_critical"]:
-            self._add_alert("critical", "memory",
-                          f"Критическое использование памяти: {metrics.memory_percent:.1f}%",
-                          metrics.memory_percent, self.thresholds["memory_critical"])
+            self._add_alert(
+                "critical",
+                "memory",
+                f"Критическое использование памяти: {metrics.memory_percent:.1f}%",
+                metrics.memory_percent,
+                self.thresholds["memory_critical"],
+            )
         elif metrics.memory_percent >= self.thresholds["memory_warning"]:
-            self._add_alert("warning", "memory",
-                          f"Высокое использование памяти: {metrics.memory_percent:.1f}%",
-                          metrics.memory_percent, self.thresholds["memory_warning"])
+            self._add_alert(
+                "warning",
+                "memory",
+                f"Высокое использование памяти: {metrics.memory_percent:.1f}%",
+                metrics.memory_percent,
+                self.thresholds["memory_warning"],
+            )
 
         # Disk alerts
         if metrics.disk_percent >= self.thresholds["disk_critical"]:
-            self._add_alert("critical", "disk",
-                          f"Критическое заполнение диска: {metrics.disk_percent:.1f}%",
-                          metrics.disk_percent, self.thresholds["disk_critical"])
+            self._add_alert(
+                "critical",
+                "disk",
+                f"Критическое заполнение диска: {metrics.disk_percent:.1f}%",
+                metrics.disk_percent,
+                self.thresholds["disk_critical"],
+            )
         elif metrics.disk_percent >= self.thresholds["disk_warning"]:
-            self._add_alert("warning", "disk",
-                          f"Высокое заполнение диска: {metrics.disk_percent:.1f}%",
-                          metrics.disk_percent, self.thresholds["disk_warning"])
+            self._add_alert(
+                "warning",
+                "disk",
+                f"Высокое заполнение диска: {metrics.disk_percent:.1f}%",
+                metrics.disk_percent,
+                self.thresholds["disk_warning"],
+            )
 
-    def _add_alert(self, level: str, component: str, message: str,
-                   value: Optional[float] = None, threshold: Optional[float] = None):
+    def _add_alert(
+        self,
+        level: str,
+        component: str,
+        message: str,
+        value: Optional[float] = None,
+        threshold: Optional[float] = None,
+    ):
         """Добавление алерта"""
         alert = Alert(
             level=level,
@@ -241,7 +270,7 @@ class EnhancedSystemMonitor:
             message=message,
             timestamp=datetime.now(timezone.utc).isoformat(),
             value=value,
-            threshold=threshold
+            threshold=threshold,
         )
         self.alerts.append(alert)
 
@@ -323,20 +352,20 @@ class EnhancedSystemMonitor:
                 "avg": round(avg("cpu_percent"), 2),
                 "max": round(max_val("cpu_percent"), 2),
                 "min": round(min_val("cpu_percent"), 2),
-                "current": self.current_metrics.cpu_percent if self.current_metrics else 0
+                "current": self.current_metrics.cpu_percent if self.current_metrics else 0,
             },
             "memory": {
                 "avg": round(avg("memory_percent"), 2),
                 "max": round(max_val("memory_percent"), 2),
                 "min": round(min_val("memory_percent"), 2),
-                "current": self.current_metrics.memory_percent if self.current_metrics else 0
+                "current": self.current_metrics.memory_percent if self.current_metrics else 0,
             },
             "disk": {
                 "avg": round(avg("disk_percent"), 2),
-                "current": self.current_metrics.disk_percent if self.current_metrics else 0
+                "current": self.current_metrics.disk_percent if self.current_metrics else 0,
             },
             "alerts_count": len(self.alerts),
-            "recent_alerts": [asdict(a) for a in self.alerts[-10:]]
+            "recent_alerts": [asdict(a) for a in self.alerts[-10:]],
         }
 
     def get_network_speed(self) -> Dict[str, float]:
@@ -358,21 +387,23 @@ class EnhancedSystemMonitor:
             "upload_bps": upload_speed,
             "download_bps": download_speed,
             "upload_mbps": round(upload_speed * 8 / 1_000_000, 2),
-            "download_mbps": round(download_speed * 8 / 1_000_000, 2)
+            "download_mbps": round(download_speed * 8 / 1_000_000, 2),
         }
 
     def get_process_list(self, limit: int = 10, sort_by: str = "cpu") -> List[Dict[str, Any]]:
         """Получение списка процессов"""
         processes = []
 
-        for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent']):
+        for proc in psutil.process_iter(["pid", "name", "cpu_percent", "memory_percent"]):
             try:
-                processes.append({
-                    "pid": proc.info['pid'],
-                    "name": proc.info['name'],
-                    "cpu_percent": proc.info['cpu_percent'] or 0,
-                    "memory_percent": proc.info['memory_percent'] or 0
-                })
+                processes.append(
+                    {
+                        "pid": proc.info["pid"],
+                        "name": proc.info["name"],
+                        "cpu_percent": proc.info["cpu_percent"] or 0,
+                        "memory_percent": proc.info["memory_percent"] or 0,
+                    }
+                )
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 continue
 
