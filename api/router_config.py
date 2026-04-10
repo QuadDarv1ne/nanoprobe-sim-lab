@@ -169,13 +169,29 @@ def register_routes(app: FastAPI):
         from api.routes import rtl433
         from api.state import get_db_manager
         from utils.caching.cache_manager import get_cache_manager
-
+        
         db = get_db_manager()
         cache = get_cache_manager()
         if db and cache:
             rtl433.set_managers(db, cache)
-
+        
         app.include_router(rtl433.router, prefix="/api/v1", tags=["RTL-433 Sensors"])
         logger.info("RTL_433 Weather Sensor routes registered")
     except ImportError as e:
         logger.warning(f"RTL_433 routes disabled: {e}")
+
+    # ADS-B Aircraft Tracker (1090 MHz)
+    try:
+        from api.routes import adsb
+        from api.state import get_db_manager
+        from utils.caching.cache_manager import get_cache_manager
+        
+        db = get_db_manager()
+        cache = get_cache_manager()
+        if db and cache:
+            adsb.set_managers(db, cache)
+        
+        app.include_router(adsb.router, prefix="/api/v1", tags=["ADS-B Aircraft Tracker"])
+        logger.info("ADS-B Aircraft Tracker routes registered")
+    except ImportError as e:
+        logger.warning(f"ADS-B routes disabled: {e}")

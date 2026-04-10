@@ -175,8 +175,8 @@ class EnhancedSystemMonitor:
         processes_count = len(psutil.pids())
 
         # Uptime
-        boot_time = datetime.fromtimestamp(psutil.boot_time()).isoformat()
-        uptime_seconds = int((now - datetime.fromtimestamp(psutil.boot_time())).total_seconds())
+        boot_time_dt = datetime.fromtimestamp(psutil.boot_time(), tz=timezone.utc)
+        uptime_seconds = int((now - boot_time_dt).total_seconds())
 
         return SystemMetrics(
             timestamp=timestamp,
