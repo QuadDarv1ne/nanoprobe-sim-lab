@@ -259,9 +259,7 @@ class DataValidator:
                 if expected_dtype in ["int", "float", "double"] and props.get("range"):
                     min_val, max_val = props["range"]
                     try:
-                        invalid_values = df[
-                            (df[column] < min_val) | (df[column] > max_val)
-                        ][column]
+                        invalid_values = df[(df[column] < min_val) | (df[column] > max_val)][column]
                         if not invalid_values.empty:
                             errors.append(
                                 f"Найдены значения вне диапазона "
