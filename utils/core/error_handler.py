@@ -560,7 +560,8 @@ class SafeExecutor:
                     # Ждем перед следующей попыткой
                     time.sleep(retry_delay)
                     self.error_handler.log_error(
-                        f"Ошибка при попытке {attempt + 1}/{max_retries} выполнения {func.__name__}",
+                        f"Ошибка при попытке {attempt + 1}/{max_retries} "
+                        f"выполнения {func.__name__}",
                         e,
                         component,
                         ErrorSeverity.WARNING,

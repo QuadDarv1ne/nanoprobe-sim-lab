@@ -215,13 +215,16 @@ class SystemHealthMonitor:
                     else:  # critical
                         threshold_val = thresholds["critical"]
 
+                    ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
                     alert = HealthAlert(
-                        alert_id=f"{metric_name}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}",
+                        alert_id=f"{metric_name}_{ts}",
                         metric_name=metric_name,
                         current_value=value,
                         threshold_value=threshold_val,
                         severity=severity,
-                        message=f"Метрика {metric_name} превысила порог: {value} > {threshold_val}",
+                        message=(
+                            f"Метрика {metric_name} превысила порог: " f"{value} > {threshold_val}"
+                        ),
                         timestamp=datetime.now(timezone.utc),
                     )
 
@@ -567,33 +570,37 @@ class SystemHealthMonitor:
         cpu_usage = metrics.get("cpu_percent", 0)
         if cpu_usage > 80:
             recommendations.append(
-                "Высокая загрузка CPU (>80%). Рассмотрите оптимизацию процессов или масштабирование."
+                "Высокая загрузка CPU (>80%). "
+                "Рассмотрите оптимизацию процессов "
+                "или масштабирование."
             )
         elif cpu_usage > 60:
             recommendations.append(
-                "Загрузка CPU выше нормы (>60%). Следите за производительностью."
+                "Загрузка CPU выше нормы (>60%). " "Следите за производительностью."
             )
 
         # Рекомендации по памяти
         memory_usage = metrics.get("memory_percent", 0)
         if memory_usage > 85:
             recommendations.append(
-                "Высокое использование памяти (>85%). Рассмотрите очистку кэша или увеличение объема памяти."
+                "Высокое использование памяти (>85%). "
+                "Рассмотрите очистку кэша или "
+                "увеличение объема памяти."
             )
         elif memory_usage > 70:
             recommendations.append(
-                "Использование памяти выше нормы (>70%). Следите за утечками памяти."
+                "Использование памяти выше нормы (>70%). " "Следите за утечками памяти."
             )
 
         # Рекомендации по диску
         disk_usage = metrics.get("disk_percent", 0)
         if disk_usage > 90:
             recommendations.append(
-                "Критическое использование диска (>90%). Освободите место на диске срочно."
+                "Критическое использование диска (>90%). " "Освободите место на диске срочно."
             )
         elif disk_usage > 80:
             recommendations.append(
-                "Высокое использование диска (>80%). Рассмотрите очистку старых файлов."
+                "Высокое использование диска (>80%). " "Рассмотрите очистку старых файлов."
             )
 
         # Рекомендации по температуре
@@ -611,11 +618,12 @@ class SystemHealthMonitor:
         proc_count = metrics.get("process_count", 0)
         if proc_count > 500:
             recommendations.append(
-                "Очень большое количество процессов (>500). Проверьте систему на наличие лишних процессов."
+                "Очень большое количество процессов (>500). "
+                "Проверьте систему на наличие лишних процессов."
             )
         elif proc_count > 300:
             recommendations.append(
-                "Высокое количество процессов (>300). Рассмотрите оптимизацию запущенных служб."
+                "Высокое количество процессов (>300). " "Рассмотрите оптимизацию запущенных служб."
             )
 
         # Рекомендации на основе оценки здоровья
