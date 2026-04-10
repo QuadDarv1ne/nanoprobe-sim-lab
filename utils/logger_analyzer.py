@@ -332,9 +332,9 @@ class AdvancedLoggerAnalyzer:
             "timestamp_stats": {
                 "first_log": min(timestamps).isoformat() if timestamps else None,
                 "last_log": max(timestamps).isoformat() if timestamps else None,
-                "total_duration": (max(timestamps) - min(timestamps)).total_seconds()
-                if timestamps
-                else 0,
+                "total_duration": (
+                    (max(timestamps) - min(timestamps)).total_seconds() if timestamps else 0
+                ),
             },
         }
 
@@ -363,7 +363,11 @@ class AdvancedLoggerAnalyzer:
                 {
                     "type": "high_error_rate",
                     "severity": "high",
-                    "description": f"Высокий процент ошибок: {len(error_entries)}/{len(logs)} ({len(error_entries) / len(logs) * 100:.2f}%)",
+                    "description": (
+                        f"Высокий процент ошибок: "
+                        f"{len(error_entries)}/{len(logs)} "
+                        f"({len(error_entries) / len(logs) * 100:.2f}%)"
+                    ),
                     "timestamp": datetime.now(timezone.utc),
                 }
             )

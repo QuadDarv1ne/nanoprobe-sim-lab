@@ -1,4 +1,4 @@
-﻿# ⚠️  DEPRECATED: Используйте scripts/project.py
+﻿# DEPRECATED: Используйте scripts/project.py
 
 #!/usr/bin/env python3
 """
@@ -11,7 +11,6 @@
 - components/ — научные компоненты
 """
 
-import os
 import shutil
 from pathlib import Path
 from typing import Dict, List

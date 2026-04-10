@@ -348,9 +348,8 @@ def main():
     if data_manager.save_surface_data(test_surface, "test_surface.txt"):
         loaded_surface = data_manager.load_surface_data("test_surface.txt")
         if loaded_surface is not None:
-            print(
-                f"✓ Данные поверхности успешно сохранены и загружены. Размер: {loaded_surface.shape}"
-            )
+            shape = loaded_surface.shape
+            print(f"✓ Данные поверхности успешно сохранены и " f"загружены. Размер: {shape}")
 
     # Создаем тестовые результаты анализа
     test_results = {
@@ -364,9 +363,8 @@ def main():
     if data_manager.save_image_analysis_results(test_results, "test_analysis.json"):
         loaded_results = data_manager.load_image_analysis_results("test_analysis.json")
         if loaded_results:
-            print(
-                f"✓ Результаты анализа успешно сохранены и загружены. Качество: {loaded_results.get('quality_score')}"
-            )
+            quality = loaded_results.get("quality_score")
+            print(f"✓ Результаты анализа успешно сохранены и " f"загружены. Качество: {quality}")
 
     # Проверяем последние файлы
     recent_txt_files = data_manager.get_recent_files(".txt", 3)

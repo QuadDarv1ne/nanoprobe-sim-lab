@@ -18,7 +18,6 @@ Project CLI — Управление проектом Nanoprobe Sim Lab
 
 import argparse
 import json
-import os
 import subprocess
 import sys
 from datetime import datetime, timezone

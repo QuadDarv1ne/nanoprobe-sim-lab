@@ -5,12 +5,11 @@
 import importlib.util
 import io
 import json
-import os
 import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict
 
 # Исправление кодировки для Windows
 if sys.platform == "win32":
@@ -169,7 +168,8 @@ class ProjectValidator:
         }
 
         self.log_message(
-            f"Проверено файлов: {total_files}, валидных: {valid_files}, ошибок: {len(invalid_files)}"
+            f"Проверено файлов: {total_files}, "
+            f"валидных: {valid_files}, ошибок: {len(invalid_files)}"
         )
 
         return result
@@ -242,7 +242,8 @@ class ProjectValidator:
         }
 
         self.log_message(
-            f"Файлов с успешными импортами: {importable_files}, проблемных: {len(unimportable_files)}"
+            f"Файлов с успешными импортами: {importable_files}, "
+            f"проблемных: {len(unimportable_files)}"
         )
 
         return result
@@ -357,16 +358,20 @@ class ProjectValidator:
             f"Структура проекта: {'✓' if structure_result['structure_valid'] else '✗'}"
         )
         self.log_message(
-            f"Синтаксис Python: {'✓' if syntax_result['syntax_valid'] else '✗'} (валидных: {syntax_result['valid_files']}/{syntax_result['total_files']})"
+            f"Синтаксис Python: {'✓' if syntax_result['syntax_valid'] else '✗'} "
+            f"(валидных: {syntax_result['valid_files']}/{syntax_result['total_files']})"
         )
         self.log_message(
-            f"Импорты: {'✓' if import_result['imports_valid'] else '✗'} (импортируемых: {import_result['importable_files']}/{import_result['total_files']})"
+            f"Импорты: {'✓' if import_result['imports_valid'] else '✗'} "
+            f"(импортируемых: {import_result['importable_files']}/{import_result['total_files']})"
         )
         self.log_message(
-            f"Зависимости: {'✓' if requirements_result['dependencies_valid'] else '✗'} (отсутствует: {len(requirements_result['missing_dependencies'])})"
+            f"Зависимости: {'✓' if requirements_result['dependencies_valid'] else '✗'} "
+            f"(отсутствует: {len(requirements_result['missing_dependencies'])})"
         )
         self.log_message(
-            f"Компоненты: {'✓' if components_result['components_valid'] else '✗'} (работающих: {components_result['working_components']}/{components_result['total_components']})"
+            f"Компоненты: {'✓' if components_result['components_valid'] else '✗'} "
+            f"(работающих: {components_result['working_components']}/{components_result['total_components']})"
         )
 
         # Подсчет ошибок и предупреждений

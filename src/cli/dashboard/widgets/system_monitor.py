@@ -75,15 +75,19 @@ class SystemMonitorWidget(Widget):
         # Memory
         mem_bar = self._make_bar(metrics["memory_percent"], width - 15)
         mem_color = self._get_color(metrics["memory_percent"])
+        mem_available = metrics["memory_available"]
         lines.append(
-            f"RAM    [{mem_color}{mem_bar}{self._reset_color()}] {metrics['memory_percent']:5.1f}% ({metrics['memory_available']} MB)"
+            f"RAM    [{mem_color}{mem_bar}{self._reset_color()}] "
+            f"{metrics['memory_percent']:5.1f}% ({mem_available} MB)"
         )
 
         # Disk
         disk_bar = self._make_bar(metrics["disk_percent"], width - 15)
         disk_color = self._get_color(metrics["disk_percent"])
+        disk_free = metrics["disk_free"]
         lines.append(
-            f"Disk   [{disk_color}{disk_bar}{self._reset_color()}] {metrics['disk_percent']:5.1f}% ({metrics['disk_free']} GB free)"
+            f"Disk   [{disk_color}{disk_bar}{self._reset_color()}] "
+            f"{metrics['disk_percent']:5.1f}% ({disk_free} GB free)"
         )
 
         # Network

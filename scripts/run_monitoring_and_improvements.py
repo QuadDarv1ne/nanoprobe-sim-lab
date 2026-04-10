@@ -1,9 +1,7 @@
 """Основной скрипт запуска проекта с мониторингом и улучшениями."""
 
-import os
 import subprocess
 import sys
-import time
 from datetime import datetime, timezone
 from pathlib import Path
 

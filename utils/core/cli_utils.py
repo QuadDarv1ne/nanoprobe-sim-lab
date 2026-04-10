@@ -1,58 +1,58 @@
 """Утилиты для улучшения CLI."""
 
 import sys
-import time
 import threading
+import time
 
 
 class Colors:
     """ANSI цвета для терминала."""
 
-    RESET = '\033[0m'
-    BOLD = '\033[1m'
-    DIM = '\033[2m'
-    UNDERLINE = '\033[4m'
+    RESET = "\033[0m"
+    BOLD = "\033[1m"
+    DIM = "\033[2m"
+    UNDERLINE = "\033[4m"
 
     # Цвета текста
-    BLACK = '\033[30m'
-    RED = '\033[31m'
-    GREEN = '\033[32m'
-    YELLOW = '\033[33m'
-    BLUE = '\033[34m'
-    MAGENTA = '\033[35m'
-    CYAN = '\033[36m'
-    WHITE = '\033[37m'
+    BLACK = "\033[30m"
+    RED = "\033[31m"
+    GREEN = "\033[32m"
+    YELLOW = "\033[33m"
+    BLUE = "\033[34m"
+    MAGENTA = "\033[35m"
+    CYAN = "\033[36m"
+    WHITE = "\033[37m"
 
     # Яркие цвета
-    BRIGHT_RED = '\033[91m'
-    BRIGHT_GREEN = '\033[92m'
-    BRIGHT_YELLOW = '\033[93m'
-    BRIGHT_BLUE = '\033[94m'
-    BRIGHT_MAGENTA = '\033[95m'
-    BRIGHT_CYAN = '\033[96m'
+    BRIGHT_RED = "\033[91m"
+    BRIGHT_GREEN = "\033[92m"
+    BRIGHT_YELLOW = "\033[93m"
+    BRIGHT_BLUE = "\033[94m"
+    BRIGHT_MAGENTA = "\033[95m"
+    BRIGHT_CYAN = "\033[96m"
 
     # Фоны
-    BG_BLACK = '\033[40m'
-    BG_RED = '\033[41m'
-    BG_GREEN = '\033[42m'
-    BG_YELLOW = '\033[43m'
-    BG_BLUE = '\033[44m'
-    BG_MAGENTA = '\033[45m'
-    BG_CYAN = '\033[46m'
-    BG_WHITE = '\033[47m'
+    BG_BLACK = "\033[40m"
+    BG_RED = "\033[41m"
+    BG_GREEN = "\033[42m"
+    BG_YELLOW = "\033[43m"
+    BG_BLUE = "\033[44m"
+    BG_MAGENTA = "\033[45m"
+    BG_CYAN = "\033[46m"
+    BG_WHITE = "\033[47m"
 
     @classmethod
     def disable(cls):
         """Отключает цвета (для Windows без colorama)."""
-        cls.RESET = ''
-        cls.BOLD = ''
-        cls.RED = ''
-        cls.GREEN = ''
-        cls.YELLOW = ''
-        cls.BLUE = ''
-        cls.MAGENTA = ''
-        cls.CYAN = ''
-        cls.WHITE = ''
+        cls.RESET = ""
+        cls.BOLD = ""
+        cls.RED = ""
+        cls.GREEN = ""
+        cls.YELLOW = ""
+        cls.BLUE = ""
+        cls.MAGENTA = ""
+        cls.CYAN = ""
+        cls.WHITE = ""
 
 
 class ProgressBar:
@@ -61,10 +61,10 @@ class ProgressBar:
     def __init__(
         self,
         total: int,
-        desc: str = '',
+        desc: str = "",
         bar_length: int = 40,
         show_eta: bool = True,
-        color: str = Colors.GREEN
+        color: str = Colors.GREEN,
     ):
         """
         Инициализирует progress bar.
@@ -113,10 +113,10 @@ class ProgressBar:
 
         percent = self.current / self.total if self.total > 0 else 0
         filled_length = int(self.bar_length * percent)
-        bar = '█' * filled_length + '░' * (self.bar_length - filled_length)
+        bar = "█" * filled_length + "░" * (self.bar_length - filled_length)
 
         # Рассчитываем ETA
-        eta_str = ''
+        eta_str = ""
         if self.show_eta and self.start_time:
             elapsed = time.time() - self.start_time
             if self.current > 0:
@@ -124,12 +124,14 @@ class ProgressBar:
                 eta_str = f" | ETA: {self._format_time(eta)}"
 
         # Формируем строку
-        sys.stdout.write(f'\r{self.desc} {self.color}{bar}{Colors.RESET} '
-                        f'{percent*100:5.1f}% ({self.current}/{self.total}){eta_str}')
+        sys.stdout.write(
+            f"\r{self.desc} {self.color}{bar}{Colors.RESET} "
+            f"{percent*100:5.1f}% ({self.current}/{self.total}){eta_str}"
+        )
         sys.stdout.flush()
 
         if self.current >= self.total:
-            sys.stdout.write('\n')
+            sys.stdout.write("\n")
             sys.stdout.flush()
 
     def __iter__(self):
@@ -184,9 +186,14 @@ def print_step(step_num: int, total: int, message: str):
 
 def print_header(title: str, width: int = 60):
     """Выводит заголовок."""
-    border = '═' * width
+    border = "═" * width
     print(f"\n{Colors.BOLD}{Colors.BRIGHT_CYAN}╔{border}╗{Colors.RESET}")
-    print(f"{Colors.BOLD}{Colors.BRIGHT_CYAN}║{Colors.RESET} {Colors.BOLD}{title.center(width)}{Colors.RESET} {Colors.BOLD}{Colors.BRIGHT_CYAN}║{Colors.RESET}")
+    title_line = (
+        f"{Colors.BOLD}{Colors.BRIGHT_CYAN}║{Colors.RESET} "
+        f"{Colors.BOLD}{title.center(width)}{Colors.RESET} "
+        f"{Colors.BOLD}{Colors.BRIGHT_CYAN}║{Colors.RESET}"
+    )
+    print(title_line)
     print(f"{Colors.BOLD}{Colors.BRIGHT_CYAN}╚{border}╝{Colors.RESET}\n")
 
 
@@ -200,24 +207,31 @@ def print_table(headers: list, rows: list, col_widths: list = None):
         col_widths: Ширина столбцов (авто если None)
     """
     if col_widths is None:
-        col_widths = [max(len(str(row[i])) if i < len(row) else 0
-                         for row in [headers] + rows) + 2
-                     for i in range(len(headers))]
+        col_widths = [
+            max(len(str(row[i])) if i < len(row) else 0 for row in [headers] + rows) + 2
+            for i in range(len(headers))
+        ]
 
     # Разделитель
-    separator = '+' + '+'.join('─' * w for w in col_widths) + '+'
+    separator = "+" + "+".join("─" * w for w in col_widths) + "+"
 
     print(f"{Colors.CYAN}{separator}{Colors.RESET}")
 
     # Заголовки
-    header_line = '|' + '|'.join(str(h).center(w) for h, w in zip(headers, col_widths)) + '|'
+    header_line = "|" + "|".join(str(h).center(w) for h, w in zip(headers, col_widths)) + "|"
     print(f"{Colors.BOLD}{Colors.BRIGHT_CYAN}{header_line}{Colors.RESET}")
     print(f"{Colors.CYAN}{separator}{Colors.RESET}")
 
     # Данные
     for row in rows:
-        row_line = '|' + '|'.join(str(row[i]).ljust(w) if i < len(row) else ''.ljust(w)
-                                  for i, w in enumerate(col_widths)) + '|'
+        row_line = (
+            "|"
+            + "|".join(
+                str(row[i]).ljust(w) if i < len(row) else "".ljust(w)
+                for i, w in enumerate(col_widths)
+            )
+            + "|"
+        )
         print(row_line)
 
     print(f"{Colors.CYAN}{separator}{Colors.RESET}")
@@ -226,9 +240,9 @@ def print_table(headers: list, rows: list, col_widths: list = None):
 class Spinner:
     """Спиннер для отображения активности."""
 
-    FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
+    FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
 
-    def __init__(self, message: str = ''):
+    def __init__(self, message: str = ""):
         """Инициализирует спиннер."""
         self.message = message
         self._running = False
@@ -237,13 +251,14 @@ class Spinner:
     def _animate(self):
         """Анимирует спиннер."""
         import itertools
+
         for frame in itertools.cycle(self.FRAMES):
             if not self._running:
                 break
-            sys.stdout.write(f'\r{frame} {self.message}')
+            sys.stdout.write(f"\r{frame} {self.message}")
             sys.stdout.flush()
             time.sleep(0.1)
-        sys.stdout.write('\r' + ' ' * (len(self.message) + 2) + '\r')
+        sys.stdout.write("\r" + " " * (len(self.message) + 2) + "\r")
         sys.stdout.flush()
 
     def start(self, message: str = None):
@@ -276,9 +291,10 @@ class Spinner:
 
 
 # Проверка поддержки цветов в Windows
-if sys.platform == 'win32':
+if sys.platform == "win32":
     try:
         import colorama
+
         colorama.init()
     except ImportError:
         # Если colorama нет, отключаем цвета
