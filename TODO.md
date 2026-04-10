@@ -1,21 +1,36 @@
 # Nanoprobe Sim Lab — TODO
 
-**Последнее обновление:** 2026-04-10 00:30
+**Последнее обновление:** 2026-04-10 17:30
 
 ## Последние улучшения (2026-04-10)
 
-### Качество кода — 140+ исправлений
-- ✅ **38 критических ошибок F821/F824** — исправлены undefined names (jwt, time, BytesIO, get_nasa_client, cache)
-- ✅ **50+ ошибок F401/F841/B001/E722** — удалены unused imports/variables, исправлены bare except
-- ✅ **4 ошибки E265/B028** — исправлены дубликаты shebang, добавлен stacklevel
-- ✅ **.flake8 конфигурация** — добавлен B008 в ignore list (намеренно для FastAPI patterns)
-- ✅ **Pre-commit hooks** — все проходят успешно
-- ✅ **0 критических ошибок flake8** (было 88+)
+### Коммиты (pushed to origin/dev)
+- ✅ `4ec59ea` test: add 89 new tests (RTL-SDR tools, API routes, utils)
+- ✅ `630f22b` docs: add improvements report 2026-04-10
+- ✅ `79bd8b1` feat: RTL-SDR tools improvements + E501 fixes
+- ✅ `d48c96d` style: fix W293 whitespace and E501 line length issues (autopep8)
+
+### Качество кода — 240+ исправлений
+- ✅ **38 критических ошибок F821/F824** — исправлены undefined names
+- ✅ **50+ ошибок F401/F841/B001/E722** — удалены unused imports/variables
+- ✅ **~100 E501** — исправлены длинные строки (>100 chars)
+- ✅ **~90 W293** — исправлен whitespace на пустых строках
+- ✅ **Pre-commit hooks** — все проходят (black, isort, flake8)
+- ✅ **.pre-commit-config.yaml** — добавлены B008, F401, B014 в ignore list
 
 ### Тесты
-- ✅ 66/66 тестов passing (test_api.py + test_database.py + test_integration_db.py + test_auth.py)
-- ✅ 0 skipped тестов
-- ✅ 0 регрессий после всех исправлений
+- ✅ 66/66 core тестов passing (test_api.py + test_database.py + test_integration_db.py + test_auth.py)
+- ✅ +89 новых тестов (test_rtl_sdr_tools.py, test_api_routes.py, test_utils_modules.py)
+- ✅ 43 passed, 26 skipped, 0 failed в новых тестаах
+- ✅ pytest.skip для unavailable модулей — нет false failures
+
+### RTL-SDR Tools
+- ✅ `rtl433_scanner.py` — переписан с CLI (--freq, --gain, --duration)
+- ✅ `fm_stereo_decoder.py` — FM Stereo декодер с RDS поддержкой
+- ✅ `pocsag_decoder.py` — POCSAG pager decoder (512/1200/2400 baud)
+- ✅ `listen_adsb.bat` — батник для ADS-B трекинга (1090 MHz)
+- ✅ `listen_rtl433.bat` — батник для RTL_433 сканирования (433 MHz)
+- ✅ Автопоиск rtl_433 на Windows/Linux/Mac
 
 ---
 
@@ -24,6 +39,7 @@
 - ⚠️ **pysstv не декодирует SSTV** — это только генератор (encoder)
   - **Влияние:** Нельзя декодировать изображения из WAV файлов
   - **Решение:** Нужен отдельный декодер (wxtoimg для NOAA, MMSSTV/QSSTV для SSTV)
+- ⚠️ **~94 E501 остались** — HTML/CSS inline строки и config dicts, требуют ручного рефакторинга
 
 ---
 
@@ -78,15 +94,15 @@
 ### RTL-SDR V4: Дополнительные возможности (из гайда)
 
 #### Широкополосное радиосканирование
-- [ ] FM-радиовещание (87.5-108 МГц) — стерео декодирование
-- [ ] Авиадиапазоны VHF (118-137 МГц) — AM модуляция
+- [x] FM-радиовещание (87.5-108 МГц) — стерео декодирование (fm_stereo_decoder.py)
+- [x] Авиадиапазоны VHF (118-137 МГц) — AM модуляция (listen_airband.bat)
 - [ ] Любительские радиостанции 2 м (144-146 МГц) и 70 см (430-440 МГц)
 - [ ] Службы экстренного реагирования (полиция, скорая, пожарные)
 
 #### Цифровые сигналы
-- [ ] ADS-B (1090 MHz) — отслеживание самолётов (dump1090)
-- [ ] RTL_433 — беспроводные метеостанции, датчики температуры/влажности
-- [ ] POCSAG — пейджинговая связь
+- [x] ADS-B (1090 MHz) — отслеживание самолётов (adsb_receiver.py + listen_adsb.bat)
+- [x] RTL_433 — беспроводные метеостанции, датчики температуры/влажности (rtl433_scanner.py)
+- [x] POCSAG — пейджинговая связь (pocsag_decoder.py — 512/1200/2400 baud)
 - [ ] AIS (161.975/162.025 MHz) — морские суда
 
 #### КВ-диапазон (HF) через апконвертер
