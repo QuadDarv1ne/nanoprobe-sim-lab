@@ -3,13 +3,14 @@ Redis кэш для Nanoprobe Sim Lab
 Кэширование результатов запросов для ускорения API
 """
 
-import json
 import hashlib
+import json
+import logging
 import os
 import time
-import logging
-from typing import Any, Optional, Callable
 from functools import wraps
+from typing import Any, Callable, Optional
+
 import redis
 
 logger = logging.getLogger(__name__)
@@ -47,13 +48,15 @@ class RedisCache:
         """Проверка стоит ли пытаться переподключиться"""
         if self._connect_attempts >= self.RECONNECT_MAX_ATTEMPTS:
             return False
-        
+
         now = time.time()
         elapsed = now - self._last_connect_attempt
-        
+
         # Экспоненциальный backoff
-        backoff = self.RECONNECT_INTERVAL * (self.RECONNECT_BACKOFF_FACTOR ** min(self._connect_attempts, 5))
-        
+        backoff = self.RECONNECT_INTERVAL * (
+            self.RECONNECT_BACKOFF_FACTOR ** min(self._connect_attempts, 5)
+        )
+
         return elapsed >= backoff
 
     @property
@@ -74,12 +77,12 @@ class RedisCache:
                 self._client = None
                 self._connect_attempts = 0  # Сбрасываем для новых попыток
                 logger.warning("Redis connection lost, will attempt reconnect")
-        
+
         # Пробуем переподключиться
         if self._should_attempt_reconnect():
             self._last_connect_attempt = time.time()
             self._connect_attempts += 1
-            
+
             try:
                 self._client = redis.Redis(
                     host=self.host,
@@ -103,11 +106,11 @@ class RedisCache:
                     logger.debug(f"Redis connect attempt {self._connect_attempts} failed: {e}")
                 else:
                     logger.warning(f"Redis connect attempt {self._connect_attempts} failed: {e}")
-        
+
         # Не пытаемся подключиться сейчас
         if not self._should_attempt_reconnect():
             self._enabled = False
-        
+
         return None
 
     def get(self, key: str) -> Optional[Any]:
@@ -195,9 +198,7 @@ class RedisCache:
                 "total_commands_processed": info.get("total_commands_processed", 0),
                 "keyspace_hits": info.get("keyspace_hits", 0),
                 "keyspace_misses": info.get("keyspace_misses", 0),
-                "keys_count": sum(
-                    db.get("keys", 0) for db in keyspace.values()
-                ) if keyspace else 0,
+                "keys_count": sum(db.get("keys", 0) for db in keyspace.values()) if keyspace else 0,
             }
         except redis.RedisError:
             return {"available": False, "error": "Connection error"}
@@ -244,6 +245,7 @@ def cached(prefix: str = "api", expire: int = 300):
         prefix: Префикс для ключа кэша
         expire: Время жизни кэша в секундах
     """
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -252,7 +254,8 @@ def cached(prefix: str = "api", expire: int = 300):
             # Generate cache key from query params only (exclude Depends-injected objects)
             # Filter out non-primitive types that would make the key unstable
             stable_kwargs = {
-                k: v for k, v in kwargs.items()
+                k: v
+                for k, v in kwargs.items()
                 if isinstance(v, (str, int, float, bool, type(None), list, dict, tuple))
             }
             cache_key = f"{prefix}:{func.__name__}:"
@@ -275,7 +278,9 @@ def cached(prefix: str = "api", expire: int = 300):
                 redis_instance.set(cache_key, result, expire)
 
             return result
+
         return wrapper
+
     return decorator
 
 
@@ -287,21 +292,21 @@ def cached_sync(prefix: str = "api", expire: int = 300):
         prefix: Префикс для ключа кэша
         expire: Время жизни кэша в секундах
     """
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args, **kwargs):
             # Используем app state если доступен, иначе модульный cache
             try:
                 from api.state import get_redis
+
                 redis_instance = get_redis()
             except Exception:
                 redis_instance = cache
 
             # Генерация ключа
             cache_key = f"{prefix}:{func.__name__}:"
-            cache_key += hashlib.md5(
-                f"{sorted(kwargs.items())}".encode()
-            ).hexdigest()[:16]
+            cache_key += hashlib.md5(f"{sorted(kwargs.items())}".encode()).hexdigest()[:16]
 
             # Попытка получить из кэша
             if redis_instance and redis_instance.is_available():
@@ -317,5 +322,7 @@ def cached_sync(prefix: str = "api", expire: int = 300):
                 redis_instance.set(cache_key, result, expire)
 
             return result
+
         return wrapper
+
     return decorator

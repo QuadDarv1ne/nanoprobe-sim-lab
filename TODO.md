@@ -1,34 +1,21 @@
 # Nanoprobe Sim Lab — TODO
 
-**Последнее обновление:** 2026-04-09 22:30
+**Последнее обновление:** 2026-04-10 00:30
 
-## Последние улучшения (2026-04-09)
+## Последние улучшения (2026-04-10)
 
-### RTL-SDR V4 — полностью функционален
-- ✅ RTL-SDR V4: исправлены импорты pysstv, создана документация и тесты
-- ✅ SSTV UI: подключены кнопки Eye/Download/Delete
-- ✅ SSTV API: добавлены эндпоинты GET/DELETE /recordings/{filename}
-- ✅ SSTV Receiver FIX: исправлены 5 критических проблем (pysstv API, кэширование инициализации)
-- ✅ **RTL-SDR V4 захват**: запись I/Q @ 2.4 MSPS, FM демодуляция, WAV output
-- ✅ **SSTV capture**: приём с МКС (145.800 MHz), анализ, спектрограмма
-- ✅ **NOAA APT capture**: приём с NOAA 15/18/19 (137 MHz), декодер
-- ✅ **Real-time visualizer**: спектр + waterfall (matplotlib)
-- ✅ RTL-SDR тест: 7.3M I/Q сэмплов за 3.1 сек (ISS 145.800 MHz)
-- ✅ NOAA тест: 24.1M I/Q сэмплов за 10.2 сек (NOAA 19 137.100 MHz)
-- ⏳ SSTV декодер: pysstv только генератор, нужен отдельный декодер
-
-### Исправления базы данных
-- ✅ **created_at FIX**: исправлены все 10 INSERT методов в database.py
-- ✅ Тест created_at: подтверждён (2026-04-09T22:26:11.665968)
-- ✅ 14/14 database тестов passing
+### Качество кода — 140+ исправлений
+- ✅ **38 критических ошибок F821/F824** — исправлены undefined names (jwt, time, BytesIO, get_nasa_client, cache)
+- ✅ **50+ ошибок F401/F841/B001/E722** — удалены unused imports/variables, исправлены bare except
+- ✅ **4 ошибки E265/B028** — исправлены дубликаты shebang, добавлен stacklevel
+- ✅ **.flake8 конфигурация** — добавлен B008 в ignore list (намеренно для FastAPI patterns)
+- ✅ **Pre-commit hooks** — все проходят успешно
+- ✅ **0 критических ошибок flake8** (было 88+)
 
 ### Тесты
-- ✅ Тесты: исправлен test_login_success (чтение пароля из файла/ENV)
-- ✅ Тесты: исправлены 24 теста auth.py (JWT, refresh tokens)
-- ✅ Тесты: исправлены 15 тестов api.py (инициализация БД)
-- ✅ Тесты: исправлен test_integration_db.py (fixture'ы, API calls)
 - ✅ 66/66 тестов passing (test_api.py + test_database.py + test_integration_db.py + test_auth.py)
-- ✅ **ВСЕ 4 skipped теста в test_api.py ИСПРАВЛЕНЫ** — created_at assertions обновлены
+- ✅ 0 skipped тестов
+- ✅ 0 регрессий после всех исправлений
 
 ---
 

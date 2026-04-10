@@ -51,7 +51,9 @@ class BackendFrontendSync:
     async def initialize(self):
         """Инициализация HTTP сессии"""
         self.session = aiohttp.ClientSession()
-        logger.info(f"[SYNC] Инициализирован: Backend={self.backend_url}, Frontend={self.frontend_url}")
+        logger.info(
+            f"[SYNC] Инициализирован: Backend={self.backend_url}, Frontend={self.frontend_url}"
+        )
 
     async def close(self):
         """Закрытие сессии"""
@@ -64,11 +66,11 @@ class BackendFrontendSync:
         if not self.session:
             logger.error("❌ Session not initialized")
             return False
-            
+
         try:
             async with self.session.get(
-                f"{self.backend_url}/health", 
-                timeout=aiohttp.ClientTimeout(total=HEALTH_CHECK_TIMEOUT)
+                f"{self.backend_url}/health",
+                timeout=aiohttp.ClientTimeout(total=HEALTH_CHECK_TIMEOUT),
             ) as resp:
                 if resp.status == 200:
                     return True
@@ -90,11 +92,11 @@ class BackendFrontendSync:
         if not self.session:
             logger.error("❌ Session not initialized")
             return False
-            
+
         try:
             async with self.session.get(
-                f"{self.frontend_url}/api/health", 
-                timeout=aiohttp.ClientTimeout(total=HEALTH_CHECK_TIMEOUT)
+                f"{self.frontend_url}/api/health",
+                timeout=aiohttp.ClientTimeout(total=HEALTH_CHECK_TIMEOUT),
             ) as resp:
                 if resp.status == 200:
                     return True
@@ -120,11 +122,11 @@ class BackendFrontendSync:
         if not self.session:
             logger.error("❌ Session not initialized")
             return None
-            
+
         try:
             async with self.session.get(
                 f"{self.backend_url}/api/v1/dashboard/stats",
-                timeout=aiohttp.ClientTimeout(total=SYNC_TIMEOUT)
+                timeout=aiohttp.ClientTimeout(total=SYNC_TIMEOUT),
             ) as resp:
                 if resp.status == 200:
                     stats = await resp.json()
@@ -133,7 +135,9 @@ class BackendFrontendSync:
                     return stats
                 else:
                     error_body = await resp.text()
-                    logger.warning(f"[SYNC] Ошибка получения статистики: {resp.status} - {error_body[:200]}")
+                    logger.warning(
+                        f"[SYNC] Ошибка получения статистики: {resp.status} - {error_body[:200]}"
+                    )
                     return None
         except asyncio.TimeoutError:
             logger.error(f"[SYNC] Timeout получения статистики")
@@ -155,11 +159,13 @@ class BackendFrontendSync:
             assert self.session is not None
             async with self.session.get(
                 f"{self.backend_url}/api/v1/dashboard/metrics/realtime",
-                timeout=aiohttp.ClientTimeout(total=5)
+                timeout=aiohttp.ClientTimeout(total=5),
             ) as resp:
                 if resp.status == 200:
                     metrics = await resp.json()
-                    logger.debug(f"[SYNC] Метрики получены: CPU={metrics.get('cpu_percent', 'N/A')}%")
+                    logger.debug(
+                        f"[SYNC] Метрики получены: CPU={metrics.get('cpu_percent', 'N/A')}%"
+                    )
                     return metrics
                 else:
                     return None
@@ -188,7 +194,7 @@ class BackendFrontendSync:
             async with self.session.post(
                 f"{self.frontend_url}/socketio/event",
                 json=payload,
-                timeout=aiohttp.ClientTimeout(total=5)
+                timeout=aiohttp.ClientTimeout(total=5),
             ) as resp:
                 if resp.status == 200:
                     logger.debug(f"[SYNC] Событие '{event}' отправлено во Frontend")
@@ -216,7 +222,7 @@ class BackendFrontendSync:
 
                 if backend_ok and frontend_ok:
                     consecutive_failures = 0  # Reset on success
-                    
+
                     # Синхронизация статистики
                     stats = await self.sync_dashboard_stats()
                     if stats:
@@ -234,7 +240,7 @@ class BackendFrontendSync:
                     consecutive_failures += 1
                     delay = min(
                         interval * (2 ** min(consecutive_failures, 5)),  # Exponential backoff
-                        MAX_RECONNECT_DELAY
+                        MAX_RECONNECT_DELAY,
                     )
                     logger.warning(
                         f"[SYNC] Health check failed (attempt {consecutive_failures}), "
@@ -247,14 +253,11 @@ class BackendFrontendSync:
                 break
             except Exception as e:
                 consecutive_failures += 1
-                delay = min(
-                    interval * (2 ** min(consecutive_failures, 5)),
-                    MAX_RECONNECT_DELAY
-                )
+                delay = min(interval * (2 ** min(consecutive_failures, 5)), MAX_RECONNECT_DELAY)
                 logger.error(
                     f"[SYNC] Ошибка в цикле синхронизации (attempt {consecutive_failures}): "
                     f"{e}, retrying in {delay:.1f}s",
-                    exc_info=True
+                    exc_info=True,
                 )
                 await asyncio.sleep(delay)
 
@@ -277,6 +280,7 @@ class BackendFrontendSync:
 
 # ==================== Интеграция с Flask ====================
 
+
 def setup_flask_sync_integration(app, socketio):
     """
     Настройка интеграции синхронизации с Flask приложением
@@ -295,11 +299,14 @@ def setup_flask_sync_integration(app, socketio):
         """Подключение клиента к Socket.IO"""
         logger.info(f"[SOCKET] Клиент подключился: {request.sid}")
         sync_manager.ws_connections["frontend"].add(request.sid)
-        emit("connected", {
-            "status": "ok",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "sync_status": sync_manager.get_sync_status(),
-        })
+        emit(
+            "connected",
+            {
+                "status": "ok",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "sync_status": sync_manager.get_sync_status(),
+            },
+        )
 
     @socketio.on("disconnect")
     def handle_disconnect():
@@ -311,6 +318,7 @@ def setup_flask_sync_integration(app, socketio):
     def handle_request_stats():
         """Запрос статистики из Backend"""
         import asyncio
+
         try:
             loop = asyncio.get_event_loop()
             stats = loop.run_until_complete(sync_manager.sync_dashboard_stats())
@@ -324,6 +332,7 @@ def setup_flask_sync_integration(app, socketio):
     def handle_request_metrics():
         """Запрос метрик из Backend"""
         import asyncio
+
         try:
             loop = asyncio.get_event_loop()
             metrics = loop.run_until_complete(sync_manager.sync_realtime_metrics())
@@ -342,6 +351,7 @@ def setup_flask_sync_integration(app, socketio):
         Backend может отправлять события сюда для трансляции во Frontend
         """
         from flask import jsonify, request
+
         data = request.json
         event = data.get("event")
         event_data = data.get("data")
@@ -357,6 +367,7 @@ def setup_flask_sync_integration(app, socketio):
 
 
 # ==================== Запуск синхронизации ====================
+
 
 async def run_sync_manager():
     """Запуск менеджера синхронизации"""
