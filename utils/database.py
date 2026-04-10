@@ -1774,7 +1774,9 @@ class DatabaseManager:
             cursor.execute(
                 """
                 INSERT INTO defect_analysis
-                (analysis_id, image_path, model_name, defects_detected, defects_data, confidence_score, processing_time_ms, created_at)
+                (analysis_id, image_path, model_name,
+                 defects_detected, defects_data,
+                 confidence_score, processing_time_ms, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
                 (
@@ -1845,7 +1847,8 @@ class DatabaseManager:
             cursor.execute(
                 """
                 INSERT INTO pdf_reports
-                (report_path, report_type, title, source_ids, file_size_bytes, pages_count, created_at)
+                (report_path, report_type, title,
+                 source_ids, file_size_bytes, pages_count, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
                 (
@@ -2154,7 +2157,9 @@ class DatabaseManager:
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT id, username, password_hash, role, created_at, last_login FROM users WHERE username = ?",
+                "SELECT id, username, password_hash, role, "
+                "created_at, last_login "
+                "FROM users WHERE username = ?",
                 (username,),
             )
             row = cursor.fetchone()
@@ -2165,7 +2170,9 @@ class DatabaseManager:
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT id, username, password_hash, role, created_at, last_login FROM users WHERE id = ?",
+                "SELECT id, username, password_hash, role, "
+                "created_at, last_login "
+                "FROM users WHERE id = ?",
                 (user_id,),
             )
             row = cursor.fetchone()

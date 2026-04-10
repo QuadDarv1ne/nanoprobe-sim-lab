@@ -244,21 +244,29 @@ class DataValidator:
                             ValidationLevel.COMPREHENSIVE,
                         ]:
                             errors.append(
-                                f"Неверный тип данных для столбца '{column}': ожидается {expected_dtype}, получено {actual_dtype}"
+                                f"Неверный тип данных для столбца "
+                                f"'{column}': ожидается {expected_dtype}, "
+                                f"получено {actual_dtype}"
                             )
                         else:
                             warnings_list.append(
-                                f"Потенциально неверный тип данных для столбца '{column}': ожидается {expected_dtype}, получено {actual_dtype}"
+                                f"Потенциально неверный тип данных для "
+                                f"столбца '{column}': ожидается "
+                                f"{expected_dtype}, получено {actual_dtype}"
                             )
 
                 # Проверяем диапазон значений для числовых столбцов
                 if expected_dtype in ["int", "float", "double"] and props.get("range"):
                     min_val, max_val = props["range"]
                     try:
-                        invalid_values = df[(df[column] < min_val) | (df[column] > max_val)][column]
+                        invalid_values = df[
+                            (df[column] < min_val) | (df[column] > max_val)
+                        ][column]
                         if not invalid_values.empty:
                             errors.append(
-                                f"Найдены значения вне диапазона [{min_val}, {max_val}] в столбце '{column}': {invalid_values.tolist()}"
+                                f"Найдены значения вне диапазона "
+                                f"[{min_val}, {max_val}] в столбце "
+                                f"'{column}': {invalid_values.tolist()}"
                             )
                     except (TypeError, ValueError):
                         warnings_list.append(
