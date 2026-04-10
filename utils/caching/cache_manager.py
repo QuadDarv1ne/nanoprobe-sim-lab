@@ -165,7 +165,7 @@ class CacheManager:
                             access_time = datetime.fromtimestamp(stat.st_atime)
                             if oldest_file_time is None or access_time < oldest_file_time:
                                 oldest_file_time = access_time
-                        except (OSError, PermissionError):
+                        except OSError:
                             continue
 
                 if file_count > 0:
@@ -255,7 +255,7 @@ class CacheManager:
                             deleted_files.append(str(cache_info.path))
                             deleted_size += cache_info.size_bytes
                             deleted_count += cache_info.file_count
-                    except (OSError, PermissionError) as e:
+                    except OSError as e:
                         print(f"Ошибка при удалении {cache_info.path}: {e}")
 
         # Очищаем системный кэш Python
@@ -285,7 +285,7 @@ class CacheManager:
                             dirs.remove(
                                 dir_name
                             )  # Удаляем из списка для предотвращения повторного обхода
-                        except (OSError, PermissionError):
+                        except OSError:
                             pass
         except Exception as e:
             logger.error(f"Error cleaning Python cache: {e}")
@@ -501,3 +501,18 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# ============================================================
+# Global instance
+# ============================================================
+
+_cache_manager: Optional[CacheManager] = None
+
+
+def get_cache_manager() -> CacheManager:
+    """Получить глобальный экземпляр CacheManager"""
+    global _cache_manager
+    if _cache_manager is None:
+        _cache_manager = CacheManager()
+    return _cache_manager
