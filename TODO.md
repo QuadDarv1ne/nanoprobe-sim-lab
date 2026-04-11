@@ -1,10 +1,10 @@
 # Nanoprobe Sim Lab — TODO
 
-**Последнее обновление:** 2026-04-11 19:15
+**Последнее обновление:** 2026-04-11 19:45
 
 ## Статус проекта
 
-- **Ветка:** `dev` ahead of `main` by 3 commits ✅
+- **Ветка:** `dev` ahead of `main` by 6 commits ✅
 - **Рабочее дерево:** чистое ✅
 - **Python:** 3.11 - 3.14
 
@@ -13,41 +13,57 @@
 ### HIGH (делать в первую очередь)
 1. [x] Улучшать код в ветке `dev`
 2. [x] Проверять тесты после изменений
-3. [ ] Merge в `main` после стабилизации
-4. [ ] Синхронизировать изменения с origin
+3. [x] Исправить критичные flake8 ошибки
+4. [ ] Merge в `main` после стабилизации
+5. [ ] Синхронизировать изменения с origin
 
 ### MEDIUM
-5. [ ] Увеличить test coverage до 80%+
-6. [x] Разбить api/routes/dashboard.py на модули (41 КБ)
-7. [x] Разбить api/routes/auth.py на модули (30 КБ)
-8. [x] Исправить критичные flake8 ошибки (F821 undefined names)
-9. [ ] Настроить bias_tee для активной антенны
+6. [ ] Увеличить test coverage до 80%+
+7. [x] Разбить api/routes/dashboard.py на модули (41 КБ)
+8. [x] Разбить api/routes/auth.py на модули (30 КБ)
+9. [x] Исправить критичные flake8 ошибки (F821, B011, B017, F841, E741, B006, B026)
+10. [ ] Настроить bias_tee для активной антенны
 
 ### LOW
-10. [ ] Исправить оставшиеся ~150 E501 строк (HTML/CSS, SQL, config dicts)
-11. [ ] Мигрировать frontend на Next.js (убрать Flask)
-12. [ ] Решить SQLite vs PostgreSQL (есть guide в docs/)
-13. [ ] Откалибровать TCXO (--freq-correction)
-14. [ ] Создать mobile application
-15. [ ] Исправить remaining flake8 warnings (B011, B017, F841, E741)
-16. [ ] Auto-format все файлы black/isort (98 files reformatted)
+11. [ ] Исправить оставшиеся ~150 E501 строк (HTML/CSS, SQL, config dicts)
+12. [ ] Мигрировать frontend на Next.js (убрать Flask)
+13. [ ] Решить SQLite vs PostgreSQL (есть guide в docs/)
+14. [ ] Откалибровать TCXO (--freq-correction)
+15. [ ] Создать mobile application
+16. [x] Auto-format все файлы black/isort (98 files reformatted)
 
 ---
 
 ## 📊 Проделанная работа (2026-04-11)
 
-### Коммиты
+### Коммиты (6 new commits)
+- **93a3924** - fix: add missing pytest import
+- **e314704** - fix: resolve flake8 errors (B011, B017, F841, E741, B006, B026)
+- **5802337** - docs: update TODO.md with today's progress
 - **b84ab32** - fix: add missing imports (time, timezone) to fix F821 errors
 - **353e2cc** - fix: fix test_cli_dashboard abstract class instantiation and error count assertion
 - **95dfb93** - style: remove unused imports (rate_limit, decode_token, Query)
-- Auto-format: 98 files reformatted with black, isort
+
+### Исправления тестов
+- ✅ Fixed test_cli_dashboard.py: replaced abstract Widget with DummyTestWidget
+- ✅ Fixed error count assertion (2 → 3 errors)
+- ✅ Fixed B011: replaced `assert False` with `pytest.raises()` in test_circuit_breaker.py
+- ✅ Fixed B017: replaced `assertRaises(Exception)` with `pytest.raises(ValidationError)`
+- ✅ Fixed F841: removed unused variable in test_integration_api.py
+- ✅ Fixed E741: renamed ambiguous variable 'l' to 'line' in test_new_improvements.py
+- ✅ Fixed B006: replaced mutable default argument in performance_benchmark.py
+- ✅ Fixed B026: fixed star-arg unpacking after keyword argument
+- ✅ All 19 dashboard tests passing
+
+### Автоматическое форматирование
+- 98 files reformatted with black, isort
 - Fixed trailing whitespace in 60+ files
 - Fixed end of lines in 14 files
 
-### Исправления тестов
-- Fixed test_cli_dashboard.py: replaced abstract Widget with DummyTestWidget
-- Fixed error count assertion (2 → 3 errors)
-- All 19 dashboard tests now passing
+### Исправления импортов
+- ✅ Added missing `import time` in adsb_tracker.py (F821)
+- ✅ Added missing `timezone` in migrate_datetime.py (F821)
+- ✅ Removed unused imports (rate_limit, decode_token, Query)
 
 ---
 
