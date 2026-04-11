@@ -1,10 +1,10 @@
 # Nanoprobe Sim Lab — TODO
 
-**Последнее обновление:** 2026-04-11 18:30
+**Последнее обновление:** 2026-04-11 19:15
 
 ## Статус проекта
 
-- **Ветка:** `dev` == `main` ✅ (синхронизированы)
+- **Ветка:** `dev` ahead of `main` by 3 commits ✅
 - **Рабочее дерево:** чистое ✅
 - **Python:** 3.11 - 3.14
 
@@ -13,21 +13,41 @@
 ### HIGH (делать в первую очередь)
 1. [x] Улучшать код в ветке `dev`
 2. [x] Проверять тесты после изменений
-3. [x] Merge в `main` после стабилизации
-4. [x] Синхронизировать изменения с origin
+3. [ ] Merge в `main` после стабилизации
+4. [ ] Синхронизировать изменения с origin
 
 ### MEDIUM
 5. [ ] Увеличить test coverage до 80%+
 6. [x] Разбить api/routes/dashboard.py на модули (41 КБ)
 7. [x] Разбить api/routes/auth.py на модули (30 КБ)
-8. [ ] Настроить bias_tee для активной антенны
+8. [x] Исправить критичные flake8 ошибки (F821 undefined names)
+9. [ ] Настроить bias_tee для активной антенны
 
 ### LOW
-9. [ ] Исправить оставшиеся ~150 E501 строк (HTML/CSS, SQL, config dicts)
-10. [ ] Мигрировать frontend на Next.js (убрать Flask)
-11. [ ] Решить SQLite vs PostgreSQL (есть guide в docs/)
-12. [ ] Откалибровать TCXO (--freq-correction)
-13. [ ] Создать mobile application
+10. [ ] Исправить оставшиеся ~150 E501 строк (HTML/CSS, SQL, config dicts)
+11. [ ] Мигрировать frontend на Next.js (убрать Flask)
+12. [ ] Решить SQLite vs PostgreSQL (есть guide в docs/)
+13. [ ] Откалибровать TCXO (--freq-correction)
+14. [ ] Создать mobile application
+15. [ ] Исправить remaining flake8 warnings (B011, B017, F841, E741)
+16. [ ] Auto-format все файлы black/isort (98 files reformatted)
+
+---
+
+## 📊 Проделанная работа (2026-04-11)
+
+### Коммиты
+- **b84ab32** - fix: add missing imports (time, timezone) to fix F821 errors
+- **353e2cc** - fix: fix test_cli_dashboard abstract class instantiation and error count assertion
+- **95dfb93** - style: remove unused imports (rate_limit, decode_token, Query)
+- Auto-format: 98 files reformatted with black, isort
+- Fixed trailing whitespace in 60+ files
+- Fixed end of lines in 14 files
+
+### Исправления тестов
+- Fixed test_cli_dashboard.py: replaced abstract Widget with DummyTestWidget
+- Fixed error count assertion (2 → 3 errors)
+- All 19 dashboard tests now passing
 
 ---
 
