@@ -70,15 +70,15 @@ def get_project_root() -> Path:
 
 def get_cached_stats() -> Optional[Dict]:
     """Получить кэшированную статистику если не истёк TTL"""
-    cached = get_app_state("stats_cache")
+    cached_data = get_app_state("stats_cache")
     cache_time = get_app_state("stats_cache_time")
 
-    if cache_time is None or cached is None:
+    if cache_time is None or cached_data is None:
         return None
 
     age = (datetime.now(timezone.utc) - cache_time).total_seconds()
     if age < STATS_CACHE_TTL:
-        return cached
+        return cached_data
     return None
 
 
@@ -155,9 +155,9 @@ async def get_dashboard_stats(
                 return DashboardStats(**cached_data)
 
         # In-memory кэш
-        cached = get_cached_stats()
-        if cached:
-            return DashboardStats(**cached)
+        cached_stats = get_cached_stats()
+        if cached_stats:
+            return DashboardStats(**cached_stats)
 
     try:
         storage = get_storage_stats()
