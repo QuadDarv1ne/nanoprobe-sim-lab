@@ -172,8 +172,16 @@ async def start_sstv_recording(
     session_manager = get_session_manager()
     session_manager.start_recording(sid, frequency, duration, gain)
 
-    # Запускаем запись в фоне
-    asyncio.create_task(_record_sstv_background(sid, receiver, duration))
+    # Запускаем запись в фоне с обработкой ошибок
+    async def _record_with_error_handling():
+        try:
+            await _record_sstv_background(sid, receiver, duration)
+        except Exception as exc:
+            logging.getLogger(__name__).error("Background SSTV recording failed: %s", exc)
+            session_manager.finish_recording(sid)
+
+    record_task = asyncio.create_task(_record_with_error_handling())
+    session_manager._task = record_task  # сохраняем ссылку
 
     return {
         "status": "started",

@@ -275,7 +275,7 @@ def _get_sightings_db(limit: int, offset: int, icao: Optional[str], flight: Opti
 
         where_clause = "WHERE " + " AND ".join(where) if where else ""
 
-        cursor.execute(f"SELECT COUNT(*) FROM adsb_sightings {where_clause}", params)
+        cursor.execute("SELECT COUNT(*) FROM adsb_sightings " + where_clause, params)
         total = cursor.fetchone()[0]
 
         cursor.execute(

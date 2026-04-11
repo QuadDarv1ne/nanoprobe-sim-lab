@@ -271,7 +271,7 @@ def _get_readings_db(
         where_clause = "WHERE " + " AND ".join(where) if where else ""
 
         # Get total count
-        cursor.execute(f"SELECT COUNT(*) FROM rtl433_readings {where_clause}", params)
+        cursor.execute("SELECT COUNT(*) FROM rtl433_readings " + where_clause, params)
         total = cursor.fetchone()[0]
 
         # Get readings

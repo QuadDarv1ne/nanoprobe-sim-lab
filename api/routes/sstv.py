@@ -508,13 +508,15 @@ async def iss_websocket(websocket: WebSocket):
                                 "timestamp": datetime.now(timezone.utc).isoformat(),
                             }
                         )
-                except Exception:
+                except Exception as exc:
+                    logger.debug("WebSocket send position error: %s", exc)
                     pass
 
             except WebSocketDisconnect:
                 break
 
     except Exception as e:
+        logger.error("WebSocket ISS tracking error: %s", e)
         try:
             await websocket.send_json({"error": str(e)})
         except Exception:
@@ -959,7 +961,15 @@ async def start_sstv_recording(
         set_app_state("recording_metadata", recording_metadata)
 
         # Планируем остановку через duration секунд
-        asyncio.create_task(stop_recording_after(duration))
+        async def _stop_after(delay: int):
+            try:
+                await asyncio.sleep(delay)
+                await stop_sstv_recording()
+            except Exception as exc:
+                logger.error("Scheduled recording stop error: %s", exc)
+
+        stop_task = asyncio.create_task(_stop_after(duration))
+        set_app_state("recording_stop_task", stop_task)
 
         return {
             "status": "recording_started",
