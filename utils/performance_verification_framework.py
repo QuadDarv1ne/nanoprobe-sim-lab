@@ -323,7 +323,7 @@ class PerformanceVerificationFramework:
         original_results = {}
         for name, func in algorithms.items():
             original_results[name] = self.benchmark_suite.benchmark_function(
-                f"original_{name}", func, 10000, iterations=10
+                func, 10000, name=f"original_{name}", iterations=10
             )
 
         # Сравниваем алгоритмы
@@ -332,7 +332,7 @@ class PerformanceVerificationFramework:
         # Применяем оптимизации
         # Используем самый быстрый алгоритм
         optimized_result = self.benchmark_suite.benchmark_function(
-            "optimized_algorithm", algorithm_optimal, 10000, iterations=10
+            algorithm_optimal, 10000, name="optimized_algorithm", iterations=10
         )
 
         # Рассчитываем улучшение

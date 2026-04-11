@@ -79,7 +79,7 @@ def test_flask_health(flask_url):
         elapsed = (time.time() - start) * 1000
 
         if response.status_code == 200:
-            data = response.json()
+            response.json()  # Check that response is valid JSON
             print_result("Flask health check", True, f"Time: {elapsed:.2f}ms")
             return True
         else:

@@ -77,12 +77,14 @@ class TestSchemasValidation:
 
     def test_pagination_params_invalid(self):
         """Тест невалидных параметров пагинации"""
+        from pydantic import ValidationError
+
         from api.schemas import PaginationParams
 
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             PaginationParams(page=0)  # page < 1
 
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             PaginationParams(page_size=101)  # page_size > 100
 
 
@@ -228,10 +230,10 @@ class TestEnhancedMonitorPrometheus:
 
         # Находим строку с CPU
         cpu_line = None
-        for l in lines:
-            if "nanoprobe_cpu_percent " in l and not l.startswith("#"):
-                cpu_value = float(l.split()[-1])
-                cpu_line = l
+        for line in lines:
+            if "nanoprobe_cpu_percent " in line and not line.startswith("#"):
+                cpu_value = float(line.split()[-1])
+                cpu_line = line
                 break
 
         assert cpu_line is not None, "Не найдена строка с CPU метрикой"
@@ -240,10 +242,10 @@ class TestEnhancedMonitorPrometheus:
 
         # Находим строку с memory
         mem_line = None
-        for l in lines:
-            if "nanoprobe_memory_percent " in l and not l.startswith("#"):
-                mem_value = float(l.split()[-1])
-                mem_line = l
+        for line in lines:
+            if "nanoprobe_memory_percent " in line and not line.startswith("#"):
+                mem_value = float(line.split()[-1])
+                mem_line = line
                 break
 
         assert mem_line is not None, "Не найдена строка с memory метрикой"

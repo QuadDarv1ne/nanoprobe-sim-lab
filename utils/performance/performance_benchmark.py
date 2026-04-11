@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Optional
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -131,15 +131,21 @@ class PerformanceBenchmarkSuite:
         return results
 
     def benchmark_function(
-        self, name: str, func: Callable, *args, iterations: int = 100, warmup: int = 10, **kwargs
+        self,
+        func: Callable,
+        *args,
+        name: str = "unnamed",
+        iterations: int = 100,
+        warmup: int = 10,
+        **kwargs,
     ) -> Dict[str, Any]:
         """
         Выполняет бенчмарк функции
 
         Args:
-            name: Имя теста
             func: Функция для бенчмарка
             *args: Аргументы для функции
+            name: Имя теста
             iterations: Количество итераций
             warmup: Количество прогревочных итераций
             **kwargs: Ключевые аргументы для функции
@@ -229,7 +235,7 @@ class PerformanceBenchmarkSuite:
         name: str,
         func: Callable,
         *args,
-        thread_counts: List[int] = [1, 2, 4, 8],
+        thread_counts: Optional[List[int]] = None,
         iterations_per_thread: int = 10,
         **kwargs,
     ) -> Dict[str, Any]:
@@ -243,10 +249,10 @@ class PerformanceBenchmarkSuite:
             thread_counts: Количество потоков для тестирования
             iterations_per_thread: Итераций на поток
             **kwargs: Ключевые аргументы для функции
-
-        Returns:
-            Результаты бенчмарка параллельного выполнения
         """
+        if thread_counts is None:
+            thread_counts = [1, 2, 4, 8]
+
         print(f"Запуск бенчмарка параллелизма: {name}")
 
         results = {}
@@ -340,7 +346,7 @@ class PerformanceBenchmarkSuite:
         for name, func in algorithms.items():
             # Выполняем бенчмарк для каждого алгоритма
             result = self.benchmark_function(
-                f"algorithm_{name}", func, test_data, iterations=iterations, **kwargs
+                func, test_data, name=f"algorithm_{name}", iterations=iterations, **kwargs
             )
             algorithm_results[name] = result
 
@@ -692,9 +698,9 @@ class BenchmarkDecorator:
         def wrapper(*args, **kwargs):
             # Выполняем бенчмарк
             result = self.benchmark_suite.benchmark_function(
-                name=f"decorated_{func.__name__}",
-                func=func,
+                func,
                 *args,
+                name=f"decorated_{func.__name__}",
                 iterations=iterations,
                 warmup=warmup,
                 **kwargs,
@@ -748,14 +754,14 @@ def main():
     # Выполняем бенчмарк для медленной функции
     print("\nБенчмарк медленной функции...")
     slow_result = benchmark_suite.benchmark_function(
-        "slow_calculation", slow_calculation, 10000, iterations=50
+        slow_calculation, 10000, name="slow_calculation", iterations=50
     )
     print(f"Среднее время: {slow_result['timing_stats']['avg_seconds']:.6f} сек")
 
     # Выполняем бенчмарк для быстрой функции
     print("\nБенчмарк быстрой функции...")
     fast_result = benchmark_suite.benchmark_function(
-        "fast_calculation", fast_calculation, 10000, iterations=50
+        fast_calculation, 10000, name="fast_calculation", iterations=50
     )
     print(f"Среднее время: {fast_result['timing_stats']['avg_seconds']:.6f} сек")
 

@@ -154,12 +154,11 @@ class TestCircuitBreakerCall:
         def fail_func():
             raise ValueError("Test error")
 
-        try:
+        with pytest.raises(ValueError) as exc_info:
             cb.call(fail_func)
-            assert False, "Should raise exception"
-        except ValueError as e:
-            assert str(e) == "Test error"
-            assert cb._failure_count == 1
+
+        assert str(exc_info.value) == "Test error"
+        assert cb._failure_count == 1
         print("  [PASS] Call failure")
 
     def test_call_open_circuit_breaker(self):
@@ -174,11 +173,8 @@ class TestCircuitBreakerCall:
                 pass
 
         # Попытка вызова при открытом
-        try:
+        with pytest.raises(CircuitBreakerOpenError):
             cb.call(lambda: "should not execute")
-            assert False, "Should raise CircuitBreakerOpenError"
-        except CircuitBreakerOpenError:
-            pass
         print("  [PASS] Call open circuit breaker")
 
 
@@ -203,11 +199,8 @@ class TestCircuitBreakerDecorator:
         def fail_func():
             raise RuntimeError("Decorated error")
 
-        try:
+        with pytest.raises(RuntimeError):
             fail_func()
-            assert False, "Should raise exception"
-        except RuntimeError:
-            pass
         print("  [PASS] Decorator failure")
 
 
