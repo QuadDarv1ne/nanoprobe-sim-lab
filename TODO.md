@@ -1,20 +1,14 @@
 # Nanoprobe Sim Lab — TODO
 
-**Последнее обновление:** 2026-04-10 21:30
+**Последнее обновление:** 2026-04-11 12:45
 
 ## Статус проекта
 
 - **Ветка:** `dev` (активная разработка) → `main` (стабильная)
 - **Тесты:** 66/66 core passing (100%) ✅
+- **RTL-SDR V4:** подключён, работает, автоопределение координат ✅
+- **МСК актуализация:** ПОЛНАЯ — все datetime/координаты timezone-aware ✅
 - **Качество кода:** 380+ исправлений, pre-commit hooks проходят ✅
-- **RTL-SDR V4:** подключён и работает ✅
-- **Очистка:** удалено 12 дублирующих файлов (-1133 строк) ✅
-- **E501:** исправлено ~111 длинных строк (210 → 99 осталось) ✅✅✅
-- **F401/F841:** исправлено ~51 unused imports/variables (86 → ~35 осталось) ✅✅✅
-- **F821/B001/E722:** исправлены критические (undefined names, bare except) ✅
-- **Python:** 3.11+ (обновлено с 3.8) ✅
-- **API E501:** 0 ошибок ✅ (все исправлены)
-- **Scripts F401:** 6 unused imports удалено ✅
 
 ## 📝 Анализ проекта (2026-04-10)
 
@@ -26,9 +20,10 @@
 - JWT + 2FA TOTP аутентификация
 - WebSocket real-time updates
 - GraphQL API
-- RTL-SDR V4 полностью интегрирован
+- RTL-SDR V4 полностью интегрирован + автоопределение координат
 - Alembic migrations для БД
 - Redis integration для кэширования
+- **МСК актуализация:** все 39 файлов обновлены — `datetime.now(timezone.utc)`, `fromtimestamp(tz=utc)`, автокоординаты по IP
 
 ### ⚠️ Требует внимания
 - **E501:** 197 длинных строк остались (HTML/CSS, SQL, config dicts) - low priority
@@ -44,6 +39,48 @@
 - Mobile application (React Native/Flutter)
 - External integrations (NASA, Zenodo, Figshare)
 - Performance monitoring dashboard
+
+## Последние улучшения (2026-04-11)
+
+### МСК автоматическая актуализация (39 файлов обновлено)
+- [x] `utils/location_manager.py` — единый менеджер локаций: авто-IP, кэш 24ч, МСК UTC+3
+- [x] `components/.../geolocation.py` — геолокация для SSTV модуля
+- [x] `components/.../satellite_tracker.py` — автокоординаты, `datetime.now(timezone.utc)`
+- [x] `components/.../main.py` — МСК время в расписании, авто-координаты
+- [x] `components/.../auto_recorder.py` — автокоординаты
+- [x] `api/routes/sstv.py` — автокоординаты + `fromtimestamp(tz=utc)`
+- [x] `api/routes/adsb.py` — `datetime.now(timezone.utc)` в stats
+- [x] `api/routes/fm_radio.py` — `datetime.now(timezone.utc)` в stats
+- [x] `api/routes/rtl433.py` — `datetime.now(timezone.utc)` в stats
+- [x] `api/routes/dashboard.py` — `boot_time` с `tz=utc`
+- [x] `api/routes/admin.py` — `boot_time`, `create_time`, `modified` с `tz=utc`
+- [x] `api/routes/weather.py` — автокоординаты
+- [x] `api/integration.py` — JWT expiry с `tz=utc`
+- [x] `api/error_handlers.py` — исправлен naive vs aware comparison (RuntimeError!)
+- [x] `api/api_interface.py` — `fromtimestamp` с `tz=utc`
+- [x] `utils/caching/cache_manager.py` — исправлен naive vs aware comparison
+- [x] `utils/config/config_manager.py` — config `last_modified` с `tz=utc`
+- [x] `utils/batch_processor.py` — автокоординаты
+- [x] `utils/data/data_integrity.py` — `fromtimestamp` с `tz=utc`
+- [x] `utils/monitoring/system_health_monitor.py` — `boot_time` с `tz=utc`
+- [x] `rtl_sdr_tools/iss_tracker.py` — автокоординаты, МСК время
+- [x] `rtl_sdr_tools/sstv_ground_station.py` — автокоординаты во всех CLI командах
+- [x] `rtl_sdr_tools/` (8 файлов) — `datetime.now(tz=utc)` в именах файлов и выводе
+- [x] `admin_cli.py` — `fromtimestamp` с `tz=utc`
+- [x] `.env` — координаты закомментированы (автоопределение)
+- [x] `.env.example` — документация автоопределения
+- [x] `tests/test_security_improvements.py` — `datetime.utcnow()` → `datetime.now(timezone.utc)`
+- [x] `tools/Dump1090-main/.../Retro-ADSB-radar/main.py` — `datetime.now(timezone.utc)`
+
+### Коммиты (pushed to origin/dev)
+- ✅ `15362c2` fix: resolve E501 line too long errors in utils modules (12 lines fixed)
+- ✅ `1c6d3fb` chore: update RTL-SDR tools (adsb_receiver, fm_radio_unified, rtl_sdr_noaa_capture)
+- ✅ `05e5c32` fix: resolve 13 E501 line too long errors in core API files
+- ✅ `77d8f48` docs: update TODO.md with cleanup status and fix broken references
+- ✅ `56a00a4` chore: remove duplicate reports, QWEN.md, active_tests, bat scripts
+- ✅ `99959a8` docs: update todo.md with current project status
+- ✅ `f9b9923` feat: add FM Stereo and POCSAG decoders + update todo.md
+- ✅ `4ec59ea` test: add 89 new tests (RTL-SDR tools, API routes, utils)
 
 ## Последние улучшения (2026-04-10)
 
@@ -211,10 +248,10 @@
 ### 🎯 Приоритеты (High → Low)
 
 **HIGH:**
-1. Закоммитить текущие изменения в RTL-SDR файлах
-2. Проверить все тесты (66 core + 89 integration)
-3. Merge dev → main после стабилизации
-4. Решить вопрос SQLite vs PostgreSQL
+1. ~~Закоммитить текущие изменения в RTL-SDR файлах~~ ✅ сделано
+2. ~~Проверить все тесты (66 core + 89 integration)~~ ✅ сделано
+3. **Merge dev → main** после стабилизации МСК актуализации
+4. ~~Решить вопрос SQLite vs PostgreSQL~~ low priority
 
 **MEDIUM:**
 5. Увеличить test coverage до 80%+
