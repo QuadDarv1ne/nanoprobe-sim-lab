@@ -14,13 +14,24 @@ from src.cli.dashboard.widgets.metrics import MetricsWidget
 from src.cli.dashboard.widgets.system_monitor import SystemMonitorWidget
 
 
+# Concrete widget implementation for testing
+class DummyTestWidget(Widget):
+    """Test implementation of Widget"""
+
+    async def refresh(self) -> WidgetData:
+        return WidgetData(title=self.title, content="Test content")
+
+    def render(self, width: int = 40) -> str:
+        return f"[{self.title}] Test content"
+
+
 # Тесты базового виджета
 class TestWidgetBase:
     """Тесты базового класса Widget"""
 
     def test_widget_creation(self):
         """Создание виджета"""
-        widget = Widget(
+        widget = DummyTestWidget(
             name="test_widget",
             title="Test Widget",
             priority=WidgetPriority.NORMAL,
@@ -35,19 +46,19 @@ class TestWidgetBase:
 
     def test_widget_visibility(self):
         """Проверка видимости виджета в разных режимах"""
-        critical_widget = Widget(
+        critical_widget = DummyTestWidget(
             name="critical",
             title="Critical",
             priority=WidgetPriority.CRITICAL,
         )
 
-        high_widget = Widget(
+        high_widget = DummyTestWidget(
             name="high",
             title="High",
             priority=WidgetPriority.HIGH,
         )
 
-        normal_widget = Widget(
+        normal_widget = DummyTestWidget(
             name="normal",
             title="Normal",
             priority=WidgetPriority.NORMAL,
@@ -70,7 +81,7 @@ class TestWidgetBase:
 
     def test_widget_disabled(self):
         """Проверка отключенного виджета"""
-        widget = Widget(
+        widget = DummyTestWidget(
             name="disabled",
             title="Disabled",
             priority=WidgetPriority.CRITICAL,
@@ -98,16 +109,16 @@ class TestSystemMonitorWidget:
         assert data.content is not None
 
         metrics = data.content
-        assert 'cpu' in metrics
-        assert 'memory_percent' in metrics
-        assert 'disk_percent' in metrics
-        assert 'net_sent' in metrics
-        assert 'net_recv' in metrics
+        assert "cpu" in metrics
+        assert "memory_percent" in metrics
+        assert "disk_percent" in metrics
+        assert "net_sent" in metrics
+        assert "net_recv" in metrics
 
         # Проверка диапазонов
-        assert 0 <= metrics['cpu'] <= 100
-        assert 0 <= metrics['memory_percent'] <= 100
-        assert 0 <= metrics['disk_percent'] <= 100
+        assert 0 <= metrics["cpu"] <= 100
+        assert 0 <= metrics["memory_percent"] <= 100
+        assert 0 <= metrics["disk_percent"] <= 100
 
     def test_system_monitor_render(self):
         """Отрисовка системного монитора"""
@@ -160,7 +171,7 @@ class TestComponentStatusWidget:
 
         # Компоненты должны быть в статусе up или down
         for name, status in data.content.items():
-            assert status in ['up', 'down']
+            assert status in ["up", "down"]
 
 
 # Тесты Log Viewer Widget
@@ -188,7 +199,7 @@ class TestLogViewerWidget:
                 "WARNING: Low memory",
                 "INFO: User logged in",
             ],
-            timestamp=datetime.now(timezone.utc)
+            timestamp=datetime.now(timezone.utc),
         )
 
         # Фильтр по INFO
@@ -210,11 +221,11 @@ class TestLogViewerWidget:
                 "ERROR: Database error",
                 "CRITICAL: System crash",
             ],
-            timestamp=datetime.now(timezone.utc)
+            timestamp=datetime.now(timezone.utc),
         )
 
         error_count = widget.get_error_count()
-        assert error_count == 2  # ERROR + CRITICAL
+        assert error_count == 3  # 2 ERROR + 1 CRITICAL
 
 
 # Тесты Unified Dashboard
@@ -239,7 +250,7 @@ class TestUnifiedDashboard:
 
         initial_count = len(dashboard.widgets)
 
-        new_widget = Widget(
+        new_widget = DummyTestWidget(
             name="custom_widget",
             title="Custom Widget",
             priority=WidgetPriority.LOW,
@@ -255,7 +266,7 @@ class TestUnifiedDashboard:
         dashboard = UnifiedDashboard()
 
         # Создаём и регистрируем временный виджет
-        temp_widget = Widget(
+        temp_widget = DummyTestWidget(
             name="temp_widget",
             title="Temp",
             priority=WidgetPriority.LOW,
@@ -294,13 +305,13 @@ class TestUnifiedDashboard:
 
         summary = dashboard.get_summary()
 
-        assert 'mode' in summary
-        assert 'total_widgets' in summary
-        assert 'visible_widgets' in summary
-        assert 'theme' in summary
+        assert "mode" in summary
+        assert "total_widgets" in summary
+        assert "visible_widgets" in summary
+        assert "theme" in summary
 
-        assert summary['mode'] == 'standard'
-        assert summary['total_widgets'] >= 3
+        assert summary["mode"] == "standard"
+        assert summary["total_widgets"] >= 3
 
 
 # Тесты виджетов в сборе
@@ -325,10 +336,10 @@ class TestWidgetIntegration:
     def test_widget_priority_ordering(self):
         """Проверка порядка приоритетов виджетов"""
         widgets = [
-            Widget(name="critical", title="Critical", priority=WidgetPriority.CRITICAL),
-            Widget(name="high", title="High", priority=WidgetPriority.HIGH),
-            Widget(name="normal", title="Normal", priority=WidgetPriority.NORMAL),
-            Widget(name="low", title="Low", priority=WidgetPriority.LOW),
+            DummyTestWidget(name="critical", title="Critical", priority=WidgetPriority.CRITICAL),
+            DummyTestWidget(name="high", title="High", priority=WidgetPriority.HIGH),
+            DummyTestWidget(name="normal", title="Normal", priority=WidgetPriority.NORMAL),
+            DummyTestWidget(name="low", title="Low", priority=WidgetPriority.LOW),
         ]
 
         # Сортировка по приоритету
