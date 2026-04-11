@@ -1,15 +1,11 @@
 """
-Auth API Router - Unified
+Auth API модули
 
-Объединяет все auth endpoint'ы из отдельных модулей:
+Разбитие auth.py на отдельные модули:
 - helpers: Утилиты, хэширование, валидация паролей
 - tokens: JWT токены, refresh token rotation
-- endpoints: Login, refresh, 2FA, logout
-
-Обратная совместимость: все старые URL'ы работают.
+- endpoints: Все endpoint'ы (login, 2FA, logout)
 """
-
-from fastapi import APIRouter
 
 from api.routes.auth_routes.endpoints import router as endpoints_router
 from api.routes.auth_routes.helpers import (
@@ -40,11 +36,8 @@ from api.routes.auth_routes.tokens import (
     revoke_refresh_token,
 )
 
-router = APIRouter()
-router.include_router(endpoints_router)
-
 __all__ = [
-    "router",
+    "endpoints_router",
     "JWT_ALGORITHM",
     "JWT_EXPIRATION_MINUTES",
     "JWT_REFRESH_EXPIRATION_DAYS",
