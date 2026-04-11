@@ -158,7 +158,9 @@ def save_location_cache(location: Dict):
         json.dump(cache, f, indent=2, ensure_ascii=False)
 
 
-def get_location(force_detect: bool = False, use_env: bool = True) -> Dict:
+def get_location(
+    force_detect: bool = False, use_env: bool = True, auto_refresh: bool = True
+) -> Dict:
     """
     Получает местоположение с автоматическим определением.
 
@@ -171,6 +173,7 @@ def get_location(force_detect: bool = False, use_env: bool = True) -> Dict:
     Args:
         force_detect: Принудительно определить по IP
         use_env: Проверять переменные окружения
+        auto_refresh: Автоматически обновлять кэш если он устарел
 
     Returns:
         Dict: lat, lon, city, country, timezone (TZInfo)
@@ -196,13 +199,27 @@ def get_location(force_detect: bool = False, use_env: bool = True) -> Dict:
         cached = load_location_cache()
         if cached:
             tz = TZInfo(cached.get("timezone_name", "MSK"), cached.get("timezone_offset", 3))
-            return {
+            location = {
                 "lat": cached["lat"],
                 "lon": cached["lon"],
                 "city": cached.get("city", "Unknown"),
                 "country": cached.get("country", "Unknown"),
                 "timezone": tz,
             }
+
+            # Если включено автообновление и кэш устарел - обновляем в фоне
+            if auto_refresh:
+                cached_time = datetime.fromisoformat(cached.get("timestamp", "")).replace(
+                    tzinfo=timezone.utc
+                )
+                if datetime.now(timezone.utc) - cached_time >= timedelta(hours=CACHE_TTL_HOURS):
+                    # Запускаем фоновое обновление
+                    import threading
+
+                    thread = threading.Thread(target=_background_location_refresh, daemon=True)
+                    thread.start()
+
+            return location
 
     # 3. Автоопределение по IP
     location = detect_location_by_ip()
@@ -218,6 +235,16 @@ def get_location(force_detect: bool = False, use_env: bool = True) -> Dict:
         "country": "Россия",
         "timezone": MSK_TZ,
     }
+
+
+def _background_location_refresh():
+    """Фоновое обновление кэша геолокации."""
+    try:
+        location = detect_location_by_ip()
+        if location:
+            save_location_cache(location)
+    except Exception:
+        pass  # Тихо игнорируем ошибки в фоновом потоке
 
 
 def force_detect_and_save() -> Optional[Dict]:
@@ -247,6 +274,30 @@ def get_location_info() -> str:
         f"   Timezone: {tz.name} (UTC{'+' if tz.utc_offset >= 0 else ''}{tz.utc_offset})\n"
         f"   Current time: {tz.now_local().strftime('%H:%M:%S')}"
     )
+
+
+def refresh_msk_data() -> Optional[Dict]:
+    """
+    Принудительно обновляет данные МСК (координаты и часовой пояс).
+    Используется для гарантированной актуализации всех расчётов.
+
+    Returns:
+        Dict: Обновлённые данные местоположения или None при ошибке
+    """
+    print("[MSK] Обновление данных геолокации...")
+    location = detect_location_by_ip()
+    if location:
+        save_location_cache(location)
+        print(f"[MSK] ✓ Местоположение обновлено: {location['city']}, {location['country']}")
+        print(f"[MSK]   Координаты: {location['lat']:.4f}°N, {location['lon']:.4f}°E")
+        print(
+            f"[MSK]   Часовой пояс: {location['timezone'].name} "
+            f"(UTC{'+' if location['timezone'].utc_offset >= 0 else ''}{location['timezone'].utc_offset})"
+        )
+        return location
+    else:
+        print("[MSK] ✗ Не удалось обновить местоположение по IP")
+        return None
 
 
 if __name__ == "__main__":

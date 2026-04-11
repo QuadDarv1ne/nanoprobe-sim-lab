@@ -18,6 +18,15 @@ _SRC_DIR = Path(__file__).parent
 if str(_SRC_DIR) not in sys.path:
     sys.path.insert(0, str(_SRC_DIR))
 
+try:
+    from utils.location_manager import TZInfo, get_location
+except ImportError:
+    try:
+        from geolocation import TZInfo, get_location
+    except ImportError:
+        TZInfo = None
+        get_location = None
+
 
 @dataclass
 class ScheduledRecording:
@@ -39,22 +48,26 @@ class AutoRecordingScheduler:
 
     def __init__(
         self,
-        ground_station_lat: float = 55.75,
-        ground_station_lon: float = 37.61,
+        ground_station_lat: float = None,
+        ground_station_lon: float = None,
         pre_pass_minutes: int = 5,
         post_pass_minutes: int = 2,
     ):
-        """
-        Инициализация планировщика.
-
-        Args:
-            ground_station_lat: Широта наземной станции
-            ground_station_lon: Долгота наземной станции
-            pre_pass_minutes: Начинать запись за N минут до AOS
-            post_pass_minutes: Заканчивать запись через N минут после LOS
-        """
-        self.lat = ground_station_lat
-        self.lon = ground_station_lon
+        """Инициализация планировщика."""
+        if ground_station_lat is None or ground_station_lon is None:
+            if get_location:
+                loc = get_location()
+                self.lat = ground_station_lat if ground_station_lat is not None else loc["lat"]
+                self.lon = ground_station_lon if ground_station_lon is not None else loc["lon"]
+                self._tz = loc.get("timezone", TZInfo("MSK", 3) if TZInfo else None)
+            else:
+                self.lat = ground_station_lat or 55.7558
+                self.lon = ground_station_lon or 37.6173
+                self._tz = None
+        else:
+            self.lat = ground_station_lat
+            self.lon = ground_station_lon
+            self._tz = TZInfo("MSK", 3) if TZInfo else None
         self.pre_pass_minutes = pre_pass_minutes
         self.post_pass_minutes = post_pass_minutes
 

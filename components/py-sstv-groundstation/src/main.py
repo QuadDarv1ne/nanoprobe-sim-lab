@@ -12,6 +12,16 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from sdr_interface import SDRInterface, SDRScanner, create_sdr
 from sstv_decoder import SSTVDecoder, detect_sstv_signal
 
+try:
+    from utils.location_manager import TZInfo, get_location, now_msk
+except ImportError:
+    try:
+        from geolocation import TZInfo, get_location, now_msk
+    except ImportError:
+        TZInfo = None
+        get_location = None
+        now_msk = None
+
 
 def show_banner():
     """Отображает баннер программы."""
@@ -603,14 +613,25 @@ def main():
     parser.add_argument("--check", action="store_true", help="Проверка подключения RTL-SDR")
     parser.add_argument("--satellites", action="store_true", help="Список спутников")
     parser.add_argument("--schedule", action="store_true", help="Расписание пролётов")
-    parser.add_argument("--lat", type=float, default=55.75, help="Широта наземной станции")
-    parser.add_argument("--lon", type=float, default=37.61, help="Долгота наземной станции")
+    parser.add_argument("--lat", type=float, default=None, help="Широта (None = авто)")
+    parser.add_argument("--lon", type=float, default=None, help="Долгота (None = авто)")
+    parser.add_argument(
+        "--detect-location", action="store_true", help="Определить местоположение по IP"
+    )
 
     args = parser.parse_args()
 
     show_banner()
 
-    # Определяем режим работы
+    if args.detect_location:
+        try:
+            from utils.location_manager import force_detect_and_save
+        except ImportError:
+            from geolocation import force_detect_and_save
+
+        force_detect_and_save()
+        return
+
     if args.auto_record:
         mode_auto_record(args)
     elif args.schedule:
