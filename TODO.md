@@ -1,6 +1,6 @@
 # Nanoprobe Sim Lab — TODO
 
-**Последнее обновление:** 2026-04-11 14:45
+**Последнее обновление:** 2026-04-11 15:00
 
 ## Статус проекта
 
@@ -8,7 +8,7 @@
 - **Тесты:** 66/66 core passing (100%) ✅
 - **RTL-SDR V4:** подключён, работает, автоопределение координат ✅
 - **МСК актуализация:** ПОЛНАЯ — единый источник, автообновление кэша ✅
-- **Качество кода:** 380+ исправлений, pre-commit hooks проходят ✅
+- **Качество кода:** 400+ исправлений, F401/F811 в core модулях исправлены ✅
 
 ## 📝 Анализ проекта (2026-04-10)
 
@@ -42,6 +42,12 @@
 
 ## Последние улучшения (2026-04-11)
 
+### Исправления качества кода (F401, F811)
+- [x] `geolocation.py` — добавлен `__all__` для явного re-export API
+- [x] `satellite_tracker.py` — удалён дублирующий `import time`
+- [x] `iss_tracker.py` — удалены unused `datetime`, `timezone`
+- [x] `adsb_tracker.py` — удалены 2 дублирующих `import subprocess`
+
 ### МСК автоматическая актуализация v2 — единый источник + автообновление
 - [x] `utils/location_manager.py` — добавлен `auto_refresh` параметр, `refresh_msk_data()`, фоновое обновление кэша
 - [x] `components/.../geolocation.py` — переделан на обёртку импорта из location_manager (устранено дублирование)
@@ -52,12 +58,10 @@
 - [x] **Все расчёты используют актуальные данные МСК** — координаты и часовой пояс автоматически обновляются
 
 ### Коммиты (pushed to origin/dev)
+- ✅ `1514a60` fix: remove unused imports and duplicate definitions (F401, F811)
+- ✅ `0acb7fc` chore: удалить MSK-ACTUALIZATION.md (документация без запроса не создаётся)
+- ✅ `6796104` chore: применить автоформатирование из pre-commit hooks
 - ✅ `bfc17aa` feat: автоматическая актуализация данных по МСК для всех расчётов
-- ✅ `15362c2` fix: resolve E501 line too long errors in utils modules (12 lines fixed)
-- ✅ `1c6d3fb` chore: update RTL-SDR tools (adsb_receiver, fm_radio_unified, rtl_sdr_noaa_capture)
-- ✅ `05e5c32` fix: resolve 13 E501 line too long errors in core API files
-- ✅ `77d8f48` docs: update TODO.md with cleanup status and fix broken references
-- ✅ `56a00a4` chore: remove duplicate reports, QWEN.md, active_tests, bat scripts
 - ✅ `99959a8` docs: update todo.md with current project status
 - ✅ `f9b9923` feat: add FM Stereo and POCSAG decoders + update todo.md
 - ✅ `4ec59ea` test: add 89 new tests (RTL-SDR tools, API routes, utils)
