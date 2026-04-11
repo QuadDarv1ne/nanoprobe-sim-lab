@@ -1,4 +1,4 @@
-"""
+﻿"""
 SSTV Satellites endpoints
 
 Спутники, расписание МКС, TLE данные,
@@ -6,11 +6,9 @@ SSTV Satellites endpoints
 """
 
 import asyncio
-import os
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 
 from fastapi import APIRouter, Query
 

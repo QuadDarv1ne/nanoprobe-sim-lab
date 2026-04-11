@@ -1,18 +1,17 @@
-"""
+﻿"""
 Dashboard alerts endpoints
 
 Алерты, конфигурация, история метрик, процессы.
 """
 
 import logging
-from pathlib import Path
 from typing import Optional
 
 import psutil
 from fastapi import APIRouter, Query
 
 from api.error_handlers import DatabaseError, ServiceUnavailableError
-from api.routes.dashboard.helpers import get_project_root, get_system_disk_usage
+from api.routes.dashboard.helpers import get_system_disk_usage
 from utils.caching.redis_cache import cached
 from utils.monitoring.monitoring import get_monitor
 

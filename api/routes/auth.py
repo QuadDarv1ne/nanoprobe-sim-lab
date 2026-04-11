@@ -1,4 +1,4 @@
-"""
+﻿"""
 Auth API Router - Unified
 
 Объединяет все auth endpoint'ы из отдельных модулей:
@@ -29,7 +29,6 @@ from api.routes.auth_routes.tokens import (
     _in_memory_tokens,
     _in_memory_tokens_lock,
     _is_token_valid,
-    _revoke_all_user_tokens,
     _revoke_refresh_token,
     _store_refresh_token,
     create_access_token,

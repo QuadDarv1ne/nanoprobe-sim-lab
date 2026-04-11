@@ -1,11 +1,11 @@
-"""
+﻿"""
 Dashboard stats endpoints
 
 Статистика дашборда, health checks.
 """
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -18,7 +18,6 @@ from api.routes.dashboard.helpers import (
     CACHE_PREFIX,
     cache_stats,
     get_cached_stats,
-    get_project_root,
     get_storage_stats,
 )
 from api.schemas import DashboardStats, ErrorResponse, SystemHealth
@@ -50,8 +49,6 @@ async def get_dashboard_stats(
     Возвращает сводную статистику для дашборда.
     Кэширование: 5 секунд (Redis + in-memory)
     """
-    from fastapi import Header
-
     if cache_control != "no-cache":
         if cache.is_available():
             redis_key = f"{CACHE_PREFIX['stats']}:all"

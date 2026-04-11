@@ -1,4 +1,4 @@
-"""
+﻿"""
 Auth helpers
 
 Утилиты, константы, хэширование паролей, валидация.
@@ -8,12 +8,10 @@ import hashlib
 import json
 import logging
 import os
-from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
 from typing import Dict, Optional
 
-import jwt
 from passlib.context import CryptContext
 
 from api.security.jwt_config import get_default_passwords, get_jwt_secret

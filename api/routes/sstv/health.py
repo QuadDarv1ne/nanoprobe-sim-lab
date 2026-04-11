@@ -1,4 +1,4 @@
-"""
+﻿"""
 SSTV Health Check endpoints
 
 Проверка здоровья SSTV модуля, диагностика устройств,
@@ -9,12 +9,10 @@ import shutil
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 
 import psutil
 from fastapi import APIRouter
 
-from api.error_handlers import ServiceUnavailableError
 from api.routes.sstv.helpers import REDIS_AVAILABLE, SSTV_AVAILABLE, get_app_state, tracker_module
 
 router = APIRouter()
