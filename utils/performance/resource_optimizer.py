@@ -94,9 +94,9 @@ class ResourceManager:
                 "memory_percent": self.process.memory_percent(),
                 "num_threads": self.process.num_threads(),
                 "num_fds": self.process.num_fds() if hasattr(self.process, "num_fds") else 0,
-                "io_counters": self.process.io_counters()._asdict()
-                if self.process.io_counters()
-                else {},
+                "io_counters": (
+                    self.process.io_counters()._asdict() if self.process.io_counters() else {}
+                ),
                 "connections": len(self.process.connections()),
                 "open_files": len(self.process.open_files()),
             }

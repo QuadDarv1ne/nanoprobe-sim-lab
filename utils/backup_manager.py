@@ -505,9 +505,7 @@ class BackupManager:
             return 0
 
     def create_backup_strategy(
-        self,
-        strategy: str = "daily",
-        auto_cleanup: bool = True
+        self, strategy: str = "daily", auto_cleanup: bool = True
     ) -> Optional[str]:
         """
         Создание резервной копии по стратегии
@@ -535,9 +533,7 @@ class BackupManager:
             include_outputs = True
 
         backup_path = self.create_backup(
-            backup_name=backup_name,
-            include_outputs=include_outputs,
-            compress=True
+            backup_name=backup_name, include_outputs=include_outputs, compress=True
         )
 
         if backup_path and auto_cleanup:

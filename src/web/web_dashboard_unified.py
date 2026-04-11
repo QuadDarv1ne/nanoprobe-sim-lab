@@ -18,8 +18,33 @@
 - FastAPI (для backend)
 """
 
-# Проверка версии Python
+import os
 import sys
+import threading
+import time
+import webbrowser
+from datetime import datetime, timezone
+from functools import wraps
+from pathlib import Path
+from typing import List
+
+import requests
+from flask import Flask, jsonify, redirect, render_template, request, session, url_for
+from flask_socketio import SocketIO, emit
+
+from utils.ai.defect_analyzer import analyze_defects as analyze_defects_util
+from utils.caching.cache_manager import CacheManager
+from utils.config.config_manager import ConfigManager
+from utils.core.error_handler import ErrorHandler
+from utils.data.data_exporter import DataExporter
+from utils.data.data_manager import DataManager
+from utils.database import DatabaseManager
+from utils.logger import NanoprobeLogger
+from utils.monitoring.system_monitor import SystemMonitor
+from utils.performance_monitor import PerformanceMonitor
+
+# Проверка версии Python
+from utils.surface_comparator import compare_surfaces as compare_surfaces_util
 
 MIN_PYTHON_VERSION = (3, 11)
 MAX_PYTHON_VERSION = (3, 14)
@@ -30,13 +55,6 @@ if sys.version_info < MIN_PYTHON_VERSION or sys.version_info >= (
     print(f"[ERROR] Требуется Python 3.11 - 3.14, текущая версия: {sys.version}")
     sys.exit(1)
 
-import os
-import threading
-import time
-import webbrowser
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import List
 
 # UTF-8 для Windows
 if sys.platform == "win32":
@@ -50,11 +68,6 @@ if sys.platform == "win32":
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
         sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
-from functools import wraps
-
-import requests
-from flask import Flask, jsonify, redirect, render_template, request, session, url_for
-from flask_socketio import SocketIO, emit
 
 # Добавляем путь к utils
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -62,19 +75,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 # Project root
 project_root = Path(__file__).parent.parent.parent
 
-from utils.ai.defect_analyzer import analyze_defects as analyze_defects_util
-from utils.caching.cache_manager import CacheManager
-from utils.config.config_manager import ConfigManager
-from utils.core.error_handler import ErrorHandler
-from utils.data.data_exporter import DataExporter
-from utils.data.data_manager import DataManager
-from utils.database import DatabaseManager
 
 # Импорт утилит
-from utils.logger import NanoprobeLogger
-from utils.monitoring.system_monitor import SystemMonitor
-from utils.performance_monitor import PerformanceMonitor
-from utils.surface_comparator import compare_surfaces as compare_surfaces_util
 
 # Reverse proxy интеграция
 try:

@@ -8,8 +8,32 @@
 - Python 3.11, 3.12, 3.13, or 3.14
 """
 
-# Проверка версии Python (требуется 3.11 - 3.14)
+import os
+import subprocess
 import sys
+import threading
+import time
+import webbrowser
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict
+
+from flask import Flask, jsonify, render_template, request
+from flask_socketio import SocketIO, emit
+
+from utils.ai.defect_analyzer import analyze_defects as analyze_defects_util
+from utils.caching.cache_manager import CacheManager
+from utils.config.config_manager import ConfigManager
+from utils.core.error_handler import ErrorHandler
+from utils.data.data_exporter import DataExporter
+from utils.data.data_manager import DataManager
+from utils.database import DatabaseManager, get_database
+from utils.logger import NanoprobeLogger
+from utils.performance_monitor import PerformanceMonitor
+from utils.surface_comparator import compare_surfaces as compare_surfaces_util
+
+# Проверка версии Python (требуется 3.11 - 3.14)
+from utils.system_monitor import SystemMonitor
 
 MIN_PYTHON_VERSION = (3, 11)
 MAX_PYTHON_VERSION = (3, 14)
@@ -21,15 +45,6 @@ if sys.version_info < MIN_PYTHON_VERSION or sys.version_info >= (
     print(f"Путь к Python: {sys.executable}")
     print("Установите Python 3.11 - 3.14 с https://www.python.org/downloads/")
     sys.exit(1)
-
-import os
-import subprocess
-import threading
-import time
-import webbrowser
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any, Dict
 
 
 def _get_disk_usage():
@@ -51,8 +66,6 @@ if sys.platform == "win32":
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
         sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
-from flask import Flask, jsonify, render_template, request
-from flask_socketio import SocketIO, emit
 
 # Добавляем путь к utils для импорта служебных модулей
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -60,17 +73,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 # Project root for component paths
 project_root = Path(__file__).parent.parent.parent
 
-from utils.ai.defect_analyzer import analyze_defects as analyze_defects_util
-from utils.caching.cache_manager import CacheManager
-from utils.config.config_manager import ConfigManager
-from utils.core.error_handler import ErrorHandler
-from utils.data.data_exporter import DataExporter
-from utils.data.data_manager import DataManager
-from utils.database import DatabaseManager, get_database
-from utils.logger import NanoprobeLogger
-from utils.performance_monitor import PerformanceMonitor
-from utils.surface_comparator import compare_surfaces as compare_surfaces_util
-from utils.system_monitor import SystemMonitor
 
 # Интеграция с Backend (FastAPI)
 try:
@@ -187,6 +189,7 @@ class WebDashboard:
         def api_health():
             """Health check endpoint"""
             try:
+                socketio_status = "ok" if hasattr(self, "socketio") else "not_initialized"
                 return jsonify(
                     {
                         "status": "healthy",
@@ -194,7 +197,7 @@ class WebDashboard:
                         "uptime": self._get_uptime(),
                         "components": {
                             "database": "ok",
-                            "socketio": "ok" if hasattr(self, "socketio") else "not_initialized",
+                            "socketio": socketio_status,
                         },
                     }
                 )
@@ -724,7 +727,10 @@ class WebDashboard:
                             jsonify(
                                 {
                                     "success": False,
-                                    "error": f"Компонент '{component}' уже запущен (PID: {process.pid})",
+                                    "error": (
+                                        f"Компонент '{component}' уже запущен"
+                                        f" (PID: {process.pid})"
+                                    ),
                                 }
                             ),
                             409,
@@ -941,7 +947,7 @@ class WebDashboard:
                             {
                                 "component": component,
                                 "status": "error",
-                                "message": f"Не удалось запустить (код {process.returncode})",
+                                "message": (f"Не удалось запустить" f" (код {process.returncode})"),
                             },
                             broadcast=True,
                         )
@@ -1081,10 +1087,8 @@ class WebDashboard:
 
                 db = get_database()
                 output_dir = request.json.get("output_dir", "output")
-                output_path = (
-                    Path(output_dir)
-                    / f"db_export_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
-                )
+                timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+                output_path = Path(output_dir) / f"db_export_{timestamp}.json"
 
                 result_path = db.export_to_json(str(output_path))
 

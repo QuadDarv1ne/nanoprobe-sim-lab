@@ -146,12 +146,12 @@ class ConfigOptimizer:
                 "cpu_percent": psutil.cpu_percent(interval=1),
                 "memory_percent": psutil.virtual_memory().percent,
                 "memory_available_gb": psutil.virtual_memory().available / (1024**3),
-                "disk_usage_percent": psutil.disk_usage("/").percent
-                if hasattr(psutil, "disk_usage")
-                else 0,
-                "disk_free_gb": psutil.disk_usage("/").free / (1024**3)
-                if hasattr(psutil, "disk_usage")
-                else 0,
+                "disk_usage_percent": (
+                    psutil.disk_usage("/").percent if hasattr(psutil, "disk_usage") else 0
+                ),
+                "disk_free_gb": (
+                    psutil.disk_usage("/").free / (1024**3) if hasattr(psutil, "disk_usage") else 0
+                ),
                 "process_count": len(psutil.pids()),
                 "thread_count": threading.active_count(),
                 "cpu_count_logical": psutil.cpu_count(logical=True),
@@ -332,7 +332,8 @@ class ConfigOptimizer:
                         avg_val = (perf_val + eff_val + stab_val) / 3
                         optimized[key] = int(avg_val) if isinstance(perf_val, int) else avg_val
                     else:
-                        # Берем значение из стабильной конфигурации как наиболее консервативное
+                        # Берем значение из стабильной конфигурации как наиболее
+                        # консервативное
                         optimized[key] = stab_val
                 elif key in perf_config:
                     optimized[key] = perf_config[key]
