@@ -48,8 +48,8 @@ export function SystemHealth({ health }: SystemHealthProps) {
             </div>
             <span className="font-medium">{health.cpu_percent.toFixed(1)}%</span>
           </div>
-          <Progress 
-            value={health.cpu_percent} 
+          <Progress
+            value={health.cpu_percent}
             indicatorClassName={getStatusColor(health.cpu_percent)}
           />
         </div>
@@ -63,8 +63,8 @@ export function SystemHealth({ health }: SystemHealthProps) {
             </div>
             <span className="font-medium">{health.memory_percent.toFixed(1)}%</span>
           </div>
-          <Progress 
-            value={health.memory_percent} 
+          <Progress
+            value={health.memory_percent}
             indicatorClassName={getStatusColor(health.memory_percent)}
           />
         </div>
@@ -78,8 +78,8 @@ export function SystemHealth({ health }: SystemHealthProps) {
             </div>
             <span className="font-medium">{health.disk_percent.toFixed(1)}%</span>
           </div>
-          <Progress 
-            value={health.disk_percent} 
+          <Progress
+            value={health.disk_percent}
             indicatorClassName={getStatusColor(health.disk_percent)}
           />
         </div>
@@ -88,8 +88,8 @@ export function SystemHealth({ health }: SystemHealthProps) {
       {/* Status Badge */}
       <div className="mt-6 flex items-center justify-center">
         <div className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 ${
-          health.status === 'healthy' 
-            ? 'bg-green-500/10 text-green-500 border border-green-500/20' 
+          health.status === 'healthy'
+            ? 'bg-green-500/10 text-green-500 border border-green-500/20'
             : health.status === 'warning'
             ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'
             : 'bg-red-500/10 text-red-500 border border-red-500/20'

@@ -19,13 +19,13 @@
             --dark-color: #34495e;
             --sidebar-width: 250px;
         }
-        
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f5f7fa;
@@ -33,7 +33,7 @@
             display: flex;
             min-height: 100vh;
         }
-        
+
         /* Sidebar Styles */
         .sidebar {
             width: var(--sidebar-width);
@@ -44,33 +44,33 @@
             z-index: 100;
             transition: all 0.3s ease;
         }
-        
+
         .sidebar-header {
             padding: 0 1.5rem 1.5rem;
             border-bottom: 1px solid rgba(255,255,255,0.1);
             text-align: center;
         }
-        
+
         .sidebar-header h2 {
             font-size: 1.2rem;
             margin-bottom: 0.5rem;
         }
-        
+
         .sidebar-header p {
             font-size: 0.8rem;
             opacity: 0.8;
         }
-        
+
         .sidebar-menu {
             list-style: none;
             padding: 0;
             margin: 0;
         }
-        
+
         .sidebar-menu li {
             margin: 0;
         }
-        
+
         .sidebar-menu a {
             display: flex;
             align-items: center;
@@ -80,19 +80,19 @@
             transition: all 0.3s ease;
             border-left: 3px solid transparent;
         }
-        
+
         .sidebar-menu a:hover, .sidebar-menu a.active {
             background: rgba(255,255,255,0.1);
             color: white;
             border-left-color: var(--secondary-color);
         }
-        
+
         .sidebar-menu i {
             margin-right: 1rem;
             width: 20px;
             text-align: center;
         }
-        
+
         /* Main Content Styles */
         .main-content {
             flex: 1;
@@ -100,7 +100,7 @@
             flex-direction: column;
             overflow: hidden;
         }
-        
+
         .header {
             background: white;
             padding: 1rem 2rem;
@@ -109,24 +109,24 @@
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .header-title h1 {
             font-size: 1.5rem;
             color: var(--primary-color);
             margin-bottom: 0.25rem;
         }
-        
+
         .header-title p {
             color: #666;
             font-size: 0.9rem;
         }
-        
+
         .header-actions {
             display: flex;
             gap: 1rem;
             align-items: center;
         }
-        
+
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -135,30 +135,30 @@
             font-size: 0.85rem;
             font-weight: 500;
         }
-        
+
         .status-badge.connected {
             background-color: rgba(39, 174, 96, 0.1);
             color: var(--success-color);
         }
-        
+
         .status-badge.disconnected {
             background-color: rgba(231, 76, 60, 0.1);
             color: var(--danger-color);
         }
-        
+
         .content {
             flex: 1;
             padding: 2rem;
             overflow-y: auto;
         }
-        
+
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
-        
+
         .card {
             background: white;
             border-radius: 10px;
@@ -168,12 +168,12 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .card:hover {
             transform: translateY(-5px);
             box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
-        
+
         .card::before {
             content: '';
             position: absolute;
@@ -183,7 +183,7 @@
             height: 4px;
             background: linear-gradient(90deg, var(--secondary-color), var(--info-color));
         }
-        
+
         .card-header {
             display: flex;
             justify-content: space-between;
@@ -192,7 +192,7 @@
             padding-bottom: 1rem;
             border-bottom: 1px solid var(--light-color);
         }
-        
+
         .card-title {
             font-size: 1.2rem;
             font-weight: 600;
@@ -200,64 +200,64 @@
             display: flex;
             align-items: center;
         }
-        
+
         .card-title i {
             margin-right: 0.75rem;
             color: var(--secondary-color);
         }
-        
+
         .metric-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 1rem;
             margin-bottom: 1rem;
         }
-        
+
         .metric-item {
             text-align: center;
         }
-        
+
         .metric-value {
             font-size: 1.8rem;
             font-weight: 700;
             margin: 0.5rem 0;
             color: var(--primary-color);
         }
-        
+
         .metric-label {
             color: #666;
             font-size: 0.9rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        
+
         .progress-container {
             margin: 1rem 0;
         }
-        
+
         .progress-header {
             display: flex;
             justify-content: space-between;
             margin-bottom: 0.5rem;
         }
-        
+
         .progress-bar {
             height: 12px;
             background-color: var(--light-color);
             border-radius: 6px;
             overflow: hidden;
         }
-        
+
         .progress-fill {
             height: 100%;
             border-radius: 6px;
             transition: width 0.5s ease;
         }
-        
+
         .progress-fill.cpu { background: linear-gradient(90deg, #3498db, #2980b9); }
         .progress-fill.memory { background: linear-gradient(90deg, #27ae60, #219653); }
         .progress-fill.disk { background: linear-gradient(90deg, #f39c12, #e67e22); }
-        
+
         .btn {
             padding: 0.6rem 1.2rem;
             border: none;
@@ -269,27 +269,27 @@
             align-items: center;
             gap: 0.5rem;
         }
-        
+
         .btn i {
             font-size: 0.9rem;
         }
-        
+
         .btn-primary { background-color: var(--secondary-color); color: white; }
         .btn-success { background-color: var(--success-color); color: white; }
         .btn-danger { background-color: var(--danger-color); color: white; }
         .btn-warning { background-color: var(--warning-color); color: white; }
         .btn-info { background-color: var(--info-color); color: white; }
-        
+
         .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
-        
+
         .component-grid {
             display: grid;
             gap: 1rem;
         }
-        
+
         .component-card {
             background: var(--light-color);
             border-radius: 8px;
@@ -299,23 +299,23 @@
             align-items: center;
             transition: all 0.3s ease;
         }
-        
+
         .component-card:hover {
             background: #d5dbdb;
             transform: translateX(5px);
         }
-        
+
         .component-info h3 {
             color: var(--primary-color);
             margin-bottom: 0.25rem;
         }
-        
+
         .component-info p {
             color: #666;
             font-size: 0.9rem;
             margin-bottom: 0.25rem;
         }
-        
+
         .component-status {
             display: inline-flex;
             align-items: center;
@@ -324,17 +324,17 @@
             font-size: 0.8rem;
             font-weight: 500;
         }
-        
+
         .status-available {
             background-color: rgba(39, 174, 96, 0.1);
             color: var(--success-color);
         }
-        
+
         .status-running {
             background-color: rgba(52, 152, 219, 0.1);
             color: var(--info-color);
         }
-        
+
         .log-container {
             background-color: var(--dark-color);
             color: white;
@@ -345,7 +345,7 @@
             max-height: 400px;
             overflow-y: auto;
         }
-        
+
         .log-entry {
             margin: 0.25rem 0;
             padding: 0.25rem 0;
@@ -353,12 +353,12 @@
             display: flex;
             gap: 1rem;
         }
-        
+
         .log-timestamp {
             color: #95a5a6;
             min-width: 80px;
         }
-        
+
         .log-level {
             display: inline-block;
             padding: 0.1rem 0.5rem;
@@ -368,18 +368,18 @@
             min-width: 70px;
             text-align: center;
         }
-        
+
         .log-level-info { background-color: rgba(52, 152, 219, 0.2); color: #3498db; }
         .log-level-warning { background-color: rgba(243, 156, 18, 0.2); color: #f39c12; }
         .log-level-error { background-color: rgba(231, 76, 60, 0.2); color: #e74c3c; }
         .log-level-debug { background-color: rgba(155, 89, 182, 0.2); color: #9b59b6; }
-        
+
         .chart-container {
             position: relative;
             height: 300px;
             margin: 1rem 0;
         }
-        
+
         .notification {
             position: fixed;
             top: 20px;
@@ -396,27 +396,27 @@
             align-items: center;
             gap: 0.75rem;
         }
-        
+
         .notification.show {
             transform: translateX(0);
         }
-        
+
         .notification i {
             font-size: 1.2rem;
         }
-        
+
         .notification-success { background-color: var(--success-color); }
         .notification-error { background-color: var(--danger-color); }
         .notification-warning { background-color: var(--warning-color); }
         .notification-info { background-color: var(--info-color); }
-        
+
         .quick-actions {
             display: flex;
             gap: 1rem;
             margin-bottom: 2rem;
             flex-wrap: wrap;
         }
-        
+
         .action-card {
             background: white;
             border-radius: 10px;
@@ -430,55 +430,55 @@
             flex: 1;
             min-width: 200px;
         }
-        
+
         .action-card:hover {
             transform: translateY(-3px);
             box-shadow: 0 6px 20px rgba(0,0,0,0.15);
         }
-        
+
         .action-card i {
             font-size: 2rem;
             color: var(--secondary-color);
         }
-        
+
         .action-info h3 {
             margin-bottom: 0.25rem;
             color: var(--primary-color);
         }
-        
+
         .action-info p {
             color: #666;
             font-size: 0.9rem;
         }
-        
+
         @media (max-width: 768px) {
             .sidebar {
                 width: 70px;
             }
-            
+
             .sidebar-header h2, .sidebar-menu span {
                 display: none;
             }
-            
+
             .content {
                 padding: 1rem;
             }
-            
+
             .dashboard-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .header {
                 padding: 1rem;
                 flex-direction: column;
                 gap: 1rem;
                 text-align: center;
             }
-            
+
             .quick-actions {
                 flex-direction: column;
             }
-            
+
             .action-card {
                 min-width: 100%;
             }
@@ -501,7 +501,7 @@
             <li><a href="#" data-tab="settings"><i class="fas fa-cog"></i> <span>Настройки</span></a></li>
         </ul>
     </div>
-    
+
     <!-- Main Content -->
     <div class="main-content">
         <!-- Header -->
@@ -521,7 +521,7 @@
                 </button>
             </div>
         </div>
-        
+
         <!-- Content Area -->
         <div class="content">
             <!-- Dashboard Tab -->
@@ -549,7 +549,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="dashboard-grid">
                     <!-- System Status -->
                     <div class="card">
@@ -602,7 +602,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Project Status -->
                     <div class="card">
                         <div class="card-header">
@@ -633,7 +633,7 @@
                             </button>
                         </div>
                     </div>
-                    
+
                     <!-- Cache Status -->
                     <div class="card">
                         <div class="card-header">
@@ -668,7 +668,7 @@
                             </button>
                         </div>
                     </div>
-                    
+
                     <!-- Active Processes -->
                     <div class="card">
                         <div class="card-header">
@@ -683,7 +683,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Components Tab -->
             <div class="tab-content" id="components">
                 <div class="card">
@@ -702,7 +702,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Analytics Tab -->
             <div class="tab-content" id="analytics">
                 <div class="dashboard-grid">
@@ -718,7 +718,7 @@
                             Обновить графики
                         </button>
                     </div>
-                    
+
                     <div class="card">
                         <div class="card-header">
                             <div class="card-title"><i class="fas fa-file-alt"></i> Статистика</div>
@@ -732,7 +732,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Monitoring Tab -->
             <div class="tab-content" id="monitoring">
                 <div class="dashboard-grid">
@@ -744,7 +744,7 @@
                             <canvas id="monitoring-chart"></canvas>
                         </div>
                     </div>
-                    
+
                     <div class="card">
                         <div class="card-header">
                             <div class="card-title"><i class="fas fa-bell"></i> Предупреждения</div>
@@ -758,7 +758,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Logs Tab -->
             <div class="tab-content" id="logs">
                 <div class="card">
@@ -796,7 +796,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Settings Tab -->
             <div class="tab-content" id="settings">
                 <div class="dashboard-grid">
@@ -827,7 +827,7 @@
                             </button>
                         </div>
                     </div>
-                    
+
                     <div class="card">
                         <div class="card-header">
                             <div class="card-title"><i class="fas fa-info-circle"></i> Информация о системе</div>
@@ -843,13 +843,13 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Notification Container -->
     <div id="notification" class="notification">
         <i class="fas fa-info-circle"></i>
         <span id="notification-message"></span>
     </div>
-    
+
     <script>
         // Global variables
         let socket;
@@ -875,27 +875,27 @@
         // Sidebar navigation
         function initializeSidebar() {
             const menuItems = document.querySelectorAll('.sidebar-menu a');
-            
+
             menuItems.forEach(item => {
                 item.addEventListener('click', function(e) {
                     e.preventDefault();
-                    
+
                     // Remove active class from all items
                     menuItems.forEach(i => i.classList.remove('active'));
-                    
+
                     // Add active class to clicked item
                     this.classList.add('active');
-                    
+
                     // Hide all tab contents
                     document.querySelectorAll('.tab-content').forEach(tab => {
                         tab.classList.remove('active');
                     });
-                    
+
                     // Show selected tab
                     const tabId = this.getAttribute('data-tab');
                     document.getElementById(tabId).classList.add('active');
                     currentTab = tabId;
-                    
+
                     // Load data for the selected tab
                     switch(tabId) {
                         case 'components':
@@ -987,18 +987,18 @@
         // Initialize WebSocket connection
         function initializeSocket() {
             socket = io();
-            
+
             socket.on('connect', function() {
                 updateConnectionStatus(true);
                 showNotification('Подключено к серверу', 'success');
                 socket.emit('request_update');
             });
-            
+
             socket.on('disconnect', function() {
                 updateConnectionStatus(false);
                 showNotification('Потеряно соединение с сервером', 'error');
             });
-            
+
             socket.on('status_update', function(data) {
                 updateDashboard(data);
                 updateCharts(data);
@@ -1042,37 +1042,37 @@
                 document.getElementById('project-version').textContent = data.project_info.version;
                 document.getElementById('components-count').textContent = data.project_info.components_count;
             }
-            
+
             if (data.system_metrics) {
                 const cpu = data.system_metrics.cpu_percent || 0;
                 const memory = data.system_metrics.memory_percent || 0;
                 const disk = data.system_metrics.disk_usage || 0;
                 const uptime = data.system_metrics.uptime || 0;
-                
+
                 // Update metrics
                 document.getElementById('cpu-metric').textContent = cpu.toFixed(1) + '%';
                 document.getElementById('memory-metric').textContent = memory.toFixed(1) + '%';
                 document.getElementById('disk-metric').textContent = disk.toFixed(1) + '%';
                 document.getElementById('uptime-metric').textContent = formatUptime(uptime);
-                
+
                 // Update progress bars
                 document.getElementById('cpu-percent').textContent = cpu.toFixed(1) + '%';
                 document.getElementById('cpu-bar').style.width = cpu + '%';
-                
+
                 document.getElementById('memory-percent').textContent = memory.toFixed(1) + '%';
                 document.getElementById('memory-bar').style.width = memory + '%';
-                
+
                 document.getElementById('disk-percent').textContent = disk.toFixed(1) + '%';
                 document.getElementById('disk-bar').style.width = disk + '%';
             }
-            
+
             if (data.cache_info) {
                 document.getElementById('cache-size').textContent = (data.cache_info.total_size_mb || 0).toFixed(1) + ' MB';
                 document.getElementById('cache-files').textContent = data.cache_info.total_files || 0;
                 document.getElementById('cache-dirs').textContent = data.cache_info.directories_count || 0;
                 document.getElementById('cleanup-status').textContent = data.cache_info.auto_cleanup_enabled ? 'Вкл' : 'Выкл';
             }
-            
+
             if (data.running_processes) {
                 updateProcessesList(data.running_processes);
             }
@@ -1083,7 +1083,7 @@
             const container = document.getElementById('processes-list');
             const processCount = Object.keys(processes).length;
             document.getElementById('processes-count').textContent = processCount;
-            
+
             if (processCount === 0) {
                 container.innerHTML = `
                     <div style="text-align: center; padding: 2rem; color: #666;">
@@ -1117,13 +1117,13 @@
             if (data.system_metrics && performanceChart) {
                 const cpuData = performanceChart.data.datasets[0].data;
                 const memData = performanceChart.data.datasets[1].data;
-                
+
                 cpuData.push(data.system_metrics.cpu_percent || 0);
                 memData.push(data.system_metrics.memory_percent || 0);
-                
+
                 if (cpuData.length > 20) cpuData.shift();
                 if (memData.length > 20) memData.shift();
-                
+
                 performanceChart.update();
             }
         }
@@ -1143,12 +1143,12 @@
                         `;
                         return;
                     }
-                    
+
                     let html = '';
                     data.forEach(component => {
                         const statusClass = component.status === 'available' ? 'status-available' : 'status-running';
                         const statusText = component.status === 'available' ? 'Доступен' : 'Запущен';
-                        const actionBtn = component.status === 'available' ? 
+                        const actionBtn = component.status === 'available' ?
                             `<button class="btn btn-success" onclick="startComponent('${component.name}')">
                                 <i class="fas fa-play"></i>
                                 Запустить
@@ -1157,7 +1157,7 @@
                                 <i class="fas fa-stop"></i>
                                 Остановить
                             </button>`;
-                        
+
                         html += `
                             <div class="component-card">
                                 <div class="component-info">
@@ -1248,7 +1248,7 @@
                         `;
                         return;
                     }
-                    
+
                     let html = '';
                     data.forEach(log => {
                         const levelClass = `log-level-${log.level.toLowerCase()}`;
@@ -1280,7 +1280,7 @@
             document.getElementById('auto-refresh').checked = settings.autoRefresh;
             document.getElementById('refresh-interval').value = settings.refreshInterval / 1000;
             document.getElementById('notifications-enabled').checked = settings.notificationsEnabled;
-            
+
             // Load system info
             fetch('/api/status')
                 .then(response => response.json())
@@ -1316,12 +1316,12 @@
         function setupAutoRefresh() {
             const checkbox = document.getElementById('auto-refresh');
             const intervalInput = document.getElementById('refresh-interval');
-            
+
             function updateRefresh() {
                 if (refreshInterval) {
                     clearInterval(refreshInterval);
                 }
-                
+
                 if (checkbox.checked) {
                     const interval = parseInt(intervalInput.value) * 1000;
                     refreshInterval = setInterval(() => {
@@ -1331,10 +1331,10 @@
                     }, interval);
                 }
             }
-            
+
             checkbox.addEventListener('change', updateRefresh);
             intervalInput.addEventListener('change', updateRefresh);
-            
+
             // Initial setup
             updateRefresh();
         }
@@ -1454,7 +1454,7 @@
             settings.autoRefresh = document.getElementById('auto-refresh').checked;
             settings.refreshInterval = parseInt(document.getElementById('refresh-interval').value) * 1000;
             settings.notificationsEnabled = document.getElementById('notifications-enabled').checked;
-            
+
             showNotification('Настройки сохранены', 'success');
             setupAutoRefresh();
         }
@@ -1495,20 +1495,20 @@
         // Notification system
         function showNotification(message, type = 'info') {
             if (!settings.notificationsEnabled) return;
-            
+
             const notification = document.getElementById('notification');
             const messageElement = document.getElementById('notification-message');
-            
+
             // Set icon based on type
             let iconClass = 'fa-info-circle';
             if (type === 'success') iconClass = 'fa-check-circle';
             if (type === 'error') iconClass = 'fa-exclamation-circle';
             if (type === 'warning') iconClass = 'fa-exclamation-triangle';
-            
+
             notification.querySelector('i').className = `fas ${iconClass}`;
             messageElement.textContent = message;
             notification.className = `notification notification-${type} show`;
-            
+
             setTimeout(() => {
                 notification.classList.remove('show');
             }, 3000);

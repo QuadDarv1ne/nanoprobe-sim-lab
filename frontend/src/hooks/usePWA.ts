@@ -1,6 +1,6 @@
 /**
  * usePWA Hook
- * 
+ *
  * React hook для управления PWA функционалом:
  * - Установка приложения
  * - Проверка статуса online/offline
@@ -77,13 +77,13 @@ export function useInstallPWA(): InstallResult {
     try {
       await deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      
+
       if (outcome === 'accepted') {
         console.log('User accepted the install prompt');
       } else {
         console.log('User dismissed the install prompt');
       }
-      
+
       setDeferredPrompt(null);
     } catch (error) {
       console.error('Error during install prompt:', error);
@@ -147,14 +147,14 @@ export function useServiceWorker(): UpdateResult {
         setUpdateAvailable(false);
         setWaitingWorker(null);
       };
-      
+
       navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
 
       let registrationRef: ServiceWorkerRegistration | null = null;
 
       navigator.serviceWorker.ready.then((registration) => {
         registrationRef = registration;
-        
+
         if (registration.waiting) {
           setWaitingWorker(registration.waiting);
           setUpdateAvailable(true);
@@ -170,7 +170,7 @@ export function useServiceWorker(): UpdateResult {
               setUpdateAvailable(true);
             }
           };
-          
+
           installingWorker.addEventListener('statechange', handleStateChange);
         };
 
@@ -287,13 +287,13 @@ export function usePWA() {
   return {
     // Install
     ...installPWA,
-    
+
     // Online status
     isOnline,
-    
+
     // Service Worker
     ...serviceWorker,
-    
+
     // Push Notifications
     ...pushNotifications,
   };
@@ -315,5 +315,3 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 
   return outputArray;
 }
-
-

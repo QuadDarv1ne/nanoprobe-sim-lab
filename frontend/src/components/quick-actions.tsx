@@ -115,7 +115,7 @@ export function QuickActions() {
   return (
     <div className="glass rounded-xl p-6 border border-border">
       <h3 className="text-lg font-semibold mb-4">Быстрые действия</h3>
-      
+
       <div className="grid grid-cols-3 gap-3">
         {actions.map((action) => (
           <button

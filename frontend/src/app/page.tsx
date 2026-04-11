@@ -45,8 +45,8 @@ export default function DashboardPage() {
         {alerts.length > 0 && (
           <div className="space-y-2">
             {alerts.map((alert, index) => (
-              <Alert 
-                key={index} 
+              <Alert
+                key={index}
                 variant={alert.level === 'critical' ? 'destructive' : alert.level === 'warning' ? 'warning' : 'info'}
                 className="card-entrance"
               >

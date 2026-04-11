@@ -1,9 +1,9 @@
 """Тесты для модуля базы данных."""
 
-import unittest
+import os
 import sys
 import tempfile
-import os
+import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -23,6 +23,7 @@ class TestDatabaseManager(unittest.TestCase):
     def tearDown(self):
         """Очистка после теста."""
         import shutil
+
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
     def test_add_scan_result(self):
@@ -33,7 +34,7 @@ class TestDatabaseManager(unittest.TestCase):
             width=100,
             height=100,
             file_path="data/scan_001.txt",
-            metadata={"voltage": 5.0, "current": 1.2}
+            metadata={"voltage": 5.0, "current": 1.2},
         )
 
         self.assertIsInstance(scan_id, int)
@@ -43,17 +44,12 @@ class TestDatabaseManager(unittest.TestCase):
         """Тестирует получение результатов сканирований."""
         # Добавляем тестовые данные
         for i in range(5):
-            self.db.add_scan_result(
-                scan_type="spm",
-                surface_type=f"type_{i}",
-                width=50,
-                height=50
-            )
+            self.db.add_scan_result(scan_type="spm", surface_type=f"type_{i}", width=50, height=50)
 
         results = self.db.get_scan_results(limit=10)
 
         self.assertEqual(len(results), 5)
-        self.assertIn('scan_type', results[0])
+        self.assertIn("scan_type", results[0])
 
     def test_get_scan_results_filtered(self):
         """Тестирует фильтрацию результатов."""
@@ -71,17 +67,14 @@ class TestDatabaseManager(unittest.TestCase):
         sim_id = self.db.add_simulation(
             simulation_id="sim_001",
             simulation_type="spm_scan",
-            parameters={"speed": 1.0, "resolution": "high"}
+            parameters={"speed": 1.0, "resolution": "high"},
         )
 
         self.assertIsInstance(sim_id, int)
 
     def test_update_simulation(self):
         """Тестирует обновление симуляции."""
-        self.db.add_simulation(
-            simulation_id="sim_002",
-            simulation_type="image_analysis"
-        )
+        self.db.add_simulation(simulation_id="sim_002", simulation_type="image_analysis")
 
         # Обновляем статус
         self.db.update_simulation("sim_002", status="completed")
@@ -93,10 +86,7 @@ class TestDatabaseManager(unittest.TestCase):
     def test_get_simulations(self):
         """Тестирует получение списка симуляций."""
         for i in range(3):
-            self.db.add_simulation(
-                simulation_id=f"sim_{i:03d}",
-                simulation_type="test"
-            )
+            self.db.add_simulation(simulation_id=f"sim_{i:03d}", simulation_type="test")
 
         simulations = self.db.get_simulations(limit=10)
 
@@ -110,7 +100,7 @@ class TestDatabaseManager(unittest.TestCase):
             source="hubble",
             width=1024,
             height=768,
-            channels=3
+            channels=3,
         )
 
         self.assertIsInstance(image_id, int)
@@ -122,7 +112,7 @@ class TestDatabaseManager(unittest.TestCase):
             self.db.add_image(
                 image_path=f"data/image_{i}.png",
                 image_type="surface" if i % 2 == 0 else "space",
-                source="local"
+                source="local",
             )
 
         all_images = self.db.get_images(limit=10)
@@ -138,7 +128,7 @@ class TestDatabaseManager(unittest.TestCase):
             export_format="csv",
             source_type="scan",
             source_id=1,
-            file_size_bytes=1024
+            file_size_bytes=1024,
         )
 
         self.assertIsInstance(export_id, int)
@@ -153,22 +143,26 @@ class TestDatabaseManager(unittest.TestCase):
 
         stats = self.db.get_statistics()
 
-        self.assertIn('total_scans', stats)
-        self.assertIn('total_simulations', stats)
-        self.assertIn('total_images', stats)
-        self.assertEqual(stats['total_scans'], 2)
-        self.assertEqual(stats['total_simulations'], 1)
-        self.assertEqual(stats['total_images'], 1)
+        self.assertIn("total_scans", stats)
+        self.assertIn("total_simulations", stats)
+        self.assertIn("total_images", stats)
+        self.assertEqual(stats["total_scans"], 2)
+        self.assertEqual(stats["total_simulations"], 1)
+        self.assertEqual(stats["total_images"], 1)
 
     def test_search_scans(self):
         """Тестирует поиск по сканированиям."""
-        self.db.add_scan_result(scan_type="test", surface_type="graphite", metadata={"note": "sample_1"})
-        self.db.add_scan_result(scan_type="test", surface_type="silicon", metadata={"note": "sample_2"})
+        self.db.add_scan_result(
+            scan_type="test", surface_type="graphite", metadata={"note": "sample_1"}
+        )
+        self.db.add_scan_result(
+            scan_type="test", surface_type="silicon", metadata={"note": "sample_2"}
+        )
 
         results = self.db.search_scans(query="graphite")
 
         self.assertEqual(len(results), 1)
-        self.assertEqual(results[0]['surface_type'], "graphite")
+        self.assertEqual(results[0]["surface_type"], "graphite")
 
     def test_delete_scan(self):
         """Тестирует удаление сканирования."""
@@ -193,11 +187,12 @@ class TestDatabaseManager(unittest.TestCase):
         self.assertTrue(result_path.exists())
 
         import json
-        with open(result_path, 'r', encoding='utf-8') as f:
+
+        with open(result_path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
-        self.assertIn('scan_results', data)
-        self.assertIn('simulations', data)
+        self.assertIn("scan_results", data)
+        self.assertIn("simulations", data)
 
     def test_get_database_singleton(self):
         """Тестирует singleton паттерн get_database."""
@@ -229,6 +224,6 @@ def run_tests():
     return result.wasSuccessful()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = run_tests()
     sys.exit(0 if success else 1)

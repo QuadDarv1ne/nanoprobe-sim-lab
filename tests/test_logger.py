@@ -3,17 +3,18 @@
 Тесты для улучшенной системы логирования
 """
 
-import sys
 import gc
-import time
-import tempfile
 import shutil
+import sys
+import tempfile
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from utils.logger import NanoprobeLogger, LoggerSetup
 import logging
+
+from utils.logger import LoggerSetup, NanoprobeLogger
 
 
 def test_logger_setup():
@@ -22,10 +23,7 @@ def test_logger_setup():
 
     with tempfile.TemporaryDirectory() as tmpdir:
         setup = LoggerSetup(
-            log_dir=tmpdir,
-            log_level="DEBUG",
-            max_bytes=1024*1024,
-            backup_count=3
+            log_dir=tmpdir, log_level="DEBUG", max_bytes=1024 * 1024, backup_count=3
         )
 
         logger = setup.create_logger("test_logger")
@@ -46,9 +44,7 @@ def test_rotating_file_handler():
 
     with tempfile.TemporaryDirectory() as tmpdir:
         setup = LoggerSetup(
-            log_dir=tmpdir,
-            max_bytes=500,  # Маленький размер для теста
-            backup_count=2
+            log_dir=tmpdir, max_bytes=500, backup_count=2  # Маленький размер для теста
         )
 
         logger = setup.create_logger("rotate_test", log_file="rotate.log")
@@ -73,10 +69,7 @@ def test_json_formatter():
     print("Тест JSON formatter...")
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        setup = LoggerSetup(
-            log_dir=tmpdir,
-            enable_json=True
-        )
+        setup = LoggerSetup(log_dir=tmpdir, enable_json=True)
 
         logger = setup.create_logger("json_test", log_file="json.log")
 
@@ -92,6 +85,7 @@ def test_json_formatter():
             line = f.readline()
 
         import json
+
         log_data = json.loads(line)
 
         assert "timestamp" in log_data
@@ -114,6 +108,7 @@ def test_context_logging():
         # Создаем фиктивный config_manager
         class FakeConfig:
             """Фиктивный конфигурационный менеджер для тестирования"""
+
             def get(self, key, default):
                 """Получение параметра конфигурации по ключу"""
                 if key == "paths.log_dir":
@@ -165,8 +160,10 @@ def test_error_logging_with_exception():
     print("Тест логирования ошибок...")
 
     with tempfile.TemporaryDirectory() as tmpdir:
+
         class FakeConfig:
             """Фиктивный конфигурационный менеджер для тестирования"""
+
             def get(self, key, default):
                 """Получение параметра конфигурации по ключу"""
                 if key == "paths.log_dir":
@@ -203,8 +200,10 @@ def test_multiple_loggers():
     print("Тест множественных логгеров...")
 
     with tempfile.TemporaryDirectory() as tmpdir:
+
         class FakeConfig:
             """Фиктивный конфигурационный менеджер для тестирования"""
+
             def get(self, key, default):
                 """Получение параметра конфигурации по ключу"""
                 if key == "paths.log_dir":
@@ -246,8 +245,10 @@ def test_log_api_event():
     print("Тест API событий...")
 
     with tempfile.TemporaryDirectory() as tmpdir:
+
         class FakeConfig:
             """Фиктивный конфигурационный менеджер для тестирования"""
+
             def get(self, key, default):
                 """Получение параметра конфигурации по ключу"""
                 if key == "paths.log_dir":
@@ -306,6 +307,7 @@ def main():
         except Exception as e:
             print(f"[FAIL] {test.__name__}: {e}")
             import traceback
+
             traceback.print_exc()
             failed += 1
 

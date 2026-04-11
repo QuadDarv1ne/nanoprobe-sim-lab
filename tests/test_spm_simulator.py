@@ -1,16 +1,17 @@
 """Тесты для симулятора СЗМ."""
 
-import unittest
-import numpy as np
 import sys
+import unittest
 from pathlib import Path
+
+import numpy as np
 
 # Добавляем путь к исходному коду
 project_root = Path(__file__).parent.parent
 spm_path = project_root / "components" / "cpp-spm-hardware-sim" / "src"
 sys.path.insert(0, str(spm_path))
 
-from spm_simulator import SurfaceModel, ProbeModel, SPMController
+from spm_simulator import ProbeModel, SPMController, SurfaceModel
 
 
 class TestSurfaceModel(unittest.TestCase):
@@ -43,7 +44,8 @@ class TestSurfaceModel(unittest.TestCase):
     def test_save_to_file(self):
         """Тестирует сохранение модели поверхности в файл"""
         import tempfile
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.txt') as tmp:
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as tmp:
             result = self.surface.save_to_file(tmp.name)
             self.assertTrue(result)
 
@@ -126,18 +128,20 @@ class TestSPMController(unittest.TestCase):
     def test_save_scan_results(self):
         """Тестирует сохранение результатов сканирования"""
         import tempfile
+
         self.controller.scan_surface()
 
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.txt') as tmp:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as tmp:
             result = self.controller.save_scan_results(tmp.name)
             self.assertTrue(result)
 
     def test_visualize_scan_results(self):
         """Тестирует визуализацию результатов"""
         import tempfile
+
         self.controller.scan_surface()
 
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
             # Визуализация должна сохранить файл без ошибок
             try:
                 self.controller.visualize_scan_results(save_path=tmp.name)
@@ -171,7 +175,6 @@ def run_tests():
     return result.wasSuccessful()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = run_tests()
     sys.exit(0 if success else 1)
-

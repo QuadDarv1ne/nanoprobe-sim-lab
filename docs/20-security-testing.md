@@ -367,7 +367,7 @@ class UserResponse(BaseModel):
     username: str
     email: str
     # password исключён
-    
+
     class Config:
         # Исключить password при сериализации
         exclude = {"password"}
@@ -451,5 +451,5 @@ class UserResponse(BaseModel):
 
 ---
 
-**Last Updated:** 2026-03-14  
+**Last Updated:** 2026-03-14
 **Version:** 1.0.0

@@ -33,20 +33,16 @@ class LogViewerWidget(Widget):
 
         if self.log_file.exists():
             try:
-                with open(self.log_file, 'r', encoding='utf-8') as f:
+                with open(self.log_file, "r", encoding="utf-8") as f:
                     # Читаем с конца файла
                     lines = f.readlines()
-                    logs = [line.strip() for line in lines[-self.max_lines:]]
+                    logs = [line.strip() for line in lines[-self.max_lines :]]
             except Exception as e:
                 logs = [f"Error reading log: {e}"]
         else:
             logs = ["Log file not found"]
 
-        return WidgetData(
-            title=self.title,
-            content=logs,
-            timestamp=datetime.now(timezone.utc)
-        )
+        return WidgetData(title=self.title, content=logs, timestamp=datetime.now(timezone.utc))
 
     def render(self, width: int = 60) -> str:
         """Отрисовка логов"""
@@ -62,7 +58,7 @@ class LogViewerWidget(Widget):
         for log in logs:
             # Обрезаем длинные строки
             if len(log) > width - 2:
-                log = log[:width - 5] + "..."
+                log = log[: width - 5] + "..."
 
             # Добавляем отступ
             lines.append(f"  {log}")
@@ -92,4 +88,4 @@ class LogViewerWidget(Widget):
         if self.data is None:
             return 0
 
-        return sum(1 for log in self.data.content if 'ERROR' in log or 'CRITICAL' in log)
+        return sum(1 for log in self.data.content if "ERROR" in log or "CRITICAL" in log)

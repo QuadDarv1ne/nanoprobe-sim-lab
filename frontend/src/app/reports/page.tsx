@@ -50,7 +50,7 @@ export default function ReportsPage() {
 
   const handleDelete = async (id: number) => {
     if (deletingIds.has(id)) return;
-    
+
     setDeletingIds(prev => new Set(prev).add(id));
     try {
       await apiClient.delete(`/api/v1/reports/${id}`);
@@ -102,7 +102,7 @@ export default function ReportsPage() {
         iframe.style.display = 'none';
         iframe.src = url;
         document.body.appendChild(iframe);
-        
+
         let cleanedUp = false;
         const cleanup = () => {
           if (cleanedUp) return;
@@ -116,13 +116,13 @@ export default function ReportsPage() {
             // Ignore cleanup errors
           }
         };
-        
+
         // Timeout fallback - cleanup after 10s
         const timeoutId = setTimeout(() => {
           cleanup();
           toast.error('Печать не удалась (таймаут)');
         }, 10000);
-        
+
         iframe.onload = () => {
           clearTimeout(timeoutId);
           try {
@@ -134,7 +134,7 @@ export default function ReportsPage() {
             toast.error('Ошибка печати');
           }
         };
-        
+
         iframe.onerror = () => {
           clearTimeout(timeoutId);
           cleanup();
@@ -264,9 +264,9 @@ export default function ReportsPage() {
                         <Button variant="outline" size="icon" onClick={() => handlePrint(report.id)} disabled={!report.report_path}>
                           <Printer className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="outline" 
-                          size="icon" 
+                        <Button
+                          variant="outline"
+                          size="icon"
                           onClick={() => handleDelete(report.id)}
                           disabled={deletingIds.has(report.id)}
                           aria-label={`Удалить отчёт #${report.id}`}

@@ -290,13 +290,13 @@ groups:
         for: 5m
         annotations:
           summary: "High CPU usage detected"
-          
+
       - alert: HighMemory
         expr: nanoprobe_memory_percent > 90
         for: 5m
         annotations:
           summary: "High memory usage detected"
-          
+
       - alert: SSTVRecordingFailed
         expr: rate(nanoprobe_sstv_recordings_total[5m]) == 0
         for: 10m

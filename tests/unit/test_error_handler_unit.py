@@ -45,9 +45,7 @@ class TestErrorHandler(unittest.TestCase):
         handler = ErrorHandler(str(self.log_file))
 
         error_info = handler.log_error(
-            message="Test error message",
-            component="TestComponent",
-            severity=ErrorSeverity.ERROR
+            message="Test error message", component="TestComponent", severity=ErrorSeverity.ERROR
         )
 
         self.assertIsInstance(error_info, ErrorInfo)
@@ -66,7 +64,7 @@ class TestErrorHandler(unittest.TestCase):
                 message="Error with exception",
                 exception=e,
                 component="TestComponent",
-                severity=ErrorSeverity.ERROR
+                severity=ErrorSeverity.ERROR,
             )
 
         self.assertEqual(error_info.exception_type, "ValueError")
@@ -133,11 +131,11 @@ class TestErrorHandler(unittest.TestCase):
 
         self.assertTrue(Path(report_path).exists())
 
-        with open(report_path, 'r', encoding='utf-8') as f:
+        with open(report_path, "r", encoding="utf-8") as f:
             report = json.load(f)
 
-        self.assertEqual(report['total_errors'], 2)
-        self.assertEqual(len(report['errors']), 2)
+        self.assertEqual(report["total_errors"], 2)
+        self.assertEqual(len(report["errors"]), 2)
 
 
 class TestRecoveryManager(unittest.TestCase):
@@ -167,10 +165,7 @@ class TestRecoveryManager(unittest.TestCase):
         self.recovery_manager.create_state_backup("test_state", test_state)
 
         self.assertIn("test_state", self.recovery_manager.state_backups)
-        self.assertEqual(
-            self.recovery_manager.state_backups["test_state"]["data"],
-            test_state
-        )
+        self.assertEqual(self.recovery_manager.state_backups["test_state"]["data"], test_state)
 
     def test_restore_state_existing(self):
         """Тестирует восстановление существующего состояния"""
@@ -189,6 +184,7 @@ class TestRecoveryManager(unittest.TestCase):
 
     def test_register_recovery_strategy(self):
         """Тестирует регистрацию стратегии восстановления"""
+
         def recovery_func(error_info):
             """TODO: Add description"""
             return True
@@ -214,6 +210,7 @@ class TestSafeExecutor(unittest.TestCase):
 
     def test_execute_successful_function(self):
         """Тестирует выполнение успешной функции"""
+
         def successful_func():
             """TODO: Add description"""
             return 42
@@ -233,30 +230,24 @@ class TestSafeExecutor(unittest.TestCase):
                 raise ConnectionError("Connection failed")
             return "success"
 
-        result = self.executor.execute_with_retry(
-            flaky_function,
-            max_retries=5,
-            retry_delay=0.01
-        )
+        result = self.executor.execute_with_retry(flaky_function, max_retries=5, retry_delay=0.01)
 
         self.assertEqual(result, "success")
         self.assertEqual(attempts[0], 3)
 
     def test_execute_with_retry_all_failures(self):
         """Тестирует выполнение, когда все попытки неудачны"""
+
         def always_fails():
             """TODO: Add description"""
             raise ValueError("Always fails")
 
         with self.assertRaises(ValueError):
-            self.executor.execute_with_retry(
-                always_fails,
-                max_retries=2,
-                retry_delay=0.01
-            )
+            self.executor.execute_with_retry(always_fails, max_retries=2, retry_delay=0.01)
 
     def test_execute_with_timeout_success(self):
         """Тестирует выполнение с таймаутом (успех)"""
+
         def quick_function():
             """TODO: Add description"""
             return "fast result"
@@ -267,16 +258,16 @@ class TestSafeExecutor(unittest.TestCase):
 
     def test_execute_with_timeout_fallback(self):
         """Тестирует выполнение с таймаутом (возврат fallback)"""
+
         def slow_function():
             """TODO: Add description"""
             import time
+
             time.sleep(2)
             return "slow result"
 
         result = self.executor.execute_with_timeout(
-            slow_function,
-            timeout=0.1,
-            fallback_return="timeout fallback"
+            slow_function, timeout=0.1, fallback_return="timeout fallback"
         )
 
         self.assertEqual(result, "timeout fallback")
@@ -294,7 +285,7 @@ class TestErrorInfo(unittest.TestCase):
             exception_type="ValueError",
             exception_message="Test exception",
             traceback_info="Traceback",
-            component="TestComponent"
+            component="TestComponent",
         )
 
         self.assertEqual(error_info.message, "Test message")
@@ -313,11 +304,11 @@ class TestErrorInfo(unittest.TestCase):
             exception_message="Warning text",
             traceback_info="",
             component="Test",
-            user_context=context
+            user_context=context,
         )
 
         self.assertEqual(error_info.user_context, context)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

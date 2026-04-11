@@ -8,5 +8,5 @@ Deployment Utilities for Nanoprobe Sim Lab
 from utils.deployment.deployment_manager import DeploymentManager
 
 __all__ = [
-    'DeploymentManager',
+    "DeploymentManager",
 ]

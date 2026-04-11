@@ -3,12 +3,13 @@
 """
 
 import logging
-from alembic.config import Config
-from alembic import command
-from alembic.script import ScriptDirectory
-from alembic.runtime.migration import MigrationContext
-from sqlalchemy import create_engine
 import os
+
+from alembic import command
+from alembic.config import Config
+from alembic.runtime.migration import MigrationContext
+from alembic.script import ScriptDirectory
+from sqlalchemy import create_engine
 
 logger = logging.getLogger(__name__)
 
@@ -80,9 +81,7 @@ def init_database(db_path: str = "data/nanoprobe.db") -> bool:
 
         # Проверяем что таблицы созданы
         with db.get_connection() as conn:
-            cursor = conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' LIMIT 1"
-            )
+            cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table' LIMIT 1")
             result = cursor.fetchone()
             if result:
                 logger.info(f"Database initialized at {db_path}")

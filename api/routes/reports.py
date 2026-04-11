@@ -94,7 +94,7 @@ async def generate_pdf_report(
         file_size = Path(report_path).stat().st_size
 
         # Сохранение в БД
-        if hasattr(db, 'add_pdf_report'):
+        if hasattr(db, "add_pdf_report"):
             db.add_pdf_report(
                 report_path=report_path,
                 report_type=request.report_type.value,
@@ -131,7 +131,7 @@ async def get_reports(
     """Список отчётов"""
     try:
         # Получение списка из БД (если метод реализован)
-        if hasattr(db, 'get_pdf_reports'):
+        if hasattr(db, "get_pdf_reports"):
             reports = db.get_pdf_reports(limit=limit)
             logger.debug(f"Retrieved {len(reports)} PDF reports")
             return {
@@ -199,7 +199,7 @@ async def delete_report(
         cursor = conn.cursor()
         cursor.execute(
             "DELETE FROM pdf_reports WHERE report_path LIKE ? OR CAST(id AS TEXT) = ?",
-            (f"%{report_id}%", report_id)
+            (f"%{report_id}%", report_id),
         )
         if cursor.rowcount == 0:
             raise NotFoundError(f"Отчёт с ID {report_id} не найден", resource_type="pdf_report")

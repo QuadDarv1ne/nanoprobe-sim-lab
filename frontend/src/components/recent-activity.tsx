@@ -86,7 +86,7 @@ export function RecentActivity() {
   return (
     <div className="glass rounded-xl p-6 border border-border">
       <h3 className="text-lg font-semibold mb-4">Последняя активность</h3>
-      
+
       <div className="space-y-3 max-h-64 overflow-y-auto">
         {activity.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
@@ -106,9 +106,9 @@ export function RecentActivity() {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{item.title}</p>
                 <p className="text-xs text-muted-foreground">
-                  {formatDistanceToNow(new Date(item.timestamp), { 
+                  {formatDistanceToNow(new Date(item.timestamp), {
                     addSuffix: true,
-                    locale: ru 
+                    locale: ru
                   })}
                 </p>
               </div>

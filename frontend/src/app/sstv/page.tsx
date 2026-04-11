@@ -70,12 +70,12 @@ export default function SSTVPage() {
 
   useEffect(() => {
     fetchData();
-    
+
     // Start polling after initial fetch
     pollIntervalRef.current = setInterval(() => {
       fetchData();
     }, 10000);
-    
+
     return () => {
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
@@ -87,7 +87,7 @@ export default function SSTVPage() {
   const fetchData = async () => {
     // Prevent overlapping requests
     if (isFetching) return;
-    
+
     setIsFetching(true);
     try {
       const [recordingsData, statusData, passData, positionData] = await Promise.all([
@@ -99,11 +99,11 @@ export default function SSTVPage() {
 
       setRecordings(recordingsData.recordings || []);
       setIsRecording(statusData.recording || false);
-      
+
       if (isISSResponse(passData) && passData.status === "success" && passData.data) {
         setNextPass(passData.data as ISSPass);
       }
-      
+
       if (isISSResponse(positionData) && positionData.status === "success" && positionData.data) {
         setIssPosition(positionData.data as ISSPosition);
       }
@@ -189,7 +189,7 @@ export default function SSTVPage() {
 
   const deleteRecording = async (recording: SSTVRecording) => {
     if (!confirm(`Удалить ${recording.filename}?`)) return;
-    
+
     try {
       await apiClient.delete(`/api/v1/sstv/recordings/${recording.filename}`);
       toast.success('Удалено', {
@@ -215,8 +215,8 @@ export default function SSTVPage() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button 
-              variant={isRecording ? "destructive" : "default"} 
+            <Button
+              variant={isRecording ? "destructive" : "default"}
               onClick={toggleRecording}
               disabled={!nextPass}
             >
@@ -240,7 +240,7 @@ export default function SSTVPage() {
           <Alert className={nextPass.time_until_aos.includes('-') ? "destructive" : "default"}>
             <Satellite className="h-4 w-4" />
             <AlertDescription>
-              {nextPass.time_until_aos.includes('-') 
+              {nextPass.time_until_aos.includes('-')
                 ? `МКС сейчас не видима. Следующий пролёт: ${format(new Date(nextPass.aos), 'HH:mm:ss')}`
                 : `МКС видима! Максимальная высота: ${nextPass.max_elevation}°. Окончание: ${format(new Date(nextPass.los), 'HH:mm:ss')}`
               }
@@ -334,7 +334,7 @@ export default function SSTVPage() {
                   <div className="text-lg font-semibold">{nextPass.duration_minutes} мин</div>
                 </div>
               </div>
-              
+
               <div className="mt-4 flex items-center gap-4">
                 <div className="flex-1">
                   <div className="text-sm text-muted-foreground mb-2">Частота приёма</div>
@@ -407,24 +407,24 @@ export default function SSTVPage() {
                         {formatFileSize(recording.size_bytes)}
                       </div>
                       <div className="flex gap-2">
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="icon"
                           onClick={() => viewRecording(recording)}
                           title="Просмотр"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="icon"
                           onClick={() => downloadRecording(recording)}
                           title="Скачать"
                         >
                           <Download className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="icon"
                           onClick={() => deleteRecording(recording)}
                           title="Удалить"

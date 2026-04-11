@@ -93,7 +93,9 @@ def test_progressive_blocking():
     assert status["blocked"] is True, "Должен быть заблокирован"
 
     # Блокировка должна быть > 100 секунд (2 минуты)
-    assert status["retry_after"] > 100, f"Блокировка должна быть > 100 сек, получено {status['retry_after']}"
+    assert (
+        status["retry_after"] > 100
+    ), f"Блокировка должна быть > 100 сек, получено {status['retry_after']}"
 
     print("[PASS] Прогрессивная блокировка")
 

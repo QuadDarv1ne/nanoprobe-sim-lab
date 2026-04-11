@@ -1,6 +1,6 @@
 /**
  * Service Worker для Nanoprobe Sim Lab PWA
- * 
+ *
  * Функционал:
  * - Кэширование статики (offline режим)
  * - Кэширование API ответов
@@ -31,7 +31,7 @@ const API_ENDPOINTS = [
 
 self.addEventListener('install', (event) => {
   console.log('[SW] Installing Service Worker...');
-  
+
   event.waitUntil(
     caches.open(STATIC_CACHE)
       .then((cache) => {
@@ -52,7 +52,7 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   console.log('[SW] Activating Service Worker...');
-  
+
   event.waitUntil(
     caches.keys()
       .then((cacheNames) => {
@@ -78,24 +78,24 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
-  
+
   // Игнорируем не-GET запросы
   if (request.method !== 'GET') {
     return;
   }
-  
+
   // API запросы
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(handleApiRequest(request));
     return;
   }
-  
+
   // Статические ресурсы
   if (isStaticAsset(url.pathname)) {
     event.respondWith(handleStaticRequest(request));
     return;
   }
-  
+
   // HTML страницы
   event.respondWith(handleHtmlRequest(request));
 });
@@ -104,39 +104,39 @@ self.addEventListener('fetch', (event) => {
 
 async function handleApiRequest(request) {
   const cache = await caches.open(API_CACHE);
-  
+
   try {
     // Пробуем получить из кэша
     const cachedResponse = await cache.match(request);
-    
+
     if (cachedResponse) {
       // Возвращаем кэш + обновляем в фоне
       fetchAndCache(request, cache);
       return cachedResponse;
     }
-    
+
     // Запрос к сети
     const networkResponse = await fetch(request);
-    
+
     // Кэшируем успешные ответы
     if (networkResponse.ok) {
       cache.put(request, networkResponse.clone());
     }
-    
+
     return networkResponse;
-    
+
   } catch (error) {
     console.error('[SW] API request failed:', error);
-    
+
     // Возвращаем fallback если есть
     const fallback = await cache.match(request);
     if (fallback) {
       return fallback;
     }
-    
+
     return new Response(
       JSON.stringify({ error: 'offline', message: 'No connection' }),
-      { 
+      {
         status: 503,
         headers: { 'Content-Type': 'application/json' }
       }
@@ -147,18 +147,18 @@ async function handleApiRequest(request) {
 async function handleStaticRequest(request) {
   const cache = await caches.open(STATIC_CACHE);
   const cachedResponse = await cache.match(request);
-  
+
   if (cachedResponse) {
     return cachedResponse;
   }
-  
+
   try {
     const networkResponse = await fetch(request);
-    
+
     if (networkResponse.ok) {
       cache.put(request, networkResponse.clone());
     }
-    
+
     return networkResponse;
   } catch (error) {
     console.error('[SW] Static request failed:', error);
@@ -168,33 +168,33 @@ async function handleStaticRequest(request) {
 
 async function handleHtmlRequest(request) {
   const cache = await caches.open(STATIC_CACHE);
-  
+
   try {
     const cachedResponse = await cache.match(request);
-    
+
     if (cachedResponse) {
       return cachedResponse;
     }
-    
+
     const networkResponse = await fetch(request);
-    
+
     if (networkResponse.ok && networkResponse.headers.get('content-type')?.includes('text/html')) {
       cache.put(request, networkResponse.clone());
     }
-    
+
     return networkResponse;
   } catch (error) {
     console.error('[SW] HTML request failed, returning offline page');
-    
+
     // Возвращаем offline страницу
     const offlinePage = await cache.match('/offline');
     if (offlinePage) {
       return offlinePage;
     }
-    
+
     return new Response(
       '<html><body><h1>Offline</h1><p>No connection available</p></body></html>',
-      { 
+      {
         status: 503,
         headers: { 'Content-Type': 'text/html' }
       }
@@ -205,7 +205,7 @@ async function handleHtmlRequest(request) {
 async function fetchAndCache(request, cache) {
   try {
     const response = await fetch(request);
-    
+
     if (response.ok) {
       await cache.put(request, response.clone());
     }
@@ -216,10 +216,10 @@ async function fetchAndCache(request, cache) {
 
 function isStaticAsset(pathname) {
   const staticExtensions = [
-    '.js', '.css', '.png', '.jpg', '.jpeg', '.gif', '.svg', 
+    '.js', '.css', '.png', '.jpg', '.jpeg', '.gif', '.svg',
     '.ico', '.woff', '.woff2', '.ttf', '.eot'
   ];
-  
+
   return staticExtensions.some(ext => pathname.endsWith(ext));
 }
 
@@ -227,7 +227,7 @@ function isStaticAsset(pathname) {
 
 self.addEventListener('sync', (event) => {
   console.log('[SW] Background sync triggered:', event.tag);
-  
+
   if (event.tag === 'sync-data') {
     event.waitUntil(syncData());
   }
@@ -237,7 +237,7 @@ async function syncData() {
   // Получаем отложенные запросы из IndexedDB
   // и отправляем их на сервер
   console.log('[SW] Syncing data...');
-  
+
   // TODO: Реализация синхронизации
   const clients = await self.clients.matchAll();
   clients.forEach(client => {
@@ -252,7 +252,7 @@ async function syncData() {
 
 self.addEventListener('push', (event) => {
   console.log('[SW] Push received:', event);
-  
+
   const options = {
     body: event.data?.text() || 'New notification',
     icon: '/icons/icon-192x192.png',
@@ -275,7 +275,7 @@ self.addEventListener('push', (event) => {
       }
     ]
   };
-  
+
   event.waitUntil(
     self.registration.showNotification('Nanoprobe Sim Lab', options)
   );
@@ -320,7 +320,7 @@ async function trackSync(request, response) {
     if (response.ok && request.method === 'GET') {
       const now = new Date().toISOString();
       localStorage.setItem('lastSync', now);
-      
+
       // Уведомляем клиенты о синхронизации
       const clients = await self.clients.matchAll();
       clients.forEach(client => {

@@ -54,7 +54,7 @@ export default function ScansPage() {
   const handleDelete = async (id: number) => {
     // Prevent double-click / concurrent deletes
     if (deletingIds.has(id)) return;
-    
+
     setDeletingIds(prev => new Set(prev).add(id));
     try {
       await apiClient.delete(`/api/v1/scans/${id}`);
@@ -152,9 +152,9 @@ export default function ScansPage() {
                         <Button variant="outline" size="icon" onClick={() => handleDownload(scan)}>
                           <Download className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="outline" 
-                          size="icon" 
+                        <Button
+                          variant="outline"
+                          size="icon"
                           onClick={() => handleDelete(scan.id)}
                           disabled={deletingIds.has(scan.id)}
                           aria-label={`Удалить сканирование #${scan.id}`}

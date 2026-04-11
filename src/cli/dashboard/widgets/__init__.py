@@ -5,19 +5,19 @@ CLI Dashboard Widgets
 Каждый виджет независим и может быть включён/выключен.
 """
 
+from .activity import ActivityWidget
 from .base import Widget, WidgetPriority
-from .system_monitor import SystemMonitorWidget
 from .component_status import ComponentStatusWidget
 from .log_viewer import LogViewerWidget
 from .metrics import MetricsWidget
-from .activity import ActivityWidget
+from .system_monitor import SystemMonitorWidget
 
 __all__ = [
-    'Widget',
-    'WidgetPriority',
-    'SystemMonitorWidget',
-    'ComponentStatusWidget',
-    'LogViewerWidget',
-    'MetricsWidget',
-    'ActivityWidget',
+    "Widget",
+    "WidgetPriority",
+    "SystemMonitorWidget",
+    "ComponentStatusWidget",
+    "LogViewerWidget",
+    "MetricsWidget",
+    "ActivityWidget",
 ]

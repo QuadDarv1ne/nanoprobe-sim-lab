@@ -1,13 +1,16 @@
 """Тесты для наземной станции SSTV."""
 
-import unittest
-import numpy as np
-import sys
 import os
+import sys
 import tempfile
+import unittest
+
+import numpy as np
 
 # Добавляем путь к исходному коду
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../components/py-sstv-groundstation/src'))
+sys.path.insert(
+    0, os.path.join(os.path.dirname(__file__), "../components/py-sstv-groundstation/src")
+)
 
 from sstv_decoder import SSTVDecoder, convert_audio_to_image, detect_sstv_signal
 
@@ -31,7 +34,7 @@ class TestSSTVDecoder(unittest.TestCase):
 
     def test_decode_from_audio_invalid_format(self):
         """Тестирует декодирование файла с неподдерживаемым форматом"""
-        with tempfile.NamedTemporaryFile(suffix='.txt', delete=False) as tmp:
+        with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as tmp:
             tmp.write(b"test")
             tmp_name = tmp.name
         result = self.decoder.decode_from_audio(tmp_name)
@@ -43,7 +46,7 @@ class TestSSTVDecoder(unittest.TestCase):
 
     def test_decode_from_audio_wav(self):
         """Тестирует декодирование WAV файла (fallback режим)"""
-        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmp:
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
             tmp_name = tmp.name
         result = self.decoder.decode_from_audio(tmp_name)
         # В fallback режиме должно вернуться изображение-заглушка или None (если pysstv не установлен)
@@ -56,8 +59,8 @@ class TestSSTVDecoder(unittest.TestCase):
 
     def test_decode_invalid_mode(self):
         """Тестирует декодирование с неверным режимом"""
-        decoder = SSTVDecoder(mode='InvalidMode')
-        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmp:
+        decoder = SSTVDecoder(mode="InvalidMode")
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
             tmp_name = tmp.name
         result = decoder.decode_from_audio(tmp_name)
         self.assertIsNone(result)
@@ -85,9 +88,10 @@ class TestSSTVDecoder(unittest.TestCase):
         """Тестирует сохранение в допустимом формате"""
         # Создаём изображение напрямую
         from PIL import Image
-        self.decoder.decoded_image = Image.new('RGB', (100, 100), color='red')
 
-        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
+        self.decoder.decoded_image = Image.new("RGB", (100, 100), color="red")
+
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
             tmp_name = tmp.name
         result = self.decoder.save_decoded_image(tmp_name)
         self.assertTrue(result)
@@ -157,7 +161,6 @@ def run_tests():
     return result.wasSuccessful()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = run_tests()
     sys.exit(0 if success else 1)
-

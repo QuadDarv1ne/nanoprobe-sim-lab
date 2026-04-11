@@ -44,12 +44,12 @@
             --danger: #ef4444;
             --danger-hover: #dc2626;
             --info: #06b6d4;
-            
+
             /* Gradients */
             --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
             --gradient-success: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
             --gradient-danger: linear-gradient(135deg, #ef4444 0%, #f59e0b 100%);
-            
+
             /* Shadows */
             --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -1146,7 +1146,7 @@
                             <i class="fas fa-calculator"></i>
                         </div>
                     </div>
-                    
+
                     <!-- Основная статистика - компактная -->
                     <div class="stats-grid compact">
                         <div class="stat-card compact">
@@ -1174,7 +1174,7 @@
                             <div class="stat-label">Отчётов</div>
                         </div>
                     </div>
-                    
+
                     <!-- Системные метрики - badges -->
                     <div class="stats-row">
                         <div class="stat-badge">
@@ -1411,7 +1411,7 @@
                         Настройки панели
                     </div>
                 </div>
-                
+
                 <div class="settings-group">
                     <label class="settings-label">
                         <i class="fas fa-sync-alt"></i> Автоматическое обновление
@@ -1480,7 +1480,7 @@
                         API Настройки
                     </div>
                 </div>
-                
+
                 <div class="settings-group">
                     <label class="settings-label">API Endpoint</label>
                     <input type="text" class="input-field" value="http://localhost:8000" id="api-endpoint">
@@ -1523,7 +1523,7 @@
             setupAutoRefresh();
             initializeAnalyticsChart();
             applyTheme(settings.theme);
-            
+
             // Автообновление статуса компонентов каждые 5 секунд
             setInterval(() => {
                 loadComponents();
@@ -1728,7 +1728,7 @@
         function updateRunningProcesses(processes) {
             const container = document.getElementById('running-processes');
             const processList = Array.isArray(processes) ? processes : Object.entries(processes || {});
-            
+
             if (processList.length === 0) {
                 container.innerHTML = `
                     <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
@@ -1743,7 +1743,7 @@
             (Array.isArray(processList) ? processList : Object.entries(processList)).forEach(([name, process]) => {
                 const processName = typeof process === 'object' ? process.name || name : name;
                 const status = typeof process === 'object' ? process.status || 'running' : 'running';
-                
+
                 html += `
                     <div class="component-item">
                         <div class="component-info">
@@ -1783,7 +1783,7 @@
                 .then(response => response.json())
                 .then(data => {
                     const components = Array.isArray(data) ? data : [];
-                    
+
                     if (components.length === 0) {
                         container.innerHTML = `
                             <li class="component-item">
@@ -1869,12 +1869,12 @@
         // ==================== Logs ====================
         function loadLogs() {
             const container = document.getElementById('log-container');
-            
+
             fetch('/api/logs')
                 .then(response => response.json())
                 .then(data => {
                     const logs = Array.isArray(data) ? data : (data.logs || []);
-                    
+
                     if (logs.length === 0) {
                         container.innerHTML = `
                             <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
@@ -1889,7 +1889,7 @@
                     logs.slice(-50).reverse().forEach(log => {
                         const level = log.level?.toLowerCase() || 'info';
                         const timestamp = log.timestamp ? new Date(log.timestamp).toLocaleTimeString() : new Date().toLocaleTimeString();
-                        
+
                         html += `
                             <div class="log-entry">
                                 <span class="log-timestamp">${timestamp}</span>
@@ -1934,7 +1934,7 @@
         // ==================== Analytics Chart ====================
         function initializeAnalyticsChart() {
             const ctx = document.getElementById('analytics-chart').getContext('2d');
-            
+
             // Gradient for chart
             const gradient = ctx.createLinearGradient(0, 0, 0, 300);
             gradient.addColorStop(0, 'rgba(59, 130, 246, 0.3)');
@@ -2008,7 +2008,7 @@
             const now = new Date().toLocaleTimeString();
             const cpuData = document.getElementById('cpu-value').textContent;
             const memoryData = document.getElementById('memory-value').textContent;
-            
+
             const cpu = parseFloat(cpuData) || 0;
             const memory = parseFloat(memoryData) || 0;
 
@@ -2026,9 +2026,9 @@
             analyticsChart.update();
 
             // Update stats
-            const cpuAvg = analyticsChart.data.datasets[0].data.reduce((a, b) => a + b, 0) / 
+            const cpuAvg = analyticsChart.data.datasets[0].data.reduce((a, b) => a + b, 0) /
                           Math.max(1, analyticsChart.data.datasets[0].data.length);
-            const memoryAvg = analyticsChart.data.datasets[1].data.reduce((a, b) => a + b, 0) / 
+            const memoryAvg = analyticsChart.data.datasets[1].data.reduce((a, b) => a + b, 0) /
                              Math.max(1, analyticsChart.data.datasets[1].data.length);
 
             document.getElementById('analytics-cpu-avg').textContent = cpuAvg.toFixed(1) + '%';
@@ -2109,7 +2109,7 @@
 
             localStorage.setItem('nanoprobe_settings', JSON.stringify(settings));
             applyTheme(settings.theme);
-            
+
             showNotification('Настройки сохранены', 'success');
         }
 
@@ -2121,12 +2121,12 @@
                 theme: 'dark'
             };
             localStorage.setItem('nanoprobe_settings', JSON.stringify(settings));
-            
+
             document.getElementById('auto-refresh').checked = true;
             document.getElementById('refresh-interval').value = 5;
             document.getElementById('notifications-enabled').checked = true;
             document.getElementById('theme-select').value = 'dark';
-            
+
             showNotification('Настройки сброшены', 'warning');
         }
 
@@ -2281,7 +2281,7 @@
         // Quick Actions
         function quickAction(action) {
             showNotification(`Выполнение: ${action}...`, 'info');
-            
+
             // Используем WebSocket для быстрого действия
             if (typeof socket !== 'undefined' && socket.connected) {
                 socket.emit('quick_action', { action: action });
@@ -2353,7 +2353,7 @@
                     <span>Загрузка сканирований...</span>
                 </div>
             `;
-            
+
             fetch('http://localhost:8000/api/v1/scans')
                 .then(response => response.json())
                 .then(data => {
@@ -2446,34 +2446,34 @@
 
         function startWaterfall() {
             if (waterfallRunning) return;
-            
+
             initWaterfall();
             waterfallRunning = true;
             waterfallData = [];
-            
+
             // Подключаемся к WebSocket
             socket.emit('start_waterfall', { fft_size: 512, sample_rate: 2400000 });
-            
+
             showNotification('Waterfall запущен', 'success');
         }
 
         function stopWaterfall() {
             if (!waterfallRunning) return;
-            
+
             waterfallRunning = false;
             socket.emit('stop_waterfall');
-            
+
             showNotification('Waterfall остановлен', 'info');
         }
 
         function saveWaterfall() {
             if (!waterfallCanvas) return;
-            
+
             const link = document.createElement('a');
             link.download = `waterfall_${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
             link.href = waterfallCanvas.toDataURL('image/png');
             link.click();
-            
+
             showNotification('Waterfall сохранён', 'success');
         }
 
@@ -2481,23 +2481,23 @@
         if (typeof socket !== 'undefined') {
             socket.on('waterfall_spectrum', function(data) {
                 if (!waterfallRunning || !waterfallCtx) return;
-                
+
                 const spectrum = data.spectrum;
                 const width = waterfallCanvas.width;
                 const height = waterfallCanvas.height;
-                
+
                 // Сдвигаем изображение вниз на 1 пиксель
                 const imageData = waterfallCtx.getImageData(0, 0, width, height - 1);
                 waterfallCtx.putImageData(imageData, 0, 1);
-                
+
                 // Рисуем новую строку спектра сверху
                 const rowHeight = 1;
                 const binWidth = width / spectrum.length;
-                
+
                 for (let i = 0; i < spectrum.length; i++) {
                     const power = spectrum[i];
                     const x = i * binWidth;
-                    
+
                     // Цветовая схема (чёрный -> синий -> зелёный -> красный -> белый)
                     let r, g, b;
                     if (power < 64) {
@@ -2509,11 +2509,11 @@
                     } else {
                         r = 255; g = 255; b = 255 - (255 - power) * 4;
                     }
-                    
+
                     waterfallCtx.fillStyle = `rgb(${r},${g},${b})`;
                     waterfallCtx.fillRect(x, 0, binWidth + 1, rowHeight);
                 }
-                
+
                 // Обновляем информацию
                 document.getElementById('waterfall-fft').textContent = data.fft_size;
                 document.getElementById('waterfall-sample-rate').textContent = (data.sample_rate / 1e6).toFixed(1);

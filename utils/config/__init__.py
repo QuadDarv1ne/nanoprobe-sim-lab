@@ -12,6 +12,6 @@ from utils.config.config_manager import ConfigManager
 from utils.config.config_validator import ConfigValidator
 
 __all__ = [
-    'ConfigManager',
-    'ConfigValidator',
+    "ConfigManager",
+    "ConfigValidator",
 ]

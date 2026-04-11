@@ -20,29 +20,46 @@ class JSONFormatter(logging.Formatter):
 
     def format(self, record):
         log_data = {
-            'timestamp': datetime.now(timezone.utc).isoformat(),
-            'level': record.levelname,
-            'logger': record.name,
-            'message': record.getMessage(),
-            'module': record.module,
-            'function': record.funcName,
-            'line': record.lineno,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+            "module": record.module,
+            "function": record.funcName,
+            "line": record.lineno,
         }
 
         # Добавляем exception если есть
         if record.exc_info:
-            log_data['exception'] = {
-                'type': record.exc_info[0].__name__ if record.exc_info[0] else None,
-                'message': str(record.exc_info[1]) if record.exc_info[1] else None,
-                'traceback': traceback.format_exception(*record.exc_info)
+            log_data["exception"] = {
+                "type": record.exc_info[0].__name__ if record.exc_info[0] else None,
+                "message": str(record.exc_info[1]) if record.exc_info[1] else None,
+                "traceback": traceback.format_exception(*record.exc_info),
             }
 
         # Добавляем extra поля
         for key, value in record.__dict__.items():
-            if key not in ('name', 'msg', 'args', 'created', 'filename', 'funcName',
-                          'levelname', 'levelno', 'lineno', 'module', 'msecs',
-                          'pathname', 'process', 'processName', 'relativeCreated',
-                          'stack_info', 'exc_info', 'thread', 'threadName'):
+            if key not in (
+                "name",
+                "msg",
+                "args",
+                "created",
+                "filename",
+                "funcName",
+                "levelname",
+                "levelno",
+                "lineno",
+                "module",
+                "msecs",
+                "pathname",
+                "process",
+                "processName",
+                "relativeCreated",
+                "stack_info",
+                "exc_info",
+                "thread",
+                "threadName",
+            ):
                 log_data[key] = value
 
         return json.dumps(log_data, ensure_ascii=False, default=str)
@@ -55,12 +72,12 @@ class ProductionLogger:
 
     def __init__(
         self,
-        name: str = 'nanoprobe',
-        log_dir: str = 'logs',
+        name: str = "nanoprobe",
+        log_dir: str = "logs",
         level: int = logging.INFO,
         max_bytes: int = 10 * 1024 * 1024,  # 10 MB
         backup_count: int = 10,
-        enable_json: bool = False
+        enable_json: bool = False,
     ):
         """
         Инициализация production логгера
@@ -85,8 +102,8 @@ class ProductionLogger:
             formatter = JSONFormatter()
         else:
             formatter = logging.Formatter(
-                '%(asctime)s | %(levelname)-8s | %(name)s | %(message)s',
-                datefmt='%Y-%m-%d %H:%M:%S'
+                "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
+                datefmt="%Y-%m-%d %H:%M:%S",
             )
 
         # Console handler
@@ -97,10 +114,7 @@ class ProductionLogger:
 
         # Rotating file handler (основной лог)
         rotating_handler = RotatingFileHandler(
-            log_path / f'{name}.log',
-            maxBytes=max_bytes,
-            backupCount=backup_count,
-            encoding='utf-8'
+            log_path / f"{name}.log", maxBytes=max_bytes, backupCount=backup_count, encoding="utf-8"
         )
         rotating_handler.setLevel(level)
         rotating_handler.setFormatter(formatter)
@@ -108,11 +122,11 @@ class ProductionLogger:
 
         # Timed rotating handler (для ежедневных логов)
         timed_handler = TimedRotatingFileHandler(
-            log_path / f'{name}_daily.log',
-            when='D',
+            log_path / f"{name}_daily.log",
+            when="D",
             interval=1,
             backupCount=backup_count,
-            encoding='utf-8'
+            encoding="utf-8",
         )
         timed_handler.setLevel(level)
         timed_handler.setFormatter(formatter)
@@ -120,10 +134,10 @@ class ProductionLogger:
 
         # Error file handler (только ошибки)
         error_handler = RotatingFileHandler(
-            log_path / f'{name}_errors.log',
+            log_path / f"{name}_errors.log",
             maxBytes=max_bytes,
             backupCount=backup_count,
-            encoding='utf-8'
+            encoding="utf-8",
         )
         error_handler.setLevel(logging.ERROR)
         error_handler.setFormatter(formatter)
@@ -166,9 +180,9 @@ def get_api_logger() -> ProductionLogger:
     global _api_logger
     if _api_logger is None:
         _api_logger = ProductionLogger(
-            name='nanoprobe_api',
-            log_dir='logs/api',
-            enable_json=True  # JSON для API удобно для мониторинга
+            name="nanoprobe_api",
+            log_dir="logs/api",
+            enable_json=True,  # JSON для API удобно для мониторинга
         )
     return _api_logger
 
@@ -178,9 +192,9 @@ def get_flask_logger() -> ProductionLogger:
     global _flask_logger
     if _flask_logger is None:
         _flask_logger = ProductionLogger(
-            name='nanoprobe_flask',
-            log_dir='logs/flask',
-            enable_json=False  # Человекочитаемый формат для Flask
+            name="nanoprobe_flask",
+            log_dir="logs/flask",
+            enable_json=False,  # Человекочитаемый формат для Flask
         )
     return _flask_logger
 
@@ -190,9 +204,7 @@ def get_system_logger() -> ProductionLogger:
     global _system_logger
     if _system_logger is None:
         _system_logger = ProductionLogger(
-            name='nanoprobe_system',
-            log_dir='logs/system',
-            enable_json=False
+            name="nanoprobe_system", log_dir="logs/system", enable_json=False
         )
     return _system_logger
 
@@ -201,7 +213,7 @@ def get_system_logger() -> ProductionLogger:
 _default_logger = None
 
 
-def get_logger(name: str = 'nanoprobe') -> ProductionLogger:
+def get_logger(name: str = "nanoprobe") -> ProductionLogger:
     """Получение логгера по имени"""
     global _default_logger
     if _default_logger is None:
@@ -222,12 +234,12 @@ class HTTPLoggingMiddleware:
         self.logger = get_api_logger().get_logger()
 
     async def __call__(self, scope, receive, send):
-        if scope['type'] != 'http':
+        if scope["type"] != "http":
             return await self.app(scope, receive, send)
 
         # Начало запроса
-        method = scope['method']
-        path = scope['path']
+        method = scope["method"]
+        path = scope["path"]
         start_time = datetime.now(timezone.utc)
 
         self.logger.info(f"→ {method} {path}")
@@ -268,8 +280,7 @@ class LogExecutionTime:
 
         if exc_type:
             self.logger.error(
-                f"Ошибка: {self.operation} - {duration:.3f}s - {str(exc_val)}",
-                exc_info=True
+                f"Ошибка: {self.operation} - {duration:.3f}s - {str(exc_val)}", exc_info=True
             )
         else:
             self.logger.debug(f"Завершено: {self.operation} - {duration:.3f}s")
@@ -286,6 +297,7 @@ def log_function_call(logger: logging.Logger = None):
         def my_function():
             pass
     """
+
     def decorator(func):
         import functools
 
@@ -306,6 +318,7 @@ def log_function_call(logger: logging.Logger = None):
                 raise
 
         return wrapper
+
     return decorator
 
 
@@ -314,10 +327,10 @@ if __name__ == "__main__":
     print("=== Тестирование Production логирования ===\n")
 
     # Создание логгера
-    logger = get_logger('test')
+    logger = get_logger("test")
 
     # Тестирование различных уровней
-    logger.debug("Debug сообщение", extra={'user_id': 123, 'action': 'test'})
+    logger.debug("Debug сообщение", extra={"user_id": 123, "action": "test"})
     logger.info("Info сообщение")
     logger.warning("Warning сообщение")
     logger.error("Error сообщение")
@@ -329,12 +342,13 @@ if __name__ == "__main__":
         logger.exception("Произошло исключение деления на ноль")
 
     # Тест JSON форматтера
-    json_logger = ProductionLogger(name='json_test', enable_json=True)
-    json_logger.info("JSON сообщение", extra={'data': {'key': 'value'}})
+    json_logger = ProductionLogger(name="json_test", enable_json=True)
+    json_logger.info("JSON сообщение", extra={"data": {"key": "value"}})
 
     # Тест контекстного менеджера
     with LogExecutionTime("Тестовая операция", logger.get_logger()):
         import time
+
         time.sleep(0.1)
 
     print("\n✓ Тестирование завершено")

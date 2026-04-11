@@ -554,9 +554,7 @@ class PerformanceProfiler:
         """
         if output_path is None:
             timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-            output_path = str(
-                self.output_dir / f"performance_visualization_{timestamp}.png"
-            )
+            output_path = str(self.output_dir / f"performance_visualization_{timestamp}.png")
 
         if not self.monitoring_data["timestamps"]:
             print("Нет данных для визуализации")

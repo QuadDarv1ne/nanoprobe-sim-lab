@@ -166,11 +166,11 @@ utils/
 
 **Пример индексов**:
 ```sql
-CREATE INDEX idx_scans_user_status 
-    ON scans(user_id, status) 
+CREATE INDEX idx_scans_user_status
+    ON scans(user_id, status)
     WHERE deleted_at IS NULL;
 
-CREATE INDEX idx_scans_user_created 
+CREATE INDEX idx_scans_user_created
     ON scans(user_id, created_at DESC);
 ```
 
@@ -268,8 +268,8 @@ slowapi>=0.1.9
 
 ## Контакты и поддержка
 
-**Владелец**: Школа программирования Maestro7IT  
-**Email**: maksimqwe42@mail.ru  
+**Владелец**: Школа программирования Maestro7IT
+**Email**: maksimqwe42@mail.ru
 **Сайт**: https://school-maestro7it.ru/
 
 ---

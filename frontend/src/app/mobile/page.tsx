@@ -1,9 +1,9 @@
 /**
  * Mobile Dashboard Page
- * 
+ *
  * Мобильная версия dashboard для Nanoprobe Sim Lab.
  * Оптимизировано для смартфонов и планшетов.
- * 
+ *
  * Features:
  * - Touch-friendly интерфейс
  * - Offline режим
@@ -17,12 +17,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { API_BASE } from '@/lib/config';
 import { apiClient } from '@/lib/api-client';
-import { 
-  Wifi, 
-  WifiOff, 
-  Activity, 
-  HardDrive, 
-  Cpu, 
+import {
+  Wifi,
+  WifiOff,
+  Activity,
+  HardDrive,
+  Cpu,
   Database,
   Radio,
   Download,
@@ -200,7 +200,7 @@ export default function MobileDashboard() {
             </button>
             <h1 className="text-lg font-bold text-white">Nanoprobe Lab</h1>
           </div>
-          
+
           <div className="flex items-center gap-2">
             {isOnline ? (
               <Wifi size={20} className="text-green-500" />
@@ -255,8 +255,8 @@ export default function MobileDashboard() {
                 <h2 className="text-white font-semibold">SSTV Station</h2>
               </div>
               <span className={`px-2 py-1 rounded-full text-xs ${
-                sstv.active 
-                  ? 'bg-green-500/20 text-green-400' 
+                sstv.active
+                  ? 'bg-green-500/20 text-green-400'
                   : 'bg-slate-600/20 text-slate-400'
               }`}>
                 {sstv.active ? 'Active' : 'Standby'}
@@ -298,7 +298,7 @@ export default function MobileDashboard() {
                   {stats.cpu.toFixed(1)}%
                 </div>
                 <div className="mt-2 h-2 bg-slate-700 rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className={`h-full ${getBgColor(stats.cpu)} transition-all duration-500`}
                     style={{ width: `${stats.cpu}%` }}
                   />
@@ -321,7 +321,7 @@ export default function MobileDashboard() {
                   {stats.memory.toFixed(1)}%
                 </div>
                 <div className="mt-2 h-2 bg-slate-700 rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className={`h-full ${getBgColor(stats.memory)} transition-all duration-500`}
                     style={{ width: `${stats.memory}%` }}
                   />
@@ -344,7 +344,7 @@ export default function MobileDashboard() {
                   {stats.disk.toFixed(1)}%
                 </div>
                 <div className="mt-2 h-2 bg-slate-700 rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className={`h-full ${getBgColor(stats.disk)} transition-all duration-500`}
                     style={{ width: `${stats.disk}%` }}
                   />

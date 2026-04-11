@@ -50,7 +50,7 @@ export default function AnalysisPage() {
 
   const handleDelete = async (id: number) => {
     if (deletingIds.has(id)) return;
-    
+
     setDeletingIds(prev => new Set(prev).add(id));
     try {
       await apiClient.delete(`/api/v1/analysis/defects/${id}`);
@@ -213,9 +213,9 @@ export default function AnalysisPage() {
                         <Button variant="outline" size="icon" onClick={() => handleDownload(analysis.id)}>
                           <Download className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="outline" 
-                          size="icon" 
+                        <Button
+                          variant="outline"
+                          size="icon"
                           onClick={() => handleDelete(analysis.id)}
                           disabled={deletingIds.has(analysis.id)}
                           aria-label={`Удалить анализ #${analysis.id}`}

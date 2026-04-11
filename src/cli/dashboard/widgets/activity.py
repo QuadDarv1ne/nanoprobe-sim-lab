@@ -34,41 +34,38 @@ class ActivityWidget(Widget):
             async with aiohttp.ClientSession() as session:
                 # Получаем активность из API
                 async with session.get(
-                    'http://localhost:8000/api/v1/dashboard/activity',
-                    timeout=5
+                    "http://localhost:8000/api/v1/dashboard/activity", timeout=5
                 ) as resp:
                     if resp.status == 200:
                         data = await resp.json()
-                        activities = data.get('recent_activity', [])
+                        activities = data.get("recent_activity", [])
         except Exception:
             # Генерируем тестовую активность
             activities = [
                 {
-                    'type': 'simulation',
-                    'description': 'SPM simulation completed',
-                    'timestamp': datetime.now(timezone.utc).isoformat(),
-                    'status': 'success'
+                    "type": "simulation",
+                    "description": "SPM simulation completed",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "status": "success",
                 },
                 {
-                    'type': 'scan',
-                    'description': 'AFM image analyzed',
-                    'timestamp': (datetime.now(timezone.utc) - timedelta(minutes=5)).isoformat(),
-                    'status': 'success'
+                    "type": "scan",
+                    "description": "AFM image analyzed",
+                    "timestamp": (datetime.now(timezone.utc) - timedelta(minutes=5)).isoformat(),
+                    "status": "success",
                 },
                 {
-                    'type': 'system',
-                    'description': 'System health check passed',
-                    'timestamp': (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat(),
-                    'status': 'info'
+                    "type": "system",
+                    "description": "System health check passed",
+                    "timestamp": (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat(),
+                    "status": "info",
                 },
             ]
 
         self._activities = activities[:10]  # Храним последние 10
 
         return WidgetData(
-            title=self.title,
-            content=self._activities,
-            timestamp=datetime.now(timezone.utc)
+            title=self.title, content=self._activities, timestamp=datetime.now(timezone.utc)
         )
 
     def render(self, width: int = 60) -> str:
@@ -83,15 +80,15 @@ class ActivityWidget(Widget):
         activities = self.data.content
 
         for activity in activities[:5]:  # Показываем последние 5
-            icon = self._get_icon(activity.get('type', 'system'))
-            status_icon = "✅" if activity.get('status') == 'success' else "ℹ️"
+            icon = self._get_icon(activity.get("type", "system"))
+            status_icon = "✅" if activity.get("status") == "success" else "ℹ️"
 
-            time_str = self._format_time(activity.get('timestamp', ''))
-            desc = activity.get('description', 'Unknown')
+            time_str = self._format_time(activity.get("timestamp", ""))
+            desc = activity.get("description", "Unknown")
 
             # Обрезаем описание
             if len(desc) > width - 15:
-                desc = desc[:width - 18] + "..."
+                desc = desc[: width - 18] + "..."
 
             lines.append(f"{icon} {status_icon} [{time_str}] {desc}")
 
@@ -103,14 +100,14 @@ class ActivityWidget(Widget):
     def _get_icon(self, activity_type: str) -> str:
         """Получить иконку по типу активности"""
         icons = {
-            'simulation': '🔬',
-            'scan': '📷',
-            'analysis': '🔍',
-            'system': '⚙️',
-            'user': '👤',
-            'error': '❌',
+            "simulation": "🔬",
+            "scan": "📷",
+            "analysis": "🔍",
+            "system": "⚙️",
+            "user": "👤",
+            "error": "❌",
         }
-        return icons.get(activity_type, '📝')
+        return icons.get(activity_type, "📝")
 
     def _format_time(self, timestamp: str) -> str:
         """Форматирование времени"""
@@ -134,10 +131,10 @@ class ActivityWidget(Widget):
     def get_activity_summary(self) -> Dict:
         """Получить сводку по активности"""
         if not self._activities:
-            return {'total': 0, 'success': 0, 'errors': 0}
+            return {"total": 0, "success": 0, "errors": 0}
 
         return {
-            'total': len(self._activities),
-            'success': sum(1 for a in self._activities if a.get('status') == 'success'),
-            'errors': sum(1 for a in self._activities if a.get('status') == 'error'),
+            "total": len(self._activities),
+            "success": sum(1 for a in self._activities if a.get("status") == "success"),
+            "errors": sum(1 for a in self._activities if a.get("status") == "error"),
         }

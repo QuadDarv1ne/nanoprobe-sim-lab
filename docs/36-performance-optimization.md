@@ -39,20 +39,20 @@ async def gather_with_concurrency(
 ) -> List[Any]:
     """
     Run tasks with limited concurrency.
-    
+
     Prevents resource exhaustion when running many async tasks.
-    
+
     Example:
         urls = ["https://api.nasa.gov/..."] * 100
         tasks = [fetch_url(url) for url in urls]
         results = await gather_with_concurrency(10, *tasks)
     """
     semaphore = asyncio.Semaphore(n)
-    
+
     async def sem_task(task):
         async with semaphore:
             return await task
-    
+
     return await asyncio.gather(
         *[sem_task(task) for task in tasks],
         return_exceptions=return_exceptions
@@ -67,7 +67,7 @@ async def run_in_batches(
 ) -> List[Any]:
     """
     Process items in batches with concurrency control.
-    
+
     Example:
         results = await run_in_batches(
             items=user_ids,
@@ -77,13 +77,13 @@ async def run_in_batches(
         )
     """
     results = []
-    
+
     for i in range(0, len(items), batch_size):
         batch = items[i:i + batch_size]
         batch_tasks = [processor(item) for item in batch]
         batch_results = await gather_with_concurrency(concurrency, *batch_tasks)
         results.extend(batch_results)
-    
+
     return results
 
 
@@ -93,31 +93,31 @@ async def run_in_batches(
 def async_cache(ttl: int = 60):
     """
     Simple in-memory cache for async functions.
-    
+
     Example:
         @async_cache(ttl=300)
         async def fetch_nasa_apod():
             ...
     """
     cache = {}
-    
+
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
             key = (args, frozenset(kwargs.items()))
-            
+
             if key in cache:
                 result, timestamp = cache[key]
                 if asyncio.get_event_loop().time() - timestamp < ttl:
                     return result
-            
+
             result = await func(*args, **kwargs)
             cache[key] = (result, asyncio.get_event_loop().time())
             return result
-        
+
         wrapper.cache_clear = cache.clear
         return wrapper
-    
+
     return decorator
 
 
@@ -127,22 +127,22 @@ def async_cache(ttl: int = 60):
 class ConnectionPoolManager:
     """
     Manage connection pools efficiently.
-    
+
     Features:
     - Automatic pool sizing
     - Connection reuse
     - Health checks
     - Graceful shutdown
     """
-    
+
     _instance = None
     _http_session: aiohttp.ClientSession = None
-    
+
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
-    
+
     async def get_http_session(self) -> aiohttp.ClientSession:
         """Get or create HTTP session"""
         if self._http_session is None or self._http_session.closed:
@@ -158,7 +158,7 @@ class ConnectionPoolManager:
                 connector=connector
             )
         return self._http_session
-    
+
     async def close_all(self):
         """Close all connections gracefully"""
         if self._http_session and not self._http_session.closed:
@@ -178,7 +178,7 @@ async def stream_json_response(
 ) -> StreamingResponse:
     """
     Stream large JSON responses.
-    
+
     Memory-efficient for large datasets.
     """
     async def generate():
@@ -190,7 +190,7 @@ async def stream_json_response(
             yield json.dumps(item)
             first = False
         yield "]"
-    
+
     return StreamingResponse(
         generate(),
         media_type="application/json"
@@ -203,19 +203,19 @@ async def stream_json_response(
 class BackgroundTaskQueue:
     """
     Priority-based background task queue.
-    
+
     Features:
     - Priority levels
     - Rate limiting
     - Retry logic
     """
-    
+
     def __init__(self, max_workers: int = 10):
         self.max_workers = max_workers
         self.queue = asyncio.PriorityQueue()
         self.workers = []
         self.running = False
-    
+
     async def start(self):
         """Start worker tasks"""
         self.running = True
@@ -223,14 +223,14 @@ class BackgroundTaskQueue:
             asyncio.create_task(self._worker(i))
             for i in range(self.max_workers)
         ]
-    
+
     async def stop(self):
         """Stop all workers gracefully"""
         self.running = False
         for worker in self.workers:
             worker.cancel()
         await asyncio.gather(*self.workers, return_exceptions=True)
-    
+
     async def enqueue(
         self,
         task: Callable,
@@ -240,7 +240,7 @@ class BackgroundTaskQueue:
     ):
         """Add task to queue"""
         await self.queue.put((priority, task, args, kwargs))
-    
+
     async def _worker(self, worker_id: int):
         """Worker coroutine"""
         while self.running:
@@ -249,14 +249,14 @@ class BackgroundTaskQueue:
                     self.queue.get(),
                     timeout=1.0
                 )
-                
+
                 try:
                     await task(*args, **kwargs)
                 except Exception as e:
                     logger.error(f"Worker {worker_id} task error: {e}")
                 finally:
                     self.queue.task_done()
-                    
+
             except asyncio.TimeoutError:
                 continue
             except asyncio.CancelledError:
@@ -284,47 +284,47 @@ from typing import Optional
 class CompressionMiddleware(BaseHTTPMiddleware):
     """
     Gzip compression for API responses.
-    
+
     Compresses responses larger than threshold.
     """
-    
+
     def __init__(self, app, minimum_size: int = 500):
         super().__init__(app)
         self.minimum_size = minimum_size
-    
+
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
-        
+
         # Check if client accepts gzip
         accept_encoding = request.headers.get("accept-encoding", "")
         if "gzip" not in accept_encoding.lower():
             return response
-        
+
         # Check content type
         content_type = response.headers.get("content-type", "")
         if not any(ct in content_type for ct in ["json", "text", "javascript"]):
             return response
-        
+
         # Check content length
         content_length = response.headers.get("content-length")
         if content_length and int(content_length) < self.minimum_size:
             return response
-        
+
         # Compress response body
         response_body = b""
         async for chunk in response.body_iterator:
             response_body += chunk
-        
+
         if len(response_body) < self.minimum_size:
             return JSONResponse(
                 content=json.loads(response_body),
                 status_code=response.status_code,
                 headers=dict(response.headers)
             )
-        
+
         # Gzip compress
         compressed = gzip.compress(response_body, compresslevel=6)
-        
+
         # Return compressed response
         return Response(
             content=compressed,
@@ -348,7 +348,7 @@ class CompressionMiddleware(BaseHTTPMiddleware):
 const nextConfig = {
   // Enable React Strict Mode
   reactStrictMode: true,
-  
+
   // Image optimization
   images: {
     domains: ['images.nasa.gov', 'api.nasa.gov'],
@@ -357,12 +357,12 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
   },
-  
+
   // Compiler optimizations
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
-  
+
   // Headers for caching
   async headers() {
     return [
@@ -386,7 +386,7 @@ const nextConfig = {
       },
     ];
   },
-  
+
   // Redirects
   async redirects() {
     return [
@@ -397,18 +397,18 @@ const nextConfig = {
       },
     ];
   },
-  
+
   // Bundle optimization
   experimental: {
     optimizePackageImports: ['lucide-react', 'recharts', 'chart.js'],
   },
-  
+
   // Output optimization
   output: 'standalone',
-  
+
   // Enable gzip compression
   compress: true,
-  
+
   // Power by header (security)
   poweredByHeader: false,
 };
@@ -427,10 +427,10 @@ export const queryClient = new QueryClient({
     queries: {
       // Stale time: data is fresh for 5 minutes
       staleTime: 5 * 60 * 1000,
-      
+
       // Cache time: keep unused data for 30 minutes
       gcTime: 30 * 60 * 1000,
-      
+
       // Retry configuration
       retry: (failureCount, error: any) => {
         // Don't retry on 4xx errors
@@ -439,10 +439,10 @@ export const queryClient = new QueryClient({
         }
         return failureCount < 3;
       },
-      
+
       // Refetch on window focus
       refetchOnWindowFocus: false,
-      
+
       // Refetch interval for real-time data
       refetchInterval: false,
     },
@@ -474,10 +474,10 @@ export function useOptimisticUpdate<T>(
     onMutate: async (newData: Partial<T>) => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey });
-      
+
       // Snapshot previous value
       const previousData = queryClient.getQueryData<T>(queryKey);
-      
+
       // Optimistically update
       if (previousData) {
         queryClient.setQueryData<T>(
@@ -485,17 +485,17 @@ export function useOptimisticUpdate<T>(
           updateFn(previousData, newData)
         );
       }
-      
+
       return { previousData };
     },
-    
+
     onError: (err: any, newData: any, context: any) => {
       // Rollback on error
       if (context?.previousData) {
         queryClient.setQueryData(queryKey, context.previousData);
       }
     },
-    
+
     onSettled: () => {
       // Refetch after mutation
       queryClient.invalidateQueries({ queryKey });
@@ -550,7 +550,7 @@ export default function DashboardLayout({
       <nav className="sticky top-0 z-50 bg-white border-b">
         {/* Navigation */}
       </nav>
-      
+
       <main className="container mx-auto py-6">
         <Suspense fallback={<DashboardSkeleton />}>
           {children}
@@ -650,13 +650,13 @@ from contextlib import asynccontextmanager
 
 class OptimizedPool:
     """Optimized connection pool with monitoring"""
-    
+
     def __init__(self, dsn: str, min_size: int = 5, max_size: int = 20):
         self.dsn = dsn
         self.min_size = min_size
         self.max_size = max_size
         self._pool = None
-    
+
     async def init(self):
         self._pool = await asyncpg.create_pool(
             self.dsn,
@@ -667,7 +667,7 @@ class OptimizedPool:
             command_timeout=60.0,
             statement_cache_size=100,
         )
-    
+
     @asynccontextmanager
     async def acquire(self):
         """Acquire connection from pool"""
@@ -675,7 +675,7 @@ class OptimizedPool:
             # Set statement timeout
             await conn.execute("SET statement_timeout = '30s'")
             yield conn
-    
+
     async def execute_batch(self, queries: list[tuple[str, tuple]]):
         """Execute multiple queries in a single transaction"""
         async with self.acquire() as conn:
@@ -714,17 +714,17 @@ def get_static_config(key: str) -> dict:
 
 class MultiLayerCache:
     """Two-layer cache: Memory + Redis"""
-    
+
     def __init__(self, redis_client, local_size: int = 1000):
         self.redis = redis_client
         self.local_cache = {}
         self.local_size = local_size
-    
+
     async def get(self, key: str) -> Optional[Any]:
         # Try local cache first
         if key in self.local_cache:
             return self.local_cache[key]
-        
+
         # Try Redis
         data = await self.redis.get(key)
         if data:
@@ -732,25 +732,25 @@ class MultiLayerCache:
             # Populate local cache
             self._set_local(key, parsed)
             return parsed
-        
+
         return None
-    
+
     async def set(self, key: str, value: Any, ttl: int = 300):
         # Set in Redis
         await self.redis.set(key, json.dumps(value), ex=ttl)
-        
+
         # Set in local cache
         self._set_local(key, value)
-    
+
     def _set_local(self, key: str, value: Any):
         """Set with LRU eviction"""
         if len(self.local_cache) >= self.local_size:
             # Remove oldest entry
             oldest_key = next(iter(self.local_cache))
             del self.local_cache[oldest_key]
-        
+
         self.local_cache[key] = value
-    
+
     def invalidate(self, key: str):
         """Invalidate both layers"""
         self.local_cache.pop(key, None)

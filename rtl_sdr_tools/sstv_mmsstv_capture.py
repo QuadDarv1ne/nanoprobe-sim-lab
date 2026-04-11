@@ -24,8 +24,8 @@ from pathlib import Path
 # ── Конфигурация ─────────────────────────────────────────────────────────────
 
 FREQUENCY = 145.800  # МКС SSTV (MHz)
-DURATION = 60        # секунд
-GAIN = 40            # dB
+DURATION = 60  # секунд
+GAIN = 40  # dB
 SAMPLE_RATE = 22050  # Hz (стандарт для SSTV)
 
 RTL_FM_PATHS = [
@@ -48,13 +48,14 @@ def find_rtl_fm() -> Path:
     for path in RTL_FM_PATHS:
         if path.exists():
             return path
-    
+
     # Проверить PATH
     import shutil
+
     found = shutil.which("rtl_fm") or shutil.which("rtl_fm.exe")
     if found:
         return Path(found)
-    
+
     return None
 
 
@@ -67,7 +68,7 @@ def capture_sstv(
 ) -> bool:
     """
     Захват SSTV сигнала через rtl_fm.
-    
+
     Returns:
         True если успешно
     """
@@ -88,13 +89,20 @@ def capture_sstv(
     # rtl_fm команда
     cmd = [
         str(rtl_fm),
-        "-f", f"{frequency}M",
-        "-M", "fm",
-        "-s", str(sample_rate),
-        "-r", str(sample_rate),
-        "-g", str(gain),
-        "-d", "0",
-        "-l", "0",  # squelch off
+        "-f",
+        f"{frequency}M",
+        "-M",
+        "fm",
+        "-s",
+        str(sample_rate),
+        "-r",
+        str(sample_rate),
+        "-g",
+        str(gain),
+        "-d",
+        "0",
+        "-l",
+        "0",  # squelch off
     ]
 
     print(f"[*] Команда: {' '.join(cmd)} > {output_file.name}")
@@ -126,7 +134,7 @@ def capture_sstv(
                 # Проверка что процесс жив
                 if process.poll() is not None:
                     print(f"\n[!] rtl_fm завершился неожиданно!")
-                    stderr_output = process.stderr.read().decode('utf-8', errors='replace')
+                    stderr_output = process.stderr.read().decode("utf-8", errors="replace")
                     print(f"    stderr: {stderr_output[:500]}")
                     return False
 
@@ -165,7 +173,7 @@ def capture_sstv(
 def open_mmsstv(wav_file: Path) -> bool:
     """
     Открыть WAV файл в MMSSTV для декодирования.
-    
+
     MMSSTV автоматически распознаёт SSTV режим и декодирует изображение.
     """
     if not MMSSTV_PATH.exists():
@@ -191,10 +199,10 @@ def open_mmsstv(wav_file: Path) -> bool:
     # Запуск MMSSTV
     # MMSSTV не принимает файл как аргумент, поэтому просто откроем программу
     subprocess.Popen([str(MMSSTV_PATH)])
-    
+
     print(f"[*] MMSSTV запущен!")
     print(f"    Теперь загрузите файл: {wav_file}")
-    
+
     return True
 
 
@@ -203,18 +211,18 @@ def list_recordings(limit: int = 10):
     if not OUTPUT_DIR.exists():
         print("Нет записей")
         return
-    
+
     files = sorted(OUTPUT_DIR.glob("iss_sstv_*.wav"), key=lambda f: f.stat().st_mtime, reverse=True)
-    
+
     if not files:
         print("Нет записей SSTV")
         return
-    
+
     print(f"Последние {min(len(files), limit)} записей SSTV:")
     print()
     print(f"{'Файл':<50} {'Размер':>10} {'Дата':>20}")
     print("-" * 85)
-    
+
     for f in files[:limit]:
         size_mb = f.stat().st_size / (1024 * 1024)
         date_str = datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
@@ -248,19 +256,22 @@ def main():
     )
 
     parser.add_argument(
-        "-f", "--frequency",
+        "-f",
+        "--frequency",
         type=float,
         default=FREQUENCY,
         help=f"Частота MHz (по умолчанию: {FREQUENCY})",
     )
     parser.add_argument(
-        "-d", "--duration",
+        "-d",
+        "--duration",
         type=int,
         default=DURATION,
         help=f"Длительность секунд (по умолчанию: {DURATION})",
     )
     parser.add_argument(
-        "-g", "--gain",
+        "-g",
+        "--gain",
         type=int,
         default=GAIN,
         help=f"Gain dB (по умолчанию: {GAIN})",

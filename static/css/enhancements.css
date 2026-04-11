@@ -557,7 +557,7 @@
         flex-direction: column;
         text-align: center;
     }
-    
+
     .data-grid {
         grid-template-columns: 1fr;
     }

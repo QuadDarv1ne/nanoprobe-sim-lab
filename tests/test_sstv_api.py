@@ -3,10 +3,11 @@
 Проверка расписания МКС, декодирования SSTV и кэширования.
 """
 
-import pytest
 import sys
 from pathlib import Path
 from unittest.mock import patch
+
+import pytest
 
 # Добавляем путь к проекту
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -20,70 +21,70 @@ class TestSatelliteTracker:
         """Тест инициализации трекера."""
         sys.path.insert(0, str(PROJECT_ROOT / "components" / "py-sstv-groundstation" / "src"))
         from satellite_tracker import SatelliteTracker
-        
+
         tracker = SatelliteTracker()
-        
+
         assert tracker.ground_station_lat == 55.75
         assert tracker.ground_station_lon == 37.61
-        assert 'iss' in tracker.satellites
+        assert "iss" in tracker.satellites
         assert len(tracker.SSTV_FREQUENCIES) > 0
 
     def test_get_pass_predictions(self):
         """Тест предсказания пролётов."""
         sys.path.insert(0, str(PROJECT_ROOT / "components" / "py-sstv-groundstation" / "src"))
         from satellite_tracker import SatelliteTracker
-        
+
         tracker = SatelliteTracker()
-        passes = tracker.get_pass_predictions('iss', hours_ahead=24)
-        
+        passes = tracker.get_pass_predictions("iss", hours_ahead=24)
+
         assert isinstance(passes, list)
         if passes:
             first_pass = passes[0]
-            assert 'aos' in first_pass
-            assert 'los' in first_pass
-            assert 'max_elevation' in first_pass
-            assert 'frequency' in first_pass
+            assert "aos" in first_pass
+            assert "los" in first_pass
+            assert "max_elevation" in first_pass
+            assert "frequency" in first_pass
 
     def test_get_next_pass(self):
         """Тест получения следующего пролёта."""
         sys.path.insert(0, str(PROJECT_ROOT / "components" / "py-sstv-groundstation" / "src"))
         from satellite_tracker import SatelliteTracker
-        
+
         tracker = SatelliteTracker()
-        next_pass = tracker.get_next_pass('iss')
-        
+        next_pass = tracker.get_next_pass("iss")
+
         assert next_pass is None or isinstance(next_pass, dict)
         if next_pass:
-            assert 'aos' in next_pass
-            assert 'los' in next_pass
+            assert "aos" in next_pass
+            assert "los" in next_pass
 
     def test_get_current_position(self):
         """Тест текущей позиции спутника."""
         sys.path.insert(0, str(PROJECT_ROOT / "components" / "py-sstv-groundstation" / "src"))
         from satellite_tracker import SatelliteTracker
-        
+
         tracker = SatelliteTracker()
-        position = tracker.get_current_position('iss')
-        
+        position = tracker.get_current_position("iss")
+
         assert position is not None
-        assert 'altitude_km' in position
-        assert 'velocity_kmh' in position
-        assert 'latitude' in position
-        assert 'longitude' in position
+        assert "altitude_km" in position
+        assert "velocity_kmh" in position
+        assert "latitude" in position
+        assert "longitude" in position
 
     def test_get_sstv_schedule(self):
         """Тест расписания SSTV."""
         sys.path.insert(0, str(PROJECT_ROOT / "components" / "py-sstv-groundstation" / "src"))
         from satellite_tracker import SatelliteTracker
-        
+
         tracker = SatelliteTracker()
         schedule = tracker.get_sstv_schedule(hours_ahead=24)
-        
+
         assert isinstance(schedule, list)
         # Расписание должно быть отсортировано по времени
         if len(schedule) > 1:
             for i in range(len(schedule) - 1):
-                assert schedule[i]['aos'] <= schedule[i + 1]['aos']
+                assert schedule[i]["aos"] <= schedule[i + 1]["aos"]
 
 
 class TestSSTVDecoder:
@@ -93,10 +94,10 @@ class TestSSTVDecoder:
         """Тест инициализации декодера."""
         sys.path.insert(0, str(PROJECT_ROOT / "components" / "py-sstv-groundstation" / "src"))
         from sstv_decoder import SSTVDecoder
-        
+
         decoder = SSTVDecoder()
-        
-        assert decoder.mode == 'auto'
+
+        assert decoder.mode == "auto"
         assert len(decoder.SUPPORTED_MODES) > 0
         assert decoder.decoded_image is None
 
@@ -104,32 +105,32 @@ class TestSSTVDecoder:
         """Тест поддерживаемых режимов."""
         sys.path.insert(0, str(PROJECT_ROOT / "components" / "py-sstv-groundstation" / "src"))
         from sstv_decoder import SSTVDecoder
-        
+
         decoder = SSTVDecoder()
         modes = decoder.SUPPORTED_MODES
-        
+
         assert isinstance(modes, list)
         assert len(modes) > 0
-        
+
         # Проверка популярных режимов
         mode_names = [m for m in modes]
-        assert any('Martin' in m for m in mode_names)
-        assert any('Scottie' in m for m in mode_names)
+        assert any("Martin" in m for m in mode_names)
+        assert any("Scottie" in m for m in mode_names)
 
     def test_metadata_structure(self):
         """Тест структуры метаданных."""
         sys.path.insert(0, str(PROJECT_ROOT / "components" / "py-sstv-groundstation" / "src"))
         from sstv_decoder import SSTVDecoder
-        
+
         decoder = SSTVDecoder()
         metadata = decoder.get_metadata()
-        
+
         assert isinstance(metadata, dict)
-        
+
         statistics = decoder.get_statistics()
         assert isinstance(statistics, dict)
-        assert 'total_images' in statistics
-        assert 'supported_modes' in statistics
+        assert "total_images" in statistics
+        assert "supported_modes" in statistics
 
 
 class TestSSTVAPIRoutes:
@@ -138,19 +139,19 @@ class TestSSTVAPIRoutes:
     @pytest.fixture
     def mock_redis(self):
         """Mock Redis cache."""
-        with patch('api.routes.sstv.REDIS_AVAILABLE', False):
+        with patch("api.routes.sstv.REDIS_AVAILABLE", False):
             yield
 
     @pytest.fixture
     def mock_tracker(self):
         """Mock SatelliteTracker."""
-        with patch('api.routes.sstv.tracker_module') as mock:
+        with patch("api.routes.sstv.tracker_module") as mock:
             yield mock
 
     def test_iss_schedule_endpoint_structure(self, mock_redis, mock_tracker):
         """Тест структуры эндпоинта расписания."""
         from api.routes.sstv import router
-        
+
         assert router is not None
         # Проверка что роутер существует
 
@@ -159,7 +160,8 @@ class TestSSTVAPIRoutes:
         # Проверка что модуль загружается
         try:
             from api.routes import sstv
-            assert hasattr(sstv, 'router')
+
+            assert hasattr(sstv, "router")
         except ImportError:
             pytest.skip("SSTV module not available")
 
@@ -171,6 +173,7 @@ class TestExternalServicesCaching:
         """Тест импорта Redis cache."""
         try:
             from utils.caching.redis_cache import RedisCache
+
             cache = RedisCache()
             assert cache is not None
         except ImportError:
@@ -179,10 +182,10 @@ class TestExternalServicesCaching:
     def test_cache_key_generation(self):
         """Тест генерации ключей кэша."""
         from utils.caching.redis_cache import RedisCache
-        
+
         cache = RedisCache()
         key = cache.generate_key("test", "arg1", "arg2")
-        
+
         assert key.startswith("test:")
         assert len(key) > 6
 
@@ -195,21 +198,21 @@ class TestIntegration:
         sys.path.insert(0, str(PROJECT_ROOT / "components" / "py-sstv-groundstation" / "src"))
         from satellite_tracker import SatelliteTracker
         from sstv_decoder import SSTVDecoder
-        
+
         tracker = SatelliteTracker()
         decoder = SSTVDecoder()
-        
+
         # Получаем расписание
         schedule = tracker.get_sstv_schedule(hours_ahead=24)
-        
+
         # Проверяем что декодер готов
         assert decoder is not None
         assert len(decoder.SUPPORTED_MODES) > 0
-        
+
         # Проверяем что частоты совпадают
         if schedule:
             for pass_info in schedule:
-                freq = pass_info.get('frequency', 0)
+                freq = pass_info.get("frequency", 0)
                 assert freq > 0 or freq == 0  # Частота может быть 0 если не найдена
 
 

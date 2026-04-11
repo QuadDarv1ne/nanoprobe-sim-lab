@@ -5,6 +5,7 @@
 
 import sys
 from pathlib import Path
+
 import pytest
 
 # Добавляем корень проекта в path
@@ -33,8 +34,7 @@ def test_sync_manager_custom_urls():
     print("Тест кастомных URL...")
 
     sync = BackendFrontendSync(
-        backend_url="http://custom-backend:9000",
-        frontend_url="http://custom-frontend:4000"
+        backend_url="http://custom-backend:9000", frontend_url="http://custom-frontend:4000"
     )
 
     assert sync.backend_url == "http://custom-backend:9000", "Custom backend URL"

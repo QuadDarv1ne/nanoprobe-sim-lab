@@ -234,17 +234,17 @@ targets = ["M31", "M42", "M51", "Crab Nebula"]
 
 for target in targets:
     print(f"Загрузка {target}...")
-    
+
     # Поиск
     results = downloader.search_hubble(target, pagesize=1)
     if not results:
         print(f"  Не найдено: {target}")
         continue
-    
+
     # Загрузка
     if 'url' in results[0]:
         path = downloader.download_image(results[0]['url'])
-        
+
         # Обработка
         processor.load_image(str(path))
         processor.create_print_versions(target.lower(), "output/print")

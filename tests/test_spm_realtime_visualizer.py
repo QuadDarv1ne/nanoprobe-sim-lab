@@ -1,18 +1,17 @@
 """Тесты для Real-time СЗМ визуализатора."""
 
-import unittest
-import numpy as np
-from pathlib import Path
 import sys
 import time
+import unittest
+from pathlib import Path
+
+import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 try:
-    from utils.spm_realtime_visualizer import (
-        StreamingDataBuffer,
-        RealTimeSPMWebSocketAdapter,
-    )
+    from utils.spm_realtime_visualizer import RealTimeSPMWebSocketAdapter, StreamingDataBuffer
+
     VISUALIZER_AVAILABLE = True
 except ImportError:
     VISUALIZER_AVAILABLE = False
@@ -47,7 +46,7 @@ class TestStreamingDataBuffer(unittest.TestCase):
         self.buffer.add_frame(frame, timestamp)
 
         latest = self.buffer.get_latest_frame()
-        self.assertEqual(latest['timestamp'], timestamp)
+        self.assertEqual(latest["timestamp"], timestamp)
 
     def test_get_latest_frame(self):
         """Тест получения последнего кадра"""
@@ -58,7 +57,7 @@ class TestStreamingDataBuffer(unittest.TestCase):
         self.buffer.add_frame(frame2)
 
         latest = self.buffer.get_latest_frame()
-        np.testing.assert_array_equal(latest['data'], frame2)
+        np.testing.assert_array_equal(latest["data"], frame2)
 
     def test_get_frames(self):
         """Тест получения нескольких кадров"""
@@ -68,7 +67,7 @@ class TestStreamingDataBuffer(unittest.TestCase):
 
         retrieved = self.buffer.get_frames(3)
         self.assertEqual(len(retrieved), 3)
-        np.testing.assert_array_equal(retrieved[-1]['data'], frames[-1])
+        np.testing.assert_array_equal(retrieved[-1]["data"], frames[-1])
 
     def test_buffer_size_limit(self):
         """Тест ограничения размера буфера"""
@@ -108,14 +107,14 @@ class TestStreamingDataBuffer(unittest.TestCase):
 
         stats = self.buffer.get_stats()
 
-        self.assertIn('current_size', stats)
-        self.assertIn('max_size', stats)
-        self.assertIn('total_frames', stats)
-        self.assertIn('fps', stats)
-        self.assertIn('buffer_usage', stats)
+        self.assertIn("current_size", stats)
+        self.assertIn("max_size", stats)
+        self.assertIn("total_frames", stats)
+        self.assertIn("fps", stats)
+        self.assertIn("buffer_usage", stats)
 
-        self.assertEqual(stats['current_size'], 1)
-        self.assertEqual(stats['total_frames'], 1)
+        self.assertEqual(stats["current_size"], 1)
+        self.assertEqual(stats["total_frames"], 1)
 
 
 @unittest.skipUnless(VISUALIZER_AVAILABLE, "Visualizer module required")
@@ -153,7 +152,7 @@ class TestRealTimeSPMWebSocketAdapter(unittest.TestCase):
         self.adapter.process_frame(frame)
 
         stats = self.adapter.get_buffer_stats()
-        self.assertEqual(stats['total_frames'], 1)
+        self.assertEqual(stats["total_frames"], 1)
 
     def test_get_latest_frame_data(self):
         """Тест получения последнего кадра"""
@@ -162,7 +161,7 @@ class TestRealTimeSPMWebSocketAdapter(unittest.TestCase):
 
         latest = self.adapter.get_latest_frame_data()
         self.assertIsNotNone(latest)
-        self.assertEqual(latest['data'].shape, (32, 32))
+        self.assertEqual(latest["data"].shape, (32, 32))
 
     def test_export_frame_to_json(self):
         """Тест экспорта кадра в JSON"""
@@ -173,14 +172,15 @@ class TestRealTimeSPMWebSocketAdapter(unittest.TestCase):
         self.assertIsNotNone(json_str)
 
         import json
+
         data = json.loads(json_str)
 
-        self.assertIn('frame_id', data)
-        self.assertIn('timestamp', data)
-        self.assertIn('shape', data)
-        self.assertIn('min', data)
-        self.assertIn('max', data)
-        self.assertEqual(data['shape'], [32, 32])
+        self.assertIn("frame_id", data)
+        self.assertIn("timestamp", data)
+        self.assertIn("shape", data)
+        self.assertIn("min", data)
+        self.assertIn("max", data)
+        self.assertEqual(data["shape"], [32, 32])
 
     def test_export_frame_to_json_invalid_id(self):
         """Тест экспорта несуществующего кадра"""
@@ -202,29 +202,29 @@ class TestWebSocketAdapterCompression(unittest.TestCase):
         message = self.adapter._create_frame_message(large_frame, time.time())
 
         # Проверка сжатия
-        self.assertEqual(message['shape'], [128, 128])
-        self.assertIn('image_base64', message)
-        self.assertIsInstance(message['image_base64'], str)
+        self.assertEqual(message["shape"], [128, 128])
+        self.assertIn("image_base64", message)
+        self.assertIsInstance(message["image_base64"], str)
 
     def test_no_compression_small_frame(self):
         """Тест без сжатия малого кадра"""
         small_frame = np.random.rand(64, 64)
         message = self.adapter._create_frame_message(small_frame, time.time())
 
-        self.assertEqual(message['shape'], [64, 64])
+        self.assertEqual(message["shape"], [64, 64])
 
     def test_message_stats(self):
         """Тест статистики в сообщении"""
         frame = np.random.rand(64, 64) * 100
         message = self.adapter._create_frame_message(frame, time.time())
 
-        self.assertIn('stats', message)
-        self.assertIn('mean', message['stats'])
-        self.assertIn('std', message['stats'])
-        self.assertIn('rms', message['stats'])
+        self.assertIn("stats", message)
+        self.assertIn("mean", message["stats"])
+        self.assertIn("std", message["stats"])
+        self.assertIn("rms", message["stats"])
 
         expected_mean = float(np.mean(frame))
-        self.assertAlmostEqual(message['stats']['mean'], expected_mean, places=5)
+        self.assertAlmostEqual(message["stats"]["mean"], expected_mean, places=5)
 
 
 @unittest.skipUnless(VISUALIZER_AVAILABLE, "Visualizer module required")
@@ -244,7 +244,7 @@ class TestIntegration(unittest.TestCase):
             self.adapter.process_frame(frame)
 
         stats = self.adapter.get_buffer_stats()
-        self.assertEqual(stats['total_frames'], 10)
+        self.assertEqual(stats["total_frames"], 10)
 
         latest = self.adapter.get_latest_frame_data()
         self.assertIsNotNone(latest)
@@ -268,5 +268,5 @@ class TestIntegration(unittest.TestCase):
         self.assertEqual(len(self.adapter.connected_clients), 0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

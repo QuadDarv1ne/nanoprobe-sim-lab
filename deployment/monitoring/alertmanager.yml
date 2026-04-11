@@ -19,18 +19,18 @@ route:
   group_interval: 5m
   repeat_interval: 4h
   receiver: 'default-receiver'
-  
+
   # Дочерние маршруты для разных уровней серьёзности
   routes:
     - match:
         severity: critical
       receiver: 'critical-receiver'
       continue: true
-    
+
     - match:
         severity: warning
       receiver: 'warning-receiver'
-    
+
     - match:
         severity: info
       receiver: 'info-receiver'
@@ -55,14 +55,14 @@ receivers:
           *Severity:* {{ .GroupLabels.severity }}
           *Description:* {{ range .Alerts }}{{ .Annotations.description }}{{ end }}
           *Time:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
-    
+
     email_configs:
       - to: 'admin@nanoprobe-lab.local'
         send_resolved: true
         html: true
         headers:
           Subject: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
-    
+
     pagerduty_configs:
       - service_key: '${PAGERDUTY_SERVICE_KEY}'
         send_resolved: true
@@ -78,7 +78,7 @@ receivers:
           *Alert:* {{ .GroupLabels.alertname }}
           *Severity:* {{ .GroupLabels.severity }}
           *Description:* {{ range .Alerts }}{{ .Annotations.description }}{{ end }}
-    
+
     email_configs:
       - to: 'admin@nanoprobe-lab.local'
         send_resolved: true
@@ -97,7 +97,7 @@ inhibit_rules:
     target_match:
       severity: 'warning'
     equal: ['alertname']
-  
+
   # Если critical, не показывать warning для того же алерта
   - source_match:
       severity: 'critical'

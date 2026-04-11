@@ -435,11 +435,11 @@ class PerformanceAnalyticsDashboard:
             "peak_metrics": {
                 "max_cpu_percent": max(cpu_values) if cpu_values else 0,
                 "max_memory_percent": max(memory_values) if memory_values else 0,
-                "max_rss_mb": max(
-                    [d["memory_metrics"].get("rss_mb", 0) for d in self.performance_history]
-                )
-                if self.performance_history
-                else 0,
+                "max_rss_mb": (
+                    max([d["memory_metrics"].get("rss_mb", 0) for d in self.performance_history])
+                    if self.performance_history
+                    else 0
+                ),
             },
             "insights_count": len(self.insights),
             "critical_insights": len([i for i in self.insights if i.severity == "critical"]),
@@ -588,9 +588,7 @@ class PerformanceAnalyticsDashboard:
         """
         if output_path is None:
             timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-            output_path = str(
-                self.output_dir / f"performance_dashboard_{timestamp}.png"
-            )
+            output_path = str(self.output_dir / f"performance_dashboard_{timestamp}.png")
 
         if not self.performance_history:
             print("Нет данных для визуализации")

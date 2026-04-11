@@ -1,6 +1,6 @@
 /**
  * InstallPrompt Component
- * 
+ *
  * Компонент для отображения prompt установки PWA приложения.
  * Автоматически скрывается после установки или отклонения.
  */
@@ -45,7 +45,7 @@ export function InstallPrompt({ onDismiss, onInstall }: InstallPromptProps) {
   const handleDismiss = () => {
     setIsVisible(false);
     onDismiss?.();
-    
+
     // Сохраняем что пользователь отклонил установку
     localStorage.setItem('pwaInstallDismissed', 'true');
   };

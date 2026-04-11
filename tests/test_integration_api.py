@@ -19,12 +19,13 @@ from api.integration import FlaskFastAPIIntegration
 
 class Colors:
     """Цвета для вывода в консоль"""
-    GREEN = '\033[92m'
-    RED = '\033[91m'
-    YELLOW = '\033[93m'
-    BLUE = '\033[94m'
-    END = '\033[0m'
-    BOLD = '\033[1m'
+
+    GREEN = "\033[92m"
+    RED = "\033[91m"
+    YELLOW = "\033[93m"
+    BLUE = "\033[94m"
+    END = "\033[0m"
+    BOLD = "\033[1m"
 
 
 def print_header(text):
@@ -54,7 +55,11 @@ def test_fastapi_health(fastapi_url):
 
         if response.status_code == 200:
             data = response.json()
-            print_result("FastAPI health check", True, f"Status: {data.get('status', 'unknown')}, Time: {elapsed:.2f}ms")
+            print_result(
+                "FastAPI health check",
+                True,
+                f"Status: {data.get('status', 'unknown')}, Time: {elapsed:.2f}ms",
+            )
             return True
         else:
             print_result("FastAPI health check", False, f"Status code: {response.status_code}")
@@ -97,8 +102,8 @@ def test_integration_module():
 
         # Проверка health_check метода
         health = integration.health_check()
-        fastapi_ok = health['fastapi']['status'] in ('healthy', 'unhealthy')
-        flask_ok = health['flask']['status'] in ('healthy', 'unhealthy')
+        fastapi_ok = health["fastapi"]["status"] in ("healthy", "unhealthy")
+        flask_ok = health["flask"]["status"] in ("healthy", "unhealthy")
 
         print_result("Health check метод", fastapi_ok and flask_ok)
 
@@ -158,6 +163,7 @@ def test_reverse_proxy_import():
 
     try:
         from api.reverse_proxy import FASTAPI_URL
+
         print_result("Импорт reverse_proxy", True, f"FASTAPI_URL: {FASTAPI_URL}")
         return True
     except ImportError as e:
@@ -196,6 +202,7 @@ def test_utils_integration():
     # Defect Analyzer
     try:
         import utils.defect_analyzer
+
         print_result("DefectAnalysisPipeline", True, "Импорт успешен")
         results.append(True)
     except Exception as e:
@@ -205,6 +212,7 @@ def test_utils_integration():
     # Surface Comparator
     try:
         from utils.surface_comparator import SurfaceComparator
+
         print_result("SurfaceComparator", True, "Импорт успешен")
         results.append(True)
     except Exception as e:
@@ -214,6 +222,7 @@ def test_utils_integration():
     # PDF Report Generator
     try:
         from utils.reporting.pdf_report_generator import ScientificPDFReport
+
         print_result("ScientificPDFReport", True, "Импорт успешен")
         results.append(True)
     except Exception as e:
@@ -265,9 +274,9 @@ def run_all_tests(fastapi_url="http://localhost:8000", flask_url="http://localho
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description='Тестирование интеграции Flask + FastAPI')
-    parser.add_argument('--fastapi-url', default='http://localhost:8000', help='URL FastAPI')
-    parser.add_argument('--flask-url', default='http://localhost:5000', help='URL Flask')
+    parser = argparse.ArgumentParser(description="Тестирование интеграции Flask + FastAPI")
+    parser.add_argument("--fastapi-url", default="http://localhost:8000", help="URL FastAPI")
+    parser.add_argument("--flask-url", default="http://localhost:5000", help="URL Flask")
 
     args = parser.parse_args()
 

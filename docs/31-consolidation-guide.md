@@ -95,16 +95,16 @@ class Widget:
     enabled: bool = True
     position: tuple = (0, 0)  # (row, col)
     size: tuple = (1, 1)      # (height, width)
-    
+
     # Callbacks
     on_refresh: Optional[Callable] = None
     on_click: Optional[Callable] = None
-    
+
     # State
     last_update: Optional[datetime] = None
     data: Any = None
     error: Optional[str] = None
-    
+
     async def refresh(self) -> Any:
         """Обновить данные виджета"""
         if self.on_refresh:
@@ -116,12 +116,12 @@ class Widget:
                 self.error = str(e)
                 logger.error(f"Widget {self.name} refresh error: {e}")
         return self.data
-    
+
     def is_visible(self, mode: DashboardMode) -> bool:
         """Проверить видимость в текущем режиме"""
         if not self.enabled:
             return False
-        
+
         if mode == DashboardMode.MINIMAL:
             return self.priority == WidgetPriority.CRITICAL
         elif mode == DashboardMode.STANDARD:
@@ -133,7 +133,7 @@ class Widget:
 class UnifiedDashboard:
     """
     Единый Dashboard с поддержкой разных режимов отображения.
-    
+
     Features:
     - Modular widget system
     - Multiple display modes
@@ -141,7 +141,7 @@ class UnifiedDashboard:
     - Keyboard navigation
     - Extensible architecture
     """
-    
+
     def __init__(
         self,
         mode: DashboardMode = DashboardMode.ENHANCED,
@@ -154,13 +154,13 @@ class UnifiedDashboard:
         self.widgets: Dict[str, Widget] = {}
         self.running = False
         self._refresh_task: Optional[asyncio.Task] = None
-        
+
         # Initialize core widgets
         self._init_core_widgets()
-    
+
     def _init_core_widgets(self):
         """Инициализация основных виджетов"""
-        
+
         # System Monitor (CRITICAL)
         self.register_widget(Widget(
             name="system_monitor",
@@ -171,7 +171,7 @@ class UnifiedDashboard:
             size=(3, 4),
             on_refresh=self._get_system_metrics
         ))
-        
+
         # Component Status (CRITICAL)
         self.register_widget(Widget(
             name="component_status",
@@ -182,7 +182,7 @@ class UnifiedDashboard:
             size=(3, 2),
             on_refresh=self._get_component_status
         ))
-        
+
         # Log Viewer (HIGH)
         self.register_widget(Widget(
             name="log_viewer",
@@ -193,7 +193,7 @@ class UnifiedDashboard:
             size=(2, 4),
             on_refresh=self._get_recent_logs
         ))
-        
+
         # Quick Actions (HIGH)
         self.register_widget(Widget(
             name="quick_actions",
@@ -202,7 +202,7 @@ class UnifiedDashboard:
             position=(3, 4),
             size=(2, 2)
         ))
-        
+
         # NASA APOD (NORMAL)
         self.register_widget(Widget(
             name="nasa_apod",
@@ -213,7 +213,7 @@ class UnifiedDashboard:
             size=(2, 3),
             on_refresh=self._get_nasa_apod
         ))
-        
+
         # ISS Position (NORMAL)
         self.register_widget(Widget(
             name="iss_position",
@@ -224,7 +224,7 @@ class UnifiedDashboard:
             size=(2, 3),
             on_refresh=self._get_iss_position
         ))
-        
+
         # Performance Metrics (NORMAL)
         self.register_widget(Widget(
             name="performance",
@@ -235,48 +235,48 @@ class UnifiedDashboard:
             size=(2, 6),
             on_refresh=self._get_performance_metrics
         ))
-    
+
     def register_widget(self, widget: Widget):
         """Зарегистрировать виджет"""
         self.widgets[widget.name] = widget
-    
+
     def unregister_widget(self, name: str):
         """Удалить виджет"""
         if name in self.widgets:
             del self.widgets[name]
-    
+
     def set_mode(self, mode: DashboardMode):
         """Изменить режим отображения"""
         self.mode = mode
         logger.info(f"Dashboard mode changed to: {mode.value}")
-    
+
     def get_visible_widgets(self) -> List[Widget]:
         """Получить видимые виджеты для текущего режима"""
         visible = [w for w in self.widgets.values() if w.is_visible(self.mode)]
         return sorted(visible, key=lambda w: w.priority.value)
-    
+
     async def refresh_all(self):
         """Обновить все видимые виджеты"""
         tasks = []
         for widget in self.get_visible_widgets():
             if widget.on_refresh:
                 tasks.append(widget.refresh())
-        
+
         if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
-    
+
     async def start(self):
         """Запустить dashboard с auto-refresh"""
         self.running = True
-        
+
         async def refresh_loop():
             while self.running:
                 await self.refresh_all()
                 self.render()
                 await asyncio.sleep(self.refresh_interval)
-        
+
         self._refresh_task = asyncio.create_task(refresh_loop())
-    
+
     async def stop(self):
         """Остановить dashboard"""
         self.running = False
@@ -286,18 +286,18 @@ class UnifiedDashboard:
                 await self._refresh_task
             except asyncio.CancelledError:
                 pass
-    
+
     def render(self):
         """Отрендерить dashboard"""
         # Clear screen
         print("\033[2J\033[H", end="")
-        
+
         # Header
         print(self._render_header())
-        
+
         # Widgets
         visible = self.get_visible_widgets()
-        
+
         # Group by rows
         rows: Dict[int, List[Widget]] = {}
         for widget in visible:
@@ -305,15 +305,15 @@ class UnifiedDashboard:
             if row not in rows:
                 rows[row] = []
             rows[row].append(widget)
-        
+
         # Render each row
         for row_num in sorted(rows.keys()):
             row_widgets = sorted(rows[row_num], key=lambda w: w.position[1])
             print(self._render_row(row_widgets))
-        
+
         # Footer
         print(self._render_footer())
-    
+
     def _render_header(self) -> str:
         """Рендер заголовка"""
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -322,7 +322,7 @@ class UnifiedDashboard:
 ║  🔬 Nanoprobe Sim Lab Dashboard    │ Mode: {self.mode.value:10} │ {now}     ║
 ╠══════════════════════════════════════════════════════════════════════════════╣
 """
-    
+
     def _render_row(self, widgets: List[Widget]) -> str:
         """Рендер строки виджетов"""
         lines = []
@@ -331,7 +331,7 @@ class UnifiedDashboard:
             lines.append(self._render_widget_content(widget))
             lines.append(f"└{'─' * 36}┘")
         return "\n".join(lines)
-    
+
     def _render_widget_content(self, widget: Widget) -> str:
         """Рендер содержимого виджета"""
         if widget.error:
@@ -340,7 +340,7 @@ class UnifiedDashboard:
             return f"│ {str(widget.data)[:34]}{' ' * (34 - len(str(widget.data)))} │"
         else:
             return f"│ {'Loading...':^34} │"
-    
+
     def _render_footer(self) -> str:
         """Рендер футера"""
         return """
@@ -348,7 +348,7 @@ class UnifiedDashboard:
 ║  [Q] Quit  [R] Refresh  [M] Mode  [H] Help  [1-9] Select Widget              ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 """
-    
+
     # Widget data providers
     async def _get_system_metrics(self) -> Dict:
         """Получить метрики системы"""
@@ -358,7 +358,7 @@ class UnifiedDashboard:
             "memory": psutil.virtual_memory().percent,
             "disk": psutil.disk_usage('/').percent
         }
-    
+
     async def _get_component_status(self) -> Dict:
         """Получить статус компонентов"""
         return {
@@ -366,12 +366,12 @@ class UnifiedDashboard:
             "analyzer": "idle",
             "sstv": "standby"
         }
-    
+
     async def _get_recent_logs(self) -> List[str]:
         """Получить последние логи"""
         # Read from log file
         return ["[INFO] System started", "[INFO] API ready"]
-    
+
     async def _get_nasa_apod(self) -> Dict:
         """Получить NASA APOD"""
         try:
@@ -380,7 +380,7 @@ class UnifiedDashboard:
             return await client.get_apod()
         except Exception as e:
             return {"error": str(e)}
-    
+
     async def _get_iss_position(self) -> Dict:
         """Получить позицию МКС"""
         try:
@@ -390,7 +390,7 @@ class UnifiedDashboard:
                     return await resp.json()
         except Exception as e:
             return {"error": str(e)}
-    
+
     async def _get_performance_metrics(self) -> Dict:
         """Получить метрики производительности"""
         return {
@@ -405,7 +405,7 @@ def run_dashboard(mode: str = "enhanced"):
     """Запуск dashboard"""
     mode_enum = DashboardMode(mode.lower())
     dashboard = UnifiedDashboard(mode=mode_enum)
-    
+
     try:
         asyncio.run(dashboard.start())
     except KeyboardInterrupt:
@@ -506,21 +506,21 @@ class Service(Enum):
 
 class ProcessManager:
     """Управление процессами сервисов"""
-    
+
     def __init__(self):
         self.processes: dict = {}
         self.running = True
-        
+
         # Setup signal handlers
         signal.signal(signal.SIGINT, self._signal_handler)
         signal.signal(signal.SIGTERM, self._signal_handler)
-    
+
     def _signal_handler(self, signum, frame):
         """Обработчик сигналов для graceful shutdown"""
         logger.info(f"Received signal {signum}, shutting down...")
         self.running = False
         self.stop_all()
-    
+
     def start_service(
         self,
         service: Service,
@@ -528,7 +528,7 @@ class ProcessManager:
         port: Optional[int] = None
     ) -> subprocess.Popen:
         """Запуск сервиса"""
-        
+
         if service == Service.API:
             return self._start_api(mode, port or 8000)
         elif service == Service.FLASK:
@@ -541,7 +541,7 @@ class ProcessManager:
             return self._start_worker()
         else:
             raise ValueError(f"Unknown service: {service}")
-    
+
     def _start_api(self, mode: ServerMode, port: int) -> subprocess.Popen:
         """Запуск FastAPI"""
         cmd = [
@@ -550,42 +550,42 @@ class ProcessManager:
             "--host", "0.0.0.0",
             "--port", str(port)
         ]
-        
+
         if mode == ServerMode.DEVELOPMENT:
             cmd.extend(["--reload"])
-        
+
         logger.info(f"Starting API server on port {port}")
         proc = subprocess.Popen(cmd)
         self.processes[Service.API] = proc
         return proc
-    
+
     def _start_flask(self, mode: ServerMode, port: int) -> subprocess.Popen:
         """Запуск Flask web interface"""
         env = os.environ.copy()
         env["FLASK_APP"] = "src/web/web_dashboard.py"
         env["FLASK_ENV"] = "development" if mode == ServerMode.DEVELOPMENT else "production"
-        
+
         cmd = [sys.executable, "-m", "flask", "run", "--port", str(port)]
-        
+
         logger.info(f"Starting Flask server on port {port}")
         proc = subprocess.Popen(cmd, env=env)
         self.processes[Service.FLASK] = proc
         return proc
-    
+
     def _start_nextjs(self, mode: ServerMode, port: int) -> subprocess.Popen:
         """Запуск Next.js frontend"""
         frontend_dir = Path(__file__).parent / "frontend"
-        
+
         if mode == ServerMode.DEVELOPMENT:
             cmd = ["npm", "run", "dev"]
         else:
             cmd = ["npm", "run", "start"]
-        
+
         logger.info(f"Starting Next.js server on port {port}")
         proc = subprocess.Popen(cmd, cwd=frontend_dir)
         self.processes[Service.NEXTJS] = proc
         return proc
-    
+
     def _start_cli(self) -> subprocess.Popen:
         """Запуск CLI dashboard"""
         from src.cli.dashboard.core import run_dashboard
@@ -593,7 +593,7 @@ class ProcessManager:
         # CLI runs in foreground
         run_dashboard("enhanced")
         return None
-    
+
     def _start_worker(self) -> subprocess.Popen:
         """Запуск background worker"""
         cmd = [sys.executable, "-m", "api.worker"]
@@ -601,7 +601,7 @@ class ProcessManager:
         proc = subprocess.Popen(cmd)
         self.processes[Service.WORKER] = proc
         return proc
-    
+
     def stop_service(self, service: Service):
         """Остановить сервис"""
         if service in self.processes:
@@ -613,12 +613,12 @@ class ProcessManager:
                 except subprocess.TimeoutExpired:
                     proc.kill()
                 logger.info(f"Stopped {service.value}")
-    
+
     def stop_all(self):
         """Остановить все сервисы"""
         for service in list(self.processes.keys()):
             self.stop_service(service)
-    
+
     def wait(self):
         """Ожидание завершения всех процессов"""
         while self.running:
@@ -627,7 +627,7 @@ class ProcessManager:
                 if proc and proc.poll() is not None:
                     logger.warning(f"{service.value} process died, restarting...")
                     self.start_service(service)
-            
+
             import time
             time.sleep(1)
 
@@ -652,11 +652,11 @@ def interactive_mode():
 ║                                                                              ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 """)
-    
+
     choice = input("Select option [1-8, Q]: ").strip().upper()
-    
+
     manager = ProcessManager()
-    
+
     if choice == "1":
         manager.start_service(Service.CLI)
     elif choice == "2":
@@ -704,7 +704,7 @@ Examples:
     python main.py web nextjs         # Next.js frontend only
         """
     )
-    
+
     # Positional arguments
     parser.add_argument(
         "command",
@@ -712,7 +712,7 @@ Examples:
         choices=["cli", "web", "api", "all", "worker", "dev"],
         help="Service to run"
     )
-    
+
     # Subcommand for web
     parser.add_argument(
         "web_type",
@@ -720,7 +720,7 @@ Examples:
         choices=["flask", "nextjs"],
         help="Web framework (for 'web' command)"
     )
-    
+
     # Options
     parser.add_argument(
         "--mode", "-m",
@@ -728,57 +728,57 @@ Examples:
         default="development",
         help="Server mode"
     )
-    
+
     parser.add_argument(
         "--port", "-p",
         type=int,
         help="Port number"
     )
-    
+
     parser.add_argument(
         "--dashboard-mode",
         choices=["standard", "enhanced", "minimal"],
         default="enhanced",
         help="Dashboard display mode (for CLI)"
     )
-    
+
     args = parser.parse_args()
-    
+
     # Interactive mode if no command
     if not args.command:
         interactive_mode()
         return
-    
+
     # Determine server mode
     mode = ServerMode.PRODUCTION if args.mode in ["prod", "production"] else ServerMode.DEVELOPMENT
-    
+
     manager = ProcessManager()
-    
+
     # Execute command
     if args.command == "cli":
         from src.cli.dashboard.core import run_dashboard
         run_dashboard(args.dashboard_mode)
-    
+
     elif args.command == "web":
         if args.web_type == "flask":
             manager.start_service(Service.FLASK, mode, args.port)
         else:
             manager.start_service(Service.NEXTJS, mode, args.port)
         manager.wait()
-    
+
     elif args.command == "api":
         manager.start_service(Service.API, mode, args.port)
         manager.wait()
-    
+
     elif args.command == "all":
         manager.start_service(Service.API, mode, args.port or 8000)
         manager.start_service(Service.NEXTJS, mode, args.port or 3000)
         manager.wait()
-    
+
     elif args.command == "worker":
         manager.start_service(Service.WORKER)
         manager.wait()
-    
+
     elif args.command == "dev":
         manager.start_service(Service.API, ServerMode.DEVELOPMENT, 8000)
         manager.start_service(Service.NEXTJS, ServerMode.DEVELOPMENT, 3000)
@@ -962,24 +962,24 @@ __all__ = [
     "NotFoundError",
     "CacheManager",
     "get_cache",
-    
+
     # Monitoring
     "SystemMonitor",
     "HealthChecker",
     "MetricsCollector",
-    
+
     # Performance
     "PerformanceProfiler",
     "run_benchmark",
     "MemoryTracker",
-    
+
     # Security
     "AuthManager",
     "RateLimiter",
-    
+
     # API
     "NASAAPIClient",
-    
+
     # Aliases
     "config",
     "logger",

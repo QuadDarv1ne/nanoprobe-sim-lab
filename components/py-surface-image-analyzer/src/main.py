@@ -17,6 +17,7 @@ try:
     if str(utils_path) not in sys.path:
         sys.path.insert(0, str(utils_path))
     from database import get_database
+
     HAS_DB = True
 except (ImportError, Exception):
     HAS_DB = False
@@ -88,7 +89,9 @@ def main():
         # Шероховатость
         if args.roughness:
             roughness_params = calculate_surface_roughness(
-                processor.processed_image if processor.processed_image is not None else processor.image
+                processor.processed_image
+                if processor.processed_image is not None
+                else processor.image
             )
             print("\nПараметры шероховатости:")
             print(f"  Ra (среднее): {roughness_params['ra']:.4f}")
@@ -104,24 +107,30 @@ def main():
             try:
                 db = get_database()
                 stats = processor.get_statistics()
-                roughness = calculate_surface_roughness(
-                    processor.processed_image if processor.processed_image is not None else processor.image
-                ) if args.roughness else None
+                roughness = (
+                    calculate_surface_roughness(
+                        processor.processed_image
+                        if processor.processed_image is not None
+                        else processor.image
+                    )
+                    if args.roughness
+                    else None
+                )
 
                 metadata = {
-                    'stats': stats,
-                    'roughness': roughness,
-                    'filter': args.filter,
-                    'processed_at': datetime.now(timezone.utc).isoformat()
+                    "stats": stats,
+                    "roughness": roughness,
+                    "filter": args.filter,
+                    "processed_at": datetime.now(timezone.utc).isoformat(),
                 }
 
                 scan_id = db.add_scan_result(
                     scan_type="image",
                     surface_type="analyzed",
-                    width=stats['shape'][1] if len(stats['shape']) > 1 else stats['shape'][0],
-                    height=stats['shape'][0],
+                    width=stats["shape"][1] if len(stats["shape"]) > 1 else stats["shape"][0],
+                    height=stats["shape"][0],
                     file_path=str(image_path),
-                    metadata=metadata
+                    metadata=metadata,
                 )
                 print(f"\nРезультаты сохранены в БД (ID: {scan_id})")
             except Exception as e:

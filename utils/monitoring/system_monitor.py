@@ -92,14 +92,14 @@ class SystemMonitor:
                 self.current_metrics = {
                     "cpu_percent": cpu_percent,
                     "memory_percent": memory_percent,
-                    "memory_available_gb": round(
-                        psutil.virtual_memory().available / (1024**3), 2
-                    ),
+                    "memory_available_gb": round(psutil.virtual_memory().available / (1024**3), 2),
                     "disk_usage_percent": disk_usage,
                     "process_count": len(psutil.pids()),
-                    "uptime": (datetime.now(timezone.utc) - self.start_time).total_seconds()
-                    if self.start_time
-                    else 0,
+                    "uptime": (
+                        (datetime.now(timezone.utc) - self.start_time).total_seconds()
+                        if self.start_time
+                        else 0
+                    ),
                 }
 
                 time.sleep(self.update_interval)
@@ -201,9 +201,11 @@ class SystemMonitor:
             "current_metrics": self.get_current_metrics(),
             "system_health": self.get_system_health(),
             "resource_trends": self.get_resource_usage_trend(),
-            "monitoring_duration": (datetime.now(timezone.utc) - self.start_time).total_seconds()
-            if self.start_time
-            else 0,
+            "monitoring_duration": (
+                (datetime.now(timezone.utc) - self.start_time).total_seconds()
+                if self.start_time
+                else 0
+            ),
         }
 
         with open(output_path, "w", encoding="utf-8") as f:

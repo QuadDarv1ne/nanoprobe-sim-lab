@@ -1,6 +1,6 @@
 /**
  * PWA & External API Hooks
- * 
+ *
  * React hooks для Progressive Web App и внешних API
  */
 

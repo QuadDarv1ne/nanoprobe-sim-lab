@@ -383,7 +383,7 @@
             loadSSTVModes();
             updateCurrentTime();
             connectWebSocket();
-            
+
             setInterval(updateCurrentTime, 1000);
             setInterval(loadISSPosition, 30000); // Update every 30s
         });
@@ -407,7 +407,7 @@
             try {
                 const response = await fetch('/api/v1/sstv/iss/schedule?hours_ahead=24');
                 const data = await response.json();
-                
+
                 if (data.status === 'success') {
                     issSchedule = data.data;
                     renderISSSchedule(issSchedule);
@@ -427,7 +427,7 @@
         // Render ISS Schedule
         function renderISSSchedule(passes) {
             const container = document.getElementById('issSchedule');
-            
+
             if (passes.length === 0) {
                 container.innerHTML = `
                     <div class="alert alert-info">
@@ -445,7 +445,7 @@
                 const aosTime = new Date(pass.aos);
                 const losTime = new Date(pass.los);
                 const isNext = index === 0 && aosTime > now;
-                
+
                 html += `
                     <div class="pass-item ${isNext ? 'next-pass' : ''}">
                         <div class="d-flex justify-content-between align-items-start">
@@ -486,12 +486,12 @@
             try {
                 const response = await fetch('/api/v1/sstv/iss/next-pass');
                 const data = await response.json();
-                
+
                 if (data.status === 'success' && data.data) {
                     const pass = data.data;
                     const aosTime = new Date(pass.aos);
                     const timeUntil = pass.time_until_aos;
-                    
+
                     document.getElementById('nextPassAlert').innerHTML = `
                         <div class="row align-items-center">
                             <div class="col-md-8">
@@ -529,7 +529,7 @@
             try {
                 const response = await fetch('/api/v1/sstv/iss/position');
                 const data = await response.json();
-                
+
                 if (data.status === 'success') {
                     const pos = data.data;
                     document.getElementById('issPosition').innerHTML = `
@@ -560,7 +560,7 @@
             try {
                 const response = await fetch('/api/v1/sstv/sstv/modes');
                 const data = await response.json();
-                
+
                 if (data.status === 'success') {
                     const modes = data.modes.slice(0, 6); // Show first 6 modes
                     document.getElementById('sstvModes').innerHTML = `
@@ -582,7 +582,7 @@
         // Update Stats
         function updateStats(passes) {
             document.getElementById('totalPasses').textContent = passes.length;
-            
+
             if (passes.length > 0) {
                 const avgElevation = Math.round(
                     passes.reduce((sum, pass) => sum + pass.max_elevation, 0) / passes.length
@@ -597,20 +597,20 @@
         function connectWebSocket() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             wsConnection = new WebSocket(`${protocol}//${window.location.host}/api/v1/sstv/ws/iss`);
-            
+
             wsConnection.onopen = function() {
                 document.getElementById('stationStatus').className = 'status-indicator status-online';
                 document.getElementById('stationStatusText').textContent = 'Станция онлайн';
             };
-            
+
             wsConnection.onclose = function() {
                 document.getElementById('stationStatus').className = 'status-indicator status-offline';
                 document.getElementById('stationStatusText').textContent = 'Станция офлайн';
-                
+
                 // Reconnect after 5 seconds
                 setTimeout(connectWebSocket, 5000);
             };
-            
+
             wsConnection.onmessage = function(event) {
                 const data = JSON.parse(event.data);
                 if (data.type === 'position') {

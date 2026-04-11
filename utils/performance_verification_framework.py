@@ -457,9 +457,9 @@ class PerformanceVerificationFramework:
             "neutral_improvements": total_tests - positive_improvements - negative_improvements,
             "average_improvement_percent": avg_improvement,
             "effectiveness_score": effectiveness_score,
-            "success_rate_percent": (positive_improvements / total_tests * 100)
-            if total_tests > 0
-            else 0,
+            "success_rate_percent": (
+                (positive_improvements / total_tests * 100) if total_tests > 0 else 0
+            ),
             "total_execution_time": sum(r.execution_time for r in self.test_results),
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "recommendations": self._generate_verification_recommendations(),
@@ -556,9 +556,11 @@ class PerformanceVerificationFramework:
             "system_info": {
                 "cpu_count": psutil.cpu_count(),
                 "memory_total_gb": round(psutil.virtual_memory().total / (1024**3), 2),
-                "platform": str(psutil.Process().parent().exe())
-                if hasattr(psutil, "Process") and psutil.Process().parent()
-                else "unknown",
+                "platform": (
+                    str(psutil.Process().parent().exe())
+                    if hasattr(psutil, "Process") and psutil.Process().parent()
+                    else "unknown"
+                ),
             },
         }
 

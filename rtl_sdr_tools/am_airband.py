@@ -131,9 +131,7 @@ class AMAirbandReceiver:
         """Ресэмплинг к аудио частоте"""
         from scipy import signal as scipy_signal
 
-        resampled = scipy_signal.resample_poly(
-            audio, self.audio_rate, self.sample_rate
-        )
+        resampled = scipy_signal.resample_poly(audio, self.audio_rate, self.sample_rate)
         return resampled.astype(np.float32)
 
     def start(self):
@@ -333,12 +331,8 @@ def main():
         default=30,
         help="Усиление RTL-SDR dB (0-50, по умолчанию: 30)",
     )
-    parser.add_argument(
-        "--device", type=int, default=0, help="Индекс RTL-SDR устройства"
-    )
-    parser.add_argument(
-        "--scan", action="store_true", help="Сканирование авиадиапазона"
-    )
+    parser.add_argument("--device", type=int, default=0, help="Индекс RTL-SDR устройства")
+    parser.add_argument("--scan", action="store_true", help="Сканирование авиадиапазона")
 
     args = parser.parse_args()
 

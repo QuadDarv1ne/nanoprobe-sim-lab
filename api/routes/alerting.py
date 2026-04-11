@@ -2,12 +2,12 @@
 API роуты для алертинга и мониторинга
 """
 
-from fastapi import APIRouter, Depends, Query, Body
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 
-from api.schemas import ErrorResponse
+from fastapi import APIRouter, Body, Depends, Query
+
 from api.alerting import AlertManager
-
+from api.schemas import ErrorResponse
 
 router = APIRouter()
 
@@ -160,7 +160,7 @@ async def get_alert_history(
         history = [a for a in history if a.get("severity") == severity]
 
     total = len(history)
-    paginated = history[offset:offset + limit]
+    paginated = history[offset : offset + limit]
 
     return {
         "alerts": paginated,

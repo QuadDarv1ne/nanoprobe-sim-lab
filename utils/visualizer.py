@@ -1,10 +1,11 @@
 """Модуль визуализации для проекта Лаборатория моделирования нанозонда."""
 
+from pathlib import Path
+from typing import Optional, Tuple
+
+import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
-from typing import Optional, Tuple
-import matplotlib.animation as animation
-from pathlib import Path
 
 
 class SurfaceVisualizer:
@@ -120,7 +121,7 @@ class SurfaceVisualizer:
         def update(frame):
             """
             Обновление кадра анимации
-            
+
             Args:
                 frame: Индекс текущего кадра
             """

@@ -1,9 +1,9 @@
 """Unit-тесты для модуля управления конфигурацией."""
 
-import unittest
-import tempfile
 import json
 import sys
+import tempfile
+import unittest
 from pathlib import Path
 
 # Добавляем путь к модулям
@@ -22,28 +22,18 @@ class TestConfigManager(unittest.TestCase):
 
         # Создаём тестовую конфигурацию
         self.test_config = {
-            "project": {
-                "name": "Test Project",
-                "version": "1.0.0"
-            },
-            "components": {
-                "test_component": {
-                    "enabled": True,
-                    "config": {"param1": "value1"}
-                }
-            },
-            "paths": {
-                "data_dir": "data",
-                "output_dir": "output"
-            }
+            "project": {"name": "Test Project", "version": "1.0.0"},
+            "components": {"test_component": {"enabled": True, "config": {"param1": "value1"}}},
+            "paths": {"data_dir": "data", "output_dir": "output"},
         }
 
-        with open(self.config_file, 'w', encoding='utf-8') as f:
+        with open(self.config_file, "w", encoding="utf-8") as f:
             json.dump(self.test_config, f, ensure_ascii=False)
 
     def tearDown(self):
         """Очистка после теста"""
         import shutil
+
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
     def test_initialization_with_existing_file(self):
@@ -85,15 +75,11 @@ class TestConfigManager(unittest.TestCase):
         # Создаём полную конфигурацию
         full_config = {
             "project": {"name": "Test", "version": "1.0"},
-            "components": {
-                "spm_simulator": {},
-                "surface_analyzer": {},
-                "sstv_groundstation": {}
-            },
-            "paths": {"data_dir": "data"}
+            "components": {"spm_simulator": {}, "surface_analyzer": {}, "sstv_groundstation": {}},
+            "paths": {"data_dir": "data"},
         }
 
-        with open(self.config_file, 'w', encoding='utf-8') as f:
+        with open(self.config_file, "w", encoding="utf-8") as f:
             json.dump(full_config, f)
 
         cm = ConfigManager(str(self.config_file))
@@ -102,12 +88,9 @@ class TestConfigManager(unittest.TestCase):
 
     def test_validate_config_missing_project(self):
         """Тестирует валидацию с отсутствующим project"""
-        invalid_config = {
-            "components": {"spm_simulator": {}},
-            "paths": {"data_dir": "data"}
-        }
+        invalid_config = {"components": {"spm_simulator": {}}, "paths": {"data_dir": "data"}}
 
-        with open(self.config_file, 'w', encoding='utf-8') as f:
+        with open(self.config_file, "w", encoding="utf-8") as f:
             json.dump(invalid_config, f)
 
         cm = ConfigManager(str(self.config_file))
@@ -162,7 +145,7 @@ class TestConfigManager(unittest.TestCase):
         self.assertTrue(success)
 
         # Проверяем, что файл обновился
-        with open(self.config_file, 'r', encoding='utf-8') as f:
+        with open(self.config_file, "r", encoding="utf-8") as f:
             saved_config = json.load(f)
 
         self.assertEqual(saved_config["test_key"], "test_value")
@@ -179,7 +162,7 @@ class TestConfigManagerEdgeCases(unittest.TestCase):
 
     def test_invalid_json_config(self):
         """Тестирует поведение с некорректным JSON"""
-        temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False)
+        temp_file = tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False)
         temp_file.write("{ invalid json }")
         temp_file.close()
 
@@ -191,5 +174,5 @@ class TestConfigManagerEdgeCases(unittest.TestCase):
             Path(temp_file.name).unlink(missing_ok=True)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

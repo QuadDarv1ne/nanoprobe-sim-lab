@@ -23,18 +23,20 @@ class TestCacheManager(unittest.TestCase):
             "cache_directories": ["cache"],
             "max_age_days": 7,
             "max_size_mb": 100,
-            "auto_cleanup": True
+            "auto_cleanup": True,
         }
 
         config_file = Path(self.temp_dir) / "config" / "cache_config.json"
         config_file.parent.mkdir()
         import json
-        with open(config_file, 'w') as f:
+
+        with open(config_file, "w") as f:
             json.dump(self.config, f)
 
     def tearDown(self):
         """Очистка после теста"""
         import shutil
+
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
     def test_initialization(self):
@@ -95,7 +97,7 @@ class TestCacheInfo(unittest.TestCase):
             size_bytes=1024,
             file_count=10,
             last_accessed=datetime.now(timezone.utc),
-            cache_type="temp"
+            cache_type="temp",
         )
 
         self.assertEqual(info.size_bytes, 1024)
@@ -103,5 +105,5 @@ class TestCacheInfo(unittest.TestCase):
         self.assertEqual(info.cache_type, "temp")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

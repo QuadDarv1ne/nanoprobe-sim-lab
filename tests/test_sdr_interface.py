@@ -1,10 +1,12 @@
 """Тесты для SDR интерфейса."""
 
-import unittest
-import sys
 import os
+import sys
+import unittest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../components/py-sstv-groundstation/src'))
+sys.path.insert(
+    0, os.path.join(os.path.dirname(__file__), "../components/py-sstv-groundstation/src")
+)
 
 from sdr_interface import SDRInterface
 
@@ -26,34 +28,34 @@ class TestSDRInterface(unittest.TestCase):
 
     def test_supported_devices(self):
         """Тестирует список поддерживаемых устройств"""
-        self.assertIn('r828d', self.sdr.SUPPORTED_DEVICES)
-        self.assertIn('rtl2832u', self.sdr.SUPPORTED_DEVICES)
-        self.assertIn('r820t', self.sdr.SUPPORTED_DEVICES)
-        self.assertIn('airspy', self.sdr.SUPPORTED_DEVICES)
-        self.assertIn('hackrf', self.sdr.SUPPORTED_DEVICES)
+        self.assertIn("r828d", self.sdr.SUPPORTED_DEVICES)
+        self.assertIn("rtl2832u", self.sdr.SUPPORTED_DEVICES)
+        self.assertIn("r820t", self.sdr.SUPPORTED_DEVICES)
+        self.assertIn("airspy", self.sdr.SUPPORTED_DEVICES)
+        self.assertIn("hackrf", self.sdr.SUPPORTED_DEVICES)
 
     def test_device_type_v4(self):
         """Тестирует инициализацию с явным указанием RTL-SDR V4"""
-        sdr_v4 = SDRInterface(device_type='r828d')
-        self.assertEqual(sdr_v4.device_type, 'r828d')
-        self.assertEqual(sdr_v4.SUPPORTED_DEVICES['r828d'], 'RTL-SDR V4 (R828D)')
+        sdr_v4 = SDRInterface(device_type="r828d")
+        self.assertEqual(sdr_v4.device_type, "r828d")
+        self.assertEqual(sdr_v4.SUPPORTED_DEVICES["r828d"], "RTL-SDR V4 (R828D)")
 
     def test_device_type_classic(self):
         """Тестирует инициализацию с явным указанием классического RTL-SDR"""
-        sdr_classic = SDRInterface(device_type='rtl2832u')
-        self.assertEqual(sdr_classic.device_type, 'rtl2832u')
+        sdr_classic = SDRInterface(device_type="rtl2832u")
+        self.assertEqual(sdr_classic.device_type, "rtl2832u")
 
     def test_device_type_auto(self):
         """Тестирует инициализацию с автоопределением"""
-        sdr_auto = SDRInterface(device_type='auto')
-        self.assertEqual(sdr_auto.device_type, 'auto')
+        sdr_auto = SDRInterface(device_type="auto")
+        self.assertEqual(sdr_auto.device_type, "auto")
 
     def test_frequencies(self):
         """Тестирует预设ленные частоты"""
-        self.assertIn('iss', self.sdr.FREQUENCIES)
-        self.assertIn('noaa_15', self.sdr.FREQUENCIES)
-        self.assertIn('meteor_m2', self.sdr.FREQUENCIES)
-        self.assertEqual(self.sdr.FREQUENCIES['iss'], 145.800)
+        self.assertIn("iss", self.sdr.FREQUENCIES)
+        self.assertIn("noaa_15", self.sdr.FREQUENCIES)
+        self.assertIn("meteor_m2", self.sdr.FREQUENCIES)
+        self.assertEqual(self.sdr.FREQUENCIES["iss"], 145.800)
 
     def test_set_frequency_before_init(self):
         """Тестирует установку частоты до инициализации"""
@@ -85,7 +87,7 @@ class TestSDRInterface(unittest.TestCase):
 
     def test_get_frequency_range_v4(self):
         """Тестирует диапазон частот для RTL-SDR V4"""
-        sdr_v4 = SDRInterface(device_type='r828d')
+        sdr_v4 = SDRInterface(device_type="r828d")
         freq_range = sdr_v4.get_frequency_range()
         # RTL-SDR V4: 24-1766 МГц
         self.assertEqual(freq_range[0], 24e6)
@@ -150,7 +152,7 @@ class TestSDRInterface(unittest.TestCase):
         """Тестирует валидацию диапазона частот"""
         # Частоты вне диапазона должны возвращать False после инициализации
         # Пока просто проверяем что метод существует
-        self.assertTrue(hasattr(self.sdr, 'set_frequency'))
+        self.assertTrue(hasattr(self.sdr, "set_frequency"))
 
 
 def run_tests():
@@ -175,6 +177,6 @@ def run_tests():
     return result.wasSuccessful()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = run_tests()
     sys.exit(0 if success else 1)

@@ -18,7 +18,7 @@ echo   5. Показать текущую лицензию
 echo   0. Выход
 echo.
 
-set /p choice=Выберите действие (0-5): 
+set /p choice=Выберите действие (0-5):
 
 if "%choice%"=="1" goto run_spm
 if "%choice%"=="2" goto run_analyzer

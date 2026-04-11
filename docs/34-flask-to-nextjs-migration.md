@@ -347,7 +347,7 @@ export function ISSTracker() {
                 <p className="text-xl font-mono">{position.velocity.toFixed(0)} km/h</p>
               </div>
             </div>
-            
+
             {/* Map component */}
             <div className="aspect-video bg-slate-100 dark:bg-slate-800 rounded-lg relative overflow-hidden">
               <ISSMap latitude={position.latitude} longitude={position.longitude} />
@@ -403,7 +403,7 @@ export function useWebSocket(
 
   const connect = useCallback(() => {
     const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000'}${url}`;
-    
+
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
@@ -479,7 +479,7 @@ def deprecation_warning():
 
 @app.route('/')
 def index():
-    return render_template('dashboard.html', 
+    return render_template('dashboard.html',
         deprecation_notice=True,
         new_url="http://localhost:3000"
     )

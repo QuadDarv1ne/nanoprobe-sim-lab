@@ -63,7 +63,7 @@ class APIClient {
           errorMessage = `HTTP ${status}: ${data?.message || data?.detail || error.response.statusText || 'Server error'}`;
         } else if (error.request) {
           // Request was made but no response received (timeout/network error)
-          errorMessage = error.code === 'ECONNABORTED' 
+          errorMessage = error.code === 'ECONNABORTED'
             ? `Request timeout after ${DEFAULT_TIMEOUT_MS}ms`
             : 'Network error - check connection';
         } else {
@@ -73,17 +73,17 @@ class APIClient {
 
         // Retry logic for transient errors (5xx, network errors)
         const shouldRetry = (
-          error.response?.status && 
+          error.response?.status &&
           (error.response.status >= 500 || error.response.status === 429)
         ) || !error.response;
 
         if (shouldRetry && originalRequest && (!originalRequest._retryCount || originalRequest._retryCount < MAX_RETRIES)) {
           originalRequest._retryCount = (originalRequest._retryCount || 0) + 1;
-          
+
           // Wait before retry (exponential backoff)
           const delay = RETRY_DELAY_MS * Math.pow(2, originalRequest._retryCount - 1);
           await new Promise(resolve => setTimeout(resolve, delay));
-          
+
           return this.client.request(originalRequest);
         }
 
@@ -92,7 +92,7 @@ class APIClient {
         (enhancedError as any).originalError = error;
         (enhancedError as any).status = error.response?.status;
         (enhancedError as any).url = originalRequest?.url;
-        
+
         return Promise.reject(enhancedError);
       }
     );

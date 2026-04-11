@@ -3,10 +3,10 @@
 Тесты для async методов DatabaseManager
 """
 
-import sys
 import asyncio
-import tempfile
 import os
+import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -75,6 +75,7 @@ async def test_async_scan_operations():
     except Exception as e:
         print(f"✗ async scan operations: FAIL - {e}")
         import traceback
+
         traceback.print_exc()
         return False
     finally:
@@ -141,7 +142,9 @@ def test_pool_stats():
         assert "pool_size" in stats
         assert stats["pool_size"] == 3
 
-        print(f"✓ pool stats: PASS (hits={stats['hits']}, misses={stats['misses']}, created={stats['created']})")
+        print(
+            f"✓ pool stats: PASS (hits={stats['hits']}, misses={stats['misses']}, created={stats['created']})"
+        )
         return True
     except Exception as e:
         print(f"✗ pool stats: FAIL - {e}")

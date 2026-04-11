@@ -12,7 +12,7 @@ services:
     image: nanoprobe-fastapi:latest
     container_name: nanoprobe-fastapi
     restart: unless-stopped
-    
+
     # Production запуск с Gunicorn
     command: >
       gunicorn api.main:app
@@ -20,7 +20,7 @@ services:
       --bind 0.0.0.0:8000
       --workers 4
       --worker-class uvicorn.workers.UvicornWorker
-    
+
     environment:
       - PYTHONUNBUFFERED=1
       - PYTHONDONTWRITEBYTECODE=1
@@ -29,26 +29,26 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - GUNICORN_LOGLEVEL=info
-    
+
     volumes:
       - ../data:/app/data
       - ../logs:/app/logs
       - ../output:/app/output
       - ../reports:/app/reports
-    
+
     networks:
       - nanoprobe-network
-    
+
     depends_on:
       - redis
-    
+
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    
+
     deploy:
       resources:
         limits:
@@ -66,7 +66,7 @@ services:
     image: nanoprobe-flask:latest
     container_name: nanoprobe-flask
     restart: unless-stopped
-    
+
     # Запуск с Gunicorn для Flask
     command: >
       gunicorn src.web.web_dashboard_integrated:app
@@ -75,7 +75,7 @@ services:
       --threads 4
       --worker-class gthread
       --timeout 120
-    
+
     environment:
       - PYTHONUNBUFFERED=1
       - FLASK_ENV=production
@@ -83,18 +83,18 @@ services:
       - FASTAPI_URL=http://fastapi:8000
       - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
       - DATABASE_URL=sqlite:///data/nanoprobe.db
-    
+
     volumes:
       - ../data:/app/data
       - ../logs:/app/logs
       - ../output:/app/output
-    
+
     networks:
       - nanoprobe-network
-    
+
     depends_on:
       - fastapi
-    
+
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/api/system_info"]
       interval: 30s
@@ -107,23 +107,23 @@ services:
     image: nginx:alpine
     container_name: nanoprobe-nginx
     restart: unless-stopped
-    
+
     ports:
       - "80:80"
       - "443:443"
-    
+
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
       - ../logs/nginx:/var/log/nginx
-    
+
     networks:
       - nanoprobe-network
-    
+
     depends_on:
       - fastapi
       - flask
-    
+
     healthcheck:
       test: ["CMD", "nginx", "-t"]
       interval: 30s
@@ -135,16 +135,16 @@ services:
     image: redis:7-alpine
     container_name: nanoprobe-redis
     restart: unless-stopped
-    
+
     # Опционально: персистентность
     command: redis-server --appendonly yes
-    
+
     volumes:
       - redis-data:/data
-    
+
     networks:
       - nanoprobe-network
-    
+
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s
@@ -156,26 +156,26 @@ services:
     image: prom/prometheus:latest
     container_name: nanoprobe-prometheus
     restart: unless-stopped
-    
+
     volumes:
       - ../monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ../monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
       - prometheus-data:/prometheus
-    
+
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--web.enable-lifecycle'
-    
+
     ports:
       - "9090:9090"
-    
+
     networks:
       - nanoprobe-network
-    
+
     depends_on:
       - fastapi
-    
+
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:9090/-/healthy"]
       interval: 30s
@@ -187,21 +187,21 @@ services:
     image: prom/alertmanager:latest
     container_name: nanoprobe-alertmanager
     restart: unless-stopped
-    
+
     volumes:
       - ../monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
       - alertmanager-data:/alertmanager
-    
+
     command:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
       - '--storage.path=/alertmanager'
-    
+
     ports:
       - "9093:9093"
-    
+
     networks:
       - nanoprobe-network
-    
+
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:9093/-/healthy"]
       interval: 30s
@@ -213,28 +213,28 @@ services:
     image: grafana/grafana:latest
     container_name: nanoprobe-grafana
     restart: unless-stopped
-    
+
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin123}
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_SERVER_ROOT_URL=http://localhost:3000
       - GF_AUTH_ANONYMOUS_ENABLED=false
-    
+
     volumes:
       - grafana-data:/var/lib/grafana
       - ../monitoring/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
       - ../monitoring/grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
       - ../monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards/files:ro
-    
+
     ports:
       - "3000:3000"
-    
+
     networks:
       - nanoprobe-network
-    
+
     depends_on:
       - prometheus
-    
+
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
       interval: 30s

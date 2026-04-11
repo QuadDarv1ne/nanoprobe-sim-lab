@@ -1,15 +1,15 @@
 """Тесты для batch processor."""
 
-import unittest
-import tempfile
 import shutil
-import time
-from pathlib import Path
 import sys
+import tempfile
+import time
+import unittest
+from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from utils.batch_processor import BatchProcessor, BatchJob
+from utils.batch_processor import BatchJob, BatchProcessor
 
 
 class TestBatchJob(unittest.TestCase):
@@ -22,7 +22,7 @@ class TestBatchJob(unittest.TestCase):
             job_type="test",
             items=[1, 2, 3, 4, 5],
             processor=lambda x: x * 2,
-            priority=5
+            priority=5,
         )
 
     def test_initialization(self):
@@ -53,11 +53,11 @@ class TestBatchJob(unittest.TestCase):
         self.job.processed_items = 3
         result = self.job.to_dict()
 
-        self.assertIn('job_id', result)
-        self.assertIn('progress', result)
-        self.assertIn('priority', result)
-        self.assertIn('success_rate', result)
-        self.assertEqual(result['priority'], 5)
+        self.assertIn("job_id", result)
+        self.assertIn("progress", result)
+        self.assertIn("priority", result)
+        self.assertIn("success_rate", result)
+        self.assertEqual(result["priority"], 5)
 
     def test_progress_callback(self):
         """Тест callback прогресса"""
@@ -90,10 +90,7 @@ class TestBatchProcessor(unittest.TestCase):
     def test_create_job_with_priority(self):
         """Тест создания задания с приоритетом"""
         job_id = self.processor.create_job(
-            job_type="test",
-            items=[1, 2, 3],
-            processor=lambda x: x * 2,
-            priority=10
+            job_type="test", items=[1, 2, 3], processor=lambda x: x * 2, priority=10
         )
 
         self.assertIn(job_id, self.processor.jobs)
@@ -102,9 +99,7 @@ class TestBatchProcessor(unittest.TestCase):
     def test_create_job_default_priority(self):
         """Тест создания задания с приоритетом по умолчанию"""
         job_id = self.processor.create_job(
-            job_type="test",
-            items=[1, 2, 3],
-            processor=lambda x: x * 2
+            job_type="test", items=[1, 2, 3], processor=lambda x: x * 2
         )
 
         self.assertEqual(self.processor.jobs[job_id].priority, 0)
@@ -112,19 +107,18 @@ class TestBatchProcessor(unittest.TestCase):
     def test_run_job_sequential(self):
         """Тест последовательного выполнения"""
         job_id = self.processor.create_job(
-            job_type="test",
-            items=[1, 2, 3, 4, 5],
-            processor=lambda x: x * 2
+            job_type="test", items=[1, 2, 3, 4, 5], processor=lambda x: x * 2
         )
 
         result = self.processor.run_job(job_id, parallel=False)
 
-        self.assertEqual(result['status'], 'completed')
-        self.assertEqual(result['processed_items'], 5)
-        self.assertEqual(result['failed_items'], 0)
+        self.assertEqual(result["status"], "completed")
+        self.assertEqual(result["processed_items"], 5)
+        self.assertEqual(result["failed_items"], 0)
 
     def test_run_job_with_errors(self):
         """Тест выполнения с ошибками"""
+
         def faulty_processor(x):
             """Процессор с эмуляцией ошибки на третьем элементе"""
             if x == 3:
@@ -132,32 +126,27 @@ class TestBatchProcessor(unittest.TestCase):
             return x * 2
 
         job_id = self.processor.create_job(
-            job_type="test",
-            items=[1, 2, 3, 4, 5],
-            processor=faulty_processor
+            job_type="test", items=[1, 2, 3, 4, 5], processor=faulty_processor
         )
 
         result = self.processor.run_job(job_id, parallel=False)
 
-        self.assertEqual(result['status'], 'completed')
-        self.assertEqual(result['failed_items'], 1)
+        self.assertEqual(result["status"], "completed")
+        self.assertEqual(result["failed_items"], 1)
 
     def test_get_enhanced_report(self):
         """Тест расширенного отчёта"""
         job_id = self.processor.create_job(
-            job_type="test",
-            items=[1, 2, 3],
-            processor=lambda x: x * 2,
-            priority=5
+            job_type="test", items=[1, 2, 3], processor=lambda x: x * 2, priority=5
         )
 
         self.processor.run_job(job_id, parallel=False)
         report = self.processor.get_enhanced_report(job_id)
 
-        self.assertIn('job_id', report)
-        self.assertIn('detailed_stats', report)
-        self.assertIn('recommendations', report)
-        self.assertIn('sample_results', report)
+        self.assertIn("job_id", report)
+        self.assertIn("detailed_stats", report)
+        self.assertIn("recommendations", report)
+        self.assertIn("sample_results", report)
 
     def test_get_queue_summary(self):
         """Тест сводки очереди"""
@@ -167,17 +156,15 @@ class TestBatchProcessor(unittest.TestCase):
 
         summary = self.processor.get_queue_summary()
 
-        self.assertEqual(summary['total_jobs'], 3)
-        self.assertEqual(summary['total_items'], 6)
-        self.assertIn(1, summary['jobs_by_priority'])
-        self.assertIn(5, summary['jobs_by_priority'])
+        self.assertEqual(summary["total_jobs"], 3)
+        self.assertEqual(summary["total_items"], 6)
+        self.assertIn(1, summary["jobs_by_priority"])
+        self.assertIn(5, summary["jobs_by_priority"])
 
     def test_export_job_report(self):
         """Тест экспорта отчёта"""
         job_id = self.processor.create_job(
-            job_type="test",
-            items=[1, 2, 3],
-            processor=lambda x: x * 2
+            job_type="test", items=[1, 2, 3], processor=lambda x: x * 2
         )
 
         self.processor.run_job(job_id, parallel=False)
@@ -191,10 +178,12 @@ class TestBatchProcessor(unittest.TestCase):
 
         def make_processor(value):
             """Фабрика процессоров для тестирования порядка выполнения"""
+
             def processor(x):
                 """Процессор который запоминает порядок выполнения"""
                 execution_order.append(value)
                 return x * 2
+
             return processor
 
         # Создание заданий с разным приоритетом
@@ -212,21 +201,19 @@ class TestBatchProcessor(unittest.TestCase):
     def test_get_job_status(self):
         """Тест получения статуса задания"""
         job_id = self.processor.create_job(
-            job_type="test",
-            items=[1, 2, 3],
-            processor=lambda x: x * 2
+            job_type="test", items=[1, 2, 3], processor=lambda x: x * 2
         )
 
         status = self.processor.get_job_status(job_id)
 
-        self.assertEqual(status['job_id'], job_id)
-        self.assertEqual(status['total_items'], 3)
+        self.assertEqual(status["job_id"], job_id)
+        self.assertEqual(status["total_items"], 3)
 
     def test_get_job_status_not_found(self):
         """Тест статуса несуществующего задания"""
         status = self.processor.get_job_status("nonexistent")
 
-        self.assertIn('error', status)
+        self.assertIn("error", status)
 
     def test_get_all_jobs(self):
         """Тест получения всех заданий"""
@@ -239,9 +226,7 @@ class TestBatchProcessor(unittest.TestCase):
     def test_cancel_job(self):
         """Тест отмены задания"""
         job_id = self.processor.create_job(
-            job_type="test",
-            items=[1, 2, 3],
-            processor=lambda x: x * 2
+            job_type="test", items=[1, 2, 3], processor=lambda x: x * 2
         )
 
         # Отмена до выполнения
@@ -276,53 +261,47 @@ class TestBatchProcessorIntegration(unittest.TestCase):
             return {"id": item["id"], "processed": True, "result": item["data"] + "_done"}
 
         job_id = self.processor.create_job(
-            job_type="image_processing",
-            items=items,
-            processor=process_item,
-            priority=7
+            job_type="image_processing", items=items, processor=process_item, priority=7
         )
 
         # Выполнение
         result = self.processor.run_job(job_id, parallel=True)
 
         # Проверка
-        self.assertEqual(result['status'], 'completed')
-        self.assertEqual(result['processed_items'], 10)
-        self.assertEqual(result['priority'], 7)
+        self.assertEqual(result["status"], "completed")
+        self.assertEqual(result["processed_items"], 10)
+        self.assertEqual(result["priority"], 7)
 
         # Расширенный отчёт
         report = self.processor.get_enhanced_report(job_id)
-        self.assertIn('recommendations', report)
-        self.assertTrue(len(report['recommendations']) > 0)
+        self.assertIn("recommendations", report)
+        self.assertTrue(len(report["recommendations"]) > 0)
 
     def test_multiple_jobs_with_different_priorities(self):
         """Тест нескольких заданий с разными приоритетами"""
-        results = {'order': []}
+        results = {"order": []}
 
         def make_processor(name):
             """Фабрика процессоров для отслеживания порядка выполнения"""
+
             def processor(x):
                 """Процессор который записывает имя в порядок выполнения"""
-                results['order'].append(name)
+                results["order"].append(name)
                 return x * 2
+
             return processor
 
         # Создание 5 заданий с разными приоритетами
         for i in range(5):
-            self.processor.create_job(
-                f"job_{i}",
-                [1],
-                make_processor(f"job_{i}"),
-                priority=i
-            )
+            self.processor.create_job(f"job_{i}", [1], make_processor(f"job_{i}"), priority=i)
 
         # Выполнение всех
         self.processor.run_all_pending(parallel=False)
 
         # Проверка порядка выполнения (обратный приоритету)
         expected_order = [f"job_{i}" for i in range(4, -1, -1)]
-        self.assertEqual(results['order'], expected_order)
+        self.assertEqual(results["order"], expected_order)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -4,9 +4,9 @@ CLI для управления миграциями Alembic
 Использование: python migrate.py [command]
 """
 
+import os
 import subprocess
 import sys
-import os
 from pathlib import Path
 
 
@@ -40,7 +40,15 @@ def main():
     if command == "migrate":
         # Создание новой миграции
         message = sys.argv[2] if len(sys.argv) > 2 else "auto_migration"
-        cmd = ["alembic", "-c", str(project_root / "alembic.ini"), "revision", "--autogenerate", "-m", message]
+        cmd = [
+            "alembic",
+            "-c",
+            str(project_root / "alembic.ini"),
+            "revision",
+            "--autogenerate",
+            "-m",
+            message,
+        ]
         sys.exit(run_command(cmd))
 
     elif command == "upgrade":

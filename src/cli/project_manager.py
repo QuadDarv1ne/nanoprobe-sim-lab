@@ -1,10 +1,10 @@
 """Менеджер проекта для Лаборатории моделирования нанозонда."""
 
-import sys
-import os
 import atexit
-import subprocess
 import json
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 # Add project root to Python path
@@ -92,9 +92,7 @@ class ProjectManager:
 
     def run_image_analyzer(self):
         """Запускает анализатор изображений поверхности."""
-        analyzer_path = (
-            project_root / self.components["image_analyzer"]["path"] / "src" / "main.py"
-        )
+        analyzer_path = project_root / self.components["image_analyzer"]["path"] / "src" / "main.py"
 
         if analyzer_path.exists():
             print(f"Запуск анализатора изображений: {analyzer_path}")

@@ -1,6 +1,6 @@
 /**
  * PWA Utilities для Nanoprobe Sim Lab
- * 
+ *
  * Функционал:
  * - Регистрация Service Worker
  * - Проверка обновлений
@@ -45,7 +45,7 @@ export async function registerServiceWorker() {
     // Проверка обновлений
     registration.addEventListener('updatefound', () => {
       const newWorker = registration.installing;
-      
+
       if (newWorker) {
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
@@ -80,9 +80,9 @@ export async function updateServiceWorker() {
   try {
     const registration = await navigator.serviceWorker.ready;
     const update = await registration.update();
-    
+
     console.log('[PWA] Service Worker update check:', update ? 'updated' : 'no update');
-    
+
     return update;
   } catch (error) {
     console.error('[PWA] Service Worker update failed:', error);
@@ -100,13 +100,13 @@ export async function unregisterServiceWorker() {
   try {
     const registration = await navigator.serviceWorker.ready;
     const success = await registration.unregister();
-    
+
     console.log('[PWA] Service Worker unregistered:', success);
-    
+
     // Очистка кэшей
     const cacheNames = await caches.keys();
     await Promise.all(cacheNames.map(name => caches.delete(name)));
-    
+
     return success;
   } catch (error) {
     console.error('[PWA] Service Worker unregistration failed:', error);
@@ -159,10 +159,10 @@ export function usePWAInstall() {
     try {
       await deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      
+
       console.log('[PWA] Install prompt outcome:', outcome);
       setDeferredPrompt(null);
-      
+
       return { outcome };
     } catch (error) {
       console.error('[PWA] Install prompt failed:', error);
@@ -269,7 +269,7 @@ export async function subscribeToPush(vapidPublicKey: string) {
 
   try {
     const registration = await navigator.serviceWorker.ready;
-    
+
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
@@ -291,13 +291,13 @@ export async function unsubscribeFromPush() {
   try {
     const registration = await navigator.serviceWorker.ready;
     const subscription = await registration.pushManager.getSubscription();
-    
+
     if (subscription) {
       const success = await subscription.unsubscribe();
       console.log('[PWA] Push unsubscribed:', success);
       return success;
     }
-    
+
     return false;
   } catch (error) {
     console.error('[PWA] Push unsubscription failed:', error);
@@ -319,7 +319,7 @@ function urlBase64ToUint8Array(base64String: string) {
   for (let i = 0; i < rawData.length; ++i) {
     outputArray[i] = rawData.charCodeAt(i);
   }
-  
+
   return outputArray;
 }
 

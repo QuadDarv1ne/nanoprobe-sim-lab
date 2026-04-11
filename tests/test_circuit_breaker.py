@@ -13,8 +13,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from utils.caching.circuit_breaker import (
     CircuitBreaker,
-    CircuitState,
     CircuitBreakerOpenError,
+    CircuitState,
     circuit_breaker,
 )
 
@@ -25,7 +25,7 @@ class TestCircuitBreakerInit:
     def test_init_default_values(self):
         """Тест инициализации со значениями по умолчанию"""
         cb = CircuitBreaker()
-        
+
         assert cb.failure_threshold == 5
         assert cb.recovery_timeout == 60
         assert cb.half_open_max_calls == 1
@@ -36,12 +36,9 @@ class TestCircuitBreakerInit:
     def test_init_custom_values(self):
         """Тест инициализации с кастомными значениями"""
         cb = CircuitBreaker(
-            failure_threshold=3,
-            recovery_timeout=30,
-            half_open_max_calls=2,
-            name="test_breaker"
+            failure_threshold=3, recovery_timeout=30, half_open_max_calls=2, name="test_breaker"
         )
-        
+
         assert cb.failure_threshold == 3
         assert cb.recovery_timeout == 30
         assert cb.half_open_max_calls == 2
@@ -61,33 +58,33 @@ class TestCircuitBreakerStateTransitions:
     def test_state_transitions_to_open_after_failures(self):
         """Тест перехода в OPEN после превышения порога ошибок"""
         cb = CircuitBreaker(failure_threshold=3)
-        
+
         # Симуляция ошибок
         for i in range(3):
             try:
                 cb.call(lambda: (_ for _ in ()).throw(Exception("Error")))
             except Exception:
                 pass
-        
+
         assert cb.state == CircuitState.OPEN
         print("  [PASS] State transitions to OPEN after failures")
 
     def test_state_transitions_to_half_open_after_timeout(self):
         """Тест перехода в HALF_OPEN после таймаута"""
         cb = CircuitBreaker(failure_threshold=2, recovery_timeout=1)
-        
+
         # Вызываем ошибки для открытия
         for i in range(2):
             try:
                 cb.call(lambda: (_ for _ in ()).throw(Exception("Error")))
             except Exception:
                 pass
-        
+
         assert cb.state == CircuitState.OPEN
-        
+
         # Ждём таймаут
         time.sleep(1.1)
-        
+
         # Проверяем переход в HALF_OPEN
         assert cb.state == CircuitState.HALF_OPEN
         print("  [PASS] State transitions to HALF_OPEN after timeout")
@@ -95,17 +92,17 @@ class TestCircuitBreakerStateTransitions:
     def test_state_transitions_to_closed_after_success(self):
         """Тест перехода в CLOSED после успешного вызова в HALF_OPEN"""
         cb = CircuitBreaker(failure_threshold=2, recovery_timeout=1)
-        
+
         # Открываем circuit breaker
         for i in range(2):
             try:
                 cb.call(lambda: (_ for _ in ()).throw(Exception("Error")))
             except Exception:
                 pass
-        
+
         # Ждём таймаут
         time.sleep(1.1)
-        
+
         # Успешный вызов в HALF_OPEN
         result = cb.call(lambda: "success")
         assert result == "success"
@@ -119,10 +116,10 @@ class TestCircuitBreakerCall:
     def test_call_success(self):
         """Тест успешного вызова"""
         cb = CircuitBreaker()
-        
+
         def success_func():
             return "success"
-        
+
         result = cb.call(success_func)
         assert result == "success"
         assert cb._success_count == 1
@@ -131,10 +128,10 @@ class TestCircuitBreakerCall:
     def test_call_with_args(self):
         """Тест вызова с аргументами"""
         cb = CircuitBreaker()
-        
+
         def add(a, b):
             return a + b
-        
+
         result = cb.call(add, 2, 3)
         assert result == 5
         print("  [PASS] Call with args")
@@ -142,10 +139,10 @@ class TestCircuitBreakerCall:
     def test_call_with_kwargs(self):
         """Тест вызова с именованными аргументами"""
         cb = CircuitBreaker()
-        
+
         def greet(name, greeting="Hello"):
             return f"{greeting}, {name}!"
-        
+
         result = cb.call(greet, "World", greeting="Hi")
         assert result == "Hi, World!"
         print("  [PASS] Call with kwargs")
@@ -153,10 +150,10 @@ class TestCircuitBreakerCall:
     def test_call_failure(self):
         """Тест неудачного вызова"""
         cb = CircuitBreaker()
-        
+
         def fail_func():
             raise ValueError("Test error")
-        
+
         try:
             cb.call(fail_func)
             assert False, "Should raise exception"
@@ -168,14 +165,14 @@ class TestCircuitBreakerCall:
     def test_call_open_circuit_breaker(self):
         """Тест вызова при открытом circuit breaker"""
         cb = CircuitBreaker(failure_threshold=2, recovery_timeout=60)
-        
+
         # Открываем circuit breaker
         for i in range(2):
             try:
                 cb.call(lambda: (_ for _ in ()).throw(Exception("Error")))
             except Exception:
                 pass
-        
+
         # Попытка вызова при открытом
         try:
             cb.call(lambda: "should not execute")
@@ -190,22 +187,22 @@ class TestCircuitBreakerDecorator:
 
     def test_decorator_success(self):
         """Тест успешного вызова через декоратор"""
-        
+
         @circuit_breaker(name="test_success", failure_threshold=3)
         def success_func():
             return "decorated success"
-        
+
         result = success_func()
         assert result == "decorated success"
         print("  [PASS] Decorator success")
 
     def test_decorator_failure(self):
         """Тест неудачного вызова через декоратор"""
-        
+
         @circuit_breaker(name="test_fail", failure_threshold=2)
         def fail_func():
             raise RuntimeError("Decorated error")
-        
+
         try:
             fail_func()
             assert False, "Should raise exception"
@@ -220,20 +217,20 @@ class TestCircuitBreakerStats:
     def test_get_stats(self):
         """Тест получения статистики"""
         cb = CircuitBreaker(failure_threshold=5)
-        
+
         # Несколько успешных вызовов
         for i in range(3):
             cb.call(lambda: "success")
-        
+
         # Несколько неудачных
         for i in range(2):
             try:
                 cb.call(lambda: (_ for _ in ()).throw(Exception("Error")))
             except Exception:
                 pass
-        
+
         stats = cb.get_stats()
-        
+
         assert stats["name"] == "default"
         assert stats["state"] == "closed"
         assert stats["failure_count"] == 2
@@ -245,17 +242,17 @@ class TestCircuitBreakerStats:
     def test_reset(self):
         """Тест сброса статистики"""
         cb = CircuitBreaker()
-        
+
         # Вызываем ошибки
         for i in range(3):
             try:
                 cb.call(lambda: (_ for _ in ()).throw(Exception("Error")))
             except Exception:
                 pass
-        
+
         # Сброс
         cb.reset()
-        
+
         assert cb._failure_count == 0
         assert cb._success_count == 0
         assert cb.state == CircuitState.CLOSED
@@ -268,34 +265,34 @@ class TestCircuitBreakerEdgeCases:
     def test_rapid_success_failures(self):
         """Тест быстрых последовательных ошибок"""
         cb = CircuitBreaker(failure_threshold=5)
-        
+
         # Быстрые ошибки
         for i in range(5):
             try:
                 cb.call(lambda: (_ for _ in ()).throw(Exception("Error")))
             except Exception:
                 pass
-        
+
         assert cb.state == CircuitState.OPEN
         print("  [PASS] Rapid success failures")
 
     def test_half_open_single_success(self):
         """Тест одного успеха в HALF_OPEN"""
         cb = CircuitBreaker(failure_threshold=2, recovery_timeout=1)
-        
+
         # Открываем
         for i in range(2):
             try:
                 cb.call(lambda: (_ for _ in ()).throw(Exception("Error")))
             except Exception:
                 pass
-        
+
         # Ждём
         time.sleep(1.1)
-        
+
         # Один успех
         cb.call(lambda: "success")
-        
+
         # Должен закрыться
         assert cb.state == CircuitState.CLOSED
         print("  [PASS] Half open single success")
@@ -303,11 +300,11 @@ class TestCircuitBreakerEdgeCases:
     def test_concurrent_access(self):
         """Тест конкурентного доступа"""
         import threading
-        
+
         cb = CircuitBreaker(failure_threshold=10)
         success_count = 0
         lock = threading.Lock()
-        
+
         def worker():
             nonlocal success_count
             for i in range(10):
@@ -317,13 +314,13 @@ class TestCircuitBreakerEdgeCases:
                         success_count += 1
                 except Exception:
                     pass
-        
+
         threads = [threading.Thread(target=worker) for _ in range(5)]
         for t in threads:
             t.start()
         for t in threads:
             t.join()
-        
+
         assert success_count == 50
         print("  [PASS] Concurrent access")
 
@@ -333,7 +330,7 @@ def run_all_tests():
     print("=" * 60)
     print("Circuit Breaker Unit Tests")
     print("=" * 60)
-    
+
     test_classes = [
         TestCircuitBreakerInit,
         TestCircuitBreakerStateTransitions,
@@ -342,14 +339,14 @@ def run_all_tests():
         TestCircuitBreakerStats,
         TestCircuitBreakerEdgeCases,
     ]
-    
+
     total_tests = 0
     passed_tests = 0
-    
+
     for test_class in test_classes:
         print(f"\n{test_class.__name__}:")
         instance = test_class()
-        
+
         for method_name in dir(instance):
             if method_name.startswith("test_"):
                 total_tests += 1
@@ -360,7 +357,7 @@ def run_all_tests():
                     print(f"  [FAIL] {method_name}: {e}")
                 except Exception as e:
                     print(f"  [ERROR] {method_name}: {e}")
-    
+
     print("\n" + "=" * 60)
     print(f"Results: {passed_tests}/{total_tests} tests passed")
     if passed_tests == total_tests:
@@ -368,7 +365,7 @@ def run_all_tests():
     else:
         print(f"  ❌ {total_tests - passed_tests} tests failed")
     print("=" * 60)
-    
+
     return passed_tests == total_tests
 
 

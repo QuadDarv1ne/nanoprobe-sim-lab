@@ -3,13 +3,14 @@ Rate Limiter для Nanoprobe Sim Lab API
 Защита от brute force и DDoS атак
 """
 
+import threading
 import time
 from collections import defaultdict
-from typing import Dict, Optional, List
-from functools import wraps
-from fastapi import Request
-import threading
 from dataclasses import dataclass, field
+from functools import wraps
+from typing import Dict, List, Optional
+
+from fastapi import Request
 
 from api.error_handlers import RateLimitError
 
@@ -17,6 +18,7 @@ from api.error_handlers import RateLimitError
 @dataclass
 class RateLimitInfo:
     """Информация о rate limit"""
+
     requests: List[float] = field(default_factory=list)
     blocked_until: float = 0.0
     violation_count: int = 0
@@ -25,10 +27,10 @@ class RateLimitInfo:
 class RateLimiter:
     """Rate limiter с скользящим окном, прогрессивной блокировкой и автоматической очисткой"""
 
-    _instance: Optional['RateLimiter'] = None
+    _instance: Optional["RateLimiter"] = None
     _lock = threading.Lock()
 
-    def __new__(cls) -> 'RateLimiter':
+    def __new__(cls) -> "RateLimiter":
         """Singleton паттерн"""
         if cls._instance is None:
             with cls._lock:
@@ -37,7 +39,7 @@ class RateLimiter:
         return cls._instance
 
     def __init__(self):
-        if hasattr(self, '_initialized') and self._initialized:
+        if hasattr(self, "_initialized") and self._initialized:
             return
         self.requests: Dict[str, RateLimitInfo] = defaultdict(RateLimitInfo)
         self._cleanup_lock = threading.Lock()
@@ -157,24 +159,30 @@ limiter = RateLimiter()
 # Автоматическая очистка rate limiter каждые 5 минут
 _rate_limit_cleanup_task = None
 
+
 async def _rate_limit_cleanup_loop():
     """Фоновый цикл очистки старых записей rate limiter"""
     import asyncio
+
     while True:
         try:
             await asyncio.sleep(300)  # 5 минут
             limiter.cleanup_old_entries(max_age_seconds=3600)
         except Exception as e:
             import logging
+
             logging.getLogger(__name__).error(f"Rate limiter cleanup error: {e}")
+
 
 def start_rate_limit_cleanup():
     """Запуск автоматической очистки rate limiter"""
     import asyncio
+
     global _rate_limit_cleanup_task
     if _rate_limit_cleanup_task is None or _rate_limit_cleanup_task.done():
         _rate_limit_cleanup_task = asyncio.create_task(_rate_limit_cleanup_loop())
         import logging
+
         logging.getLogger(__name__).info("Rate limiter auto-cleanup started (every 5 minutes)")
 
 
@@ -186,6 +194,7 @@ def rate_limit(max_requests: int = 10, window_seconds: int = 60):
         max_requests: Максимум запросов в окно
         window_seconds: Размер окна в секундах
     """
+
     def decorator(func):
         @wraps(func)
         async def wrapper(request: Request, *args, **kwargs):
@@ -197,5 +206,7 @@ def rate_limit(max_requests: int = 10, window_seconds: int = 60):
                 raise RateLimitError(retry_after)
 
             return await func(request, *args, **kwargs)
+
         return wrapper
+
     return decorator

@@ -16,7 +16,7 @@ if %errorlevel% neq 0 (
     echo 1. Скачайте Zadig: https://zadig.akeo.ie/
     echo 2. Запустите Zadig от имени администратора
     echo 3. Options -^> List All Devices
-    echo 4. Выберите RTL2838UHIDIR или Bulk-In, Interface  
+    echo 4. Выберите RTL2838UHIDIR или Bulk-In, Interface
     echo 5. Драйвер: WinUSB (v6.x.x.x)
     echo 6. Нажмите Replace Driver
     echo 7. Переподключите RTL-SDR

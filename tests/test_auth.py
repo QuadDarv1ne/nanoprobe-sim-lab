@@ -11,15 +11,15 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from api.routes.auth import (
-    validate_password_strength,
-    hash_password,
-    verify_password,
+    _is_token_valid,
+    _revoke_refresh_token,
+    _store_refresh_token,
     create_access_token,
     create_refresh_token,
     decode_token,
-    _store_refresh_token,
-    _is_token_valid,
-    _revoke_refresh_token,
+    hash_password,
+    validate_password_strength,
+    verify_password,
 )
 
 
@@ -81,7 +81,7 @@ class TestPasswordValidation:
         # Ровно 8 символов
         is_valid, _ = validate_password_strength("Pass123!")
         assert is_valid is True
-        
+
         # Минимальный специальный символ
         is_valid, _ = validate_password_strength("Password1!")
         assert is_valid is True
@@ -157,21 +157,23 @@ class TestJWTToken:
     def test_decode_token_expired(self):
         """Тест: декодирование истёкшего токена"""
         # Создаём токен с прошлым временем
-        import jwt
         from datetime import datetime, timedelta, timezone
+
+        import jwt
 
         expired_payload = {
             "sub": "testuser",
             "exp": datetime.now(timezone.utc) - timedelta(minutes=5),
-            "type": "access"
+            "type": "access",
         }
-        from api.routes.auth import JWT_SECRET, JWT_ALGORITHM
+        from api.routes.auth import JWT_ALGORITHM, JWT_SECRET
+
         expired_token = jwt.encode(expired_payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
         # Без allow_expired должен вернуть ошибку
         result = decode_token(expired_token)
         assert result == {"error": "token_expired"}
-        
+
         # С allow_expired=True должен декодировать
         payload = decode_token(expired_token, allow_expired=True)
         assert payload["sub"] == "testuser"
@@ -278,7 +280,7 @@ def run_all_tests():
     print("=" * 60)
     print("Authentication Module Unit Tests")
     print("=" * 60)
-    
+
     test_classes = [
         TestPasswordValidation,
         TestPasswordHashing,
@@ -287,14 +289,14 @@ def run_all_tests():
         TestTokenTypes,
         TestJWTClaims,
     ]
-    
+
     total_tests = 0
     passed_tests = 0
-    
+
     for test_class in test_classes:
         print(f"\n{test_class.__name__}:")
         instance = test_class()
-        
+
         for method_name in dir(instance):
             if method_name.startswith("test_"):
                 total_tests += 1
@@ -305,7 +307,7 @@ def run_all_tests():
                     print(f"  [FAIL] {method_name}: {e}")
                 except Exception as e:
                     print(f"  [ERROR] {method_name}: {e}")
-    
+
     print("\n" + "=" * 60)
     print(f"Results: {passed_tests}/{total_tests} tests passed")
     if passed_tests == total_tests:
@@ -313,7 +315,7 @@ def run_all_tests():
     else:
         print(f"  ❌ {total_tests - passed_tests} tests failed")
     print("=" * 60)
-    
+
     return passed_tests == total_tests
 
 

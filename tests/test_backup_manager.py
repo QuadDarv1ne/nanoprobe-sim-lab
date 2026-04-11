@@ -1,12 +1,12 @@
 """Тесты для backup_manager."""
 
-import unittest
-import sys
 import os
-import tempfile
 import shutil
+import sys
+import tempfile
+import unittest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from utils.backup_manager import BackupManager
 
@@ -17,7 +17,7 @@ class TestBackupManager(unittest.TestCase):
     def setUp(self):
         """Подготовка тестового окружения"""
         self.temp_dir = tempfile.mkdtemp()
-        self.backup_dir = os.path.join(self.temp_dir, 'backups')
+        self.backup_dir = os.path.join(self.temp_dir, "backups")
         os.makedirs(self.backup_dir, exist_ok=True)
 
     def tearDown(self):
@@ -33,7 +33,7 @@ class TestBackupManager(unittest.TestCase):
         with self.assertRaises(ValueError):
             manager = BackupManager()
             manager.backup_dir = self.backup_dir
-            manager.create_backup(backup_name='')
+            manager.create_backup(backup_name="")
 
     def test_create_backup_none_name(self):
         """Тестирует создание бэкапа с None именем (автогенерация)"""
@@ -42,7 +42,7 @@ class TestBackupManager(unittest.TestCase):
             manager = BackupManager()
             manager.backup_dir = self.backup_dir
             # Просто проверяем что метод существует и не падает сразу
-            self.assertTrue(hasattr(manager, 'create_backup'))
+            self.assertTrue(hasattr(manager, "create_backup"))
         except Exception:
             # Может упасть из-за отсутствия файлов для бэкапа - это ок
             pass
@@ -58,7 +58,7 @@ class TestBackupManager(unittest.TestCase):
         """Тестирует удаление несуществующего бэкапа"""
         manager = BackupManager()
         manager.backup_dir = self.backup_dir
-        result = manager.delete_backup('nonexistent_backup')
+        result = manager.delete_backup("nonexistent_backup")
         self.assertFalse(result)
 
     def test_metadata_initialization(self):
@@ -89,6 +89,6 @@ def run_tests():
     return result.wasSuccessful()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = run_tests()
     sys.exit(0 if success else 1)

@@ -1,6 +1,6 @@
 # RTL-SDR SSTV Recording Guide
 
-**Last Updated:** 2026-03-15  
+**Last Updated:** 2026-03-15
 **Version:** 1.0.0
 
 ---

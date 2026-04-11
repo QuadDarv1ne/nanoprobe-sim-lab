@@ -1,6 +1,6 @@
 /**
  * Offline Page
- * 
+ *
  * Страница отображается когда нет подключения к интернету.
  * Показывает статус подключения и кэшированную информацию.
  */
@@ -71,11 +71,11 @@ export default function OfflinePage() {
               <WifiOff className="w-10 h-10 text-red-400" />
             )}
           </div>
-          
+
           <h1 className="text-3xl font-bold text-white mb-2">
             {isOnline ? 'Соединение восстановлено!' : 'Нет подключения'}
           </h1>
-          
+
           <p className="text-slate-400">
             {isOnline
               ? 'Подключение к интернету успешно'

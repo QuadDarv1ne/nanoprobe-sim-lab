@@ -1,6 +1,6 @@
 /**
  * NASA API React Hooks
- * 
+ *
  * Хуки для работы с NASA API:
  * - useAPOD - Astronomy Picture of the Day
  * - useMarsPhotos - Photos from Mars rovers
@@ -97,8 +97,8 @@ function useNASAData<T>(endpoint: string, params?: NASAQueryParams) {
       setData(response.data);
       setCached(response.data.cached || false);
     } catch (err: unknown) {
-      const errorMessage = 
-        axios.isAxiosError(err) 
+      const errorMessage =
+        axios.isAxiosError(err)
           ? (err.response?.data?.detail || err.message || 'NASA API error')
           : (err instanceof Error ? err.message : 'Unknown error');
       setError(errorMessage);
@@ -120,7 +120,7 @@ function useNASAData<T>(endpoint: string, params?: NASAQueryParams) {
 
 export function useAPOD(date?: string) {
   const { data, loading, error, cached, refetch } = useNASAData<APOD>('/apod', { date });
-  
+
   return {
     apod: data,
     loading,
@@ -146,7 +146,7 @@ export function useMarsPhotos(params?: {
     photos: MarsPhoto[];
     total_count: number;
   }>('/mars/photos', params);
-  
+
   return {
     photos: data?.photos || [],
     totalCount: data?.total_count || 0,
@@ -171,7 +171,7 @@ export function useAsteroids(params?: {
     near_earth_objects: Record<string, Asteroid[]>;
     element_count: number;
   }>('/asteroids/feed', params);
-  
+
   return {
     asteroids: data?.near_earth_objects || {},
     elementCount: data?.element_count || 0,
@@ -194,7 +194,7 @@ export function useNaturalEvents(params?: {
   const { data, loading, error, cached, refetch } = useNASAData<{
     events: NaturalEvent[];
   }>('/events/natural', params);
-  
+
   return {
     events: data?.events || [],
     loading,
@@ -261,7 +261,7 @@ export function useNASAImageLibrary(params: {
       }>;
     };
   }>('/image-library/search', params);
-  
+
   return {
     results: data?.collection?.items || [],
     loading,
@@ -287,7 +287,7 @@ export function useMarsRovers() {
       total_photos: number;
     }>;
   }>('/mars/rovers');
-  
+
   return {
     rovers: data?.rovers || [],
     loading,
@@ -318,7 +318,7 @@ export function useNASAHealth() {
     };
 
     checkHealth();
-    
+
     // Check every 5 minutes
     const interval = setInterval(checkHealth, 300000);
     return () => clearInterval(interval);

@@ -2,9 +2,10 @@
 GraphQL API routes для Nanoprobe Sim Lab
 """
 
-from fastapi import APIRouter
-from typing import Optional, Dict, Any
 import logging
+from typing import Any, Dict, Optional
+
+from fastapi import APIRouter
 
 from api.error_handlers import DatabaseError
 
@@ -19,9 +20,7 @@ router = APIRouter(prefix="/graphql", tags=["GraphQL"])
     description="Выполнение GraphQL запросов",
 )
 async def graphql_query(
-    query: str,
-    variables: Optional[Dict[str, Any]] = None,
-    operation_name: Optional[str] = None
+    query: str, variables: Optional[Dict[str, Any]] = None, operation_name: Optional[str] = None
 ):
     """
     GraphQL endpoint для выполнения запросов
@@ -64,9 +63,7 @@ async def graphql_query(
 
     try:
         result = await schema.execute(
-            query,
-            variable_values=variables,
-            operation_name=operation_name
+            query, variable_values=variables, operation_name=operation_name
         )
 
         if result.errors:
@@ -74,15 +71,11 @@ async def graphql_query(
             return {
                 "data": result.data,
                 "errors": [str(e) for e in result.errors],
-                "success": False
+                "success": False,
             }
 
         logger.debug(f"GraphQL query executed successfully: {operation_name or 'anonymous'}")
-        return {
-            "data": result.data,
-            "errors": None,
-            "success": True
-        }
+        return {"data": result.data, "errors": None, "success": True}
 
     except Exception as e:
         logger.error(f"GraphQL execution error: {e}")
@@ -97,6 +90,7 @@ async def graphql_query(
 async def get_graphql_schema():
     """Получить схему GraphQL API"""
     from api.graphql_schema import schema
+
     return {
         "schema": str(schema),
         "types": [
@@ -116,5 +110,5 @@ async def get_graphql_schema():
         ],
         "mutations": [
             "createScan(scanType, surfaceType, width, height)",
-        ]
+        ],
     }

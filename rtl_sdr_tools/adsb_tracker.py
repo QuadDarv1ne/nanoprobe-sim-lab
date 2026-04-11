@@ -8,6 +8,7 @@ import json
 import logging
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -54,9 +55,8 @@ class ADSBTracker:
             Path to saved .npy file or None
         """
         try:
-            from rtlsdr import RtlSdr
-
             import numpy as np
+            from rtlsdr import RtlSdr
         except ImportError:
             print("[!] pyrtlsdr or numpy not available")
             return None
@@ -150,10 +150,12 @@ class ADSBTracker:
         # gvanem/dump1090-win requires config for gain/device settings
         cmd = [
             str(decoder),
-            "--config", str(decoder.parent / "adsb_tracking.cfg"),
+            "--config",
+            str(decoder.parent / "adsb_tracking.cfg"),
             "--net",
             "--interactive",
-            "--max-messages", "0",  # unlimited
+            "--max-messages",
+            "0",  # unlimited
         ]
 
         process = None
@@ -173,8 +175,8 @@ class ADSBTracker:
             time.sleep(3)
 
             # Fetch aircraft data via HTTP API
-            import urllib.request
             import json as json_mod
+            import urllib.request
 
             # Try to fetch from the HTTP API
             urls_to_try = [
@@ -200,7 +202,9 @@ class ADSBTracker:
 
                 time.sleep(2)
                 elapsed = int(time.time() - start_time)
-                print(f"\r  Waiting for aircraft data... [{elapsed}/{duration}s]", end="", flush=True)
+                print(
+                    f"\r  Waiting for aircraft data... [{elapsed}/{duration}s]", end="", flush=True
+                )
 
             print()  # newline after progress
 
@@ -256,14 +260,19 @@ class ADSBTracker:
         # Run dump1090 in JSON output mode
         cmd = [
             str(decoder),
-            "--device", f"0:{RTLSDR_SERIAL}",
-            "--gain", "max",
+            "--device",
+            f"0:{RTLSDR_SERIAL}",
+            "--gain",
+            "max",
             "--net",
             "--net-beast",
             "--json-location-enabled",
-            "--write-json", str(OUTPUT_DIR),
-            "--max-range", "300",
-            "--duration", str(duration),
+            "--write-json",
+            str(OUTPUT_DIR),
+            "--max-range",
+            "300",
+            "--duration",
+            str(duration),
         ]
 
         aircraft_data = []
@@ -426,9 +435,7 @@ class ADSBTracker:
             cursor.execute("SELECT COUNT(DISTINCT icao) FROM adsb_sightings")
             unique_aircraft = cursor.fetchone()[0]
 
-            cursor.execute(
-                "SELECT MIN(created_at), MAX(created_at) FROM adsb_sightings"
-            )
+            cursor.execute("SELECT MIN(created_at), MAX(created_at) FROM adsb_sightings")
             row = cursor.fetchone()
             first_seen = row[0]
             last_seen = row[1]
@@ -467,15 +474,11 @@ class ADSBTracker:
                 )
                 """
             )
-            cursor.execute(
-                "CREATE INDEX IF NOT EXISTS idx_adsb_icao ON adsb_sightings(icao)"
-            )
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_adsb_icao ON adsb_sightings(icao)")
             cursor.execute(
                 "CREATE INDEX IF NOT EXISTS idx_adsb_time ON adsb_sightings(created_at DESC)"
             )
-            cursor.execute(
-                "CREATE INDEX IF NOT EXISTS idx_adsb_flight ON adsb_sightings(flight)"
-            )
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_adsb_flight ON adsb_sightings(flight)")
             conn.commit()
 
     def _find_decoder(self) -> Optional[Path]:
@@ -549,9 +552,7 @@ async def main():
         default=30,
         help="Capture duration in seconds (default: 30)",
     )
-    parser.add_argument(
-        "-g", "--gain", type=int, default=40, help="RTL-SDR gain (default: 40)"
-    )
+    parser.add_argument("-g", "--gain", type=int, default=40, help="RTL-SDR gain (default: 40)")
 
     args = parser.parse_args()
 

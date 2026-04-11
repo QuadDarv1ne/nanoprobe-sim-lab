@@ -416,9 +416,9 @@ class OptimizationOrchestrator:
                 "cpu_count": cpu_count,
                 "memory_gb": round(memory_total, 2),
                 "disk_space_gb": round(disk_total, 2),
-                "platform": str(psutil.Process().parent().exe())
-                if psutil.Process().parent()
-                else "unknown",
+                "platform": (
+                    str(psutil.Process().parent().exe()) if psutil.Process().parent() else "unknown"
+                ),
             }
         except Exception:
             return {"info": "Could not retrieve system info"}

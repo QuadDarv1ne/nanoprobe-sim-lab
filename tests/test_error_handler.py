@@ -25,7 +25,7 @@ def test_error_info_serialization():
         traceback_info="Traceback info",
         component="test",
         user_context={"user": "test_user"},
-        error_id="test_123"
+        error_id="test_123",
     )
 
     # Сериализация
@@ -85,6 +85,7 @@ def main():
         except Exception as e:
             print(f"✗ {test.__name__}: FAIL - {e}")
             import traceback
+
             traceback.print_exc()
             failed += 1
 

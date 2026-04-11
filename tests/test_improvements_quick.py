@@ -4,8 +4,8 @@
 Запуск без pytest
 """
 
-import sys
 import os
+import sys
 import time
 from pathlib import Path
 
@@ -16,8 +16,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 def test_schemas_validation():
     """Тесты валидации Pydantic схем"""
     print("\n=== Тесты валидации схем ===")
-    from api.schemas import LoginRequest, PaginationParams
     from pydantic import ValidationError
+
+    from api.schemas import LoginRequest, PaginationParams
 
     # Тест 1: Валидный запрос
     try:
@@ -67,8 +68,9 @@ def test_schemas_validation():
 def test_database_cache():
     """Тесты кэширования DatabaseManager"""
     print("\n=== Тесты кэша БД ===")
-    from utils.database import DatabaseManager
     import tempfile
+
+    from utils.database import DatabaseManager
 
     # Создаём временную БД
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
@@ -78,7 +80,7 @@ def test_database_cache():
         db = DatabaseManager(db_path=db_path, enable_cache=True)
 
         # Тест 1: Инициализация кэша
-        assert hasattr(db, '_query_cache')
+        assert hasattr(db, "_query_cache")
         assert db._cache_ttl == 60
         print("[PASS] Инициализация кэша")
 
@@ -132,6 +134,7 @@ def test_database_cache():
     except Exception as e:
         print(f"[FAIL] Тесты кэша: {e}")
         import traceback
+
         traceback.print_exc()
         return False
     finally:
@@ -190,6 +193,7 @@ def test_enhanced_monitor_prometheus():
     except Exception as e:
         print(f"[FAIL] Тесты Prometheus: {e}")
         import traceback
+
         traceback.print_exc()
         return False
     finally:
@@ -222,6 +226,7 @@ def test_dashboard_routes():
     except Exception as e:
         print(f"[FAIL] Dashboard routes: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

@@ -1,6 +1,6 @@
 # 🚀 Nanoprobe Sim Lab - Quick Start Guide
 
-**Last Updated:** 2026-03-15  
+**Last Updated:** 2026-03-15
 **Version:** 3.0 (Unified Launcher)
 
 ---
@@ -47,7 +47,7 @@ python main.py
 # Flask + FastAPI + Auto Sync
 python main.py flask
 
-# Next.js + FastAPI + Auto Sync  
+# Next.js + FastAPI + Auto Sync
 python main.py nextjs
 
 # Только Backend API

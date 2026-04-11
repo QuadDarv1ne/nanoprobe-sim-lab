@@ -1,10 +1,10 @@
 """Unit-тесты для модуля логирования."""
 
-import unittest
-import tempfile
-import shutil
 import logging
+import shutil
 import sys
+import tempfile
+import unittest
 from pathlib import Path
 
 # Добавляем путь к модулям
@@ -168,7 +168,7 @@ class TestLoggerIntegration(unittest.TestCase):
         log_file = self.log_dir / "test.log"
         self.assertTrue(log_file.exists())
 
-        with open(log_file, 'r', encoding='utf-8') as f:
+        with open(log_file, "r", encoding="utf-8") as f:
             content = f.read()
 
         self.assertIn(test_message, content)
@@ -182,5 +182,5 @@ class TestLoggerIntegration(unittest.TestCase):
         self.assertGreaterEqual(len(logger.handlers), 1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

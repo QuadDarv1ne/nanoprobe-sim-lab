@@ -407,7 +407,8 @@ class NanoprobeDashboard:
         self.logs_text.delete(1.0, tk.END)
         self.logs_text.insert(tk.END, "Логи обновляются...\n")
         self.logs_text.insert(
-            tk.END, f"Время обновления: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}\n"
+            tk.END,
+            f"Время обновления: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}\n",
         )
 
     def save_settings(self) -> None:

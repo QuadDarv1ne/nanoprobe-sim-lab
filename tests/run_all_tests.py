@@ -1,9 +1,9 @@
 """Скрипт запуска всех тестов для проекта Лаборатория моделирования нанозонда."""
 
-import unittest
-import sys
 import os
 import subprocess
+import sys
+import unittest
 from pathlib import Path
 
 
@@ -19,9 +19,9 @@ def run_specific_test_suite(test_file_path):
     """
     try:
         # Запускаем тесты с помощью subprocess для изоляции
-        result = subprocess.run([
-            sys.executable, test_file_path
-        ], capture_output=True, text=True, timeout=60)
+        result = subprocess.run(
+            [sys.executable, test_file_path], capture_output=True, text=True, timeout=60
+        )
 
         print(f"Результаты тестов из {test_file_path}:")
         print(result.stdout)
@@ -52,9 +52,9 @@ def discover_and_run_tests():
     for test_file in test_files:
         print(f"  - {test_file.name}")
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("ЗАПУСК ВСЕХ ТЕСТОВ ПРОЕКТА")
-    print("="*60)
+    print("=" * 60)
 
     results = {}
     all_passed = True
@@ -66,15 +66,15 @@ def discover_and_run_tests():
         if not success:
             all_passed = False
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("ОБОБЩЕННЫЕ РЕЗУЛЬТАТЫ ТЕСТИРОВАНИЯ:")
-    print("="*60)
+    print("=" * 60)
 
     for test_file, result in results.items():
         status = "ПРОЙДЕН" if result else "НЕ ПРОЙДЕН"
         print(f"{test_file:<30} {status}")
 
-    print("-"*60)
+    print("-" * 60)
     passed_count = sum(1 for r in results.values() if r)
     total_count = len(results)
     print(f"Пройдено: {passed_count}/{total_count}")
@@ -142,4 +142,3 @@ def main():
 if __name__ == "__main__":
     exit_code = main()
     sys.exit(exit_code)
-

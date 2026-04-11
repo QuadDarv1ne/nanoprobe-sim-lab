@@ -4,11 +4,12 @@
 Проверка улучшенных компонентов: schemas, dashboard routes, database cache, enhanced monitor
 """
 
-import pytest
-import sys
 import os
+import sys
 import time
 from pathlib import Path
+
+import pytest
 
 # Добавляем путь к проекту
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -91,8 +92,9 @@ class TestDatabaseCache:
     @pytest.fixture
     def db(self):
         """Создание тестовой БД"""
-        from utils.database import DatabaseManager
         import tempfile
+
+        from utils.database import DatabaseManager
 
         with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
             db_path = f.name
@@ -110,8 +112,8 @@ class TestDatabaseCache:
 
     def test_cache_initialization(self, db):
         """Тест инициализации кэша"""
-        assert hasattr(db, '_query_cache')
-        assert hasattr(db, '_cache_ttl')
+        assert hasattr(db, "_query_cache")
+        assert hasattr(db, "_cache_ttl")
         assert db._cache_ttl == 60
         assert db._cache_max_size == 100
 
@@ -155,12 +157,7 @@ class TestDatabaseCache:
     def test_scan_methods_use_cache(self, db):
         """Тест использования кэша в методах сканирований"""
         # Добавляем тестовое сканирование
-        _ = db.add_scan_result(
-            scan_type="spm",
-            surface_type="test",
-            width=100,
-            height=100
-        )
+        _ = db.add_scan_result(scan_type="spm", surface_type="test", width=100, height=100)
 
         # Первый запрос - кэш должен заполниться
         scans = db.get_scan_results(limit=10)
@@ -176,12 +173,7 @@ class TestDatabaseCache:
 
     def test_delete_scan_invalidates_cache(self, db):
         """Тест инвалидации кэша при удалении"""
-        scan_id = db.add_scan_result(
-            scan_type="spm",
-            surface_type="test",
-            width=100,
-            height=100
-        )
+        scan_id = db.add_scan_result(scan_type="spm", surface_type="test", width=100, height=100)
 
         # Заполняем кэш
         db.get_scan_by_id(scan_id)
@@ -202,6 +194,7 @@ class TestEnhancedMonitorPrometheus:
     def monitor(self):
         """Создание монитора"""
         from utils.enhanced_monitor import EnhancedSystemMonitor
+
         monitor = EnhancedSystemMonitor(history_size=10)
         monitor.start_monitoring()
         time.sleep(2)  # Ждём сбора метрик
@@ -288,8 +281,9 @@ class TestDatabaseCacheIntegration:
     @pytest.fixture
     def db(self):
         """Создание тестовой БД"""
-        from utils.database import DatabaseManager
         import tempfile
+
+        from utils.database import DatabaseManager
 
         with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
             db_path = f.name

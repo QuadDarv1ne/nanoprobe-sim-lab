@@ -10,13 +10,13 @@ Usage:
 """
 
 from .core import UnifiedDashboard, run_dashboard
-from .widgets.base import Widget, WidgetPriority, WidgetMode, WidgetData
+from .widgets.base import Widget, WidgetData, WidgetMode, WidgetPriority
 
 __all__ = [
-    'UnifiedDashboard',
-    'run_dashboard',
-    'Widget',
-    'WidgetPriority',
-    'WidgetMode',
-    'WidgetData',
+    "UnifiedDashboard",
+    "run_dashboard",
+    "Widget",
+    "WidgetPriority",
+    "WidgetMode",
+    "WidgetData",
 ]

@@ -1,9 +1,9 @@
 """Тесты для модуля управления конфигурацией."""
 
-import unittest
 import json
-import tempfile
 import sys
+import tempfile
+import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -20,23 +20,14 @@ class TestConfigManager(unittest.TestCase):
         self.config_file = Path(self.temp_dir) / "test_config.json"
 
         self.test_config = {
-            "project": {
-                "name": "Test Project",
-                "version": "1.0.0"
-            },
+            "project": {"name": "Test Project", "version": "1.0.0"},
             "components": {
-                "spm_simulator": {
-                    "enabled": True,
-                    "config": {"surface_size": [50, 50]}
-                }
+                "spm_simulator": {"enabled": True, "config": {"surface_size": [50, 50]}}
             },
-            "paths": {
-                "data_dir": "data",
-                "log_dir": "logs"
-            }
+            "paths": {"data_dir": "data", "log_dir": "logs"},
         }
 
-        with open(self.config_file, 'w', encoding='utf-8') as f:
+        with open(self.config_file, "w", encoding="utf-8") as f:
             json.dump(self.test_config, f)
 
         # Сброс singleton для изоляции тестов
@@ -46,6 +37,7 @@ class TestConfigManager(unittest.TestCase):
     def tearDown(self):
         """Очистка после теста"""
         import shutil
+
         shutil.rmtree(self.temp_dir, ignore_errors=True)
         # Сброс singleton после теста
         ConfigManager._instance = None
@@ -100,10 +92,7 @@ class TestConfigManager(unittest.TestCase):
         """Тестирует обновление конфигурации компонента"""
         config_mgr = ConfigManager(str(self.config_file))
 
-        success = config_mgr.update_component_config(
-            "spm_simulator",
-            {"surface_size": [100, 100]}
-        )
+        success = config_mgr.update_component_config("spm_simulator", {"surface_size": [100, 100]})
         self.assertTrue(success)
 
         spm_config = config_mgr.get_component_config("spm_simulator")
@@ -138,5 +127,5 @@ class TestConfigManagerMissingFile(unittest.TestCase):
         self.assertIn("project", config_mgr.config)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

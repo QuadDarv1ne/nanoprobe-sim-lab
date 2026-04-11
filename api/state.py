@@ -5,9 +5,10 @@
 
 import os
 import platform
-from typing import Optional, Any, Dict
-from utils.database import DatabaseManager
+from typing import Any, Dict, Optional
+
 from utils.caching.redis_cache import RedisCache
+from utils.database import DatabaseManager
 
 # Глобальные состояния
 db_manager: Optional[DatabaseManager] = None
@@ -22,6 +23,7 @@ def get_system_disk_usage():
     Returns psutil.sdiskusage namedtuple.
     """
     import psutil
+
     if platform.system() == "Windows":
         path = os.environ.get("SYSTEMDRIVE", "C:\\")
     else:

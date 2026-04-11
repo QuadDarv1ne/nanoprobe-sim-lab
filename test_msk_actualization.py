@@ -74,13 +74,7 @@ def test_geolocation_wrapper():
 
     try:
         sys.path.insert(0, str(project_root / "components" / "py-sstv-groundstation" / "src"))
-        from geolocation import (
-            DEFAULT_LOCATION,
-            MSK_TZ,
-            get_location,
-            now_msk,
-            utc_to_msk,
-        )
+        from geolocation import DEFAULT_LOCATION, MSK_TZ, get_location, now_msk, utc_to_msk
 
         loc = get_location()
         print(f"\n✓ Обёртка geolocation работает:")
@@ -178,11 +172,7 @@ def test_cache_mechanism():
     print("=" * 70)
 
     try:
-        from utils.location_manager import (
-            CACHE_FILE,
-            CACHE_TTL_HOURS,
-            load_location_cache,
-        )
+        from utils.location_manager import CACHE_FILE, CACHE_TTL_HOURS, load_location_cache
 
         cached = load_location_cache()
         if cached:

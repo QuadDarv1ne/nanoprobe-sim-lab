@@ -39,8 +39,7 @@ async def analyze_image_defects(
         image_path = Path(request.image_path)
         if not image_path.exists():
             raise ValidationError(
-                f"Файл не найден: {request.image_path}",
-                details={"path": request.image_path}
+                f"Файл не найден: {request.image_path}", details={"path": request.image_path}
             )
 
         # Создание пайплайна
@@ -54,37 +53,34 @@ async def analyze_image_defects(
         )
 
         # Бизнес-метрики
-        defects_list = result.get('defects', [])
+        defects_list = result.get("defects", [])
         BusinessMetrics.inc_defect_analysis(request.model_name, defects_list)
 
         # Конвертация дефектов в формат схемы
         defects = [
             DefectInfo(
-                type=d.get('type', 'unknown'),
-                x=d.get('x', 0),
-                y=d.get('y', 0),
-                width=d.get('width', 0),
-                height=d.get('height', 0),
-                area=d.get('area', 0),
-                confidence=d.get('confidence', 0),
+                type=d.get("type", "unknown"),
+                x=d.get("x", 0),
+                y=d.get("y", 0),
+                width=d.get("width", 0),
+                height=d.get("height", 0),
+                area=d.get("area", 0),
+                confidence=d.get("confidence", 0),
             )
-            for d in result.get('defects', [])
+            for d in result.get("defects", [])
         ]
 
         # Вычисление средней уверенности
-        confidence_score = (
-            sum(d.confidence for d in defects) / len(defects)
-            if defects else 0.0
-        )
+        confidence_score = sum(d.confidence for d in defects) / len(defects) if defects else 0.0
 
         return DefectAnalysisResponse(
-            analysis_id=result.get('analysis_id', f"defect_{uuid.uuid4().hex[:8]}"),
+            analysis_id=result.get("analysis_id", f"defect_{uuid.uuid4().hex[:8]}"),
             image_path=str(image_path),
             model_name=request.model_name,
             defects_count=len(defects),
             defects=defects,
             confidence_score=confidence_score,
-            processing_time_ms=result.get('processing_time_ms', 0),
+            processing_time_ms=result.get("processing_time_ms", 0),
             timestamp=datetime.now(timezone.utc).isoformat(),
         )
 
@@ -124,9 +120,12 @@ async def get_defect_analysis(
     try:
         analyses = db.get_defect_analyses(limit=500)
         analysis = next(
-            (a for a in analyses if
-             a.get('analysis_id') == analysis_id or str(a.get('id')) == analysis_id),
-            None
+            (
+                a
+                for a in analyses
+                if a.get("analysis_id") == analysis_id or str(a.get("id")) == analysis_id
+            ),
+            None,
         )
         if not analysis:
             raise NotFoundError(f"Анализ с ID {analysis_id} не найден")
@@ -152,7 +151,7 @@ async def delete_defect_analysis(
         cursor = conn.cursor()
         cursor.execute(
             "DELETE FROM defect_analysis WHERE analysis_id = ? OR CAST(id AS TEXT) = ?",
-            (analysis_id, analysis_id)
+            (analysis_id, analysis_id),
         )
         if cursor.rowcount == 0:
             raise NotFoundError(f"Анализ с ID {analysis_id} не найден", resource_type="analysis")
@@ -170,9 +169,12 @@ async def export_defect_analysis(
     """Экспорт результата анализа в JSON или CSV (принимает analysis_id UUID или числовой id)"""
     analyses = db.get_defect_analyses(limit=500)
     analysis = next(
-        (a for a in analyses if
-         a.get('analysis_id') == analysis_id or str(a.get('id')) == analysis_id),
-        None
+        (
+            a
+            for a in analyses
+            if a.get("analysis_id") == analysis_id or str(a.get("id")) == analysis_id
+        ),
+        None,
     )
 
     if not analysis:
@@ -181,11 +183,13 @@ async def export_defect_analysis(
     if fmt == "csv":
         import csv
         import io
+
         output = io.StringIO()
         writer = csv.DictWriter(output, fieldnames=analysis.keys())
         writer.writeheader()
         writer.writerow(analysis)
         from fastapi.responses import Response
+
         return Response(
             content=output.getvalue(),
             media_type="text/csv",

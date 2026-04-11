@@ -1,13 +1,16 @@
 """Тесты для анализатора изображений поверхности."""
 
-import unittest
-import numpy as np
-import sys
 import os
+import sys
 import tempfile
+import unittest
+
+import numpy as np
 
 # Добавляем путь к исходному коду
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../components/py-surface-image-analyzer/src'))
+sys.path.insert(
+    0, os.path.join(os.path.dirname(__file__), "../components/py-surface-image-analyzer/src")
+)
 
 from image_processor import ImageProcessor, calculate_surface_roughness
 
@@ -20,8 +23,9 @@ class TestImageProcessor(unittest.TestCase):
         self.processor = ImageProcessor()
         # Создаем тестовое изображение для всех тестов
         self.test_image = np.random.randint(0, 255, (50, 50, 3), dtype=np.uint8)
-        self.temp_file = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+        self.temp_file = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
         from PIL import Image
+
         img = Image.fromarray(self.test_image)
         img.save(self.temp_file.name)
         self.temp_file.close()
@@ -84,7 +88,7 @@ class TestImageProcessor(unittest.TestCase):
 
     def test_load_image_invalid_format(self):
         """Тестирует загрузку файла с неподдерживаемым форматом"""
-        with tempfile.NamedTemporaryFile(suffix='.txt', delete=False) as tmp:
+        with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as tmp:
             tmp.write(b"test")
             tmp_name = tmp.name
         result = self.processor.load_image(tmp_name)
@@ -105,10 +109,10 @@ class TestUtilityFunctions(unittest.TestCase):
         roughness = calculate_surface_roughness(test_image)
 
         self.assertIsInstance(roughness, dict)
-        self.assertIn('ra', roughness)
-        self.assertIn('rq', roughness)
-        self.assertIn('rz', roughness)
-        self.assertGreaterEqual(roughness['ra'], 0)
+        self.assertIn("ra", roughness)
+        self.assertIn("rq", roughness)
+        self.assertIn("rz", roughness)
+        self.assertGreaterEqual(roughness["ra"], 0)
 
     def test_calculate_surface_roughness_grayscale(self):
         """Тестирует вычисление шероховатости для Ч/Б изображения"""
@@ -117,8 +121,8 @@ class TestUtilityFunctions(unittest.TestCase):
         roughness = calculate_surface_roughness(test_image)
 
         self.assertIsInstance(roughness, dict)
-        self.assertIn('ra', roughness)
-        self.assertGreaterEqual(roughness['ra'], 0)
+        self.assertIn("ra", roughness)
+        self.assertGreaterEqual(roughness["ra"], 0)
 
     def test_calculate_surface_roughness_empty_image(self):
         """Тестирует обработку пустого изображения"""
@@ -143,8 +147,10 @@ class TestImageProcessorExtended(unittest.TestCase):
         self.test_image = np.random.randint(0, 255, (50, 50, 3), dtype=np.uint8)
 
         import tempfile
-        self.temp_file = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+
+        self.temp_file = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
         from PIL import Image
+
         img = Image.fromarray(self.test_image)
         img.save(self.temp_file.name)
         self.temp_file.close()
@@ -152,6 +158,7 @@ class TestImageProcessorExtended(unittest.TestCase):
     def tearDown(self):
         """Очистка после теста"""
         import os
+
         try:
             os.unlink(self.temp_file.name)
         except Exception:
@@ -170,11 +177,11 @@ class TestImageProcessorExtended(unittest.TestCase):
         stats = self.processor.get_statistics()
 
         self.assertIsNotNone(stats)
-        self.assertIn('mean', stats)
-        self.assertIn('std', stats)
-        self.assertIn('min', stats)
-        self.assertIn('max', stats)
-        self.assertIn('shape', stats)
+        self.assertIn("mean", stats)
+        self.assertIn("std", stats)
+        self.assertIn("min", stats)
+        self.assertIn("max", stats)
+        self.assertIn("shape", stats)
 
     def test_get_histogram(self):
         """Тестирует получение гистограммы"""
@@ -188,10 +195,11 @@ class TestImageProcessorExtended(unittest.TestCase):
         """Тестирует сохранение изображения"""
         import tempfile
         import time
-        self.processor.load_image(self.temp_file.name)
-        self.processor.apply_noise_reduction('gaussian')
 
-        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
+        self.processor.load_image(self.temp_file.name)
+        self.processor.apply_noise_reduction("gaussian")
+
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
             save_path = tmp.name
 
         result = self.processor.save_image(save_path)
@@ -207,13 +215,13 @@ class TestImageProcessorExtended(unittest.TestCase):
     def test_get_metadata(self):
         """Тестирует получение метаданных"""
         self.processor.load_image(self.temp_file.name)
-        self.processor.apply_noise_reduction('median')
+        self.processor.apply_noise_reduction("median")
 
         metadata = self.processor.get_metadata()
 
-        self.assertIn('filepath', metadata)
-        self.assertIn('filter_applied', metadata)
-        self.assertEqual(metadata['filter_applied'], 'median')
+        self.assertIn("filepath", metadata)
+        self.assertIn("filter_applied", metadata)
+        self.assertEqual(metadata["filter_applied"], "median")
 
 
 def run_tests():
@@ -240,7 +248,6 @@ def run_tests():
     return result.wasSuccessful()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = run_tests()
     sys.exit(0 if success else 1)
-

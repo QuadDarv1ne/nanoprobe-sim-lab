@@ -17,8 +17,10 @@ from pydantic import BaseModel, Field, field_validator
 
 # ==================== Аутентификация ====================
 
+
 class Token(BaseModel):
     """JWT токен"""
+
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
@@ -27,6 +29,7 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     """Данные из токена"""
+
     username: Optional[str] = None
     user_id: Optional[int] = None
     exp: Optional[datetime] = None
@@ -34,35 +37,38 @@ class TokenData(BaseModel):
 
 class LoginRequest(BaseModel):
     """Запрос на логин"""
-    username: str = Field(..., min_length=3, max_length=50, pattern=r'^[a-zA-Z0-9_]+$')
+
+    username: str = Field(..., min_length=3, max_length=50, pattern=r"^[a-zA-Z0-9_]+$")
     password: str = Field(..., min_length=8, max_length=128)
 
-    @field_validator('password')
+    @field_validator("password")
     @classmethod
     def validate_password_strength(cls, v: str) -> str:
         """Валидация сложности пароля"""
         if len(v) < 8:
-            raise ValueError('Пароль должен быть не менее 8 символов')
+            raise ValueError("Пароль должен быть не менее 8 символов")
         if len(v) > 128:
-            raise ValueError('Пароль не должен превышать 128 символов')
-        if not re.search(r'[A-ZА-ЯЁ]', v):
-            raise ValueError('Пароль должен содержать заглавную букву')
-        if not re.search(r'\d', v):
-            raise ValueError('Пароль должен содержать цифру')
-        if not re.search(r'[a-zа-яё]', v):
-            raise ValueError('Пароль должен содержать строчную букву')
+            raise ValueError("Пароль не должен превышать 128 символов")
+        if not re.search(r"[A-ZА-ЯЁ]", v):
+            raise ValueError("Пароль должен содержать заглавную букву")
+        if not re.search(r"\d", v):
+            raise ValueError("Пароль должен содержать цифру")
+        if not re.search(r"[a-zа-яё]", v):
+            raise ValueError("Пароль должен содержать строчную букву")
         if not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in v):
-            raise ValueError('Пароль должен содержать специальный символ')
+            raise ValueError("Пароль должен содержать специальный символ")
         return v
 
 
 class RefreshTokenRequest(BaseModel):
     """Запрос на обновление токена"""
+
     refresh_token: str = Field(..., description="Refresh токен")
 
 
 class LoginResponse(BaseModel):
     """Ответ на логин"""
+
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
@@ -72,8 +78,10 @@ class LoginResponse(BaseModel):
 
 # ==================== Сканирования ====================
 
+
 class ScanType(str, Enum):
     """Типы сканирований"""
+
     SPM = "spm"
     IMAGE = "image"
     SSTV = "sstv"
@@ -81,6 +89,7 @@ class ScanType(str, Enum):
 
 class ScanCreate(BaseModel):
     """Создание сканирования"""
+
     scan_type: ScanType
     surface_type: Optional[str] = None
     width: Optional[int] = None
@@ -90,6 +99,7 @@ class ScanCreate(BaseModel):
 
 class ScanResponse(BaseModel):
     """Ответ со сканированием"""
+
     id: int
     timestamp: str
     scan_type: str
@@ -106,6 +116,7 @@ class ScanResponse(BaseModel):
 
 class ScanListResponse(BaseModel):
     """Список сканирований"""
+
     items: List[ScanResponse]
     total: int
     limit: int
@@ -114,8 +125,10 @@ class ScanListResponse(BaseModel):
 
 # ==================== Симуляции ====================
 
+
 class SimulationStatus(str, Enum):
     """Статусы симуляции"""
+
     RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
@@ -124,12 +137,14 @@ class SimulationStatus(str, Enum):
 
 class SimulationCreate(BaseModel):
     """Создание симуляции"""
+
     simulation_type: str
     parameters: Optional[Dict[str, Any]] = None
 
 
 class SimulationResponse(BaseModel):
     """Ответ с симуляцией"""
+
     id: int
     simulation_id: str
     simulation_type: str
@@ -147,6 +162,7 @@ class SimulationResponse(BaseModel):
 
 class SimulationListResponse(BaseModel):
     """Список симуляций"""
+
     items: List[SimulationResponse]
     total: int
     limit: int
@@ -154,8 +170,10 @@ class SimulationListResponse(BaseModel):
 
 # ==================== Анализ дефектов ====================
 
+
 class DefectType(str, Enum):
     """Типы дефектов"""
+
     PIT = "pit"
     HILLOCK = "hillock"
     SCRATCH = "scratch"
@@ -165,6 +183,7 @@ class DefectType(str, Enum):
 
 class DefectInfo(BaseModel):
     """Информация о дефекте"""
+
     type: str
     x: float
     y: float
@@ -176,12 +195,14 @@ class DefectInfo(BaseModel):
 
 class DefectAnalysisRequest(BaseModel):
     """Запрос на анализ дефектов"""
+
     image_path: str
     model_name: Optional[str] = "isolation_forest"
 
 
 class DefectAnalysisResponse(BaseModel):
     """Ответ анализа дефектов"""
+
     analysis_id: str
     image_path: str
     model_name: str
@@ -194,14 +215,17 @@ class DefectAnalysisResponse(BaseModel):
 
 # ==================== Сравнение поверхностей ====================
 
+
 class SurfaceComparisonRequest(BaseModel):
     """Запрос на сравнение поверхностей"""
+
     image1_path: str
     image2_path: str
 
 
 class ComparisonMetrics(BaseModel):
     """Метрики сравнения"""
+
     ssim: float
     psnr: float
     mse: float
@@ -211,6 +235,7 @@ class ComparisonMetrics(BaseModel):
 
 class SurfaceComparisonResponse(BaseModel):
     """Ответ сравнения поверхностей"""
+
     comparison_id: str
     image1_path: str
     image2_path: str
@@ -222,8 +247,10 @@ class SurfaceComparisonResponse(BaseModel):
 
 # ==================== PDF Отчёты ====================
 
+
 class ReportType(str, Enum):
     """Типы отчётов"""
+
     SURFACE_ANALYSIS = "surface_analysis"
     DEFECT_ANALYSIS = "defect_analysis"
     COMPARISON = "comparison"
@@ -233,6 +260,7 @@ class ReportType(str, Enum):
 
 class PDFReportRequest(BaseModel):
     """Запрос на генерацию PDF отчёта"""
+
     report_type: ReportType
     title: str
     author: Optional[str] = "Nanoprobe Simulation Lab"
@@ -242,6 +270,7 @@ class PDFReportRequest(BaseModel):
 
 class PDFReportResponse(BaseModel):
     """Ответ с PDF отчётом"""
+
     report_id: str
     report_path: str
     report_type: str
@@ -253,8 +282,10 @@ class PDFReportResponse(BaseModel):
 
 # ==================== Пакетная обработка ====================
 
+
 class BatchJobCreate(BaseModel):
     """Создание задания пакетной обработки"""
+
     job_type: str
     items: List[Any]
     parameters: Optional[Dict[str, Any]] = None
@@ -263,6 +294,7 @@ class BatchJobCreate(BaseModel):
 
 class BatchJobResponse(BaseModel):
     """Ответ задания"""
+
     job_id: str
     job_type: str
     status: str
@@ -275,8 +307,10 @@ class BatchJobResponse(BaseModel):
 
 # ==================== Общее ====================
 
+
 class ErrorResponse(BaseModel):
     """Ошибка"""
+
     detail: str
     error_code: Optional[str] = None
     severity: Optional[str] = None
@@ -286,6 +320,7 @@ class ErrorResponse(BaseModel):
 
 class StatisticsResponse(BaseModel):
     """Статистика базы данных"""
+
     total_scans: int
     total_simulations: int
     active_simulations: int
@@ -300,8 +335,10 @@ class StatisticsResponse(BaseModel):
 
 # ==================== Пагинация ====================
 
+
 class PaginationParams(BaseModel):
     """Параметры пагинации"""
+
     page: int = Field(1, ge=1, description="Номер страницы")
     page_size: int = Field(20, ge=1, le=100, description="Размер страницы")
 
@@ -318,6 +355,7 @@ class PaginationParams(BaseModel):
 
 class PaginatedResponse(BaseModel):
     """Пагинированный ответ"""
+
     items: List[Any]
     total: int
     page: int
@@ -329,8 +367,10 @@ class PaginatedResponse(BaseModel):
 
 # ==================== Дашборд ====================
 
+
 class DashboardStats(BaseModel):
     """Статистика дашборда"""
+
     total_scans: int
     total_simulations: int
     active_simulations: int
@@ -353,6 +393,7 @@ class DashboardStats(BaseModel):
 
 class HealthStatus(BaseModel):
     """Статус здоровья"""
+
     status: str
     timestamp: str
     version: str
@@ -362,6 +403,7 @@ class HealthStatus(BaseModel):
 
 class SystemHealth(BaseModel):
     """Системное здоровье"""
+
     status: str
     timestamp: str
     version: str
@@ -372,6 +414,7 @@ class SystemHealth(BaseModel):
 
 class RealtimeMetrics(BaseModel):
     """Метрики в реальном времени"""
+
     timestamp: str
     cpu_percent: float
     memory_percent: float
@@ -382,8 +425,10 @@ class RealtimeMetrics(BaseModel):
 
 # ==================== Экспорт ====================
 
+
 class ExportRequest(BaseModel):
     """Запрос на экспорт"""
+
     format: str = Field(..., pattern="^(json|csv|pdf|xlsx)$")
     scan_ids: Optional[List[int]] = None
     include_metadata: bool = True
@@ -391,6 +436,7 @@ class ExportRequest(BaseModel):
 
 class ExportResponse(BaseModel):
     """Ответ экспорта"""
+
     export_id: str
     format: str
     status: str
@@ -403,8 +449,10 @@ class ExportResponse(BaseModel):
 
 # ==================== NASA API ====================
 
+
 class APODResponse(BaseModel):
     """NASA APOD ответ"""
+
     date: str
     explanation: str
     title: str
@@ -417,6 +465,7 @@ class APODResponse(BaseModel):
 
 class MarsPhoto(BaseModel):
     """Фото с марсохода"""
+
     id: int
     sol: int
     camera: Dict[str, Any]
@@ -426,12 +475,14 @@ class MarsPhoto(BaseModel):
 
 class MarsPhotosResponse(BaseModel):
     """Ответ фото с Марса"""
+
     photos: List[MarsPhoto]
     total: int
 
 
 class NEOCloseApproach(BaseModel):
     """Сближение с Землёй"""
+
     orbiting_body: str
     miss_distance: Dict[str, Any]
     relative_velocity: Dict[str, Any]
@@ -439,6 +490,7 @@ class NEOCloseApproach(BaseModel):
 
 class NearEarthObject(BaseModel):
     """Околоземный объект"""
+
     id: str
     name: str
     diameter: Dict[str, Any]
@@ -448,5 +500,6 @@ class NearEarthObject(BaseModel):
 
 class NEOsResponse(BaseModel):
     """Ответ NEO"""
+
     near_earth_objects: List[NearEarthObject]
     total: int

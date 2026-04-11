@@ -2,10 +2,11 @@
 Tests for Nanoprobe Sim Lab improvements
 """
 
-import pytest
-import requests
 import sys
 from pathlib import Path
+
+import pytest
+import requests
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -129,7 +130,7 @@ class TestFlaskWeb:
         response = requests.post(
             f"{BASE_FLASK}/api/actions/start_component",
             json={"component": "test_component"},
-            timeout=5
+            timeout=5,
         )
         # 404 означает что Flask сервер не запущен - это допустимо
         # 200 означает что сервер запущен и endpoint работает
@@ -144,7 +145,7 @@ class TestFlaskWeb:
         response = requests.post(
             f"{BASE_FLASK}/api/actions/stop_component",
             json={"component": "test_component"},
-            timeout=5
+            timeout=5,
         )
         # 404 означает что Flask сервер не запущен - это допустимо
         # 200 означает что сервер запущен и endpoint работает
@@ -159,7 +160,8 @@ class TestEnhancedMonitor:
 
     def test_import_module(self):
         """Тест импорта модуля"""
-        from utils.enhanced_monitor import EnhancedSystemMonitor, SystemMetrics, Alert
+        from utils.enhanced_monitor import Alert, EnhancedSystemMonitor, SystemMetrics
+
         assert EnhancedSystemMonitor is not None
         assert SystemMetrics is not None
         assert Alert is not None
@@ -167,6 +169,7 @@ class TestEnhancedMonitor:
     def test_create_monitor(self):
         """Тест создания монитора"""
         from utils.enhanced_monitor import EnhancedSystemMonitor
+
         monitor = EnhancedSystemMonitor()
         assert monitor is not None
         assert monitor.history_size == 300

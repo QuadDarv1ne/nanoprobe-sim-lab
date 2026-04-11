@@ -1,10 +1,11 @@
 """Тесты для новых функций проекта."""
 
-import unittest
 import sys
 import tempfile
-import numpy as np
+import unittest
 from pathlib import Path
+
+import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -18,11 +19,11 @@ class TestDataExporter(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             exporter = DataExporter(tmpdir)
-            data = {'x': [1, 2, 3], 'y': [4, 5, 6]}
-            filepath = exporter.export(data, 'test.csv', fmt='csv')
+            data = {"x": [1, 2, 3], "y": [4, 5, 6]}
+            filepath = exporter.export(data, "test.csv", fmt="csv")
 
             self.assertTrue(filepath.exists())
-            self.assertEqual(filepath.suffix, '.csv')
+            self.assertEqual(filepath.suffix, ".csv")
 
     def test_export_json(self):
         """Тестирует экспорт в JSON."""
@@ -30,11 +31,11 @@ class TestDataExporter(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             exporter = DataExporter(tmpdir)
-            data = {'key': 'value', 'number': 42}
-            filepath = exporter.export(data, 'test.json', fmt='json')
+            data = {"key": "value", "number": 42}
+            filepath = exporter.export(data, "test.json", fmt="json")
 
             self.assertTrue(filepath.exists())
-            self.assertEqual(filepath.suffix, '.json')
+            self.assertEqual(filepath.suffix, ".json")
 
     def test_export_npy(self):
         """Тестирует экспорт в NumPy формат."""
@@ -43,10 +44,10 @@ class TestDataExporter(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             exporter = DataExporter(tmpdir)
             data = np.array([[1, 2], [3, 4]])
-            filepath = exporter.export(data, 'test.npy', fmt='npy')
+            filepath = exporter.export(data, "test.npy", fmt="npy")
 
             self.assertTrue(filepath.exists())
-            self.assertEqual(filepath.suffix, '.npy')
+            self.assertEqual(filepath.suffix, ".npy")
 
     def test_export_surface_data(self):
         """Тестирует экспорт данных поверхности."""
@@ -55,7 +56,7 @@ class TestDataExporter(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             exporter = DataExporter(tmpdir)
             surface_data = np.random.rand(10, 10)
-            filepath = exporter.export_surface_data(surface_data, fmt='json')
+            filepath = exporter.export_surface_data(surface_data, fmt="json")
 
             self.assertTrue(filepath.exists())
 
@@ -67,12 +68,12 @@ class TestDataExporter(unittest.TestCase):
             exporter = DataExporter(tmpdir)
             importer = DataImporter(tmpdir)
 
-            data = {'key': 'value', 'number': 42}
-            filepath = exporter.export(data, 'test.json', fmt='json')
+            data = {"key": "value", "number": 42}
+            filepath = exporter.export(data, "test.json", fmt="json")
 
             imported = importer.import_file(filepath)
-            self.assertEqual(imported['key'], 'value')
-            self.assertEqual(imported['number'], 42)
+            self.assertEqual(imported["key"], "value")
+            self.assertEqual(imported["number"], 42)
 
 
 class TestCLIUtils(unittest.TestCase):
@@ -88,7 +89,7 @@ class TestCLIUtils(unittest.TestCase):
 
     def test_colorize_function(self):
         """Тестирует функцию colorize."""
-        from utils.cli_utils import colorize, Colors
+        from utils.cli_utils import Colors, colorize
 
         result = colorize("hello", Colors.GREEN)
         self.assertIsInstance(result, str)
@@ -124,7 +125,7 @@ class TestSPMMultiprocessing(unittest.TestCase):
 
     def test_parallel_scan(self):
         """Тестирует параллельное сканирование."""
-        from spm_simulator import SurfaceModel, SPMController
+        from spm_simulator import SPMController, SurfaceModel
 
         surface = SurfaceModel(20, 20)
         controller = SPMController()
@@ -138,7 +139,7 @@ class TestSPMMultiprocessing(unittest.TestCase):
 
     def test_sequential_scan(self):
         """Тестирует последовательное сканирование."""
-        from spm_simulator import SurfaceModel, SPMController
+        from spm_simulator import SPMController, SurfaceModel
 
         surface = SurfaceModel(10, 10)
         controller = SPMController()
@@ -152,7 +153,7 @@ class TestSPMMultiprocessing(unittest.TestCase):
 
     def test_scan_data_range(self):
         """Тестирует диапазон данных сканирования."""
-        from spm_simulator import SurfaceModel, SPMController
+        from spm_simulator import SPMController, SurfaceModel
 
         surface = SurfaceModel(15, 15)
         controller = SPMController()
@@ -186,6 +187,6 @@ def run_tests():
     return result.wasSuccessful()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = run_tests()
     sys.exit(0 if success else 1)

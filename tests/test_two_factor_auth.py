@@ -5,16 +5,17 @@ Unit тесты для Two-Factor Authentication
 Тестирование 2FA TOTP (Google Authenticator)
 """
 
-import sys
 import os
+import sys
 import tempfile
 import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from utils.security.two_factor_auth import TwoFactorAuth
 import pyotp
+
+from utils.security.two_factor_auth import TwoFactorAuth
 
 
 class TestTwoFactorAuthInit:
@@ -25,7 +26,7 @@ class TestTwoFactorAuthInit:
         with tempfile.TemporaryDirectory() as tmpdir:
             storage_path = os.path.join(tmpdir, "2fa_secrets.json")
             totp = TwoFactorAuth(storage_path)
-            
+
             assert totp.storage_path == Path(storage_path)
             assert totp._secrets == {}
         print("  [PASS] Init default storage")
@@ -35,7 +36,7 @@ class TestTwoFactorAuthInit:
         with tempfile.TemporaryDirectory() as tmpdir:
             storage_path = os.path.join(tmpdir, "subdir", "2fa_secrets.json")
             totp = TwoFactorAuth(storage_path)
-            
+
             assert totp.storage_path.parent.exists()
         print("  [PASS] Init creates directory")
 
@@ -48,9 +49,9 @@ class TestTwoFactorAuthSetup:
         with tempfile.TemporaryDirectory() as tmpdir:
             storage_path = os.path.join(tmpdir, "2fa_secrets.json")
             totp = TwoFactorAuth(storage_path)
-            
+
             secret, uri = totp.setup_2fa("testuser", "test@example.com")
-            
+
             assert isinstance(secret, str)
             assert len(secret) > 0
             assert isinstance(uri, str)
@@ -63,10 +64,10 @@ class TestTwoFactorAuthSetup:
         with tempfile.TemporaryDirectory() as tmpdir:
             storage_path = os.path.join(tmpdir, "2fa_secrets.json")
             totp = TwoFactorAuth(storage_path)
-            
+
             secret1, _ = totp.setup_2fa("user1", "user1@example.com")
             secret2, _ = totp.setup_2fa("user2", "user2@example.com")
-            
+
             assert secret1 != secret2
         print("  [PASS] Setup 2FA generates unique secrets")
 
@@ -75,9 +76,9 @@ class TestTwoFactorAuthSetup:
         with tempfile.TemporaryDirectory() as tmpdir:
             storage_path = os.path.join(tmpdir, "2fa_secrets.json")
             totp = TwoFactorAuth(storage_path)
-            
+
             totp.setup_2fa("testuser", "test@example.com")
-            
+
             # Проверяем, что секрет сохранён
             assert "testuser" in totp._secrets
             assert "secret" in totp._secrets["testuser"]
@@ -92,17 +93,17 @@ class TestTwoFactorAuthVerification:
         with tempfile.TemporaryDirectory() as tmpdir:
             storage_path = os.path.join(tmpdir, "2fa_secrets.json")
             totp = TwoFactorAuth(storage_path)
-            
+
             # Настраиваем 2FA
             secret, _ = totp.setup_2fa("testuser", "test@example.com")
-            
+
             # Генерируем правильный код
             totp_obj = pyotp.TOTP(secret)
             code = totp_obj.now()
-            
+
             # Верифицируем
             is_valid = totp.verify_2fa("testuser", code)
-            
+
             assert is_valid is True
         print("  [PASS] Verify 2FA valid code")
 
@@ -111,12 +112,12 @@ class TestTwoFactorAuthVerification:
         with tempfile.TemporaryDirectory() as tmpdir:
             storage_path = os.path.join(tmpdir, "2fa_secrets.json")
             totp = TwoFactorAuth(storage_path)
-            
+
             totp.setup_2fa("testuser", "test@example.com")
-            
+
             # Неправильный код
             is_valid = totp.verify_2fa("testuser", "000000")
-            
+
             assert is_valid is False
         print("  [PASS] Verify 2FA invalid code")
 
@@ -125,9 +126,9 @@ class TestTwoFactorAuthVerification:
         with tempfile.TemporaryDirectory() as tmpdir:
             storage_path = os.path.join(tmpdir, "2fa_secrets.json")
             totp = TwoFactorAuth(storage_path)
-            
+
             is_valid = totp.verify_2fa("nonexistent", "123456")
-            
+
             assert is_valid is False
         print("  [PASS] Verify 2FA nonexistent user")
 
@@ -136,19 +137,19 @@ class TestTwoFactorAuthVerification:
         with tempfile.TemporaryDirectory() as tmpdir:
             storage_path = os.path.join(tmpdir, "2fa_secrets.json")
             totp = TwoFactorAuth(storage_path)
-            
+
             secret, _ = totp.setup_2fa("testuser", "test@example.com")
-            
+
             # Генерируем код
             totp_obj = pyotp.TOTP(secret)
             code = totp_obj.now()
-            
+
             # Ждём 31 секунду (код устаревает)
             time.sleep(31)
-            
+
             # Код должен быть невалидным
             is_valid = totp.verify_2fa("testuser", code)
-            
+
             assert is_valid is False
         print("  [PASS] Verify 2FA expired code")
 
@@ -161,10 +162,10 @@ class TestTwoFactorAuthBackupCodes:
         with tempfile.TemporaryDirectory() as tmpdir:
             storage_path = os.path.join(tmpdir, "2fa_secrets.json")
             totp = TwoFactorAuth(storage_path)
-            
+
             totp.setup_2fa("testuser", "test@example.com")
             codes = totp.generate_backup_codes("testuser")
-            
+
             assert isinstance(codes, list)
             assert len(codes) == 10
             assert all(isinstance(code, str) for code in codes)
@@ -176,10 +177,10 @@ class TestTwoFactorAuthBackupCodes:
         with tempfile.TemporaryDirectory() as tmpdir:
             storage_path = os.path.join(tmpdir, "2fa_secrets.json")
             totp = TwoFactorAuth(storage_path)
-            
+
             totp.setup_2fa("testuser", "test@example.com")
             codes = totp.generate_backup_codes("testuser")
-            
+
             # Все коды уникальны
             assert len(codes) == len(set(codes))
         print("  [PASS] Generate backup codes unique")
@@ -189,13 +190,13 @@ class TestTwoFactorAuthBackupCodes:
         with tempfile.TemporaryDirectory() as tmpdir:
             storage_path = os.path.join(tmpdir, "2fa_secrets.json")
             totp = TwoFactorAuth(storage_path)
-            
+
             totp.setup_2fa("testuser", "test@example.com")
             codes = totp.generate_backup_codes("testuser")
-            
+
             # Верифицируем резервный код
             is_valid = totp.verify_backup_code("testuser", codes[0])
-            
+
             assert is_valid is True
         print("  [PASS] Verify backup code")
 
@@ -204,13 +205,13 @@ class TestTwoFactorAuthBackupCodes:
         with tempfile.TemporaryDirectory() as tmpdir:
             storage_path = os.path.join(tmpdir, "2fa_secrets.json")
             totp = TwoFactorAuth(storage_path)
-            
+
             totp.setup_2fa("testuser", "test@example.com")
             codes = totp.generate_backup_codes("testuser")
-            
+
             # Первое использование - успешно
             assert totp.verify_backup_code("testuser", codes[0]) is True
-            
+
             # Повторное использование - неудачно
             assert totp.verify_backup_code("testuser", codes[0]) is False
         print("  [PASS] Verify backup code consumed")
@@ -220,11 +221,11 @@ class TestTwoFactorAuthBackupCodes:
         with tempfile.TemporaryDirectory() as tmpdir:
             storage_path = os.path.join(tmpdir, "2fa_secrets.json")
             totp = TwoFactorAuth(storage_path)
-            
+
             totp.setup_2fa("testuser", "test@example.com")
-            
+
             is_valid = totp.verify_backup_code("testuser", "INVALID8")
-            
+
             assert is_valid is False
         print("  [PASS] Verify backup code invalid")
 
@@ -237,12 +238,12 @@ class TestTwoFactorAuthDisable:
         with tempfile.TemporaryDirectory() as tmpdir:
             storage_path = os.path.join(tmpdir, "2fa_secrets.json")
             totp = TwoFactorAuth(storage_path)
-            
+
             totp.setup_2fa("testuser", "test@example.com")
-            
+
             # Отключаем
             result = totp.disable_2fa("testuser")
-            
+
             assert result is True
             assert "testuser" not in totp._secrets
         print("  [PASS] Disable 2FA")
@@ -252,9 +253,9 @@ class TestTwoFactorAuthDisable:
         with tempfile.TemporaryDirectory() as tmpdir:
             storage_path = os.path.join(tmpdir, "2fa_secrets.json")
             totp = TwoFactorAuth(storage_path)
-            
+
             result = totp.disable_2fa("nonexistent")
-            
+
             assert result is False
         print("  [PASS] Disable 2FA nonexistent user")
 
@@ -267,9 +268,9 @@ class TestTwoFactorAuthStatus:
         with tempfile.TemporaryDirectory() as tmpdir:
             storage_path = os.path.join(tmpdir, "2fa_secrets.json")
             totp = TwoFactorAuth(storage_path)
-            
+
             totp.setup_2fa("testuser", "test@example.com")
-            
+
             assert totp.is_2fa_enabled("testuser") is True
         print("  [PASS] Is 2FA enabled true")
 
@@ -278,7 +279,7 @@ class TestTwoFactorAuthStatus:
         with tempfile.TemporaryDirectory() as tmpdir:
             storage_path = os.path.join(tmpdir, "2fa_secrets.json")
             totp = TwoFactorAuth(storage_path)
-            
+
             assert totp.is_2fa_enabled("nonexistent") is False
         print("  [PASS] Is 2FA enabled false")
 
@@ -287,11 +288,11 @@ class TestTwoFactorAuthStatus:
         with tempfile.TemporaryDirectory() as tmpdir:
             storage_path = os.path.join(tmpdir, "2fa_secrets.json")
             totp = TwoFactorAuth(storage_path)
-            
+
             totp.setup_2fa("testuser", "test@example.com")
-            
+
             status = totp.get_2fa_status("testuser")
-            
+
             assert status["enabled"] is True
             assert "secret" in status
             assert "backup_codes" in status or "has_backup_codes" in status
@@ -305,14 +306,14 @@ class TestTwoFactorAuthPersistence:
         """Тест сохранения и загрузки секретов"""
         with tempfile.TemporaryDirectory() as tmpdir:
             storage_path = os.path.join(tmpdir, "2fa_secrets.json")
-            
+
             # Создаём и настраиваем
             totp1 = TwoFactorAuth(storage_path)
             totp1.setup_2fa("testuser", "test@example.com")
-            
+
             # Создаём новый экземпляр (должен загрузить сохранённые данные)
             totp2 = TwoFactorAuth(storage_path)
-            
+
             assert "testuser" in totp2._secrets
             assert totp2._secrets["testuser"]["secret"] == totp1._secrets["testuser"]["secret"]
         print("  [PASS] Persistence save and load")
@@ -323,7 +324,7 @@ def run_all_tests():
     print("=" * 60)
     print("Two-Factor Authentication Unit Tests")
     print("=" * 60)
-    
+
     test_classes = [
         TestTwoFactorAuthInit,
         TestTwoFactorAuthSetup,
@@ -333,14 +334,14 @@ def run_all_tests():
         TestTwoFactorAuthStatus,
         TestTwoFactorAuthPersistence,
     ]
-    
+
     total_tests = 0
     passed_tests = 0
-    
+
     for test_class in test_classes:
         print(f"\n{test_class.__name__}:")
         instance = test_class()
-        
+
         for method_name in dir(instance):
             if method_name.startswith("test_"):
                 total_tests += 1
@@ -351,7 +352,7 @@ def run_all_tests():
                     print(f"  [FAIL] {method_name}: {e}")
                 except Exception as e:
                     print(f"  [ERROR] {method_name}: {e}")
-    
+
     print("\n" + "=" * 60)
     print(f"Results: {passed_tests}/{total_tests} tests passed")
     if passed_tests == total_tests:
@@ -359,7 +360,7 @@ def run_all_tests():
     else:
         print(f"  ❌ {total_tests - passed_tests} tests failed")
     print("=" * 60)
-    
+
     return passed_tests == total_tests
 
 

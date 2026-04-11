@@ -13,11 +13,13 @@ import numpy as np
 class WaterfallDisplay:
     """Waterfall дисплей для RTL-SDR."""
 
-    def __init__(self,
-                 width: int = 512,
-                 height: int = 256,
-                 sample_rate: float = 2.4e6,
-                 center_freq: float = 145.8e6):
+    def __init__(
+        self,
+        width: int = 512,
+        height: int = 256,
+        sample_rate: float = 2.4e6,
+        center_freq: float = 145.8e6,
+    ):
         """
         Инициализация waterfall дисплея.
 
@@ -38,7 +40,7 @@ class WaterfallDisplay:
 
         # FFT параметры
         self.fft_size = width
-        self.freq_bins = np.fft.fftfreq(width, 1/sample_rate) + center_freq
+        self.freq_bins = np.fft.fftfreq(width, 1 / sample_rate) + center_freq
         self._hann_window = np.hanning(width).astype(np.float32)
 
         # Цветовая палитра (grayscale)
@@ -89,7 +91,7 @@ class WaterfallDisplay:
             return None
 
         # Вычисляем FFT с Hann-окном (убирает спектральные утечки)
-        windowed = samples[:self.fft_size] * self._hann_window
+        windowed = samples[: self.fft_size] * self._hann_window
         fft_data = np.fft.fft(windowed)
         fft_shifted = np.fft.fftshift(fft_data)
 
@@ -106,8 +108,7 @@ class WaterfallDisplay:
 
         # Нормализуем к 0-255
         power_normalized = np.clip(
-            (power_db - self.min_power) / (self.max_power - self.min_power + 1e-10) * 255,
-            0, 255
+            (power_db - self.min_power) / (self.max_power - self.min_power + 1e-10) * 255, 0, 255
         ).astype(np.uint8)
 
         # Добавляем в буфер
@@ -133,10 +134,12 @@ class WaterfallDisplay:
         if self.current_row == 0:
             buffer = self.waterfall_buffer.copy()
         else:
-            buffer = np.vstack([
-                self.waterfall_buffer[self.current_row:],
-                self.waterfall_buffer[:self.current_row]
-            ])
+            buffer = np.vstack(
+                [
+                    self.waterfall_buffer[self.current_row :],
+                    self.waterfall_buffer[: self.current_row],
+                ]
+            )
 
         # Конвертируем в RGB
         image = self.colormap[buffer.astype(np.uint8)]
@@ -158,13 +161,14 @@ class WaterfallDisplay:
 
             # Сохраняем как PNG через PIL
             from PIL import Image
-            pil_image = Image.fromarray(image, 'RGB')
+
+            pil_image = Image.fromarray(image, "RGB")
 
             # Добавляем метаданные
             filepath = Path(filepath)
             filepath.parent.mkdir(parents=True, exist_ok=True)
 
-            pil_image.save(str(filepath), 'PNG')
+            pil_image.save(str(filepath), "PNG")
 
             print(f"Waterfall сохранён: {filepath}")
             return True
@@ -257,10 +261,10 @@ class WaterfallRecorder:
             from PIL import Image
 
             # Конвертируем кадры
-            images = [Image.fromarray(frame, 'RGB') for frame in self.frames]
+            images = [Image.fromarray(frame, "RGB") for frame in self.frames]
 
             # Сохраняем
-            timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             output_path = self.output_dir / f"waterfall_{timestamp}.gif"
 
             images[0].save(
@@ -268,7 +272,7 @@ class WaterfallRecorder:
                 save_all=True,
                 append_images=images[1:],
                 duration=100,  # 100ms на кадр = 10 fps
-                loop=0
+                loop=0,
             )
 
             print(f"Waterfall видео сохранено: {output_path}")

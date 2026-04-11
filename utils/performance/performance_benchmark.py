@@ -482,12 +482,16 @@ class PerformanceBenchmarkSuite:
             "aggregated_stats": self._calculate_aggregated_stats(),
             "monitoring_data": {
                 "samples_count": len(self.monitoring_data["timestamps"]),
-                "avg_cpu_percent": statistics.mean(self.monitoring_data["cpu_percent"])
-                if self.monitoring_data["cpu_percent"]
-                else 0,
-                "avg_memory_mb": statistics.mean(self.monitoring_data["memory_mb"])
-                if self.monitoring_data["memory_mb"]
-                else 0,
+                "avg_cpu_percent": (
+                    statistics.mean(self.monitoring_data["cpu_percent"])
+                    if self.monitoring_data["cpu_percent"]
+                    else 0
+                ),
+                "avg_memory_mb": (
+                    statistics.mean(self.monitoring_data["memory_mb"])
+                    if self.monitoring_data["memory_mb"]
+                    else 0
+                ),
             },
         }
 
@@ -542,9 +546,7 @@ class PerformanceBenchmarkSuite:
 
         if output_path is None:
             timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-            output_path = str(
-                self.output_dir / f"benchmark_visualization_{timestamp}.png"
-            )
+            output_path = str(self.output_dir / f"benchmark_visualization_{timestamp}.png")
 
         # Подготовка данных
         df = pd.DataFrame(

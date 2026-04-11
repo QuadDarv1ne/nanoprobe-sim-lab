@@ -1,6 +1,6 @@
 /**
  * PWA Provider компонент
- * 
+ *
  * Обеспечивает:
  * - Регистрацию Service Worker
  * - UI для установки приложения
@@ -43,7 +43,7 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
   const handleInstall = async () => {
     const result = await install();
     setShowInstallPrompt(false);
-    
+
     if (result.outcome === 'accepted') {
       console.log('PWA installed successfully');
     }
@@ -57,7 +57,7 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
-      
+
       {/* Offline Banner */}
       {!isOnline && (
         <Alert variant="destructive" className="fixed bottom-4 left-4 right-4 z-50">
@@ -74,8 +74,8 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
           <RefreshCw className="h-4 w-4 animate-spin" />
           <AlertDescription className="flex items-center justify-between">
             <span>Доступно обновление приложения</span>
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               variant="outline"
               onClick={applyUpdate}
             >
@@ -96,8 +96,8 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
               Установите Nanoprobe Sim Lab для быстрого доступа и офлайн режима
             </p>
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setShowInstallPrompt(false)}
               >
                 Позже

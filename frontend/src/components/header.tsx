@@ -43,9 +43,9 @@ export function Header() {
         </Button>
 
         {/* Notifications */}
-        <Button 
-          variant="outline" 
-          size="icon" 
+        <Button
+          variant="outline"
+          size="icon"
           className="relative"
           aria-label={`Уведомления, ${notificationCount} новых`}
         >
@@ -58,9 +58,9 @@ export function Header() {
         </Button>
 
         {/* Theme Toggle */}
-        <Button 
-          variant="outline" 
-          size="icon" 
+        <Button
+          variant="outline"
+          size="icon"
           onClick={toggleTheme}
           aria-label={theme === "dark" ? "Переключить на светлую тему" : "Переключить на тёмную тему"}
         >

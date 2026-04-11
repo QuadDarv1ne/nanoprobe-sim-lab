@@ -5,11 +5,12 @@ Integration Tests: API + Database
 Тестирование взаимодействия API с базой данных
 """
 
-import sys
 import os
+import sys
 import tempfile
-import pytest
 from pathlib import Path
+
+import pytest
 
 # Добавляем путь к проекту
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -19,6 +20,7 @@ TEST_DB = tempfile.mktemp(suffix=".db")
 os.environ["DATABASE_PATH"] = TEST_DB
 
 from fastapi.testclient import TestClient
+
 from api.main import app
 from api.state import get_db_manager
 
@@ -47,7 +49,9 @@ def scan_id(client):
         "height": 128,
     }
     response = client.post("/api/v1/scans", json=scan_data)
-    assert response.status_code == 201, f"Ошибка создания скана: {response.status_code} - {response.text}"
+    assert (
+        response.status_code == 201
+    ), f"Ошибка создания скана: {response.status_code} - {response.text}"
     data = response.json()
     assert "id" in data, "Ответ не содержит id"
     return data["id"]
@@ -72,6 +76,7 @@ def sim_id(client):
 
 
 # ==================== Tests ====================
+
 
 def test_db_connection():
     """Тест 1: Подключение к базе данных"""
@@ -98,35 +103,35 @@ def test_health_check(client):
 def test_create_scan(client):
     """Тест 3: Создание сканирования через API"""
     print("\n[TEST] Создание сканирования через API...")
-    
+
     scan_data = {
         "scan_type": "spm",
         "surface_type": "test_surface",
         "width": 128,
         "height": 128,
     }
-    
+
     response = client.post("/api/v1/scans", json=scan_data)
     assert response.status_code == 201, f"Ошибка: {response.status_code} - {response.text}"
     data = response.json()
-    
+
     assert "id" in data, "Ответ не содержит id"
     assert data["surface_type"] == "test_surface", "surface_type не совпадает"
-    
+
     print(f"[PASS] Сканирование создано (id={data['id']})")
 
 
 def test_get_scan(client, scan_id):
     """Тест 4: Получение сканирования из БД"""
     print("\n[TEST] Получение сканирования из БД...")
-    
+
     response = client.get(f"/api/v1/scans/{scan_id}")
     assert response.status_code == 200, f"Ошибка: {response.status_code}"
     data = response.json()
-    
+
     assert data["id"] == scan_id, "id не совпадает"
     assert data["surface_type"] == "test_surface", "surface_type не совпадает"
-    
+
     print(f"[PASS] Сканирование получено (id={scan_id})")
 
 
@@ -186,19 +191,19 @@ def test_delete_scan(client, scan_id):
 def test_create_simulation(client):
     """Тест 8: Создание симуляции"""
     print("\n[TEST] Создание симуляции...")
-    
+
     sim_data = {
         "simulation_type": "spm",
         "surface_type": "graphene",
         "parameters": {"resolution": 64},
     }
-    
+
     response = client.post("/api/v1/simulations", json=sim_data)
     assert response.status_code == 201, f"Ошибка: {response.status_code}"
     data = response.json()
-    
+
     assert "id" in data, "Ответ не содержит id"
-    
+
     print(f"[PASS] Симуляция создана (id={data['id']})")
 
 
@@ -219,31 +224,31 @@ def test_simulation_status(client, sim_id):
 def test_dashboard_stats(client):
     """Тест 10: Статистика дашборда"""
     print("\n[TEST] Статистика дашборда...")
-    
+
     response = client.get("/api/v1/dashboard/stats")
     assert response.status_code == 200, f"Ошибка: {response.status_code}"
     data = response.json()
-    
+
     assert isinstance(data, dict), "Ответ не словарь"
     assert "total_scans" in data or "total_simulations" in data, "Ответ не содержит статистику"
-    
+
     print("[PASS] Статистика получена")
 
 
 def test_auth_login(client):
     """Тест 11: Аутентификация (login)"""
     print("\n[TEST] Аутентификация...")
-    
+
     login_data = {
         "username": "admin",
         "password": "Admin123!",
     }
-    
+
     response = client.post("/api/v1/auth/login", json=login_data)
-    
+
     # Может быть 200 (успех) или 401 (нет пользователя)
     assert response.status_code in [200, 401, 404], f"Ошибка: {response.status_code}"
-    
+
     if response.status_code == 200:
         data = response.json()
         assert "access_token" in data, "Ответ не содержит access_token"
@@ -255,35 +260,35 @@ def test_auth_login(client):
 def test_db_transaction_rollback(client):
     """Тест 12: Откат транзакции при ошибке"""
     print("\n[TEST] Откат транзакции...")
-    
+
     # Создаём некорректные данные
     invalid_data = {
         "surface_type": "",
         "resolution": -1,
     }
-    
+
     response = client.post("/api/v1/scans/", json=invalid_data)
-    
+
     # Должна быть ошибка валидации
     assert response.status_code in [400, 422], f"Ожидалась ошибка валидации: {response.status_code}"
-    
+
     print("[PASS] Транзакция откатилась при ошибке валидации")
 
 
 def test_concurrent_requests(client):
     """Тест 13: Параллельные запросы"""
     print("\n[TEST] Параллельные запросы...")
-    
+
     import concurrent.futures
-    
+
     def make_request():
         response = client.get("/api/v1/scans/")
         return response.status_code
-    
+
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         futures = [executor.submit(make_request) for _ in range(5)]
         results = [f.result() for f in futures]
-    
+
     assert all(r == 200 for r in results), "Не все запросы успешны"
-    
+
     print("[PASS] Параллельные запросы обработаны")

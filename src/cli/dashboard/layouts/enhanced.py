@@ -15,17 +15,15 @@ class EnhancedLayout:
 
     def __init__(self):
         self.visible_widgets = [
-            'system_monitor',      # CRITICAL
-            'component_status',    # CRITICAL
-            'log_viewer',          # HIGH
-            'metrics',             # NORMAL
-            'activity',            # NORMAL
+            "system_monitor",  # CRITICAL
+            "component_status",  # CRITICAL
+            "log_viewer",  # HIGH
+            "metrics",  # NORMAL
+            "activity",  # NORMAL
         ]
 
     def get_widgets(self, dashboard):
         """Получить виджеты для раскладки"""
         return [
-            dashboard.widgets[name]
-            for name in self.visible_widgets
-            if name in dashboard.widgets
+            dashboard.widgets[name] for name in self.visible_widgets if name in dashboard.widgets
         ]

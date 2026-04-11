@@ -1,12 +1,13 @@
 """Unit-тесты для модуля управления данными."""
 
-import unittest
-import tempfile
-import shutil
 import json
-import numpy as np
+import shutil
 import sys
+import tempfile
+import unittest
 from pathlib import Path
+
+import numpy as np
 
 # Добавляем путь к модулям
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -23,8 +24,7 @@ class TestDataManager(unittest.TestCase):
         self.data_dir = Path(self.temp_dir) / "data"
         self.output_dir = Path(self.temp_dir) / "output"
         self.data_manager = DataManager(
-            data_dir=str(self.data_dir),
-            output_dir=str(self.output_dir)
+            data_dir=str(self.data_dir), output_dir=str(self.output_dir)
         )
 
     def tearDown(self):
@@ -68,16 +68,10 @@ class TestDataManager(unittest.TestCase):
 
     def test_save_and_load_image_analysis_results(self):
         """Тестирует сохранение и загрузку результатов анализа изображений"""
-        test_results = {
-            "roughness": 0.5,
-            "defects": 3,
-            "quality": 0.95
-        }
+        test_results = {"roughness": 0.5, "defects": 3, "quality": 0.95}
 
         # Сохраняем
-        success = self.data_manager.save_image_analysis_results(
-            test_results, "analysis.json"
-        )
+        success = self.data_manager.save_image_analysis_results(test_results, "analysis.json")
         self.assertTrue(success)
 
         # Загружаем
@@ -89,10 +83,7 @@ class TestDataManager(unittest.TestCase):
 
     def test_save_simulation_metadata(self):
         """Тестирует сохранение метаданных симуляции"""
-        metadata = {
-            "duration": 3600,
-            "parameters": {"temp": 25, "pressure": 101325}
-        }
+        metadata = {"duration": 3600, "parameters": {"temp": 25, "pressure": 101325}}
 
         success = self.data_manager.save_simulation_metadata(metadata)
         self.assertTrue(success)
@@ -101,7 +92,7 @@ class TestDataManager(unittest.TestCase):
         metadata_file = self.output_dir / "simulation_metadata.json"
         self.assertTrue(metadata_file.exists())
 
-        with open(metadata_file, 'r', encoding='utf-8') as f:
+        with open(metadata_file, "r", encoding="utf-8") as f:
             saved_data = json.load(f)
 
         self.assertIn("timestamp", saved_data)
@@ -127,10 +118,7 @@ class TestDataManager(unittest.TestCase):
         """Тестирует экспорт из DataFrame в CSV"""
         import pandas as pd
 
-        test_df = pd.DataFrame({
-            "col1": [1, 2, 3],
-            "col2": [4, 5, 6]
-        })
+        test_df = pd.DataFrame({"col1": [1, 2, 3], "col2": [4, 5, 6]})
 
         success = self.data_manager.export_to_csv(test_df, "dataframe.csv")
         self.assertTrue(success)
@@ -160,8 +148,8 @@ class TestDataManager(unittest.TestCase):
 
     def test_cleanup_old_files(self):
         """Тестирует удаление старых файлов"""
-        import time
         import os
+        import time
 
         # Создаём старый файл
         old_file = self.output_dir / "old_file.txt"
@@ -230,5 +218,5 @@ class TestDataManagerEdgeCases(unittest.TestCase):
         self.assertFalse(success)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

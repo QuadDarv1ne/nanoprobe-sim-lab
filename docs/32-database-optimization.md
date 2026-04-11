@@ -15,11 +15,11 @@ SELECT * FROM scans WHERE user_id = 123 AND created_at > '2024-01-01';
 
 -- Подробный анализ с затратами
 EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)
-SELECT s.*, u.username 
-FROM scans s 
-JOIN users u ON s.user_id = u.id 
-WHERE s.status = 'completed' 
-ORDER BY s.created_at DESC 
+SELECT s.*, u.username
+FROM scans s
+JOIN users u ON s.user_id = u.id
+WHERE s.status = 'completed'
+ORDER BY s.created_at DESC
 LIMIT 50;
 ```
 
@@ -46,19 +46,19 @@ logger = logging.getLogger(__name__)
 
 class QueryAnalyzer:
     """Анализатор SQL запросов с рекомендациями"""
-    
+
     def __init__(self, connection: asyncpg.Connection):
         self.conn = connection
-    
+
     async def analyze_query(self, query: str) -> Dict[str, Any]:
         """Проанализировать запрос и вернуть рекомендации"""
-        
+
         # Получаем план выполнения
         explain_query = f"EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) {query}"
         result = await self.conn.fetchval(explain_query)
-        
+
         plan = json.loads(result)[0]
-        
+
         analysis = {
             "plan": plan,
             "execution_time_ms": plan.get("Execution Time", 0),
@@ -67,17 +67,17 @@ class QueryAnalyzer:
             "issues": [],
             "recommendations": []
         }
-        
+
         # Анализ плана
         self._analyze_plan_node(plan.get("Plan", {}), analysis)
-        
+
         return analysis
-    
+
     def _analyze_plan_node(self, node: Dict, analysis: Dict):
         """Рекурсивный анализ узла плана"""
-        
+
         node_type = node.get("Node Type", "")
-        
+
         # Проверка Seq Scan
         if node_type == "Seq Scan":
             table = node.get("Relation Name", "unknown")
@@ -92,11 +92,11 @@ class QueryAnalyzer:
                 "table": table,
                 "suggestion": f"Consider adding an index on frequently filtered columns in '{table}'"
             })
-        
+
         # Проверка большого количества строк
         actual_rows = node.get("Actual Rows", 0)
         plan_rows = node.get("Plan Rows", 0)
-        
+
         if actual_rows > 10000:
             analysis["issues"].append({
                 "type": "large_result",
@@ -104,7 +104,7 @@ class QueryAnalyzer:
                 "severity": "medium",
                 "message": f"Large result set: {actual_rows} rows"
             })
-        
+
         # Проверка hash join с большим количеством строк
         if node_type in ["Hash Join", "Hash Aggregate"]:
             if actual_rows > 100000:
@@ -112,19 +112,19 @@ class QueryAnalyzer:
                     "action": "optimize_join",
                     "suggestion": "Consider adding indexes or restructuring the query"
                 })
-        
+
         # Рекурсивный анализ дочерних узлов
         for key in ["Plans", "plan"]:
             if key in node:
                 for child in node[key]:
                     self._analyze_plan_node(child, analysis)
-    
+
     async def analyze_slow_queries(self, limit: int = 10) -> List[Dict]:
         """Получить самые медленные запросы из pg_stat_statements"""
-        
+
         try:
             queries = await self.conn.fetch("""
-                SELECT 
+                SELECT
                     query,
                     calls,
                     total_exec_time / 1000 as total_time_sec,
@@ -135,17 +135,17 @@ class QueryAnalyzer:
                 ORDER BY total_exec_time DESC
                 LIMIT $1
             """, limit)
-            
+
             return [dict(q) for q in queries]
         except Exception as e:
             logger.error(f"Error analyzing slow queries: {e}")
             return []
-    
+
     async def get_table_stats(self) -> List[Dict]:
         """Получить статистику по таблицам"""
-        
+
         stats = await self.conn.fetch("""
-            SELECT 
+            SELECT
                 schemaname,
                 tablename,
                 n_live_tup as row_count,
@@ -157,12 +157,12 @@ class QueryAnalyzer:
             FROM pg_stat_user_tables
             ORDER BY n_live_tup DESC
         """)
-        
+
         return [dict(s) for s in stats]
-    
+
     async def get_index_usage(self) -> List[Dict]:
         """Получить статистику использования индексов"""
-        
+
         stats = await self.conn.fetch("""
             SELECT
                 schemaname,
@@ -175,12 +175,12 @@ class QueryAnalyzer:
             FROM pg_stat_user_indexes
             ORDER BY idx_scan DESC
         """)
-        
+
         return [dict(s) for s in stats]
-    
+
     async def find_unused_indexes(self) -> List[Dict]:
         """Найти неиспользуемые индексы"""
-        
+
         indexes = await self.conn.fetch("""
             SELECT
                 schemaname,
@@ -192,7 +192,7 @@ class QueryAnalyzer:
             AND indexname NOT LIKE '%_pkey'
             ORDER BY pg_relation_size(indexrelid) DESC
         """)
-        
+
         return [dict(i) for i in indexes]
 
 
@@ -200,12 +200,12 @@ class QueryAnalyzer:
 async def main():
     conn = await asyncpg.connect("postgresql://user:pass@localhost/db")
     analyzer = QueryAnalyzer(conn)
-    
+
     # Analyze a query
     analysis = await analyzer.analyze_query("""
         SELECT * FROM scans WHERE user_id = 123
     """)
-    
+
     print(f"Execution time: {analysis['execution_time_ms']:.2f}ms")
     print(f"Issues: {len(analysis['issues'])}")
     for issue in analysis["issues"]:
@@ -223,59 +223,59 @@ async def main():
 
 -- Scans table
 -- Частые запросы: user_id + status, user_id + created_at
-CREATE INDEX CONCURRENTLY idx_scans_user_status 
-    ON scans(user_id, status) 
+CREATE INDEX CONCURRENTLY idx_scans_user_status
+    ON scans(user_id, status)
     WHERE deleted_at IS NULL;
 
-CREATE INDEX CONCURRENTLY idx_scans_user_created 
-    ON scans(user_id, created_at DESC) 
+CREATE INDEX CONCURRENTLY idx_scans_user_created
+    ON scans(user_id, created_at DESC)
     WHERE deleted_at IS NULL;
 
-CREATE INDEX CONCURRENTLY idx_scans_status_created 
+CREATE INDEX CONCURRENTLY idx_scans_status_created
     ON scans(status, created_at DESC);
 
 -- Simulations table
-CREATE INDEX CONCURRENTLY idx_simulations_user_type_status 
+CREATE INDEX CONCURRENTLY idx_simulations_user_type_status
     ON simulations(user_id, simulation_type, status);
 
-CREATE INDEX CONCURRENTLY idx_simulations_active 
-    ON simulations(started_at) 
+CREATE INDEX CONCURRENTLY idx_simulations_active
+    ON simulations(started_at)
     WHERE status = 'running';
 
 -- Analysis results
-CREATE INDEX CONCURRENTLY idx_analysis_scan_defects 
+CREATE INDEX CONCURRENTLY idx_analysis_scan_defects
     ON analysis_results(scan_id, defect_count DESC);
 
-CREATE INDEX CONCURRENTLY idx_analysis_type_created 
+CREATE INDEX CONCURRENTLY idx_analysis_type_created
     ON analysis_results(analysis_type, created_at DESC);
 
 -- Users table
-CREATE INDEX CONCURRENTLY idx_users_email_active 
-    ON users(email) 
+CREATE INDEX CONCURRENTLY idx_users_email_active
+    ON users(email)
     WHERE is_active = TRUE;
 
-CREATE INDEX CONCURRENTLY idx_users_created 
+CREATE INDEX CONCURRENTLY idx_users_created
     ON users(created_at DESC);
 
 -- Audit log
-CREATE INDEX CONCURRENTLY idx_audit_user_action_time 
+CREATE INDEX CONCURRENTLY idx_audit_user_action_time
     ON audit_log(user_id, action, created_at DESC);
 
-CREATE INDEX CONCURRENTLY idx_audit_entity 
+CREATE INDEX CONCURRENTLY idx_audit_entity
     ON audit_log(entity_type, entity_id);
 
 -- Sessions (for JWT)
-CREATE INDEX CONCURRENTLY idx_sessions_user_valid 
-    ON sessions(user_id, expires_at) 
+CREATE INDEX CONCURRENTLY idx_sessions_user_valid
+    ON sessions(user_id, expires_at)
     WHERE revoked = FALSE;
 
 -- Partial indexes для конкретных сценариев
-CREATE INDEX CONCURRENTLY idx_scans_completed 
-    ON scans(completed_at DESC) 
+CREATE INDEX CONCURRENTLY idx_scans_completed
+    ON scans(completed_at DESC)
     WHERE status = 'completed';
 
-CREATE INDEX CONCURRENTLY idx_scans_failed 
-    ON scans(created_at DESC) 
+CREATE INDEX CONCURRENTLY idx_scans_failed
+    ON scans(created_at DESC)
     WHERE status = 'failed';
 ```
 
@@ -285,7 +285,7 @@ CREATE INDEX CONCURRENTLY idx_scans_failed
    ```sql
    -- ПРАВИЛЬНО: WHERE user_id = ? AND status = ?
    CREATE INDEX idx_good ON scans(user_id, status);
-   
+
    -- НЕПРАВИЛЬНО: WHERE status = ? (user_id не указан)
    -- Индекс не будет использован!
    ```
@@ -295,7 +295,7 @@ CREATE INDEX CONCURRENTLY idx_scans_failed
    -- ПРАВИЛЬНО: equality + range
    CREATE INDEX idx_good ON scans(user_id, created_at DESC);
    -- WHERE user_id = ? AND created_at > ?
-   
+
    -- МЕНЕЕ ЭФФЕКТИВНО: range + equality
    CREATE INDEX idx_bad ON scans(created_at DESC, user_id);
    ```
@@ -303,10 +303,10 @@ CREATE INDEX CONCURRENTLY idx_scans_failed
 3. **Include колонки для Index-Only Scan**
    ```sql
    -- Index-only scan без обращения к таблице
-   CREATE INDEX idx_scans_user_status_include 
-       ON scans(user_id, status) 
+   CREATE INDEX idx_scans_user_status_include
+       ON scans(user_id, status)
        INCLUDE (scan_type, file_path);
-   
+
    -- SELECT scan_type, file_path FROM scans WHERE user_id = ?
    -- Вернёт данные только из индекса!
    ```
@@ -330,14 +330,14 @@ logger = logging.getLogger(__name__)
 class QueryCache:
     """
     Кэш для результатов SQL запросов.
-    
+
     Features:
     - Automatic key generation
     - TTL management
     - Cache invalidation patterns
     - Compression for large results
     """
-    
+
     def __init__(
         self,
         redis_client,
@@ -349,24 +349,24 @@ class QueryCache:
         self.prefix = prefix
         self.default_ttl = default_ttl
         self.compress_threshold = compress_threshold
-    
+
     def _generate_key(self, query: str, params: tuple = ()) -> str:
         """Генерация ключа кэша"""
         content = f"{query}:{json.dumps(params, default=str)}"
         hash_key = hashlib.sha256(content.encode()).hexdigest()[:16]
         return f"{self.prefix}{hash_key}"
-    
+
     async def get(self, query: str, params: tuple = ()) -> Optional[Any]:
         """Получить результат из кэша"""
         key = self._generate_key(query, params)
-        
+
         cached = await self.redis.get(key)
         if cached:
             logger.debug(f"Cache hit for query: {query[:50]}...")
             return json.loads(cached)
-        
+
         return None
-    
+
     async def set(
         self,
         query: str,
@@ -376,10 +376,10 @@ class QueryCache:
     ):
         """Сохранить результат в кэш"""
         key = self._generate_key(query, params)
-        
+
         # Serialize result
         serialized = json.dumps(result, default=str)
-        
+
         # Compress if large
         if len(serialized) > self.compress_threshold:
             import gzip
@@ -395,16 +395,16 @@ class QueryCache:
                 serialized,
                 ex=ttl or self.default_ttl
             )
-        
+
         logger.debug(f"Cached query result: {query[:50]}...")
-    
+
     async def invalidate_pattern(self, pattern: str):
         """Инвалидация кэша по паттерну"""
         keys = await self.redis.keys(f"{self.prefix}*{pattern}*")
         if keys:
             await self.redis.delete(*keys)
             logger.info(f"Invalidated {len(keys)} cache entries")
-    
+
     async def invalidate_table(self, table: str):
         """Инвалидация кэша для таблицы"""
         await self.invalidate_pattern(table)
@@ -417,7 +417,7 @@ def cached_query(
 ):
     """
     Декоратор для кэширования результатов запросов.
-    
+
     Usage:
         @cached_query(ttl=60, invalidate_on=["scans"])
         async def get_user_scans(user_id: int):
@@ -430,21 +430,21 @@ def cached_query(
             from utils.redis_client import get_redis
             redis = await get_redis()
             cache = QueryCache(redis)
-            
+
             # Generate cache key
             if key_pattern:
                 key = key_pattern.format(*args, **kwargs)
             else:
                 key = f"{func.__name__}:{args}:{kwargs}"
-            
+
             # Try cache first
             cached = await cache.redis.get(f"{cache.prefix}{key}")
             if cached:
                 return json.loads(cached)
-            
+
             # Execute function
             result = await func(*args, **kwargs)
-            
+
             # Cache result
             serialized = json.dumps(result, default=str)
             await cache.redis.set(
@@ -452,37 +452,37 @@ def cached_query(
                 serialized,
                 ex=ttl
             )
-            
+
             return result
-        
+
         # Add invalidation method
         async def invalidate(*args, **kwargs):
             from utils.redis_client import get_redis
             redis = await get_redis()
             cache = QueryCache(redis)
-            
+
             if key_pattern:
                 key = key_pattern.format(*args, **kwargs)
             else:
                 key = f"{func.__name__}:{args}:{kwargs}"
-            
+
             await cache.redis.delete(f"{cache.prefix}{key}")
-        
+
         wrapper.invalidate = invalidate
-        
+
         return wrapper
-    
+
     return decorator
 
 
 # Repository with caching
 class CachedRepository:
     """Базовый класс для репозиториев с кэшированием"""
-    
+
     def __init__(self, db, cache: QueryCache):
         self.db = db
         self.cache = cache
-    
+
     async def _fetch_cached(
         self,
         query: str,
@@ -490,21 +490,21 @@ class CachedRepository:
         ttl: int = 300
     ) -> List[dict]:
         """Выполнить запрос с кэшированием"""
-        
+
         # Check cache
         cached = await self.cache.get(query, params)
         if cached is not None:
             return cached
-        
+
         # Execute query
         result = await self.db.fetch(query, *params)
         result_list = [dict(r) for r in result]
-        
+
         # Cache result
         await self.cache.set(query, params, result_list, ttl)
-        
+
         return result_list
-    
+
     async def _execute_and_invalidate(
         self,
         query: str,
@@ -512,14 +512,14 @@ class CachedRepository:
         tables: List[str] = None
     ):
         """Выполнить запрос и инвалидировать кэш"""
-        
+
         result = await self.db.execute(query, *params)
-        
+
         # Invalidate related tables
         if tables:
             for table in tables:
                 await self.cache.invalidate_table(table)
-        
+
         return result
 ```
 
@@ -531,7 +531,7 @@ from utils.database.query_cache import CachedRepository, cached_query
 
 class ScanRepository(CachedRepository):
     """Репозиторий для работы со сканированиями"""
-    
+
     @cached_query(ttl=60, key_pattern="user_scans:{0}")
     async def get_user_scans(self, user_id: int, limit: int = 50) -> List[dict]:
         """Получить сканирования пользователя (кэшируется)"""
@@ -546,7 +546,7 @@ class ScanRepository(CachedRepository):
             (user_id, limit),
             ttl=60
         )
-    
+
     async def create_scan(self, user_id: int, scan_type: str, **kwargs) -> dict:
         """Создать новое сканирование"""
         result = await self._execute_and_invalidate(
@@ -559,7 +559,7 @@ class ScanRepository(CachedRepository):
             tables=["scans"]
         )
         return dict(result)
-    
+
     async def update_scan_status(self, scan_id: int, status: str) -> dict:
         """Обновить статус сканирования"""
         result = await self._execute_and_invalidate(
@@ -588,15 +588,15 @@ logger = logging.getLogger(__name__)
 
 class DatabasePool:
     """Управление пулом соединений PostgreSQL"""
-    
+
     _instance: Optional['DatabasePool'] = None
     _pool: Optional[asyncpg.Pool] = None
-    
+
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
-    
+
     async def initialize(
         self,
         dsn: str,
@@ -608,7 +608,7 @@ class DatabasePool:
         """Инициализация пула соединений"""
         if self._pool is not None:
             return
-        
+
         self._pool = await asyncpg.create_pool(
             dsn,
             min_size=min_size,
@@ -618,25 +618,25 @@ class DatabasePool:
             command_timeout=60.0,
             statement_cache_size=100,
         )
-        
+
         logger.info(f"Database pool initialized: {min_size}-{max_size} connections")
-    
+
     @asynccontextmanager
     async def connection(self):
         """Получить соединение из пула"""
         if self._pool is None:
             raise RuntimeError("Pool not initialized")
-        
+
         async with self._pool.acquire() as conn:
             yield conn
-    
+
     @asynccontextmanager
     async def transaction(self):
         """Выполнить операции в транзакции"""
         async with self.connection() as conn:
             async with conn.transaction():
                 yield conn
-    
+
     async def close(self):
         """Закрыть пул соединений"""
         if self._pool:
@@ -662,19 +662,19 @@ async def get_db():
 -- Monitoring queries
 
 -- Текущие активные запросы
-SELECT 
+SELECT
     pid,
     now() - pg_stat_activity.query_start AS duration,
     query,
     state,
     usename
-FROM pg_stat_activity 
+FROM pg_stat_activity
 WHERE (now() - pg_stat_activity.query_start) > interval '5 seconds'
 AND state != 'idle'
 ORDER BY duration DESC;
 
 -- Размеры таблиц
-SELECT 
+SELECT
     tablename,
     pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) AS size,
     n_live_tup as rows
@@ -683,7 +683,7 @@ ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC
 LIMIT 10;
 
 -- Проблемы с индексами
-SELECT 
+SELECT
     tablename,
     indexname,
     idx_scan as scans,

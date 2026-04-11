@@ -214,7 +214,7 @@ read -p "Настроить SSL сертификат? (y/n): " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     DOMAIN=$(read -p "Введите домен: " DOMAIN)
-    
+
     ssh $USER@$SERVER_IP "
         apt install -y certbot python3-certbot-nginx
         certbot --nginx -d $DOMAIN --non-interactive --agree-tos --email admin@example.com

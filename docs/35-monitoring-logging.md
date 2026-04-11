@@ -202,7 +202,7 @@ def track_nasa_api(endpoint: str):
 # ==========================================
 def setup_metrics(app):
     """Setup Prometheus metrics for FastAPI"""
-    
+
     instrumentator = Instrumentator(
         should_group_status_codes=True,
         should_ignore_untemplated=True,
@@ -213,9 +213,9 @@ def setup_metrics(app):
         inprogress_name="http_requests_inprogress",
         inprogress_labels=True,
     )
-    
+
     instrumentator.instrument(app).expose(app, endpoint="/metrics")
-    
+
     return instrumentator
 ```
 
@@ -253,14 +253,14 @@ class LogContext(BaseModel):
 
 class JSONFormatter(logging.Formatter):
     """Custom JSON formatter for structured logging"""
-    
+
     def __init__(self, include_extra: bool = True):
         super().__init__()
         self.include_extra = include_extra
-    
+
     def format(self, record: logging.LogRecord) -> str:
         """Format log record as JSON"""
-        
+
         # Base log entry
         log_entry = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -271,7 +271,7 @@ class JSONFormatter(logging.Formatter):
             "function": record.funcName,
             "line": record.lineno,
         }
-        
+
         # Add exception info if present
         if record.exc_info:
             log_entry["exception"] = {
@@ -279,7 +279,7 @@ class JSONFormatter(logging.Formatter):
                 "message": str(record.exc_info[1]) if record.exc_info[1] else None,
                 "traceback": traceback.format_exception(*record.exc_info)
             }
-        
+
         # Add extra fields
         if self.include_extra:
             extra_fields = {}
@@ -295,28 +295,28 @@ class JSONFormatter(logging.Formatter):
                         extra_fields[key] = value
                     except (TypeError, ValueError):
                         extra_fields[key] = str(value)
-            
+
             if extra_fields:
                 log_entry["extra"] = extra_fields
-        
+
         return json.dumps(log_entry)
 
 
 class ContextFilter(logging.Filter):
     """Add context to log records"""
-    
+
     def __init__(self):
         super().__init__()
         self._context: Dict[str, Any] = {}
-    
+
     def set_context(self, **kwargs):
         """Set context values"""
         self._context.update(kwargs)
-    
+
     def clear_context(self):
         """Clear context"""
         self._context.clear()
-    
+
     def filter(self, record: logging.LogRecord) -> bool:
         """Add context to record"""
         for key, value in self._context.items():
@@ -334,18 +334,18 @@ def setup_logging(
     include_context: bool = True
 ) -> None:
     """Setup structured logging"""
-    
+
     # Get root logger
     root_logger = logging.getLogger()
     root_logger.setLevel(getattr(logging, level.upper()))
-    
+
     # Remove existing handlers
     for handler in root_logger.handlers[:]:
         root_logger.removeHandler(handler)
-    
+
     # Create console handler
     console_handler = logging.StreamHandler(sys.stdout)
-    
+
     if json_output:
         console_handler.setFormatter(JSONFormatter())
     else:
@@ -354,13 +354,13 @@ def setup_logging(
                 '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
             )
         )
-    
+
     # Add context filter if needed
     if include_context:
         console_handler.addFilter(context_filter)
-    
+
     root_logger.addHandler(console_handler)
-    
+
     # Suppress noisy libraries
     logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
     logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -369,7 +369,7 @@ def setup_logging(
 # Context manager for request logging
 class RequestLoggingContext:
     """Context manager for request logging"""
-    
+
     def __init__(
         self,
         request_id: str,
@@ -383,7 +383,7 @@ class RequestLoggingContext:
         self.ip_address = ip_address
         self.endpoint = endpoint
         self.method = method
-    
+
     def __enter__(self):
         context_filter.set_context(
             request_id=self.request_id,
@@ -393,7 +393,7 @@ class RequestLoggingContext:
             method=self.method
         )
         return self
-    
+
     def __exit__(self, *args):
         context_filter.clear_context()
 ```
@@ -448,13 +448,13 @@ _startup_time = datetime.now()
 async def check_database(pool: asyncpg.Pool) -> ComponentHealth:
     """Check database health"""
     start = datetime.now()
-    
+
     try:
         async with pool.acquire() as conn:
             result = await conn.fetchval("SELECT 1")
-            
+
         latency = (datetime.now() - start).total_seconds() * 1000
-        
+
         return ComponentHealth(
             name="database",
             status="healthy" if latency < 100 else "degraded",
@@ -472,13 +472,13 @@ async def check_database(pool: asyncpg.Pool) -> ComponentHealth:
 async def check_redis(redis_client: redis.Redis) -> ComponentHealth:
     """Check Redis health"""
     start = datetime.now()
-    
+
     try:
         await redis_client.ping()
         latency = (datetime.now() - start).total_seconds() * 1000
-        
+
         info = await redis_client.info()
-        
+
         return ComponentHealth(
             name="redis",
             status="healthy" if latency < 50 else "degraded",
@@ -499,7 +499,7 @@ async def check_redis(redis_client: redis.Redis) -> ComponentHealth:
 async def check_nasa_api() -> ComponentHealth:
     """Check NASA API connectivity"""
     start = datetime.now()
-    
+
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(
@@ -507,7 +507,7 @@ async def check_nasa_api() -> ComponentHealth:
                 timeout=aiohttp.ClientTimeout(total=5)
             ) as resp:
                 latency = (datetime.now() - start).total_seconds() * 1000
-                
+
                 return ComponentHealth(
                     name="nasa_api",
                     status="healthy" if resp.status == 200 else "degraded",
@@ -531,23 +531,23 @@ async def health_basic():
 @router.get("/health/ready")
 async def health_ready(response: Response):
     """Readiness check (all critical dependencies)"""
-    
+
     from api.dependencies import get_db_pool, get_redis
-    
+
     db_pool = await get_db_pool()
     redis_client = await get_redis()
-    
+
     db_health = await check_database(db_pool)
     redis_health = await check_redis(redis_client)
-    
+
     is_ready = (
         db_health.status == "healthy" and
         redis_health.status == "healthy"
     )
-    
+
     if not is_ready:
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
-    
+
     return {
         "ready": is_ready,
         "checks": {
@@ -560,20 +560,20 @@ async def health_ready(response: Response):
 @router.get("/health/detailed", response_model=HealthResponse)
 async def health_detailed(response: Response):
     """Detailed health check with all components"""
-    
+
     from api.dependencies import get_db_pool, get_redis
-    
+
     # Run all checks in parallel
     db_pool = await get_db_pool()
     redis_client = await get_redis()
-    
+
     results = await asyncio.gather(
         check_database(db_pool),
         check_redis(redis_client),
         check_nasa_api(),
         return_exceptions=True
     )
-    
+
     components = [
         r if isinstance(r, ComponentHealth) else ComponentHealth(
             name="unknown",
@@ -582,10 +582,10 @@ async def health_detailed(response: Response):
         )
         for r in results
     ]
-    
+
     # Determine overall status
     statuses = [c.status for c in components]
-    
+
     if "unhealthy" in statuses:
         overall_status = "unhealthy"
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
@@ -593,7 +593,7 @@ async def health_detailed(response: Response):
         overall_status = "degraded"
     else:
         overall_status = "healthy"
-    
+
     return HealthResponse(
         status=overall_status,
         timestamp=datetime.now(),
@@ -665,7 +665,7 @@ groups:
       # High error rate
       - alert: HighErrorRate
         expr: |
-          sum(rate(http_requests_total{status=~"5.."}[5m])) 
+          sum(rate(http_requests_total{status=~"5.."}[5m]))
           / sum(rate(http_requests_total[5m])) > 0.05
         for: 5m
         labels:

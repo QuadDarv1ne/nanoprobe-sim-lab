@@ -1,6 +1,6 @@
 #!/bin/bash
 # Nanoprobe Sim Lab - Production Deployment Script
-# 
+#
 # Usage:
 #   ./deploy.sh [up|down|restart|logs|status]
 
@@ -53,31 +53,31 @@ check_docker() {
 
 deploy() {
     log_info "Starting deployment..."
-    
+
     # Check prerequisites
     check_docker
     check_env
-    
+
     # Pull latest images
     log_info "Pulling latest images..."
     docker-compose -f $COMPOSE_FILE -p $PROJECT_NAME pull
-    
+
     # Run migrations
     log_info "Running database migrations..."
     # docker-compose -f $COMPOSE_FILE -p $PROJECT_NAME run --rm migration
-    
+
     # Start services
     log_info "Starting services..."
     docker-compose -f $COMPOSE_FILE -p $PROJECT_NAME up -d
-    
+
     # Wait for services to be healthy
     log_info "Waiting for services to be healthy..."
     sleep 10
-    
+
     # Check health
     log_info "Checking service health..."
     docker-compose -f $COMPOSE_FILE -p $PROJECT_NAME ps
-    
+
     log_info "Deployment completed successfully!"
 }
 

@@ -3,21 +3,16 @@ API роуты для управления сканированиями
 CRUD операции для результатов сканирований
 """
 
-from fastapi import APIRouter, Depends, Query, status
 from typing import Optional
 
-from api.schemas import (
-    ScanCreate,
-    ScanResponse,
-    ScanListResponse,
-    ErrorResponse,
-)
+from fastapi import APIRouter, Depends, Query, status
+
 from api.dependencies import get_db, get_redis_cache
-from api.error_handlers import NotFoundError, DatabaseError
+from api.error_handlers import DatabaseError, NotFoundError
+from api.schemas import ErrorResponse, ScanCreate, ScanListResponse, ScanResponse
 from api.state import get_redis
 from utils.caching.redis_cache import RedisCache
 from utils.database import DatabaseManager
-
 
 router = APIRouter()
 

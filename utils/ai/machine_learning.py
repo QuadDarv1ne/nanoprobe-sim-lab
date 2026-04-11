@@ -1,14 +1,15 @@
 """Модуль машинного обучения для проекта Лаборатория моделирования нанозонда."""
 
-import numpy as np
 import logging
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
-from sklearn.metrics import mean_squared_error, r2_score, accuracy_score, classification_report
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-import joblib
-from typing import Dict, Any
 from pathlib import Path
+from typing import Any, Dict
+
+import joblib
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.metrics import accuracy_score, classification_report, mean_squared_error, r2_score
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 logger = logging.getLogger(__name__)
 

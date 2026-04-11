@@ -1,16 +1,18 @@
 """Тесты для AI/ML анализатора дефектов."""
 
-import unittest
-import tempfile
 import shutil
-import numpy as np
-from pathlib import Path
 import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 try:
     from PIL import Image
+
     PIL_AVAILABLE = True
 except ImportError:
     PIL_AVAILABLE = False
@@ -27,23 +29,23 @@ class TestDefectDetector(unittest.TestCase):
 
     def test_isolation_forest_detector(self):
         """Тест детектора Isolation Forest"""
-        detector = DefectDetector('isolation_forest')
+        detector = DefectDetector("isolation_forest")
         result = detector.detect_defects(self.test_image)
 
-        self.assertIn('defects', result)
-        self.assertIn('defects_count', result)
+        self.assertIn("defects", result)
+        self.assertIn("defects_count", result)
 
     def test_kmeans_detector(self):
         """Тест детектора K-Means"""
-        detector = DefectDetector('kmeans')
+        detector = DefectDetector("kmeans")
         result = detector.detect_defects(self.test_image)
 
-        self.assertIn('defects', result)
+        self.assertIn("defects", result)
 
     def test_invalid_model(self):
         """Тест неверной модели"""
         with self.assertRaises(ValueError):
-            DefectDetector('invalid_model')
+            DefectDetector("invalid_model")
 
 
 class TestAdvancedDefectAnalyzer(unittest.TestCase):
@@ -64,29 +66,29 @@ class TestAdvancedDefectAnalyzer(unittest.TestCase):
         """Тест ансамблевого детектирования"""
         result = self.analyzer.ensemble_detect(self.test_image)
 
-        self.assertIn('defects', result)
-        self.assertIn('defects_count', result)
-        self.assertIn('if_defects_count', result)
-        self.assertIn('km_defects_count', result)
-        self.assertTrue(result['ensemble'])
+        self.assertIn("defects", result)
+        self.assertIn("defects_count", result)
+        self.assertIn("if_defects_count", result)
+        self.assertIn("km_defects_count", result)
+        self.assertTrue(result["ensemble"])
 
     def test_analyze_with_stats(self):
         """Тест анализа со статистикой"""
         result = self.analyzer.analyze_with_stats(self.test_image)
 
-        self.assertIn('statistics', result)
-        stats = result['statistics']
+        self.assertIn("statistics", result)
+        stats = result["statistics"]
 
-        self.assertIn('total_area', stats)
-        self.assertIn('defect_density', stats)
-        self.assertIn('severity', stats)
-        self.assertIn('defect_types', stats)
+        self.assertIn("total_area", stats)
+        self.assertIn("defect_density", stats)
+        self.assertIn("severity", stats)
+        self.assertIn("defect_types", stats)
 
     def test_generate_defect_map(self):
         """Тест генерации карты дефектов"""
         defects = [
-            {'x': 50, 'y': 50, 'width': 20, 'height': 20},
-            {'x': 100, 'y': 100, 'width': 15, 'height': 15},
+            {"x": 50, "y": 50, "width": 20, "height": 20},
+            {"x": 100, "y": 100, "width": 15, "height": 15},
         ]
 
         defect_map = self.analyzer.generate_defect_map(self.test_image, defects)
@@ -104,25 +106,25 @@ class TestAdvancedDefectAnalyzer(unittest.TestCase):
     def test_generate_recommendations_high_severity(self):
         """Тест рекомендаций - высокая серьёзность"""
         result = {
-            'statistics': {
-                'severity': 'high',
-                'defect_density': 6.0,
-                'defect_types': {'scratch': 3, 'crack': 1},
+            "statistics": {
+                "severity": "high",
+                "defect_density": 6.0,
+                "defect_types": {"scratch": 3, "crack": 1},
             }
         }
 
         recommendations = self.analyzer._generate_recommendations(result)
 
         self.assertGreater(len(recommendations), 0)
-        self.assertTrue(any('критический' in r.lower() for r in recommendations))
+        self.assertTrue(any("критический" in r.lower() for r in recommendations))
 
     def test_generate_recommendations_low_severity(self):
         """Тест рекомендаций - низкая серьёзность"""
         result = {
-            'statistics': {
-                'severity': 'low',
-                'defect_density': 0.5,
-                'defect_types': {},
+            "statistics": {
+                "severity": "low",
+                "defect_density": 0.5,
+                "defect_types": {},
             }
         }
 
@@ -132,20 +134,24 @@ class TestAdvancedDefectAnalyzer(unittest.TestCase):
 
     def test_combine_detections_overlapping(self):
         """Тест объединения перекрывающихся детектирований"""
-        defects1 = [{'x': 50, 'y': 50, 'width': 20, 'height': 20, 'confidence': 0.9, 'type': 'pit'}]
-        defects2 = [{'x': 55, 'y': 55, 'width': 18, 'height': 18, 'confidence': 0.85, 'type': 'pit'}]
+        defects1 = [{"x": 50, "y": 50, "width": 20, "height": 20, "confidence": 0.9, "type": "pit"}]
+        defects2 = [
+            {"x": 55, "y": 55, "width": 18, "height": 18, "confidence": 0.85, "type": "pit"}
+        ]
 
         combined = self.analyzer._combine_detections(defects1, defects2)
 
         # Должно быть одно объединённое детектирование
         self.assertEqual(len(combined), 1)
-        self.assertAlmostEqual(combined[0]['x'], 52.5, places=1)
-        self.assertAlmostEqual(combined[0]['y'], 52.5, places=1)
+        self.assertAlmostEqual(combined[0]["x"], 52.5, places=1)
+        self.assertAlmostEqual(combined[0]["y"], 52.5, places=1)
 
     def test_combine_detections_non_overlapping(self):
         """Тест объединения неперекрывающихся детектирований"""
-        defects1 = [{'x': 20, 'y': 20, 'width': 10, 'height': 10, 'confidence': 0.9, 'type': 'pit'}]
-        defects2 = [{'x': 100, 'y': 100, 'width': 10, 'height': 10, 'confidence': 0.85, 'type': 'pit'}]
+        defects1 = [{"x": 20, "y": 20, "width": 10, "height": 10, "confidence": 0.9, "type": "pit"}]
+        defects2 = [
+            {"x": 100, "y": 100, "width": 10, "height": 10, "confidence": 0.85, "type": "pit"}
+        ]
 
         combined = self.analyzer._combine_detections(defects1, defects2)
 
@@ -165,7 +171,7 @@ class TestAdvancedDefectAnalyzer(unittest.TestCase):
         result_low = analyzer_low.ensemble_detect(test_img)
 
         # Низкий порог должен найти больше дефектов
-        self.assertGreaterEqual(result_low['defects_count'], result_high['defects_count'])
+        self.assertGreaterEqual(result_low["defects_count"], result_high["defects_count"])
 
 
 @unittest.skipUnless(PIL_AVAILABLE, "PIL required for image tests")
@@ -195,9 +201,9 @@ class TestDefectAnalyzerWithImages(unittest.TestCase):
         """Тест полного цикла анализа"""
         result = self.analyzer.analyze_with_stats(self.test_image)
 
-        self.assertGreater(result['defects_count'], 0)
-        self.assertIn('statistics', result)
-        self.assertIn('severity', result['statistics'])
+        self.assertGreater(result["defects_count"], 0)
+        self.assertIn("statistics", result)
+        self.assertIn("severity", result["statistics"])
 
     def test_report_generation(self):
         """Тест генерации отчёта"""
@@ -208,14 +214,15 @@ class TestDefectAnalyzerWithImages(unittest.TestCase):
 
         # Проверка содержимого отчёта
         import json
-        with open(report_path, 'r', encoding='utf-8') as f:
+
+        with open(report_path, "r", encoding="utf-8") as f:
             report = json.load(f)
 
-        self.assertIn('id', report)
-        self.assertIn('timestamp', report)
-        self.assertIn('analysis', report)
-        self.assertIn('recommendations', report)
+        self.assertIn("id", report)
+        self.assertIn("timestamp", report)
+        self.assertIn("analysis", report)
+        self.assertIn("recommendations", report)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

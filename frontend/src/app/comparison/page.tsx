@@ -48,7 +48,7 @@ export default function ComparisonPage() {
 
   const handleDelete = async (id: number) => {
     if (deletingIds.has(id)) return;
-    
+
     setDeletingIds(prev => new Set(prev).add(id));
     try {
       await apiClient.delete(`/api/v1/comparison/${id}`);
@@ -214,9 +214,9 @@ export default function ComparisonPage() {
                         <Button variant="outline" size="icon" onClick={() => handleDownload(comp.id)}>
                           <Download className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="outline" 
-                          size="icon" 
+                        <Button
+                          variant="outline"
+                          size="icon"
                           onClick={() => handleDelete(comp.id)}
                           disabled={deletingIds.has(comp.id)}
                           aria-label={`Удалить сравнение #${comp.id}`}

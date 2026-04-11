@@ -53,7 +53,7 @@ export default function SimulationsPage() {
 
   const handleDelete = async (id: number) => {
     if (deletingIds.has(id)) return;
-    
+
     setDeletingIds(prev => new Set(prev).add(id));
     try {
       await apiClient.delete(`/api/v1/simulations/${id}`);
@@ -149,8 +149,8 @@ export default function SimulationsPage() {
                     </td>
                     <td className="p-4">
                       <span className={`px-2 py-1 rounded-full text-sm ${
-                        sim.status === 'completed' 
-                          ? 'bg-green-500/10 text-green-500' 
+                        sim.status === 'completed'
+                          ? 'bg-green-500/10 text-green-500'
                           : sim.status === 'running'
                           ? 'bg-blue-500/10 text-blue-500'
                           : 'bg-gray-500/10 text-gray-500'
@@ -169,9 +169,9 @@ export default function SimulationsPage() {
                         <Button variant="outline" size="icon" onClick={() => handleStop(sim.id)} disabled={sim.status !== 'running'}>
                           <Square className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="outline" 
-                          size="icon" 
+                        <Button
+                          variant="outline"
+                          size="icon"
                           onClick={() => handleDelete(sim.id)}
                           disabled={deletingIds.has(sim.id)}
                           aria-label={`Удалить симуляцию #${sim.id}`}

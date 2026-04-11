@@ -59,12 +59,12 @@ jobs:
         body: |
           ## Changes
           ${{ steps.changelog.outputs.changelog }}
-          
+
           ## Installation
           ```bash
           pip install nanoprobe-sim-lab==${{ steps.get_version.outputs.VERSION }}
           ```
-          
+
           ## Docker
           ```bash
           docker pull ghcr.io/${{ github.repository }}:v${{ steps.get_version.outputs.VERSION }}

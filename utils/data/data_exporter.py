@@ -9,6 +9,7 @@ import numpy as np
 
 try:
     import pandas as pd
+
     PANDAS_AVAILABLE = True
 except ImportError:
     PANDAS_AVAILABLE = False
@@ -17,7 +18,7 @@ except ImportError:
 class DataExporter:
     """Экспорт данных в различные форматы."""
 
-    SUPPORTED_FORMATS = ['csv', 'hdf5', 'json', 'npy']
+    SUPPORTED_FORMATS = ["csv", "hdf5", "json", "npy"]
 
     def __init__(self, output_dir: str = "output"):
         """Инициализирует экспортер данных."""
@@ -25,11 +26,7 @@ class DataExporter:
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
     def export(
-        self,
-        data: Union[Dict, List, np.ndarray],
-        filename: str,
-        fmt: str = 'csv',
-        **kwargs
+        self, data: Union[Dict, List, np.ndarray], filename: str, fmt: str = "csv", **kwargs
     ) -> Path:
         """
         Экспортирует данные в файл.
@@ -57,21 +54,21 @@ class DataExporter:
 
         filepath = self.output_dir / filename
         if not filepath.suffix:
-            filepath = filepath.with_suffix(f'.{fmt}')
+            filepath = filepath.with_suffix(f".{fmt}")
 
         # Проверяем расширение файла
-        valid_extensions = {'.csv', '.hdf5', '.h5', '.json', '.npy'}
+        valid_extensions = {".csv", ".hdf5", ".h5", ".json", ".npy"}
         if filepath.suffix.lower() not in valid_extensions:
             raise ValueError(f"Неподдерживаемое расширение: {filepath.suffix}")
 
         try:
-            if fmt == 'csv':
+            if fmt == "csv":
                 self._export_csv(data, filepath, **kwargs)
-            elif fmt == 'hdf5':
+            elif fmt == "hdf5":
                 self._export_hdf5(data, filepath, **kwargs)
-            elif fmt == 'json':
+            elif fmt == "json":
                 self._export_json(data, filepath, **kwargs)
-            elif fmt == 'npy':
+            elif fmt == "npy":
                 self._export_npy(data, filepath, **kwargs)
         except Exception as e:
             raise RuntimeError(f"Ошибка экспорта в {fmt}: {e}")
@@ -101,9 +98,9 @@ class DataExporter:
 
         if isinstance(data, np.ndarray):
             df = pd.DataFrame(data)
-            df.to_hdf(filepath, key='data', mode='w', **kwargs)
+            df.to_hdf(filepath, key="data", mode="w", **kwargs)
         elif isinstance(data, dict):
-            with pd.HDFStore(filepath, mode='w') as store:
+            with pd.HDFStore(filepath, mode="w") as store:
                 for key, value in data.items():
                     if isinstance(value, np.ndarray):
                         store.put(key, pd.DataFrame(value))
@@ -114,6 +111,7 @@ class DataExporter:
 
     def _export_json(self, data: Union[Dict, List], filepath: Path, **kwargs):
         """Экспорт в JSON."""
+
         def convert_to_serializable(obj):
             """
             Преобразует объекты в JSON-сериализуемый формат.
@@ -139,7 +137,7 @@ class DataExporter:
             return obj
 
         serializable_data = convert_to_serializable(data)
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             json.dump(serializable_data, f, indent=2, **kwargs)
 
     def _export_npy(self, data: np.ndarray, filepath: Path, **kwargs):
@@ -153,7 +151,7 @@ class DataExporter:
         surface_data: np.ndarray,
         metadata: Optional[Dict] = None,
         filename: str = None,
-        fmt: str = 'hdf5'
+        fmt: str = "hdf5",
     ) -> Path:
         """
         Экспортирует данные поверхности с метаданными.
@@ -168,16 +166,17 @@ class DataExporter:
             Path: Путь к файлу
         """
         if filename is None:
-            timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             filename = f"surface_{timestamp}"
 
         export_data = {
-            'surface': surface_data,
-            'metadata': metadata or {
-                'width': surface_data.shape[1],
-                'height': surface_data.shape[0],
-                'timestamp': datetime.now(timezone.utc).isoformat()
-            }
+            "surface": surface_data,
+            "metadata": metadata
+            or {
+                "width": surface_data.shape[1],
+                "height": surface_data.shape[0],
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            },
         }
 
         return self.export(export_data, filename, fmt=fmt)
@@ -187,7 +186,7 @@ class DataExporter:
         scan_data: np.ndarray,
         scan_params: Optional[Dict] = None,
         filename: str = None,
-        fmt: str = 'csv'
+        fmt: str = "csv",
     ) -> Path:
         """
         Экспортирует результаты сканирования.
@@ -202,20 +201,17 @@ class DataExporter:
             Path: Путь к файлу
         """
         if filename is None:
-            timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             filename = f"scan_results_{timestamp}"
 
-        if fmt == 'csv':
+        if fmt == "csv":
             export_data = {
-                'x': np.repeat(np.arange(scan_data.shape[1]), scan_data.shape[0]),
-                'y': np.tile(np.arange(scan_data.shape[0]), scan_data.shape[1]),
-                'value': scan_data.flatten()
+                "x": np.repeat(np.arange(scan_data.shape[1]), scan_data.shape[0]),
+                "y": np.tile(np.arange(scan_data.shape[0]), scan_data.shape[1]),
+                "value": scan_data.flatten(),
             }
         else:
-            export_data = {
-                'scan_data': scan_data,
-                'scan_params': scan_params or {}
-            }
+            export_data = {"scan_data": scan_data, "scan_params": scan_params or {}}
 
         return self.export(export_data, filename, fmt=fmt)
 
@@ -223,7 +219,7 @@ class DataExporter:
 class DataImporter:
     """Импорт данных из различных форматов."""
 
-    SUPPORTED_FORMATS = ['csv', 'hdf5', 'json', 'npy']
+    SUPPORTED_FORMATS = ["csv", "hdf5", "json", "npy"]
 
     def __init__(self, input_dir: str = "data"):
         """Инициализирует импортер данных."""
@@ -243,18 +239,18 @@ class DataImporter:
         filepath = Path(filepath)
 
         if fmt is None:
-            fmt = filepath.suffix.lstrip('.').lower()
+            fmt = filepath.suffix.lstrip(".").lower()
 
         if fmt not in self.SUPPORTED_FORMATS:
             raise ValueError(f"Неподдерживаемый формат: {fmt}")
 
-        if fmt == 'csv':
+        if fmt == "csv":
             return self._import_csv(filepath)
-        elif fmt == 'hdf5':
+        elif fmt == "hdf5":
             return self._import_hdf5(filepath)
-        elif fmt == 'json':
+        elif fmt == "json":
             return self._import_json(filepath)
-        elif fmt == 'npy':
+        elif fmt == "npy":
             return self._import_npy(filepath)
 
     def _import_csv(self, filepath: Path) -> np.ndarray:
@@ -270,14 +266,14 @@ class DataImporter:
             raise ImportError("pandas required for HDF5 import")
 
         result = {}
-        with pd.HDFStore(filepath, mode='r') as store:
+        with pd.HDFStore(filepath, mode="r") as store:
             for key in store.keys():
-                result[key.lstrip('/')] = store[key].values
+                result[key.lstrip("/")] = store[key].values
         return result
 
     def _import_json(self, filepath: Path) -> Dict:
         """Импорт из JSON."""
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             return json.load(f)
 
     def _import_npy(self, filepath: Path) -> np.ndarray:
