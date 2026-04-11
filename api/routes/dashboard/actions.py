@@ -8,7 +8,7 @@ import logging
 import os
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Query, status
+from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
 
 from api.error_handlers import ValidationError

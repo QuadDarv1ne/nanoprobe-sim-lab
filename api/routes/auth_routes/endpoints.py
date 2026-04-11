@@ -10,7 +10,7 @@ from typing import Optional
 import jwt
 from fastapi import APIRouter, Depends, Request
 
-from api.dependencies import get_current_user, rate_limit
+from api.dependencies import get_current_user
 from api.error_handlers import AuthenticationError, ValidationError
 from api.rate_limiter import auth_limit
 from api.routes.auth_routes.helpers import (
@@ -24,7 +24,6 @@ from api.routes.auth_routes.helpers import (
 from api.routes.auth_routes.tokens import (
     create_access_token,
     create_refresh_token,
-    decode_token,
     is_token_valid,
     revoke_all_user_tokens,
     revoke_refresh_token,
