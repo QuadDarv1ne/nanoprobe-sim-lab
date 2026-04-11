@@ -156,9 +156,6 @@ class ADSBTracker:
             "--max-messages", "0",  # unlimited
         ]
 
-        import subprocess
-        import time
-
         process = None
         aircraft_data = []
 
@@ -252,8 +249,6 @@ class ADSBTracker:
 
         print(f"Using decoder: {decoder}")
         print(f"Capturing for {duration}s...")
-
-        import subprocess
 
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         json_file = OUTPUT_DIR / f"adsb_{timestamp}.json"

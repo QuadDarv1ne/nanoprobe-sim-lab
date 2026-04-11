@@ -294,8 +294,6 @@ class SatelliteTracker:
 
         # Проверяем возраст кэша
         if tle_file.exists():
-            import time
-
             age_hours = (time.time() - tle_file.stat().st_mtime) / 3600
             if age_hours < max_age_hours:
                 loaded = self.load_tle(str(tle_file))
