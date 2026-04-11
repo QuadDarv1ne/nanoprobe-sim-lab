@@ -13,7 +13,7 @@ from contextlib import asynccontextmanager, contextmanager
 from datetime import datetime, timedelta, timezone
 from functools import wraps
 from pathlib import Path
-from queue import Queue
+from queue import Empty, Queue
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
@@ -43,7 +43,7 @@ class ConnectionPool:
             conn = self._pool.get_nowait()
             self._stats["hits"] += 1
             return conn
-        except Exception:
+        except Empty:
             with self._lock:
                 # Атомарная проверка и инкремент (race condition fix)
                 if self._created < self.pool_size:
@@ -58,7 +58,7 @@ class ConnectionPool:
         try:
             self._pool.put_nowait(conn)
         except Exception:
-            logger.debug("Connection close on return error")
+            logger.debug("Connection pool full, closing connection")
             conn.close()
 
     def _create_connection(self) -> sqlite3.Connection:
@@ -79,8 +79,10 @@ class ConnectionPool:
             try:
                 conn = self._pool.get_nowait()
                 conn.close()
-            except Exception:
+            except Empty:
                 break
+            except sqlite3.Error as e:
+                logger.warning("Error closing connection: %s", e)
 
     def get_stats(self) -> Dict[str, int]:
         """Получение статистики пула"""
@@ -112,7 +114,7 @@ class AsyncConnectionPool:
         """Получение соединения из пула"""
         try:
             return self._pool.get_nowait()
-        except Exception:
+        except asyncio.QueueEmpty:
             async with self._lock:
                 if self._created < self.pool_size:
                     conn = self._create_connection()
@@ -125,6 +127,7 @@ class AsyncConnectionPool:
         try:
             self._pool.put_nowait(conn)
         except Exception:
+            logger.debug("Async connection pool full, closing connection")
             conn.close()
 
     def _create_connection(self) -> sqlite3.Connection:
@@ -142,8 +145,10 @@ class AsyncConnectionPool:
             try:
                 conn = self._pool.get_nowait()
                 conn.close()
-            except Exception:
+            except asyncio.QueueEmpty:
                 break
+            except sqlite3.Error as e:
+                logger.warning("Error closing async connection: %s", e)
 
 
 class DatabaseManager:

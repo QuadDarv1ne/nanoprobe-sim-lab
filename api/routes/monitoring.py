@@ -245,13 +245,7 @@ async def profile_database_query(
             "analyze": analyze,
         }
 
-        # Получаем план выполнения (безопасно - таблица из whitelist)
-        # Параметризация через placeholder для защиты от SQL-инъекций
-        allowed_tables = ["scans", "simulations", "images", "users", "reports", "exports"]
-        table_name = query.split()[-1] if query else ""
-        if table_name not in allowed_tables:
-            return {"error": "Invalid table name", "status_code": 400}
-
+        # Получаем план выполнения (таблицы уже проверены через ALLOWED_TABLES)
         cursor.execute(f"EXPLAIN QUERY PLAN {query}")
 
         query_plan = cursor.fetchall()

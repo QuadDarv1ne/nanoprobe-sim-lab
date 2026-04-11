@@ -84,7 +84,13 @@ try:
 except ImportError:
     PROXY_AVAILABLE = False
     FASTAPI_URL = os.getenv("FASTAPI_URL", "http://localhost:8000")
-    JWT_SECRET = os.getenv("JWT_SECRET", "nanoprobe-secret-key-change-in-production")
+    _jwt_secret_env = os.getenv("JWT_SECRET")
+    if not _jwt_secret_env:
+        raise RuntimeError(
+            "JWT_SECRET environment variable is not set. "
+            "Set it to a secure random string in production."
+        )
+    JWT_SECRET = _jwt_secret_env
 
 
 # ==================== Декораторы ====================

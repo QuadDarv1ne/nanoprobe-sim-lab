@@ -203,7 +203,7 @@ class SQLiteToPostgresMigrator:
                         # Проверяем, это datetime строка
                         if value.endswith("Z"):
                             value = value[:-1] + "+00:00"
-                    except:
+                    except (ValueError, TypeError):
                         pass
 
                 # Конвертируем boolean

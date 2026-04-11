@@ -86,7 +86,7 @@ with open(output_wav, "wb") as f:
         process.terminate()
         try:
             process.wait(timeout=5)
-        except:
+        except (subprocess.TimeoutExpired, OSError):
             process.kill()
             process.wait()
 
