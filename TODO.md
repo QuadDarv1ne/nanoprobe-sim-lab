@@ -1,13 +1,13 @@
 # Nanoprobe Sim Lab — TODO
 
-**Последнее обновление:** 2026-04-11 12:45
+**Последнее обновление:** 2026-04-11 14:45
 
 ## Статус проекта
 
 - **Ветка:** `dev` (активная разработка) → `main` (стабильная)
 - **Тесты:** 66/66 core passing (100%) ✅
 - **RTL-SDR V4:** подключён, работает, автоопределение координат ✅
-- **МСК актуализация:** ПОЛНАЯ — все datetime/координаты timezone-aware ✅
+- **МСК актуализация:** ПОЛНАЯ — единый источник, автообновление кэша ✅
 - **Качество кода:** 380+ исправлений, pre-commit hooks проходят ✅
 
 ## 📝 Анализ проекта (2026-04-10)
@@ -42,37 +42,17 @@
 
 ## Последние улучшения (2026-04-11)
 
-### МСК автоматическая актуализация (39 файлов обновлено)
-- [x] `utils/location_manager.py` — единый менеджер локаций: авто-IP, кэш 24ч, МСК UTC+3
-- [x] `components/.../geolocation.py` — геолокация для SSTV модуля
-- [x] `components/.../satellite_tracker.py` — автокоординаты, `datetime.now(timezone.utc)`
-- [x] `components/.../main.py` — МСК время в расписании, авто-координаты
-- [x] `components/.../auto_recorder.py` — автокоординаты
-- [x] `api/routes/sstv.py` — автокоординаты + `fromtimestamp(tz=utc)`
-- [x] `api/routes/adsb.py` — `datetime.now(timezone.utc)` в stats
-- [x] `api/routes/fm_radio.py` — `datetime.now(timezone.utc)` в stats
-- [x] `api/routes/rtl433.py` — `datetime.now(timezone.utc)` в stats
-- [x] `api/routes/dashboard.py` — `boot_time` с `tz=utc`
-- [x] `api/routes/admin.py` — `boot_time`, `create_time`, `modified` с `tz=utc`
-- [x] `api/routes/weather.py` — автокоординаты
-- [x] `api/integration.py` — JWT expiry с `tz=utc`
-- [x] `api/error_handlers.py` — исправлен naive vs aware comparison (RuntimeError!)
-- [x] `api/api_interface.py` — `fromtimestamp` с `tz=utc`
-- [x] `utils/caching/cache_manager.py` — исправлен naive vs aware comparison
-- [x] `utils/config/config_manager.py` — config `last_modified` с `tz=utc`
-- [x] `utils/batch_processor.py` — автокоординаты
-- [x] `utils/data/data_integrity.py` — `fromtimestamp` с `tz=utc`
-- [x] `utils/monitoring/system_health_monitor.py` — `boot_time` с `tz=utc`
-- [x] `rtl_sdr_tools/iss_tracker.py` — автокоординаты, МСК время
-- [x] `rtl_sdr_tools/sstv_ground_station.py` — автокоординаты во всех CLI командах
-- [x] `rtl_sdr_tools/` (8 файлов) — `datetime.now(tz=utc)` в именах файлов и выводе
-- [x] `admin_cli.py` — `fromtimestamp` с `tz=utc`
-- [x] `.env` — координаты закомментированы (автоопределение)
-- [x] `.env.example` — документация автоопределения
-- [x] `tests/test_security_improvements.py` — `datetime.utcnow()` → `datetime.now(timezone.utc)`
-- [x] `tools/Dump1090-main/.../Retro-ADSB-radar/main.py` — `datetime.now(timezone.utc)`
+### МСК автоматическая актуализация v2 — единый источник + автообновление
+- [x] `utils/location_manager.py` — добавлен `auto_refresh` параметр, `refresh_msk_data()`, фоновое обновление кэша
+- [x] `components/.../geolocation.py` — переделан на обёртку импорта из location_manager (устранено дублирование)
+- [x] `components/.../satellite_tracker.py` — обновлён импорт на `utils.location_manager`
+- [x] `components/.../main.py` — обновлён импорт на `utils.location_manager`
+- [x] `components/.../auto_recorder.py` — обновлён импорт на `utils.location_manager`
+- [x] `test_msk_actualization.py` — комплексный тест системы (5/5 тестов проходят)
+- [x] **Все расчёты используют актуальные данные МСК** — координаты и часовой пояс автоматически обновляются
 
 ### Коммиты (pushed to origin/dev)
+- ✅ `bfc17aa` feat: автоматическая актуализация данных по МСК для всех расчётов
 - ✅ `15362c2` fix: resolve E501 line too long errors in utils modules (12 lines fixed)
 - ✅ `1c6d3fb` chore: update RTL-SDR tools (adsb_receiver, fm_radio_unified, rtl_sdr_noaa_capture)
 - ✅ `05e5c32` fix: resolve 13 E501 line too long errors in core API files
