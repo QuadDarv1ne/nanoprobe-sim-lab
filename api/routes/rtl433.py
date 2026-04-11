@@ -3,7 +3,7 @@ RTL_433 API Routes
 Endpoints for weather station and sensor data
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Query
@@ -185,7 +185,7 @@ async def get_stats():
         "unique_devices": unique_devices,
         "first_reading": first_reading,
         "last_reading": last_reading,
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(tz=timezone.utc).isoformat(),
     }
 
     # Cache for 10 seconds

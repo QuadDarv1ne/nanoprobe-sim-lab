@@ -4,14 +4,12 @@
 """
 import os
 import subprocess
-from datetime import datetime
+from datetime import datetime, timezone
 
 RTL_FM = r"M:\GitHub\nanoprobe-sim-lab\tools\rtl-sdr-blog\x64\rtl_fm.exe"
 FREQUENCY = "106.0M"  # Strongest station from earlier scan
 DURATION = 10  # seconds
-OUTPUT_FILE = (
-    f"M:\\GitHub\\nanoprobe-sim-lab\\fm_106MHz_{datetime.now().strftime('%Y%m%d_%H%M%S')}.raw"
-)
+OUTPUT_FILE = f"M:\\GitHub\\nanoprobe-sim-lab\\fm_106MHz_{datetime.now(tz=timezone.utc).strftime('%Y%m%d_%H%M%S')}.raw"
 
 print(f"Capturing FM radio at {FREQUENCY} for {DURATION}s...")
 print(f"Output: {OUTPUT_FILE}")

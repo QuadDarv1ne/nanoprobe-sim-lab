@@ -363,7 +363,7 @@ def cleanup_old_error_reports(days: int = 30):
     deleted = 0
 
     for file in ERROR_REPORTS_DIR.glob("error_report_*.json"):
-        mtime = datetime.fromtimestamp(file.stat().st_mtime)
+        mtime = datetime.fromtimestamp(file.stat().st_mtime, tz=timezone.utc)
         if mtime < cutoff:
             file.unlink()
             deleted += 1

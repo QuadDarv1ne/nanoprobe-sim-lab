@@ -208,7 +208,7 @@ async def get_iss_next_pass(
             "frequency_mhz": next_pass["frequency"],
             "duration_minutes": round(next_pass["duration_minutes"], 1),
             "time_until_aos": next_pass.get(
-                "time_until_aos", str(next_pass["aos"] - datetime.utcnow())
+                "time_until_aos", str(next_pass["aos"] - datetime.now(timezone.utc))
             ),
         }
 
@@ -294,7 +294,9 @@ async def is_iss_visible(
             "status": "success",
             "visible": visible,
             "elevation": (
-                tracker._elevation_from_position(position, __import__("datetime").datetime.utcnow())
+                tracker._elevation_from_position(
+                    position, __import__("datetime").datetime.now(timezone.utc)
+                )
                 if position
                 else 0
             ),
@@ -1118,7 +1120,7 @@ async def list_recordings(limit: int = 20):
             "filename": file.name,
             "path": str(file),
             "size_bytes": stat.st_size,
-            "created_at": datetime.fromtimestamp(stat.st_ctime).isoformat(),
+            "created_at": datetime.fromtimestamp(stat.st_ctime, tz=timezone.utc).isoformat(),
             "has_image": png.exists(),
             "image_filename": png.name if png.exists() else None,
             "frequency": metadata.get("frequency", "145.800"),

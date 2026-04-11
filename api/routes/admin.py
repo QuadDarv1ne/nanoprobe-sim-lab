@@ -59,7 +59,7 @@ async def get_system_info(current_user: dict = Depends(get_current_user)):
         "cpu_count": psutil.cpu_count(),
         "memory_total": psutil.virtual_memory().total,
         "disk_total": get_system_disk_usage().total,
-        "boot_time": datetime.fromtimestamp(psutil.boot_time()).isoformat(),
+        "boot_time": datetime.fromtimestamp(psutil.boot_time(), tz=timezone.utc).isoformat(),
     }
 
 
@@ -133,7 +133,7 @@ async def get_system_processes(current_user: dict = Depends(get_current_user)):
         "cpu_percent": process.cpu_percent(),
         "memory_percent": process.memory_percent(),
         "memory_info": process.memory_info()._asdict(),
-        "create_time": datetime.fromtimestamp(process.create_time()).isoformat(),
+        "create_time": datetime.fromtimestamp(process.create_time(), tz=timezone.utc).isoformat(),
         "threads": process.num_threads(),
         "open_files": [f.path for f in process.open_files()],
     }
@@ -162,7 +162,7 @@ async def list_logs(current_user: dict = Depends(get_current_user)):
             {
                 "name": f.name,
                 "size": f.stat().st_size,
-                "modified": datetime.fromtimestamp(f.stat().st_mtime).isoformat(),
+                "modified": datetime.fromtimestamp(f.stat().st_mtime, tz=timezone.utc).isoformat(),
             }
         )
 

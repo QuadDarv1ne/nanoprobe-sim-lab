@@ -16,7 +16,7 @@ FM Stereo Decoder для RTL-SDR
 import argparse
 import logging
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -123,7 +123,7 @@ class FMStereoDecoder:
         audio_samples = []
 
         if record:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(tz=timezone.utc).strftime("%Y%m%d_%H%M%S")
             output_file = Path(__file__).parent.parent / "data" / "fm_record"
             output_file.mkdir(parents=True, exist_ok=True)
             wav_path = output_file / f"fm_{self.frequency_mhz:.1f}_{timestamp}.wav"

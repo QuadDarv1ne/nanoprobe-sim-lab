@@ -1,35 +1,60 @@
 #!/usr/bin/env python3
 """
-ISS/MKS Tracker - Расчёт пролётов МКС над Москвой
+ISS/MKS Tracker — автоопределение координат + МСК время
 Использует SGP4 + TLE из CelesTrak
 """
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-# Добавляем путь к модулям
-sys.path.insert(0, str(Path(__file__).parent / "components" / "py-sstv-groundstation" / "src"))
+SCRIPT_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(SCRIPT_DIR.parent / "components" / "py-sstv-groundstation" / "src"))
+sys.path.insert(0, str(SCRIPT_DIR.parent))
 
 from satellite_tracker import SatelliteTracker
 
-# Координаты Москвы
-MOSCOW_LAT = 55.7558
-MOSCOW_LON = 37.6173
+try:
+    from utils.location_manager import MSK_TZ, get_location, get_location_info
+except ImportError:
+    try:
+        from geolocation import TZInfo, get_location
+
+        MSK_TZ = TZInfo("MSK", 3)
+
+        def get_location_info():
+            loc = get_location()
+            return f"[LOC] {loc['city']}, {loc['country']}"
+
+    except ImportError:
+
+        def get_location():
+            return {
+                "lat": 55.7558,
+                "lon": 37.6173,
+                "city": "Moscow",
+                "country": "Russia",
+                "timezone": MSK_TZ,
+            }
+
+        def get_location_info():
+            return "[LOC] Moscow, Russia (fallback)"
 
 
 def main():
+    loc = get_location()
+    lat = loc["lat"]
+    lon = loc["lon"]
+    tz = loc.get("timezone", MSK_TZ)
+
     print("=" * 70)
-    print("МКС TRACKER - Пролёты над Москвой")
+    print("ISS TRACKER — Avto-opredelenie koordinat")
     print("=" * 70)
-    print(f"Koordinaty: {MOSCOW_LAT}°N, {MOSCOW_LON}°E")
-    print(f"Vremya: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}")
+    print(get_location_info())
+    print(f"Vremya: {tz.now_local().strftime('%Y-%m-%d %H:%M:%S')} {tz.name}")
     print("=" * 70)
     print()
 
-    # Инициализация трекера
-    tracker = SatelliteTracker()
-    tracker.ground_station_lat = MOSCOW_LAT
-    tracker.ground_station_lon = MOSCOW_LON
+    tracker = SatelliteTracker(ground_station_lat=lat, ground_station_lon=lon)
 
     # Обновление TLE из CelesTrak
     print("Zagruzka TLE dannykh iz CelesTrak...")

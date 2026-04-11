@@ -5,9 +5,11 @@
 - JWT refresh token rotation
 """
 
-import pytest
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
+
+import pytest
+
 
 # Тесты для Argon2
 class TestArgon2Hashing:
@@ -95,16 +97,16 @@ class TestAuditLogging:
     def test_audit_event_structure(self):
         """Проверка структуры audit события"""
         import json
-        from datetime import datetime
+        from datetime import datetime, timezone
 
         # Пример audit события
         audit_event = {
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             "event_type": "login.success",
             "username": "testuser",
             "ip": "192.168.1.1",
             "user_agent": "Mozilla/5.0",
-            "extra": {"user_id": 1, "role": "admin"}
+            "extra": {"user_id": 1, "role": "admin"},
         }
 
         # Проверка полей
@@ -148,9 +150,10 @@ class TestJWTTokenRotation:
 
     def test_refresh_token_has_jti(self):
         """Проверка что refresh токен имеет уникальный jti"""
-        import jwt
         import secrets
-        from datetime import datetime, timedelta
+        from datetime import datetime, timedelta, timezone
+
+        import jwt
 
         JWT_SECRET = secrets.token_urlsafe(32)
         JWT_ALGORITHM = "HS256"
@@ -159,10 +162,10 @@ class TestJWTTokenRotation:
         jti = secrets.token_urlsafe(16)
         payload = {
             "sub": "testuser",
-            "exp": datetime.utcnow() + timedelta(days=7),
-            "iat": datetime.utcnow(),
+            "exp": datetime.now(timezone.utc) + timedelta(days=7),
+            "iat": datetime.now(timezone.utc),
             "jti": jti,
-            "type": "refresh"
+            "type": "refresh",
         }
 
         token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
@@ -196,12 +199,7 @@ class TestJWTTokenRotation:
         import redis
 
         try:
-            redis_client = redis.Redis(
-                host="localhost",
-                port=6379,
-                db=0,
-                decode_responses=True
-            )
+            redis_client = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
             redis_client.ping()
 
             # Сохранение токена
@@ -257,8 +255,8 @@ class TestSecurityIntegration:
 
     def test_audit_logger_format(self):
         """Проверка формата audit логгера"""
-        import logging
         import json
+        import logging
         from io import StringIO
 
         # Создаём тестовый logger
@@ -269,7 +267,7 @@ class TestSecurityIntegration:
         class TestJSONFormatter(logging.Formatter):
             def format(self, record):
                 log_data = {
-                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                     "level": record.levelname,
                     "message": record.getMessage(),
                 }

@@ -4,7 +4,7 @@ ADS-B (1090 MHz) data capture using RTL-SDR V4
 Decodes Mode-S transponder signals from aircraft
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 import numpy as np
 from rtlsdr import RtlSdr
@@ -121,7 +121,7 @@ def main():
         print(f"    - Or use: https://github.com/wiedehopf/readsb")
 
     # Save to file for further analysis
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now(tz=timezone.utc).strftime("%Y%m%d_%H%M%S")
     np.save(f"adsb_samples_{timestamp}.npy", samples)
     print(f"\n[+] Saved raw I/Q to: adsb_samples_{timestamp}.npy")
 

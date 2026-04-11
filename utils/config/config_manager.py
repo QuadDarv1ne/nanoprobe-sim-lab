@@ -82,7 +82,9 @@ class ConfigManager:
         try:
             with open(self.config_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                self._last_modified = datetime.fromtimestamp(os.path.getmtime(self.config_file))
+                self._last_modified = datetime.fromtimestamp(
+                    os.path.getmtime(self.config_file, tz=timezone.utc)
+                )
                 return data if isinstance(data, dict) else {}
         except json.JSONDecodeError as e:
             print(f"Ошибка при загрузке конфигурации: {e}")

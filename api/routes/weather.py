@@ -15,6 +15,15 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+# Автоопределение координат станции
+try:
+    from utils.location_manager import get_location as _get_station_location
+
+    _station = _get_station_location()
+    _DEFAULT_LAT, _DEFAULT_LON = _station["lat"], _station["lon"]
+except ImportError:
+    _DEFAULT_LAT, _DEFAULT_LON = 55.7558, 37.6173
+
 # Weather codes mapping (WMO)
 WEATHER_CODES = {
     0: "Ясно",

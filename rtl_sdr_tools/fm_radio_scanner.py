@@ -5,7 +5,7 @@
 
 import os
 import subprocess
-from datetime import datetime
+from datetime import datetime, timezone
 
 import numpy as np
 
@@ -146,7 +146,7 @@ def capture_fm_station(freq_mhz, station_name, duration=DURATION_SEC):
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     freq = f"{freq_mhz:.3f}M"
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now(tz=timezone.utc).strftime("%Y%m%d_%H%M%S")
     output_file = os.path.join(
         OUTPUT_DIR, f"fm_{station_name.replace(' ', '_').lower()}_{timestamp}.wav"
     )
@@ -238,7 +238,7 @@ def capture_all_known_stations(max_stations=5):
 
 def main():
     print(f"FM Radio Scanner using RTL-SDR Blog V4")
-    print(f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Date: {datetime.now(tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"Device: RTL-SDR Blog V4 (R828D)")
     print(f"Gain: {GAIN} dB")
 

@@ -58,7 +58,7 @@ def cmd_status(args):
     if db_path.exists():
         print(f"  ✅ Файл: {db_path}")
         print(f"  ✅ Размер: {db_path.stat().st_size:,} байт")
-        print(f"  ✅ Изменён: {datetime.fromtimestamp(db_path.stat().st_mtime)}")
+        print(f"  ✅ Изменён: {datetime.fromtimestamp(db_path.stat().st_mtime, tz=timezone.utc)}")
     else:
         print(f"  ❌ {db_path} (не существует)")
 

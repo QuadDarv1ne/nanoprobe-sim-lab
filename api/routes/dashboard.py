@@ -260,7 +260,7 @@ async def get_detailed_stats(
         disk = get_system_disk_usage()
 
         # Uptime системы
-        boot_time = datetime.fromtimestamp(psutil.boot_time())
+        boot_time = datetime.fromtimestamp(psutil.boot_time(), tz=timezone.utc)
         uptime = datetime.now(timezone.utc) - boot_time
 
         return {
@@ -711,7 +711,9 @@ async def get_storage_stats_endpoint(
                         {
                             "path": str(item.relative_to(root)),
                             "size_mb": round(size / (1024**2), 4),
-                            "modified": datetime.fromtimestamp(item.stat().st_mtime).isoformat(),
+                            "modified": datetime.fromtimestamp(
+                                item.stat().st_mtime, tz=timezone.utc
+                            ).isoformat(),
                         }
                     )
                 except (OSError, IOError):

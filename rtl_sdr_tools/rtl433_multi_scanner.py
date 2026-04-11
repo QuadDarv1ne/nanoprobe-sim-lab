@@ -433,7 +433,7 @@ async def main():
 
     # Scanning mode
     print(f"RTL_433 Multi-Frequency Scanner")
-    print(f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Time: {datetime.now(tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"Device: RTL-SDR Blog V4 (SN: {RTLSDR_SERIAL})")
     print()
 

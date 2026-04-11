@@ -575,7 +575,7 @@ class NanoprobeAPI:
                                     "path": str(file_path),
                                     "size": file_path.stat().st_size,
                                     "modified": datetime.fromtimestamp(
-                                        file_path.stat().st_mtime
+                                        file_path.stat().st_mtime, tz=timezone.utc
                                     ).isoformat(),
                                 }
                             )

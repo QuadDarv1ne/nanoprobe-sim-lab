@@ -490,7 +490,9 @@ class SystemHealthMonitor:
                 "cpu_count": psutil.cpu_count(logical=True),
                 "cpu_freq": psutil.cpu_freq()._asdict() if psutil.cpu_freq() else {},
                 "memory_total_gb": round(psutil.virtual_memory().total / (1024**3), 2),
-                "boot_time": datetime.fromtimestamp(psutil.boot_time()).isoformat(),
+                "boot_time": datetime.fromtimestamp(
+                    psutil.boot_time(), tz=timezone.utc
+                ).isoformat(),
                 "hostname": socket.gethostname(),
                 "platform": f"{os.name}-{sys.platform}",
             }

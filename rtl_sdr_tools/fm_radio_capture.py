@@ -4,7 +4,7 @@
 """
 
 import wave
-from datetime import datetime
+from datetime import datetime, timezone
 
 import numpy as np
 from rtlsdr import RtlSdr
@@ -100,7 +100,7 @@ def capture_fm(frequency, station_name="Unknown"):
     audio = fm_demodulate(samples, AUDIO_RATE, SAMPLE_RATE)
 
     # Save audio
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now(tz=timezone.utc).strftime("%Y%m%d_%H%M%S")
     filename = f"fm_{station_name.replace(' ', '_').lower()}_{timestamp}.wav"
     save_wav(filename, audio, AUDIO_RATE)
 
@@ -148,7 +148,7 @@ def scan_fm_band():
 
 def main():
     print(f"FM Radio Capture using RTL-SDR V4")
-    print(f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Date: {datetime.now(tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}")
 
     # Option 1: Try to scan FM band first
     try:

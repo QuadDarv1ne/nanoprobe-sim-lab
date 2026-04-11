@@ -204,7 +204,9 @@ class DataIntegrityChecker:
                     "name": item.name,
                     "path": str(item),
                     "size": item.stat().st_size,
-                    "modified": datetime.fromtimestamp(item.stat().st_mtime).isoformat(),
+                    "modified": datetime.fromtimestamp(
+                        item.stat().st_mtime, tz=timezone.utc
+                    ).isoformat(),
                     "checksum": self.calculate_file_checksum(str(item)),
                 }
                 manifest["files"].append(file_info)

@@ -5,7 +5,7 @@
 import os
 import subprocess
 import wave
-from datetime import datetime
+from datetime import datetime, timezone
 
 import numpy as np
 
@@ -23,9 +23,7 @@ STATIONS = [
 
 def capture_and_convert(freq, name):
     """Capture FM and convert to WAV"""
-    raw_file = (
-        f"M:\\GitHub\\nanoprobe-sim-lab\\fm_{name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.raw"
-    )
+    raw_file = f"M:\\GitHub\\nanoprobe-sim-lab\\fm_{name}_{datetime.now(tz=timezone.utc).strftime('%Y%m%d_%H%M%S')}.raw"
     wav_file = raw_file.replace(".raw", ".wav")
 
     print(f"\n{'='*50}")
@@ -64,7 +62,7 @@ def capture_and_convert(freq, name):
 
 
 print(f"FM Radio Multi-Station Capture")
-print(f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+print(f"Date: {datetime.now(tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}")
 print(f"Device: RTL-SDR Blog V4")
 
 for freq, name in STATIONS:

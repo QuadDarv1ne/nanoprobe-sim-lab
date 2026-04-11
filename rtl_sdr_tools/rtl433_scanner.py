@@ -15,7 +15,7 @@ import json
 import os
 import subprocess
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Пути к rtl_433 (Windows)
@@ -61,7 +61,7 @@ def scan_433_mhz(
         output_dir = str(Path(__file__).parent.parent / "data" / "rtl433")
     os.makedirs(output_dir, exist_ok=True)
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now(tz=timezone.utc).strftime("%Y%m%d_%H%M%S")
     json_file = os.path.join(output_dir, f"rtl433_{timestamp}.jsonl")
     log_file = os.path.join(output_dir, f"rtl433_{timestamp}.log")
 
@@ -77,7 +77,7 @@ def scan_433_mhz(
     frequency_hz = int(frequency_mhz * 1_000_000)
 
     print(f"RTL_433 — {frequency_mhz:.2f} MHz ISM Band Scanner")
-    print(f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Date: {datetime.now(tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"Device: RTL-SDR Blog V4")
     print(f"Frequency: {frequency_mhz:.2f} MHz ({frequency_hz} Hz)")
     print(f"Gain: {gain} dB")

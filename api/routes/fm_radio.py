@@ -3,7 +3,7 @@ FM Radio API Routes
 Endpoints for FM station scanning and recordings
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Query
@@ -172,7 +172,7 @@ async def get_stats():
         total_recordings=total_recordings,
         unique_stations=unique_stations,
         total_storage_bytes=total_storage,
-        timestamp=datetime.now().isoformat(),
+        timestamp=datetime.now(tz=timezone.utc).isoformat(),
     )
 
     if _cache_manager:

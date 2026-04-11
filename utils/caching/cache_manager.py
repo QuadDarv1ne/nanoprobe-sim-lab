@@ -162,7 +162,7 @@ class CacheManager:
                             file_count += 1
 
                             # Определяем время последнего доступа
-                            access_time = datetime.fromtimestamp(stat.st_atime)
+                            access_time = datetime.fromtimestamp(stat.st_atime, tz=timezone.utc)
                             if oldest_file_time is None or access_time < oldest_file_time:
                                 oldest_file_time = access_time
                         except OSError:
@@ -316,7 +316,9 @@ class CacheManager:
                 should_cleanup = True
             else:
                 try:
-                    last_cleanup_time = datetime.fromtimestamp(last_cleanup_file.stat().st_mtime)
+                    last_cleanup_time = datetime.fromtimestamp(
+                        last_cleanup_file.stat().st_mtime, tz=timezone.utc
+                    )
                     if datetime.now(timezone.utc) - last_cleanup_time > timedelta(days=1):
                         should_cleanup = True
                 except (OSError, ValueError):
@@ -326,7 +328,9 @@ class CacheManager:
                 should_cleanup = True
             else:
                 try:
-                    last_cleanup_time = datetime.fromtimestamp(last_cleanup_file.stat().st_mtime)
+                    last_cleanup_time = datetime.fromtimestamp(
+                        last_cleanup_file.stat().st_mtime, tz=timezone.utc
+                    )
                     if datetime.now(timezone.utc) - last_cleanup_time > timedelta(weeks=1):
                         should_cleanup = True
                 except (OSError, ValueError):

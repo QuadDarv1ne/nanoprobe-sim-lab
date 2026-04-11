@@ -3,7 +3,7 @@ ADS-B Aircraft Tracker API Routes
 Endpoints for aircraft tracking data from 1090 MHz
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Query
@@ -191,7 +191,7 @@ async def get_stats():
         unique_aircraft=unique_aircraft,
         first_seen=first_seen,
         last_seen=last_seen,
-        timestamp=datetime.now().isoformat(),
+        timestamp=datetime.now(tz=timezone.utc).isoformat(),
     )
 
     if _cache_manager:
