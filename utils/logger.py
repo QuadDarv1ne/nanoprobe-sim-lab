@@ -209,20 +209,6 @@ class NanoprobeLogger:
             return f"[{context_str}] {message}"
         return message
 
-    def get_logger(self, name: str) -> logging.Logger:
-        """
-        Получает или создает логгер с заданным именем
-
-        Args:
-            name: Имя логгера
-
-        Returns:
-            Экземпляр логгера
-        """
-        if name not in self.loggers:
-            self.loggers[name] = self.logger_setup.create_logger(name)
-        return self.loggers[name]
-
     def log_spm_event(self, message: str, level: str = "INFO"):
         """
         Логирует событие связанное с СЗМ симулятором

@@ -309,7 +309,7 @@ def main():
         print(f"  {status} {step}: {'успешно' if success else 'ошибка'}")
 
     if results["success"]:
-        print(f"\n✓ Сборка завершена успешно!")
+        print("\n✓ Сборка завершена успешно!")
         print(f"  Исполняемый файл: {results['executable_path']}")
         print("\nДля запуска используйте:")
         print(f"  {results['executable_path']}")

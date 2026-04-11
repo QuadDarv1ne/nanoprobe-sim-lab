@@ -219,7 +219,7 @@ class RTLSDRReceiver:
 
             logger.info(
                 f"RTL-SDR V4 инициализирован: {self.frequency} МГц, "
-                f"SR={self.sample_rate/1e6:.1f} MSPS, gain={self.gain} dB"
+                f"SR={self.sample_rate / 1e6:.1f} MSPS, gain={self.gain} dB"
             )
             return True
 
@@ -329,7 +329,7 @@ class RTLSDRReceiver:
         if output_file:
             self._save_wav(audio, output_file)
 
-        logger.info(f"Запись завершена: {len(audio)/AUDIO_SAMPLE_RATE:.1f}с аудио")
+        logger.info(f"Запись завершена: {len(audio) / AUDIO_SAMPLE_RATE:.1f}с аудио")
         return audio
 
     def _save_wav(self, audio: np.ndarray, output_file: str):

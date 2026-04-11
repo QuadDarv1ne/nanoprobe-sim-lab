@@ -346,7 +346,7 @@ def _revoke_all_user_tokens(username: str):
     if redis_client:
         try:
             # Удаляем все ключи refresh_token:* для данного пользователя
-            pattern = f"refresh_token:*"
+            pattern = "refresh_token:*"
             for key in redis_client.scan_iter(match=pattern):
                 if redis_client.get(key) == username:
                     redis_client.delete(key)

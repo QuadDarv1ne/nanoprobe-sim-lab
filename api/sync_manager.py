@@ -140,7 +140,7 @@ class BackendFrontendSync:
                     )
                     return None
         except asyncio.TimeoutError:
-            logger.error(f"[SYNC] Timeout получения статистики")
+            logger.error("[SYNC] Timeout получения статистики")
             return None
         except aiohttp.ClientError as e:
             logger.error(f"[SYNC] Client error при получении статистики: {e}")

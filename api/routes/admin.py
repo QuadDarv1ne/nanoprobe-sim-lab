@@ -310,30 +310,6 @@ async def backup_database(current_user: dict = Depends(get_current_user)):
         raise ValidationError(f"Ошибка создания бэкапа: {str(e)}")
 
 
-@router.get(
-    "/database/stats",
-    summary="Статистика БД",
-    description="Получить статистику базы данных",
-)
-async def get_database_stats(current_user: dict = Depends(get_current_user)):
-    """Статистика БД"""
-    if current_user.get("role") != "admin":
-        raise AuthorizationError("Требуется роль администратора")
-
-    db = get_db_manager()
-    stats = db.get_statistics()
-
-    # Размер файла БД
-    db_path = Path(db.db_path)
-    db_size = db_path.stat().st_size if db_path.exists() else 0
-
-    return {
-        **stats,
-        "database_size_bytes": db_size,
-        "database_path": str(db_path),
-    }
-
-
 @router.post(
     "/database/vacuum",
     summary="Оптимизировать БД",

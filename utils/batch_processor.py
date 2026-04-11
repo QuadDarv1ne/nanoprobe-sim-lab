@@ -997,7 +997,7 @@ if __name__ == "__main__":
 
         # Статистика
         stats = processor.get_statistics()
-        print(f"\nСтатистика:")
+        print("\nСтатистика:")
         print(f"  Всего заданий: {stats['total_jobs']}")
         print(f"  Выполнено: {stats['completed']}")
         print(f"  Успешность: {stats['success_rate']:.1f}%")

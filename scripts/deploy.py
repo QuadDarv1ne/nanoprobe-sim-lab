@@ -4,21 +4,19 @@
 Использование: python scripts/deploy.py [--check] [--setup] [--start]
 """
 
-import os
-import sys
-import subprocess
 import argparse
+import subprocess
+import sys
 from pathlib import Path
-from datetime import datetime
 
 
 class Colors:
-    GREEN = '\033[0;32m'
-    YELLOW = '\033[1;33m'
-    RED = '\033[0;31m'
-    CYAN = '\033[0;36m'
-    BOLD = '\033[1m'
-    END = '\033[0m'
+    GREEN = "\033[0;32m"
+    YELLOW = "\033[1;33m"
+    RED = "\033[0;31m"
+    CYAN = "\033[0;36m"
+    BOLD = "\033[1m"
+    END = "\033[0m"
 
 
 def print_header(text):
@@ -72,23 +70,23 @@ class DeploymentChecker:
         print_step("Проверка зависимостей")
 
         required_packages = [
-            'fastapi',
-            'uvicorn',
-            'flask',
-            'flask_socketio',
-            'gunicorn',
-            'requests',
-            'numpy',
-            'scipy',
-            'pillow',
-            'reportlab',
-            'scikit-learn',
+            "fastapi",
+            "uvicorn",
+            "flask",
+            "flask_socketio",
+            "gunicorn",
+            "requests",
+            "numpy",
+            "scipy",
+            "pillow",
+            "reportlab",
+            "scikit-learn",
         ]
 
         missing = []
         for package in required_packages:
             try:
-                __import__(package.replace('-', '_'))
+                __import__(package.replace("-", "_"))
                 print_success(f"{package}")
             except ImportError:
                 print_warning(f"{package} не найден")
@@ -106,7 +104,7 @@ class DeploymentChecker:
         """Проверка .env файла"""
         print_step("Проверка .env файла")
 
-        env_file = self.project_root / '.env'
+        env_file = self.project_root / ".env"
 
         if not env_file.exists():
             error = ".env файл не найден"
@@ -116,9 +114,9 @@ class DeploymentChecker:
             return False
 
         # Проверка обязательных переменных
-        required_vars = ['JWT_SECRET', 'FLASK_SECRET_KEY']
+        required_vars = ["JWT_SECRET", "FLASK_SECRET_KEY"]
 
-        with open(env_file, 'r') as f:
+        with open(env_file, "r") as f:
             content = f.read()
 
         missing_vars = []
@@ -133,8 +131,8 @@ class DeploymentChecker:
             return False
 
         # Проверка на дефолтные значения
-        default_secrets = ['your-secret-key', 'change-me', 'secret-key']
-        with open(env_file, 'r') as f:
+        default_secrets = ["your-secret-key", "change-me", "secret-key"]
+        with open(env_file, "r") as f:
             for line in f:
                 for default in default_secrets:
                     if default in line.lower():
@@ -150,7 +148,7 @@ class DeploymentChecker:
         """Проверка необходимых директорий"""
         print_step("Проверка директорий")
 
-        required_dirs = ['logs', 'data', 'output', 'reports', 'deployment/nginx/ssl']
+        required_dirs = ["logs", "data", "output", "reports", "deployment/nginx/ssl"]
 
         for dir_name in required_dirs:
             dir_path = self.project_root / dir_name
@@ -166,9 +164,9 @@ class DeploymentChecker:
         """Проверка SSL сертификатов"""
         print_step("Проверка SSL сертификатов")
 
-        ssl_dir = self.project_root / 'deployment' / 'nginx' / 'ssl'
-        crt_file = ssl_dir / 'nanoprobe-lab.local.crt'
-        key_file = ssl_dir / 'nanoprobe-lab.local.key'
+        ssl_dir = self.project_root / "deployment" / "nginx" / "ssl"
+        crt_file = ssl_dir / "nanoprobe-lab.local.crt"
+        key_file = ssl_dir / "nanoprobe-lab.local.key"
 
         if not crt_file.exists() or not key_file.exists():
             warning = "SSL сертификаты не найдены"
@@ -193,7 +191,7 @@ class DeploymentChecker:
 
         for port in ports:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            result = sock.connect_ex(('127.0.0.1', port))
+            result = sock.connect_ex(("127.0.0.1", port))
             sock.close()
 
             if result == 0:
@@ -260,11 +258,11 @@ class DeploymentManager:
         """Настройка SSL"""
         print_step("Настройка SSL")
 
-        ssl_dir = self.project_root / 'deployment' / 'nginx' / 'ssl'
+        ssl_dir = self.project_root / "deployment" / "nginx" / "ssl"
         ssl_dir.mkdir(parents=True, exist_ok=True)
 
         # Генерация сертификатов
-        script = self.project_root / 'scripts' / 'generate_ssl_certs.py'
+        script = self.project_root / "scripts" / "generate_ssl_certs.py"
         if script.exists():
             subprocess.run([sys.executable, str(script)], cwd=str(self.project_root))
         else:
@@ -277,7 +275,7 @@ class DeploymentManager:
         """Запуск Docker Compose"""
         print_step("Запуск Docker Compose")
 
-        compose_file = self.project_root / 'deployment' / 'docker' / 'docker-compose.prod.yml'
+        compose_file = self.project_root / "deployment" / "docker" / "docker-compose.prod.yml"
 
         if not compose_file.exists():
             print_error("docker-compose.prod.yml не найден")
@@ -286,8 +284,7 @@ class DeploymentManager:
         try:
             # Запуск
             subprocess.run(
-                ['docker-compose', '-f', str(compose_file), 'up', '-d'],
-                cwd=str(self.project_root)
+                ["docker-compose", "-f", str(compose_file), "up", "-d"], cwd=str(self.project_root)
             )
             print_success("Docker контейнеры запущены")
             return True
@@ -324,13 +321,14 @@ class DeploymentManager:
         print_step("Проверка развёртывания")
 
         import time
+
         import requests
 
         time.sleep(5)  # Ждём запуска
 
         endpoints = {
-            'FastAPI': 'http://localhost:8000/health',
-            'Flask': 'http://localhost:5000/api/system_info',
+            "FastAPI": "http://localhost:8000/health",
+            "Flask": "http://localhost:5000/api/system_info",
         }
 
         all_healthy = True
@@ -366,7 +364,7 @@ class DeploymentManager:
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Развёртывание Nanoprobe Simulation Lab',
+        description="Развёртывание Nanoprobe Simulation Lab",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Примеры:
@@ -374,29 +372,13 @@ def main():
   python deploy.py --setup          # Настройка и запуск
   python deploy.py --docker         # Запуск через Docker
   python deploy.py --verify         # Проверка развёртывания
-        """
+        """,
     )
 
-    parser.add_argument(
-        '--check',
-        action='store_true',
-        help='Проверка готовности к развёртыванию'
-    )
-    parser.add_argument(
-        '--setup',
-        action='store_true',
-        help='Настройка и развёртывание'
-    )
-    parser.add_argument(
-        '--docker',
-        action='store_true',
-        help='Использовать Docker Compose'
-    )
-    parser.add_argument(
-        '--verify',
-        action='store_true',
-        help='Проверка развёртывания'
-    )
+    parser.add_argument("--check", action="store_true", help="Проверка готовности к развёртыванию")
+    parser.add_argument("--setup", action="store_true", help="Настройка и развёртывание")
+    parser.add_argument("--docker", action="store_true", help="Использовать Docker Compose")
+    parser.add_argument("--verify", action="store_true", help="Проверка развёртывания")
 
     args = parser.parse_args()
 

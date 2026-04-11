@@ -109,7 +109,7 @@ def generate_final_report(monitor_results, improvement_results, tests_passed, pr
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
     print(f"Время завершения: {timestamp}")
 
-    print(f"\nМониторинг:")
+    print("\nМониторинг:")
     print(
         f"  - Состояние системы: {monitor_results['health']['health_score'] if monitor_results['health'] else 'N/A'}/100"
     )
@@ -118,7 +118,7 @@ def generate_final_report(monitor_results, improvement_results, tests_passed, pr
     )
     print(f"  - Рекомендаций: {len(monitor_results['recommendations'])}")
 
-    print(f"\nУлучшения:")
+    print("\nУлучшения:")
     print(f"  - Изменений внесено: {len(improvement_results['changes_made'])}")
     print(f"  - Проблем безопасности: {len(improvement_results['security_issues'])}")
 

@@ -455,7 +455,7 @@ def main():
     if results["summary"]["total_warnings"] > 0:
         print(f"⚠ Найдено {results['summary']['total_warnings']} предупреждений")
 
-    print(f"\nДетали валидации сохранены в: reports/logs/validation_report_*.json")
+    print("\nДетали валидации сохранены в: reports/logs/validation_report_*.json")
 
 
 if __name__ == "__main__":

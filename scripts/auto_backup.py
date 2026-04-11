@@ -5,7 +5,6 @@
 """
 
 import sys
-import os
 from pathlib import Path
 
 # Добавляем путь к проекту
@@ -27,10 +26,7 @@ def main():
         config = ConfigManager()
         backup_mgr = BackupManager(config)
 
-        backup_path = backup_mgr.create_backup_strategy(
-            strategy=strategy,
-            auto_cleanup=True
-        )
+        backup_path = backup_mgr.create_backup_strategy(strategy=strategy, auto_cleanup=True)
 
         if backup_path:
             print(f"Backup created: {backup_path}")

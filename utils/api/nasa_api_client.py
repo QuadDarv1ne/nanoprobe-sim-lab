@@ -100,7 +100,7 @@ class NASAAPIClient:
             async with session.get(url, params=request_params) as response:
                 if response.status == 429 and self.demo_key_fallback:
                     # Rate limit - пробуем DEMO_KEY
-                    logger.warning(f"Rate limit exceeded, switching to DEMO_KEY")
+                    logger.warning("Rate limit exceeded, switching to DEMO_KEY")
                     request_params["api_key"] = "DEMO_KEY"
                     async with session.get(url, params=request_params) as retry_response:
                         return await retry_response.json()
@@ -247,7 +247,7 @@ class NASAAPIClient:
             "per_page": per_page,
         }
 
-        endpoint = f"/neo/rest/v1/feed" if feed_type == "browse" else "/neo/rest/v1/query"
+        endpoint = "/neo/rest/v1/feed" if feed_type == "browse" else "/neo/rest/v1/query"
         return await self._request(endpoint, params)
 
     async def get_asteroid_by_id(self, asteroid_id: int) -> Dict[str, Any]:
