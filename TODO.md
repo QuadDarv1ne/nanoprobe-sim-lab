@@ -1,13 +1,15 @@
 # Nanoprobe Sim Lab — TODO
 
-**Последнее обновление:** 2026-04-12 23:30
+**Последнее обновление:** 2026-04-13 00:15
 
 ## Статус проекта
 
-- **Ветка:** `dev` (впереди `main` на 2 коммита) ✅
-- **Рабочее дерево:** есть изменения ✅
+- **Ветка:** `dev` = `origin/dev` (синхронизированы) ✅
+- **Рабочее дерево:** чистое ✅
 - **Python:** 3.11 - 3.14
-- **Последний коммит:** 26cc5ab
+- **Последний коммит:** f8afa28
+- **flake8:** 0 ошибок (api/, utils/) ✅
+- **Тесты:** 30 auth passed, 6 integration passed ✅
 
 ## 🎯 Текущие приоритеты
 
@@ -15,8 +17,8 @@
 1. [x] Улучшать код в ветке `dev`
 2. [x] Проверять тесты после изменений
 3. [x] Исправить критичные flake8 ошибки (0 ошибок!)
-4. [ ] Merge в `main` после стабилизации
-5. [ ] Push в origin
+4. [x] Push в origin (выполнено 2026-04-13)
+5. [ ] Merge в `main` после стабилизации
 
 ### MEDIUM
 6. [ ] Увеличить test coverage до 80%+
@@ -33,6 +35,19 @@
 15. [ ] Откалибровать TCXO (--freq-correction)
 16. [ ] Создать mobile application
 17. [x] Auto-format все файлы black/isort (98 files reformatted)
+
+---
+
+## 📊 Проделанная работа (2026-04-13 Night)
+
+### Push в origin
+✅ Push 4 коммитов в origin/dev:
+  - 43786fe - refactor: вынести health check логику в api/health.py
+  - 26cc5ab - style: исправить все flake8 ошибки (E402, E226, E501)
+  - 67399e1 - refactor: мигрировать с bcrypt/passlib на Argon2
+  - f8afa28 - chore: удалить bcrypt/passlib из requirements.txt
+✅ flake8: 0 ошибок в api/ и utils/
+✅ Тесты: 30 auth passed, 6 integration passed
 
 ---
 
