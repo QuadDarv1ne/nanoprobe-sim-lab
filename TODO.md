@@ -7,10 +7,30 @@
 - **Ветка:** `dev` = `main` = `origin/dev` = `origin/main` (синхронизированы) ✅
 - **Рабочее дерево:** чистое ✅
 - **Python:** 3.11 - 3.14
-- **Последний коммит:** 4c0f963
-- **flake8:** 19 E501 (low priority - CSS/JS/SQL строки)
+- **Последний коммит:** 81902f0
+- **flake8:** 0 F/B ошибок, 19 E501 (low priority)
 - **Тесты:** 200+ passed ✅
 - **Coverage:** ~20% (цель: 80%+)
+
+## 📝 Пометки
+
+### Архитектура
+- 24 API роута в `api/routes/`, разбиты на модули
+- 36+ утилит в `utils/`
+- State management через `api/state.py` (singleton)
+- WebSocket менеджер для real-time обновлений
+
+### Качество кода
+- ✅ 0 критических flake8 ошибок (F/B)
+- ✅ 0 print() в production коде
+- ✅ Pre-commit hooks: black, isort, flake8
+- ⚠️ global statement используется (оправдано для singleton)
+- ⚠️ except Exception: в 4 местах (api/main.py, sstv routes)
+
+### Следующие шаги
+1. Увеличить coverage до 80%+
+2. Решить SQLite vs PostgreSQL
+3. Мигрировать frontend на Next.js
 
 ## 🎯 Текущие приоритеты
 
