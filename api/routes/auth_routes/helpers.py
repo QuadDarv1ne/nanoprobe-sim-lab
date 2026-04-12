@@ -12,7 +12,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, Optional
 
-from passlib.context import CryptContext
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 
 from api.security.jwt_config import get_default_passwords, get_jwt_secret
 
@@ -27,8 +28,8 @@ JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_MINUTES = int(os.getenv("JWT_EXPIRATION_MINUTES", "60"))
 JWT_REFRESH_EXPIRATION_DAYS = int(os.getenv("JWT_REFRESH_EXPIRATION_DAYS", "7"))
 
-# Argon2 + bcrypt fallback
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Argon2 password hasher
+ph = PasswordHasher()
 
 
 def _get_or_create_hash(username: str, password: str, cache: Dict[str, str]) -> str:
@@ -46,7 +47,7 @@ def _get_or_create_hash(username: str, password: str, cache: Dict[str, str]) -> 
     cache_key = f"{username}:{hashlib.sha256(password.encode()).hexdigest()[:16]}"
     if cache_key in cache:
         return cache[cache_key]
-    new_hash = pwd_context.hash(password)
+    new_hash = ph.hash(password)
     cache[cache_key] = new_hash
     return new_hash
 
@@ -99,12 +100,15 @@ def validate_password_strength(password: str) -> tuple[bool, str]:
 
 def hash_password(password: str) -> str:
     """Хэшировать пароль с Argon2."""
-    return pwd_context.hash(password)
+    return ph.hash(password)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Проверить пароль."""
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        return ph.verify(hashed_password, plain_password)
+    except VerifyMismatchError:
+        return False
 
 
 def _initialize_users_db():

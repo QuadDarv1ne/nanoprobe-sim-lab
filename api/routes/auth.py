@@ -20,7 +20,7 @@ from api.routes.auth_routes.helpers import (
     AuditEventType,
     hash_password,
     log_audit_event,
-    pwd_context,
+    ph,
     validate_password_strength,
     verify_password,
 )
@@ -51,7 +51,7 @@ __all__ = [
     "AuditEventType",
     "hash_password",
     "log_audit_event",
-    "pwd_context",
+    "ph",
     "validate_password_strength",
     "verify_password",
     "create_access_token",

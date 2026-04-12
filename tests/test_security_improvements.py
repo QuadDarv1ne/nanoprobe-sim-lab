@@ -9,6 +9,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 
 
 # Тесты для Argon2
@@ -17,20 +19,10 @@ class TestArgon2Hashing:
 
     def test_argon2_hash_format(self):
         """Проверка формата Argon2 хеша"""
-        from passlib.context import CryptContext
-
-        pwd_context = CryptContext(
-            schemes=["argon2", "bcrypt"],
-            default="argon2",
-            deprecated="auto",
-            argon2__memory_cost=65536,
-            argon2__time_cost=3,
-            argon2__parallelism=4,
-            argon2__type="id",
-        )
+        ph = PasswordHasher()
 
         password = "TestPassword123!"
-        hash_result = pwd_context.hash(password)
+        hash_result = ph.hash(password)
 
         # Argon2 хеш начинается с $argon2
         assert hash_result.startswith("$argon2")
@@ -39,55 +31,26 @@ class TestArgon2Hashing:
 
     def test_argon2_verification(self):
         """Проверка верификации пароля с Argon2"""
-        from passlib.context import CryptContext
-
-        pwd_context = CryptContext(
-            schemes=["argon2", "bcrypt"],
-            default="argon2",
-            deprecated="auto",
-            argon2__memory_cost=65536,
-            argon2__time_cost=3,
-            argon2__parallelism=4,
-            argon2__type="id",
-        )
+        ph = PasswordHasher()
 
         password = "SecurePassword456!"
-        hash_result = pwd_context.hash(password)
+        hash_result = ph.hash(password)
 
         # Верная проверка
-        assert pwd_context.verify(hash_result, password) is True
+        assert ph.verify(hash_result, password) is True
 
         # Неверная проверка
-        assert pwd_context.verify(hash_result, "WrongPassword") is False
+        with pytest.raises(VerifyMismatchError):
+            ph.verify(hash_result, "WrongPassword")
 
-    def test_bcrypt_to_argon2_migration(self):
-        """Проверка миграции с bcrypt на Argon2"""
-        from passlib.context import CryptContext
+    def test_argon2_different_passwords_different_hashes(self):
+        """Проверка, что разные пароли дают разные хеши"""
+        ph = PasswordHasher()
 
-        pwd_context = CryptContext(
-            schemes=["argon2", "bcrypt"],
-            default="argon2",
-            deprecated="auto",
-            argon2__memory_cost=65536,
-            argon2__time_cost=3,
-            argon2__parallelism=4,
-            argon2__type="id",
-        )
+        hash1 = ph.hash("Password1!")
+        hash2 = ph.hash("Password2!")
 
-        # Создаём bcrypt хеш
-        bcrypt_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
-        bcrypt_hash = bcrypt_ctx.hash("MigrationTest123!")
-
-        # Проверяем что это bcrypt
-        assert bcrypt_hash.startswith("$2")
-
-        # При повторном хешировании passlib должен использовать Argon2
-        new_hash = pwd_context.hash("MigrationTest123!")
-        assert new_hash.startswith("$argon2")
-
-        # Оба хеша должны работать
-        assert pwd_context.verify(bcrypt_hash, "MigrationTest123!")
-        assert pwd_context.verify(new_hash, "MigrationTest123!")
+        assert hash1 != hash2
 
 
 # Тесты для Audit Logging
