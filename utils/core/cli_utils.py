@@ -126,7 +126,7 @@ class ProgressBar:
         # Формируем строку
         sys.stdout.write(
             f"\r{self.desc} {self.color}{bar}{Colors.RESET} "
-            f"{percent*100:5.1f}% ({self.current}/{self.total}){eta_str}"
+            f"{percent * 100:5.1f}% ({self.current}/{self.total}){eta_str}"
         )
         sys.stdout.flush()
 

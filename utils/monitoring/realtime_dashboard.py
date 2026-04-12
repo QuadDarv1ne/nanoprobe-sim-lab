@@ -24,14 +24,14 @@ from plotly.subplots import make_subplots
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils.logger_analyzer import AdvancedLoggerAnalyzer
-from utils.memory_tracker import MemoryTracker
-from utils.optimization_orchestrator import OptimizationOrchestrator
-from utils.performance_analytics_dashboard import PerformanceAnalyticsDashboard
-from utils.performance_benchmark import PerformanceBenchmarkSuite
-from utils.performance_profiler import PerformanceProfiler
-from utils.resource_optimizer import ResourceManager
-from utils.system_health_monitor import SystemHealthMonitor
+from utils.logger_analyzer import AdvancedLoggerAnalyzer  # noqa: E402
+from utils.memory_tracker import MemoryTracker  # noqa: E402
+from utils.optimization_orchestrator import OptimizationOrchestrator  # noqa: E402
+from utils.performance_analytics_dashboard import PerformanceAnalyticsDashboard  # noqa: E402
+from utils.performance_benchmark import PerformanceBenchmarkSuite  # noqa: E402
+from utils.performance_profiler import PerformanceProfiler  # noqa: E402
+from utils.resource_optimizer import ResourceManager  # noqa: E402
+from utils.system_health_monitor import SystemHealthMonitor  # noqa: E402
 
 
 @dataclass
@@ -244,14 +244,14 @@ class RealTimeDashboard:
             <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
             <style>
                 body {{ font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }}
-                .header {{ background-color: #2c3e50; color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }}
-                .metrics-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; }}
-                .metric-card {{ background-color: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; }}
+                .header {{ background-color: #2c3e50; color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }}  # noqa: E501
+                .metrics-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; }}  # noqa: E501
+                .metric-card {{ background-color: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; }}  # noqa: E501
                 .metric-value {{ font-size: 24px; font-weight: bold; color: #3498db; }}
                 .metric-label {{ font-size: 14px; color: #7f8c8d; }}
-                .chart-container {{ background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
+                .chart-container {{ background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}  # noqa: E501
                 .controls {{ margin: 20px 0; text-align: center; }}
-                button {{ padding: 10px 20px; margin: 0 5px; background-color: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; }}
+                button {{ padding: 10px 20px; margin: 0 5px; background-color: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; }}  # noqa: E501
                 button:hover {{ background-color: #2980b9; }}
             </style>
         </head>
@@ -306,12 +306,12 @@ class RealTimeDashboard:
                         .then(response => response.json())
                         .then(data => {{
                             // Обновляем значения метрик
-                            document.querySelector('.metrics-grid .metric-value:nth-child(1)').textContent = data.cpu_percent.toFixed(1) + '%';
-                            document.querySelector('.metrics-grid .metric-value:nth-child(2)').textContent = data.memory_percent.toFixed(1) + '%';
-                            document.querySelector('.metrics-grid .metric-value:nth-child(3)').textContent = data.disk_usage.toFixed(1) + '%';
-                            document.querySelector('.metrics-grid .metric-value:nth-child(4)').textContent = data.resource_efficiency.toFixed(1) + '%';
-                            document.querySelector('.metrics-grid .metric-value:nth-child(5)').textContent = data.optimization_score.toFixed(1) + '%';
-                            document.querySelector('.metrics-grid .metric-value:nth-child(6)').textContent = data.active_processes;
+                            document.querySelector('.metrics-grid .metric-value:nth-child(1)').textContent = data.cpu_percent.toFixed(1) + '%';  # noqa: E501
+                            document.querySelector('.metrics-grid .metric-value:nth-child(2)').textContent = data.memory_percent.toFixed(1) + '%';  # noqa: E501
+                            document.querySelector('.metrics-grid .metric-value:nth-child(3)').textContent = data.disk_usage.toFixed(1) + '%';  # noqa: E501
+                            document.querySelector('.metrics-grid .metric-value:nth-child(4)').textContent = data.resource_efficiency.toFixed(1) + '%';  # noqa: E501
+                            document.querySelector('.metrics-grid .metric-value:nth-child(5)').textContent = data.optimization_score.toFixed(1) + '%';  # noqa: E501
+                            document.querySelector('.metrics-grid .metric-value:nth-child(6)').textContent = data.active_processes;  # noqa: E501
 
                             // Обновляем timestamp
                             console.log('Metrics updated at:', data.timestamp);

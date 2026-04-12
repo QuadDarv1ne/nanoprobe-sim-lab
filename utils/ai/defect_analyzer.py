@@ -12,6 +12,10 @@ from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 import numpy as np
+from scipy import ndimage
+from sklearn.cluster import DBSCAN, KMeans
+from sklearn.ensemble import IsolationForest, RandomForestClassifier
+from sklearn.preprocessing import StandardScaler
 
 logger = logging.getLogger(__name__)
 
@@ -28,11 +32,6 @@ try:
     CV2_AVAILABLE = True
 except ImportError:
     CV2_AVAILABLE = False
-
-from scipy import ndimage
-from sklearn.cluster import DBSCAN, KMeans
-from sklearn.ensemble import IsolationForest, RandomForestClassifier
-from sklearn.preprocessing import StandardScaler
 
 
 class DefectDetector:

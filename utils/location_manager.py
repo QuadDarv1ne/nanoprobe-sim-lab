@@ -258,9 +258,9 @@ def force_detect_and_save() -> Optional[Dict]:
         save_location_cache(location)
         print(f"OK: {location['city']}, {location['country']}")
         print(f"   Coords: {location['lat']:.4f}N, {location['lon']:.4f}E")
-        print(
-            f"   Timezone: {location['timezone'].name} (UTC{'+' if location['timezone'].utc_offset >= 0 else ''}{location['timezone'].utc_offset})"
-        )
+        tz = location["timezone"]
+        sign = "+" if tz.utc_offset >= 0 else ""
+        print(f"   Timezone: {tz.name} (UTC{sign}{tz.utc_offset})")
         return location
     else:
         print("ERROR: ne udalos opredelit mestopolozhenie po IP")

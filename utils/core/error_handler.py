@@ -9,8 +9,6 @@
 import json
 import logging
 import queue
-
-logger = logging.getLogger(__name__)
 import threading
 import time
 import traceback
@@ -20,6 +18,8 @@ from enum import Enum
 from functools import wraps
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class ErrorSeverity(Enum):

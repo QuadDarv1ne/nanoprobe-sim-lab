@@ -11,9 +11,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Dict, List
 
-logger = logging.getLogger(__name__)
-
 import coverage
+
+logger = logging.getLogger(__name__)
 
 
 class TestFramework:

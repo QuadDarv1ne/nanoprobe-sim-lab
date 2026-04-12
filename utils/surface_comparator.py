@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import Any, Dict
 
 import numpy as np
+from scipy import ndimage
+from scipy.stats import pearsonr
 
 logger = logging.getLogger(__name__)
 
@@ -16,9 +18,6 @@ try:
     PIL_AVAILABLE = True
 except ImportError:
     PIL_AVAILABLE = False
-
-from scipy import ndimage
-from scipy.stats import pearsonr
 
 try:
     import matplotlib.pyplot as plt

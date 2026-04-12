@@ -8,8 +8,6 @@
 import hashlib
 import json
 import logging
-
-logger = logging.getLogger(__name__)
 import re
 import warnings
 from dataclasses import dataclass
@@ -21,6 +19,8 @@ from typing import Any, Callable, Dict, List, Union
 
 import numpy as np
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 
 class ValidationLevel(Enum):

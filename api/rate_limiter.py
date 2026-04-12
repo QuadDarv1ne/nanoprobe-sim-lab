@@ -14,11 +14,10 @@ Endpoints:
 - Redis (опционально для production)
 """
 
+import asyncio
 import logging
 import os
 from typing import Dict
-
-logger = logging.getLogger(__name__)
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -26,6 +25,8 @@ from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi.util import get_remote_address
+
+logger = logging.getLogger(__name__)
 
 # ==================== Limiter Configuration ====================
 
@@ -224,8 +225,6 @@ def reset_rate_limit_stats():
 
 
 # ==================== IP Whitelist/Blacklist ====================
-
-import asyncio
 
 _ip_whitelist: set = set()
 _ip_blacklist: set = set()
