@@ -9,11 +9,8 @@ from pathlib import Path
 from typing import Any, Dict, Tuple
 
 import numpy as np
-from cpp_spm_hardware_sim.src.spm_simulator import SPMController, SurfaceModel
 from flask import Flask, Response, jsonify, request
 from flask_cors import CORS
-from py_sstv_groundstation.src.sstv_decoder import SSTVDecoder
-from py_surface_image_analyzer.src.image_processor import ImageProcessor
 
 from api.state import get_system_disk_usage
 from utils.config.config_manager import ConfigManager
@@ -21,6 +18,47 @@ from utils.data.data_manager import DataManager
 from utils.logger import NanoprobeLogger, setup_project_logging
 
 from .validators import DataValidator, ResponseBuilder, ValidationError
+
+# Lazy imports (components с дефисами в путях)
+# Импортируются только при использовании
+SPMController = None
+SurfaceModel = None
+ImageProcessor = None
+SSTVDecoder = None
+
+
+def _import_components():
+    """Lazy импорт компонентов."""
+    global SPMController, SurfaceModel, ImageProcessor, SSTVDecoder
+
+    if SPMController is None:
+        import sys
+
+        # Добавляем компоненты с подчёркиваниями вместо дефисов
+        sys.path.insert(0, str(Path(__file__).parent.parent / "components"))
+
+        try:
+            from cpp_spm_hardware_sim.src.spm_simulator import SPMController as _SPM
+            from cpp_spm_hardware_sim.src.spm_simulator import SurfaceModel as _SM
+
+            SPMController = _SPM
+            SurfaceModel = _SM
+        except ImportError:
+            pass
+
+        try:
+            from py_sstv_groundstation.src.sstv_decoder import SSTVDecoder as _SSTV
+
+            SSTVDecoder = _SSTV
+        except ImportError:
+            pass
+
+        try:
+            from py_surface_image_analyzer.src.image_processor import ImageProcessor as _IP
+
+            ImageProcessor = _IP
+        except ImportError:
+            pass
 
 
 class NanoprobeAPI:
@@ -37,15 +75,18 @@ class NanoprobeAPI:
         self.app = Flask(__name__)
         CORS(self.app)  # Разрешаем кросс-доменные запросы
 
+        # Lazy импорт компонентов
+        _import_components()
+
         # Инициализация компонентов
         self.config_manager = ConfigManager()
         self.data_manager = DataManager()
         self.logger_manager: NanoprobeLogger = setup_project_logging(self.config_manager)
 
-        # Компоненты симуляции
-        self.spm_controller = SPMController()
-        self.image_processor = ImageProcessor()
-        self.sstv_decoder = SSTVDecoder()
+        # Компоненты симуляции (могут быть None если не доступны)
+        self.spm_controller = SPMController() if SPMController else None
+        self.image_processor = ImageProcessor() if ImageProcessor else None
+        self.sstv_decoder = SSTVDecoder() if SSTVDecoder else None
 
         # Состояния
         self.active_simulations = {}
@@ -130,6 +171,14 @@ class NanoprobeAPI:
             JSON ответ с результатом операции
         """
         try:
+            if SurfaceModel is None:
+                return (
+                    jsonify(
+                        ResponseBuilder.validation_error("surface", "SPM component not available")
+                    ),
+                    503,
+                )
+
             data = request.get_json()
 
             # Валидация входных данных

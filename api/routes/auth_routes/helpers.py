@@ -28,15 +28,27 @@ JWT_EXPIRATION_MINUTES = int(os.getenv("JWT_EXPIRATION_MINUTES", "60"))
 JWT_REFRESH_EXPIRATION_DAYS = int(os.getenv("JWT_REFRESH_EXPIRATION_DAYS", "7"))
 
 # Argon2 + bcrypt fallback
-pwd_context = CryptContext(
-    schemes=["argon2", "bcrypt"],
-    default="argon2",
-    deprecated="auto",
-    argon2__memory_cost=65536,
-    argon2__time_cost=3,
-    argon2__parallelism=4,
-    argon2__type="id",
-)
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+def _get_or_create_hash(username: str, password: str, cache: Dict[str, str]) -> str:
+    """
+    Получить или создать хэш пароля с кэшированием.
+
+    Args:
+        username: Имя пользователя
+        password: Пароль в открытом виде
+        cache: Словарь кэша хэшей
+
+    Returns:
+        Хэш пароля
+    """
+    cache_key = f"{username}:{hashlib.sha256(password.encode()).hexdigest()[:16]}"
+    if cache_key in cache:
+        return cache[cache_key]
+    new_hash = pwd_context.hash(password)
+    cache[cache_key] = new_hash
+    return new_hash
 
 
 class AuditEventType(str, Enum):
@@ -110,16 +122,8 @@ def _initialize_users_db():
             logger.warning(f"Failed to load password hash cache: {e}")
             cached_hashes = {}
 
-    def _get_or_create_hash(username: str, password: str) -> str:
-        cache_key = f"{username}:{hashlib.sha256(password.encode()).hexdigest()[:16]}"
-        if cache_key in cached_hashes:
-            return cached_hashes[cache_key]
-        new_hash = pwd_context.hash(password)
-        cached_hashes[cache_key] = new_hash
-        return new_hash
-
-    admin_hash = _get_or_create_hash("admin", default_passwords["admin"])
-    user_hash = _get_or_create_hash("user", default_passwords["user"])
+    admin_hash = _get_or_create_hash("admin", default_passwords["admin"], cached_hashes)
+    user_hash = _get_or_create_hash("user", default_passwords["user"], cached_hashes)
 
     try:
         hash_cache_file.parent.mkdir(parents=True, exist_ok=True)
@@ -149,19 +153,12 @@ def _get_users_db() -> Dict[str, dict]:
     if hash_cache_file.exists():
         try:
             cached_hashes = json.loads(hash_cache_file.read_text())
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Failed to load password hash cache: {e}")
+            cached_hashes = {}
 
-    def _get_or_create_hash(username: str, password: str) -> str:
-        cache_key = f"{username}:{hashlib.sha256(password.encode()).hexdigest()[:16]}"
-        if cache_key in cached_hashes:
-            return cached_hashes[cache_key]
-        new_hash = pwd_context.hash(password)
-        cached_hashes[cache_key] = new_hash
-        return new_hash
-
-    admin_hash = _get_or_create_hash("admin", default_passwords["admin"])
-    user_hash = _get_or_create_hash("user", default_passwords["user"])
+    admin_hash = _get_or_create_hash("admin", default_passwords["admin"], cached_hashes)
+    user_hash = _get_or_create_hash("user", default_passwords["user"], cached_hashes)
 
     return {
         "admin": {
