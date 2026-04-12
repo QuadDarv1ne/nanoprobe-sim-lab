@@ -338,30 +338,9 @@ async def health_check():
 @app.get("/health/detailed", tags=["Health"])
 async def detailed_health_check():
     """Детальная проверка здоровья системы"""
-    import platform
+    from api.health import CPU_CRITICAL, DISK_CRITICAL, MEMORY_CRITICAL, compute_system_health
 
-    import psutil
-
-    cpu_percent = psutil.cpu_percent(interval=0.1)
-    memory = psutil.virtual_memory()
-    # Cross-platform disk usage: Windows uses drive letters, Unix uses '/'
-    disk_path = os.environ.get("SYSTEMDRIVE", "C:\\") if platform.system() == "Windows" else "/"
-    disk = psutil.disk_usage(disk_path)
-
-    health_status = "healthy"
-    issues = []
-
-    if cpu_percent > 90:
-        health_status = "warning"
-        issues.append("Высокая загрузка CPU")
-
-    if memory.percent > 90:
-        health_status = "warning"
-        issues.append("Высокое использование памяти")
-
-    if disk.percent > 90:
-        health_status = "critical"
-        issues.append("Критическое заполнение диска")
+    health = compute_system_health()
 
     # Redis status
     try:
@@ -374,27 +353,39 @@ async def detailed_health_check():
         cache_status = "unavailable"
 
     return {
-        "status": health_status,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "version": "1.0.0",
+        "status": health["status"],
+        "timestamp": health["timestamp"],
+        "version": APP_VERSION,
         "python_version": f"{os.sys.version}",
         "database": "SQLite 3.x",
         "metrics": {
-            "cpu": {"percent": cpu_percent, "status": "ok" if cpu_percent < 90 else "warning"},
+            "cpu": {
+                "percent": health["cpu_percent"],
+                "status": (
+                    "ok"
+                    if health["cpu_percent"] is None or health["cpu_percent"] < CPU_CRITICAL
+                    else "warning"
+                ),
+            },
             "memory": {
-                "percent": memory.percent,
-                "used_gb": round(memory.used / (1024**3), 2),
-                "total_gb": round(memory.total / (1024**3), 2),
-                "status": "ok" if memory.percent < 90 else "warning",
+                "percent": health["memory_percent"],
+                "status": (
+                    "ok"
+                    if health["memory_percent"] is None
+                    or health["memory_percent"] < MEMORY_CRITICAL
+                    else "warning"
+                ),
             },
             "disk": {
-                "percent": disk.percent,
-                "used_gb": round(disk.used / (1024**3), 2),
-                "total_gb": round(disk.total / (1024**3), 2),
-                "status": "ok" if disk.percent < 90 else "warning",
+                "percent": health["disk_percent"],
+                "status": (
+                    "ok"
+                    if health["disk_percent"] is None or health["disk_percent"] < DISK_CRITICAL
+                    else "warning"
+                ),
             },
         },
-        "issues": issues,
+        "issues": health["issues"],
         "services": {
             "api": "running",
             "database": "running",
