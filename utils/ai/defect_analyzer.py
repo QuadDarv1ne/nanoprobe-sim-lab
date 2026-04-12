@@ -356,7 +356,7 @@ class DefectDetector:
             "is_trained": self.is_trained,
         }
         joblib.dump(model_data, filepath)
-        print(f"Модель сохранена: {filepath}")
+        logger.info(f"Модель сохранена: {filepath}")
 
     def load_model(self, filepath: str):
         """Загрузка модели"""
@@ -367,7 +367,7 @@ class DefectDetector:
         self.scaler = model_data["scaler"]
         self.model_name = model_data["model_name"]
         self.is_trained = model_data["is_trained"]
-        print(f"Модель загружена: {filepath}")
+        logger.info(f"Модель загружена: {filepath}")
 
 
 class DefectAnalysisPipeline:

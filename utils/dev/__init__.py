@@ -1,5 +1,6 @@
 """Development tools"""
 
-from .code_analyzer import *
+# Code analyzer was removed from project
+# If you need it, check utils/archived/
 
-__all__ = ["code_analyzer"]
+__all__ = []
