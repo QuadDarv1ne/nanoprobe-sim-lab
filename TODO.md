@@ -4,12 +4,12 @@
 
 ## Статус проекта
 
-- **Ветка:** `dev` = `origin/dev` (синхронизированы) ✅
+- **Ветка:** `dev` = `main` = `origin/dev` = `origin/main` (синхронизированы) ✅
 - **Рабочее дерево:** чистое ✅
 - **Python:** 3.11 - 3.14
-- **Последний коммит:** f8afa28
+- **Последний коммит:** 71d1052
 - **flake8:** 0 ошибок (api/, utils/) ✅
-- **Тесты:** 30 auth passed, 6 integration passed ✅
+- **Тесты:** 45 passed (auth + api + integration) ✅
 
 ## 🎯 Текущие приоритеты
 
@@ -18,7 +18,8 @@
 2. [x] Проверять тесты после изменений
 3. [x] Исправить критичные flake8 ошибки (0 ошибок!)
 4. [x] Push в origin (выполнено 2026-04-13)
-5. [ ] Merge в `main` после стабилизации
+5. [x] Merge в `main` после стабилизации (выполнено 2026-04-13)
+6. [ ] Увеличить test coverage до 80%+
 
 ### MEDIUM
 6. [ ] Увеличить test coverage до 80%+
@@ -35,6 +36,17 @@
 15. [ ] Откалибровать TCXO (--freq-correction)
 16. [ ] Создать mobile application
 17. [x] Auto-format все файлы black/isort (98 files reformatted)
+
+---
+
+## 📊 Проделанная работа (2026-04-13 Morning)
+
+### Merge в main и Push
+✅ Merge dev → main (fast-forward)
+✅ Push origin/main (e4cdbf7..71d1052)
+✅ Push origin/dev (up-to-date)
+✅ Все ветки синхронизированы: dev = main = origin/dev = origin/main
+✅ Тесты: 45 passed (auth + api + integration)
 
 ---
 

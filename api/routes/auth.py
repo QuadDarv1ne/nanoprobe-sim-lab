@@ -18,6 +18,7 @@ from api.routes.auth_routes.helpers import (
     JWT_REFRESH_EXPIRATION_DAYS,
     JWT_SECRET,
     AuditEventType,
+    _get_users_db,
     hash_password,
     log_audit_event,
     ph,
