@@ -37,6 +37,20 @@
 16. [ ] Создать mobile application
 17. [x] Auto-format все файлы black/isort (98 files reformatted)
 
+## 📊 Проделанная работа (2026-04-13 Evening)
+
+### Test Coverage - Wave 2
+✅ Добавлено 35 новых тестов:
+  - test_additional_api.py: 19 тестов (analysis, comparison, reports, batch, alerting)
+  - test_sstv_and_utils.py: 16 тестов (SSTV API, data validation, integrity, rate limiter, 2FA)
+✅ Coverage: 17% → 18% (+1%, итого +3% за день)
+✅ Все 109 тестов проходят успешно
+✅ Pre-commit hooks: black, isort, flake8 прошли
+✅ Commit: ac53fc3
+✅ Push в origin/dev
+
+---
+
 ## 📊 Проделанная работа (2026-04-13 Afternoon)
 
 ### Test Coverage Improvement
