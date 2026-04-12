@@ -65,7 +65,7 @@ class BatchJob:
         job_type: str,
         items: List[Any],
         processor: Callable,
-        parameters: Dict = None,
+        parameters: Optional[Dict] = None,
         priority: int = 0,
         callback: Optional[Callable] = None,
     ):
@@ -176,9 +176,9 @@ class BatchProcessor:
         job_type: str,
         items: List[Any],
         processor: Callable,
-        parameters: Dict = None,
+        parameters: Optional[Dict] = None,
         priority: int = 0,
-        callback: Callable = None,
+        callback: Optional[Callable] = None,
     ) -> str:
         """
         Создание нового задания
@@ -214,8 +214,8 @@ class BatchProcessor:
         self,
         audio_files: List[str],
         output_dir: str = "output/sstv_batch",
-        parameters: Dict = None,
-        callback: Callable = None,
+        parameters: Optional[Dict] = None,
+        callback: Optional[Callable] = None,
     ) -> str:
         """
         Пакетное декодирование SSTV файлов
@@ -279,7 +279,7 @@ class BatchProcessor:
         hours_ahead: int = 24,
         ground_station_lat: float = 55.75,
         ground_station_lon: float = 37.61,
-        callback: Callable = None,
+        callback: Optional[Callable] = None,
     ) -> str:
         """
         Пакетный расчёт пролётов спутников
@@ -327,7 +327,7 @@ class BatchProcessor:
         )
 
     def process_image_batch(
-        self, image_paths: List[str], operation: str = "analyze", parameters: Dict = None
+        self, image_paths: List[str], operation: str = "analyze", parameters: Optional[Dict] = None
     ) -> str:
         """
         Пакетная обработка изображений
@@ -864,7 +864,7 @@ class FolderWatcher:
         watch_folder: str,
         processor: BatchProcessor,
         pattern: str = "*.png",
-        callback: Callable = None,
+        callback: Optional[Callable] = None,
     ):
         """
         Инициализация наблюдателя
