@@ -147,8 +147,8 @@ async def start_sstv_recording(
             try:
                 recording_process.kill()
                 recording_process.wait(timeout=2)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Error killing recording process: {e}")
         raise ServiceUnavailableError(f"Не удалось начать запись: {str(e)}")
 
 
@@ -218,8 +218,8 @@ async def stop_sstv_recording():
             try:
                 recording_process.kill()
                 recording_process.wait(timeout=2)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Error killing recording process during stop: {e}")
         set_app_state("recording_process", None)
         set_app_state("recording_metadata", {})
 
@@ -273,8 +273,8 @@ async def list_recordings(limit: int = 20):
         if meta_json.exists():
             try:
                 metadata = json.loads(meta_json.read_text())
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Failed to read metadata for {file.name}: {e}")
 
         entry = {
             "filename": file.name,

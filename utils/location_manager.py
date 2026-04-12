@@ -10,12 +10,15 @@
 """
 
 import json
+import logging
 import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, Optional
 
 import requests
+
+logger = logging.getLogger(__name__)
 
 
 class TZInfo:
@@ -90,7 +93,8 @@ def detect_location_by_ip() -> Optional[Dict]:
                     offset = tz.utcoffset(datetime.now(timezone.utc))
                     tz_offset = int(offset.total_seconds() // 3600)
                     tz_name = tz_str.split("/")[-1].replace("_", " ")
-                except Exception:
+                except Exception as e:
+                    logger.debug(f"Failed to parse timezone info: {e}")
                     tz_offset = 0
                     tz_name = "LOCAL"
             return {
@@ -100,8 +104,8 @@ def detect_location_by_ip() -> Optional[Dict]:
                 "country": data.get("country", "Unknown"),
                 "timezone": TZInfo(tz_name, tz_offset),
             }
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"ip-api.com geolocation failed: {e}")
 
     # ipapi.co
     try:
@@ -117,8 +121,8 @@ def detect_location_by_ip() -> Optional[Dict]:
                 "country": data.get("country_name", "Unknown"),
                 "timezone": TZInfo(data.get("timezone", "LOCAL"), tz_offset),
             }
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"ipapi.co geolocation failed: {e}")
 
     return None
 
@@ -134,8 +138,8 @@ def load_location_cache() -> Optional[Dict]:
             )
             if datetime.now(timezone.utc) - cached_time < timedelta(hours=CACHE_TTL_HOURS):
                 return cache
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Failed to load location cache: {e}")
     return None
 
 
@@ -242,8 +246,8 @@ def _background_location_refresh():
         location = detect_location_by_ip()
         if location:
             save_location_cache(location)
-    except Exception:
-        pass  # Тихо игнорируем ошибки в фоновом потоке
+    except Exception as e:
+        logger.debug(f"Background location refresh failed: {e}")
 
 
 def force_detect_and_save() -> Optional[Dict]:

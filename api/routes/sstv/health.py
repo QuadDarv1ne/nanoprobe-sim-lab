@@ -5,6 +5,7 @@ SSTV Health Check endpoints
 деградация функциональности.
 """
 
+import logging
 import shutil
 import time
 from datetime import datetime, timezone
@@ -14,6 +15,8 @@ import psutil
 from fastapi import APIRouter
 
 from api.routes.sstv.helpers import REDIS_AVAILABLE, SSTV_AVAILABLE, get_app_state, tracker_module
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -101,8 +104,8 @@ async def sstv_extended_health_check():
                 if sdr:
                     try:
                         sdr.close()
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.debug(f"Error closing SDR device: {e}")
         else:
             device_status = "not_found"
 
@@ -122,8 +125,8 @@ async def sstv_extended_health_check():
             proc = psutil.Process(recording_process.pid)
             memory_info = proc.memory_info()
             memory_usage["recording_process_mb"] = memory_info.rss / (1024 * 1024)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Failed to get recording process memory: {e}")
 
     memory_usage["system_available_mb"] = psutil.virtual_memory().available / (1024 * 1024)
 
@@ -255,13 +258,14 @@ async def check_rtlsdr_device():
                     }
                 )
             except Exception as e:
+                logger.warning(f"Error checking SDR device {i}: {e}")
                 devices.append({"index": i, "error": str(e)})
             finally:
                 if sdr:
                     try:
                         sdr.close()
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.debug(f"Error closing SDR device {i}: {e}")
 
         return {"status": "ok", "count": num_devices, "devices": devices}
 
