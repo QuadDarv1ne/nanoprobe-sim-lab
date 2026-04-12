@@ -195,7 +195,8 @@ async def get_system_status():
             services["redis"]["status"] = "running"
         else:
             services["redis"]["status"] = "disabled"
-    except Exception:
+    except Exception as e:
+        logger.warning("Redis health check failed: %s", e)
         services["redis"]["status"] = "error"
 
     return {

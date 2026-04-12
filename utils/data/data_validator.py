@@ -8,6 +8,8 @@
 import hashlib
 import json
 import logging
+
+logger = logging.getLogger(__name__)
 import re
 import warnings
 from dataclasses import dataclass
@@ -144,7 +146,7 @@ class DataValidator:
             try:
                 value = str(value)
             except Exception:
-                return False
+                return False  # Невозможно конвертировать в строку
 
         if len(value) < min_length:
             return False

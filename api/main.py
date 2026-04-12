@@ -366,7 +366,8 @@ async def detailed_health_check():
 
         _r = get_redis()
         cache_status = "running" if _r and _r.is_available() else "unavailable"
-    except Exception:
+    except Exception as e:
+        logger.debug("Failed to check Redis status: %s", e)
         cache_status = "unavailable"
 
     return {
@@ -607,7 +608,7 @@ async def websocket_endpoint(websocket: WebSocket):
         try:
             await manager.disconnect(websocket)
         except Exception:
-            pass  # Уже отключено
+            pass  # Уже отключено, это нормально
 
 
 # Фоновая задача для push-уведомлений подписчикам

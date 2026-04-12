@@ -431,7 +431,8 @@ class NASAAPIClient:
         try:
             await self.get_api_info()
             return True
-        except Exception:
+        except Exception as e:
+            logger.debug("NASA API health check failed: %s", e)
             return False
 
 

@@ -58,7 +58,7 @@ class SSTVSessionManager:
             try:
                 await ws.send_json(message)
             except Exception:
-                disconnected.append(ws)
+                disconnected.append(ws)  # WebSocket closed
 
         # Удаляем отключенные
         for ws in disconnected:
