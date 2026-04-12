@@ -9,6 +9,7 @@ import logging
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
@@ -425,6 +426,22 @@ async def api_root():
 
 # Регистрация всех роутов через централизованный модуль
 register_routes(app)
+
+# Раздача статических файлов (изображения сканов, отчёты и т.д.)
+try:
+    from fastapi.staticfiles import StaticFiles
+
+    # Монтируем директорию data для доступа к файлам сканов
+    if Path("data").exists():
+        app.mount("/data", StaticFiles(directory="data"), name="data")
+        logger.info("Static files mounted: /data -> data/")
+
+    # Монтируем директорию output для отчётов и визуализаций
+    if Path("output").exists():
+        app.mount("/output", StaticFiles(directory="output"), name="output")
+        logger.info("Static files mounted: /output -> output/")
+except Exception as e:
+    logger.warning(f"Static files mounting disabled: {e}")
 
 
 # Metrics endpoint для Prometheus

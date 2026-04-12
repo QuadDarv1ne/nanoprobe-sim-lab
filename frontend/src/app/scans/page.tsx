@@ -15,7 +15,7 @@ interface Scan {
   width?: number;
   height?: number;
   created_at: string;
-  image_path?: string;
+  file_path?: string;
 }
 
 export default function ScansPage() {
@@ -75,8 +75,8 @@ export default function ScansPage() {
   };
 
   const handleDownload = (scan: Scan) => {
-    if (scan.image_path) {
-      window.open(`${API_BASE}${scan.image_path}`, '_blank');
+    if (scan.file_path) {
+      window.open(`${API_BASE}${scan.file_path}`, '_blank');
     } else {
       toast.error('Файл недоступен');
     }

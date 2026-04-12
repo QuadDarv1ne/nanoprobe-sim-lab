@@ -7,6 +7,7 @@ SSTV Health Check endpoints
 
 import logging
 import shutil
+import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -19,6 +20,10 @@ from api.routes.sstv.helpers import REDIS_AVAILABLE, SSTV_AVAILABLE, get_app_sta
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+# Кэш проверки устройств
+_device_check_cache = {"result": None, "timestamp": 0, "checking": False}
+_DEVICE_CACHE_TTL = 15  # секунд
 
 
 @router.get("/health")
@@ -206,72 +211,100 @@ def _get_degradation_recommendations(degradation_level: str, device_status: str)
 @router.get("/device/check")
 async def check_rtlsdr_device():
     """
-    Проверка подключения RTL-SDR устройства.
-
-    Returns:
-        Информация об устройстве (тип, серийный номер, статус)
+    Проверка подключения RTL-SDR устройства (неблокирующая, с кэшем).
     """
-    try:
-        from rtlsdr import RtlSdr
-    except ImportError:
-        return {
-            "status": "error",
-            "message": "pyrtlsdr не установлен",
-            "devices": [],
-        }
+    now = time.time()
 
-    try:
-        if hasattr(RtlSdr, "get_device_count"):
-            num_devices = RtlSdr.get_device_count()
-        else:
-            try:
-                test = RtlSdr(device_index=0)
-                test.close()
-                num_devices = 1
-            except Exception:
-                num_devices = 0
+    # Возвращаем кэш если свежий
+    if (
+        _device_check_cache["result"] is not None
+        and (now - _device_check_cache["timestamp"]) < _DEVICE_CACHE_TTL
+    ):
+        return _device_check_cache["result"]
 
-        if num_devices == 0:
-            return {
-                "status": "no_devices",
-                "message": "RTL-SDR устройства не обнаружены",
-                "devices": [],
-            }
+    # Если уже проверяем — возвращаем последний результат или "checking"
+    if _device_check_cache["checking"]:
+        return {"status": "checking", "message": "Проверка устройства..."}
 
-        devices = []
-        for i in range(num_devices):
+    _device_check_cache["checking"] = True
+
+    def _check_thread():
+        try:
+            from rtlsdr import RtlSdr
+
+            # Пробуем создать экземпляр с таймаутом
             sdr = None
             try:
-                sdr = RtlSdr(device_index=i)
+                sdr = RtlSdr(device_index=0)
                 name = sdr.get_device_name() if hasattr(sdr, "get_device_name") else "Unknown"
                 serial = sdr.get_serial_number() if hasattr(sdr, "get_serial_number") else "Unknown"
-
                 is_v4 = "R828D" in name.upper() or "V4" in name.upper()
 
-                devices.append(
-                    {
-                        "index": i,
-                        "name": name,
-                        "serial": serial,
-                        "is_v4": is_v4,
-                        "recommended_sample_rate": 2400000 if is_v4 else 2000000,
-                    }
-                )
+                _device_check_cache["result"] = {
+                    "status": "ok",
+                    "connected": True,
+                    "device_index": 0,
+                    "device_name": name,
+                    "serial": serial,
+                    "is_v4": is_v4,
+                    "recommended_sample_rate": 2400000 if is_v4 else 2000000,
+                    "tuner": name.split()[-1] if name else "Unknown",
+                }
+                return
             except Exception as e:
-                logger.warning(f"Error checking SDR device {i}: {e}")
-                devices.append({"index": i, "error": str(e)})
+                # Устройство не открылось — pyrtlsdr загружен, но устройство не отвечает
+                _device_check_cache["result"] = {
+                    "status": "device_error",
+                    "connected": False,
+                    "message": f"Устройство найдено, но не открывается: {str(e)[:100]}",
+                    "device_index": 0,
+                    "device_name": "RTL-SDR",
+                    "serial": "",
+                    "is_v4": False,
+                    "tuner": "Unknown",
+                }
+                return
             finally:
                 if sdr:
                     try:
                         sdr.close()
-                    except Exception as e:
-                        logger.debug(f"Error closing SDR device {i}: {e}")
+                    except Exception:
+                        pass
 
-        return {"status": "ok", "count": num_devices, "devices": devices}
+        except ImportError:
+            _device_check_cache["result"] = {
+                "status": "driver_not_installed",
+                "connected": False,
+                "message": "pyrtlsdr не установлен",
+                "devices": [],
+            }
+        except Exception as e:
+            _device_check_cache["result"] = {
+                "status": "error",
+                "connected": False,
+                "message": str(e)[:100],
+                "devices": [],
+            }
 
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": str(e),
-            "devices": [],
+    # Запускаем проверку в потоке с таймаутом
+    t = threading.Thread(target=_check_thread, daemon=True)
+    t.start()
+    t.join(timeout=3)  # Максимум 3 секунды
+
+    if t.is_alive():
+        # Таймаут — устройство не отвечает
+        _device_check_cache["result"] = {
+            "status": "timeout",
+            "connected": False,
+            "message": "Устройство не отвечает (таймаут 3с). Проверьте драйверы Zadig.",
+            "device_index": 0,
+            "device_name": "RTL-SDR (timeout)",
+            "serial": "",
+            "is_v4": False,
+            "tuner": "Unknown",
         }
+
+    _device_check_cache["checking"] = False
+    _device_check_cache["timestamp"] = time.time()
+
+    return _device_check_cache["result"]
