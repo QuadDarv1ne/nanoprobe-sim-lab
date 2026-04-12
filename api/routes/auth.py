@@ -12,7 +12,7 @@ Auth API Router - Unified
 from fastapi import APIRouter
 
 from api.routes.auth_routes.endpoints import router as endpoints_router
-from api.routes.auth_routes.helpers import (
+from api.routes.auth_routes.helpers import (  # noqa: F401 - re-export for api.dependencies
     JWT_ALGORITHM,
     JWT_EXPIRATION_MINUTES,
     JWT_REFRESH_EXPIRATION_DAYS,
