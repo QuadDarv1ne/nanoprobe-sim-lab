@@ -6,6 +6,7 @@ SSTV Satellites endpoints
 """
 
 import asyncio
+import logging
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -14,6 +15,8 @@ from fastapi import APIRouter, Query
 
 from api.error_handlers import NotFoundError, ServiceUnavailableError
 from api.routes.sstv.helpers import REDIS_AVAILABLE, get_redis_cache, get_satellite_tracker
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -69,7 +72,8 @@ async def get_iss_schedule(
             "data": result,
         }
 
-    except Exception:
+    except Exception as e:
+        logger.exception("Failed to get ISS schedule: %s", e)
         raise ServiceUnavailableError("Не удалось получить расписание МКС")
 
 
@@ -119,7 +123,8 @@ async def get_iss_next_pass(
 
         return {"status": "success", "cached": False, "data": result}
 
-    except Exception:
+    except Exception as e:
+        logger.exception("Failed to get ISS next pass: %s", e)
         raise ServiceUnavailableError("Не удалось получить данные о пролёте МКС")
 
 
@@ -158,7 +163,8 @@ async def get_iss_current_position():
 
         return {"status": "success", "cached": False, "data": result}
 
-    except Exception:
+    except Exception as e:
+        logger.exception("Failed to get ISS position: %s", e)
         raise ServiceUnavailableError("Не удалось получить позицию МКС")
 
 
@@ -187,7 +193,8 @@ async def is_iss_visible(
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
-    except Exception:
+    except Exception as e:
+        logger.exception("Failed to check ISS visibility: %s", e)
         raise ServiceUnavailableError("Не удалось проверить видимость МКС")
 
 
@@ -240,7 +247,8 @@ async def get_all_satellites_schedule(hours_ahead: int = 24):
             "data": result,
         }
 
-    except Exception:
+    except Exception as e:
+        logger.exception("Failed to get satellite schedule: %s", e)
         raise ServiceUnavailableError("Не удалось получить расписание спутников")
 
 
