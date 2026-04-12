@@ -129,7 +129,8 @@ class CircuitBreaker:
             result = func(*args, **kwargs)
             self._on_success()
             return result
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Circuit breaker call failed for {self._name}: {e}")
             self._on_failure()
             raise
 

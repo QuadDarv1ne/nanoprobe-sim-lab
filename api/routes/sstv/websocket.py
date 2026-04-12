@@ -63,10 +63,10 @@ async def iss_websocket(websocket: WebSocket):
         logger.error("WebSocket ISS tracking error: %s", e)
         try:
             await websocket.send_json({"error": str(e)})
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("WebSocket error response failed: %s", e)
     finally:
         try:
             await websocket.close()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("WebSocket close failed: %s", e)

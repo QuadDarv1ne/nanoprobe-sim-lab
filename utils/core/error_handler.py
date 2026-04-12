@@ -9,6 +9,8 @@
 import json
 import logging
 import queue
+
+logger = logging.getLogger(__name__)
 import threading
 import time
 import traceback
@@ -142,7 +144,8 @@ class ErrorHandler:
                 self.error_history = [
                     ErrorInfo.from_dict(item) if isinstance(item, dict) else item for item in data
                 ]
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Failed to load error history: {e}")
             self.error_history = []
 
     def save_error_history(self):

@@ -14,8 +14,11 @@ Endpoints:
 - Redis (опционально для production)
 """
 
+import logging
 import os
 from typing import Dict
+
+logger = logging.getLogger(__name__)
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -180,8 +183,8 @@ def get_limit_from_exception(exc: RateLimitExceeded) -> str:
             parts = detail.split("per")
             if len(parts) > 1:
                 return parts[1].strip()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Failed to parse rate limit from exception: {e}")
     return "100/minute"
 
 

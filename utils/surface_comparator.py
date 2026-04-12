@@ -1,11 +1,14 @@
 """Surface image comparison module for Nanoprobe Simulation Lab"""
 
 import json
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict
 
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 try:
     from PIL import Image
@@ -93,8 +96,8 @@ class SurfaceComparator:
         try:
             metrics["ssim"] = _calculate_ssim(img1, img2)
             metrics["psnr"] = _calculate_psnr(img1, img2)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"SSIM/PSNR calculation failed: {e}")
 
         mse_val = float(np.mean((img1 - img2) ** 2))
         metrics["mse"] = mse_val
