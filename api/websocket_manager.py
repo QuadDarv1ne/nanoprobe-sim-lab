@@ -103,8 +103,8 @@ class ConnectionManager:
             # Закрытие соединения
             try:
                 await websocket.close()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Error closing websocket: {e}")
 
             logger.info(f"WebSocket disconnected. Total: {len(self.active_connections)}")
 

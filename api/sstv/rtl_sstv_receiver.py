@@ -246,8 +246,8 @@ class RTLSDRReceiver:
                 info["tuner_type"] = str(self.sdr.get_tuner_type())
                 info["actual_gain"] = self.sdr.gain
                 info["actual_freq_mhz"] = self.sdr.fc / 1e6
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Failed to get optional device info: {e}")
         return info
 
     def read_samples(self, num_samples: int = 8192) -> Optional[np.ndarray]:
@@ -314,8 +314,8 @@ class RTLSDRReceiver:
             self.is_running = False
             try:
                 self.sdr.cancel_read_async()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Error canceling async read: {e}")
 
         if not iq_chunks:
             return None
@@ -417,12 +417,12 @@ class RTLSDRReceiver:
         if self.sdr:
             try:
                 self.sdr.cancel_read_async()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Error canceling async read during close: {e}")
             try:
                 self.sdr.close()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Error closing SDR device: {e}")
             finally:
                 self.sdr = None
         logger.info("RTL-SDR закрыт")
@@ -494,7 +494,7 @@ class SSTVDecoder:
                         self._record_success(img)
                         return img
                 except Exception:
-                    continue
+                    continue  # Пробуем следующий режим
 
             logger.warning("SSTV декодирование не удалось ни в одном режиме")
             return None
@@ -506,8 +506,8 @@ class SSTVDecoder:
             if tmp_path and os.path.exists(tmp_path):
                 try:
                     os.unlink(tmp_path)
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug(f"Failed to remove temp file {tmp_path}: {e}")
 
     def _try_decode(self, wav_path: str, sample_rate: int, mode_cls) -> Optional[Any]:
         """Попытка декодирования одним режимом через pysstv API."""

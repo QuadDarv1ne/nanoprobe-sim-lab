@@ -319,8 +319,8 @@ async def profile_database_query(
         if conn:
             try:
                 conn.close()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Error closing DB connection in profile_database_query: {e}")
 
 
 @router.get(
@@ -386,8 +386,8 @@ async def get_database_indexes() -> Dict[str, Any]:
         if conn:
             try:
                 conn.close()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Error closing DB connection in get_database_indexes: {e}")
 
 
 # Project root for database path

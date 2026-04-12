@@ -133,8 +133,8 @@ def get_redis_client():
         instance = get_redis()
         if instance and instance.is_available():
             return instance.client
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Failed to get Redis from app state: {e}")
 
     cache = get_redis_connection_pool()
     return cache.client if cache.is_available() else None
