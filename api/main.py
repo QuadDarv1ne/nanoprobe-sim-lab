@@ -23,6 +23,9 @@ from utils.database import DatabaseManager
 
 logger = logging.getLogger(__name__)
 
+# Версия приложения (единый источник)
+APP_VERSION = os.getenv("APP_VERSION", "2.0.0")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -41,7 +44,7 @@ async def lifespan(app: FastAPI):
                 dsn=sentry_dsn,
                 traces_sample_rate=0.1,  # 10% транзакций для мониторинга
                 environment=os.getenv("ENVIRONMENT", "development"),
-                release=os.getenv("APP_VERSION", "1.0.0"),
+                release=APP_VERSION,
                 integrations=[
                     StarletteIntegration(),
                     FastApiIntegration(),
@@ -211,7 +214,7 @@ app = FastAPI(
 ### Аутентификация:
 Большинство эндпоинтов требуют JWT токен. Получите токен через `/api/v1/auth/login`.
     """,
-    version="1.0.0",
+    version=APP_VERSION,
     contact={
         "name": "Школа программирования Maestro7IT",
         "email": "maksimqwe42@mail.ru",
@@ -219,7 +222,7 @@ app = FastAPI(
     },
     license_info={
         "name": "Proprietary",
-        "url": "https://github.com/your-username/nanoprobe-sim-lab/blob/main/legal/LICENCE_RU",
+        "url": "https://github.com/QuadDarv1ne/nanoprobe-sim-lab/blob/main/legal/LICENCE_RU",
     },
     lifespan=lifespan,
     docs_url="/docs",
@@ -321,7 +324,7 @@ async def health_check():
         result = {
             "status": "healthy",
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "version": "1.0.0",
+            "version": APP_VERSION,
         }
         logger.info(f"Health check result: {result}")
         return result

@@ -317,11 +317,10 @@ def setup_flask_sync_integration(app, socketio):
     @socketio.on("request_stats")
     def handle_request_stats():
         """Запрос статистики из Backend"""
-        import asyncio
-
         try:
-            loop = asyncio.get_event_loop()
+            loop = asyncio.new_event_loop()
             stats = loop.run_until_complete(sync_manager.sync_dashboard_stats())
+            loop.close()
             if stats:
                 emit("stats", stats)
         except Exception as e:
@@ -331,11 +330,10 @@ def setup_flask_sync_integration(app, socketio):
     @socketio.on("request_metrics")
     def handle_request_metrics():
         """Запрос метрик из Backend"""
-        import asyncio
-
         try:
-            loop = asyncio.get_event_loop()
+            loop = asyncio.new_event_loop()
             metrics = loop.run_until_complete(sync_manager.sync_realtime_metrics())
+            loop.close()
             if metrics:
                 emit("metrics", metrics)
         except Exception as e:
