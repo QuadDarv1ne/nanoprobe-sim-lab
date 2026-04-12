@@ -106,7 +106,8 @@ def _initialize_users_db():
     if hash_cache_file.exists():
         try:
             cached_hashes = json.loads(hash_cache_file.read_text())
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Failed to load password hash cache: {e}")
             cached_hashes = {}
 
     def _get_or_create_hash(username: str, password: str) -> str:
