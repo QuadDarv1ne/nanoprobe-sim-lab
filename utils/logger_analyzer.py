@@ -2,6 +2,7 @@
 
 import csv
 import json
+import logging
 import re
 import statistics
 import threading
@@ -11,6 +12,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+logger = logging.getLogger(__name__)
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -131,7 +134,8 @@ class AdvancedLoggerAnalyzer:
                     timestamp=timestamp, level=level, component=component, message=message
                 )
 
-        except Exception:
+        except Exception as e:
+            logger.debug("Failed to parse log line with standard format: %s", e)
             # Если стандартный формат не подходит, пробуем другие варианты
             pass
 

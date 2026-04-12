@@ -1,5 +1,6 @@
 """Модуль управления развертыванием для проекта Лаборатория моделирования нанозонда."""
 
+import logging
 import os
 import shutil
 import subprocess
@@ -8,6 +9,8 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List
+
+logger = logging.getLogger(__name__)
 
 # Опциональный импорт Docker
 try:
@@ -602,8 +605,8 @@ spec:
                             status["running_containers"].append(
                                 {"name": name, "status": status_str}
                             )
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning("Failed to get Docker container status: %s", e)
 
         return status
 

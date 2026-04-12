@@ -1,6 +1,7 @@
 """Модуль тестовой платформы для проекта Лаборатория моделирования нанозонда."""
 
 import json
+import logging
 import os
 import subprocess
 import time
@@ -9,6 +10,8 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Dict, List
+
+logger = logging.getLogger(__name__)
 
 import coverage
 
@@ -244,7 +247,8 @@ class TestFramework:
                 try:
                     target_function()
                     iterations += 1
-                except Exception:
+                except Exception as e:
+                    logger.debug("Test iteration failed (continuing): %s", e)
                     # Игнорируем ошибки для продолжения теста
                     pass
 

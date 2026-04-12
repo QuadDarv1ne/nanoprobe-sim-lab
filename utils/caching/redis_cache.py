@@ -302,7 +302,7 @@ def cached_sync(prefix: str = "api", expire: int = 300):
 
                 redis_instance = get_redis()
             except Exception:
-                redis_instance = cache
+                redis_instance = cache  # Fallback на модульный cache
 
             # Генерация ключа
             cache_key = f"{prefix}:{func.__name__}:"
