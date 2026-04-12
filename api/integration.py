@@ -6,6 +6,7 @@
 import json
 import logging
 import os
+import secrets
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
@@ -13,6 +14,16 @@ import jwt
 import requests
 
 logger = logging.getLogger(__name__)
+
+
+def _get_jwt_secret() -> str:
+    """Получить JWT секрет из ENV или сгенерировать безопасный."""
+    secret = os.getenv("JWT_SECRET")
+    if secret:
+        return secret
+    # В development генерируем случайный секрет
+    # В production ОБЯЗАТЕЛЬНО установите JWT_SECRET в ENV
+    return secrets.token_hex(32)
 
 
 class FlaskFastAPIIntegration:
@@ -37,9 +48,7 @@ class FlaskFastAPIIntegration:
         """
         self.fastapi_url = fastapi_url.rstrip("/")
         self.flask_url = flask_url.rstrip("/")
-        self.jwt_secret = jwt_secret or os.getenv(
-            "JWT_SECRET", "your-secret-key-change-in-production"
-        )
+        self.jwt_secret = jwt_secret or _get_jwt_secret()
         self._token_cache: Optional[str] = None
         self._token_expiry: Optional[datetime] = None
 

@@ -33,9 +33,6 @@ def _get_jwt_secret() -> str:
         raise RuntimeError("JWT secret configuration error")
 
 
-JWT_ALGORITHM = "HS256"
-
-
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> dict:
@@ -54,6 +51,8 @@ async def get_current_user(
     try:
         token = credentials.credentials
         jwt_secret = _get_jwt_secret()
+        from api.routes.auth_routes.helpers import JWT_ALGORITHM
+
         payload = jwt.decode(token, jwt_secret, algorithms=[JWT_ALGORITHM])
         username: str = payload.get("sub")
 

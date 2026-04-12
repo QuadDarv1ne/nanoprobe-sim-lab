@@ -3,14 +3,17 @@ ADS-B Aircraft Tracker API Routes
 Endpoints for aircraft tracking data from 1090 MHz
 """
 
+import logging
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
 from utils.caching.cache_manager import CacheManager
 from utils.database import DatabaseManager
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/adsb", tags=["ADS-B Aircraft"])
 
@@ -24,6 +27,13 @@ def set_managers(db: DatabaseManager, cache: CacheManager):
     global _db_manager, _cache_manager
     _db_manager = db
     _cache_manager = cache
+
+
+def _get_db() -> DatabaseManager:
+    """Get database manager or raise error"""
+    if _db_manager is None:
+        raise HTTPException(status_code=503, detail="Database not initialized")
+    return _db_manager
 
 
 class ADSBSighting(BaseModel):
@@ -172,7 +182,8 @@ async def get_stats():
 
     _ensure_table()
 
-    with _db_manager.get_connection() as conn:
+    db = _get_db()
+    with db.get_connection() as conn:
         cursor = conn.cursor()
 
         cursor.execute("SELECT COUNT(*) FROM adsb_sightings")
@@ -209,7 +220,8 @@ async def clear_data():
     """
     _ensure_table()
 
-    with _db_manager.get_connection() as conn:
+    db = _get_db()
+    with db.get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("DELETE FROM adsb_sightings")
         deleted = cursor.rowcount
@@ -226,7 +238,8 @@ async def clear_data():
 
 def _ensure_table():
     """Create adsb_sightings table if not exists"""
-    with _db_manager.get_connection() as conn:
+    db = _get_db()
+    with db.get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
             """

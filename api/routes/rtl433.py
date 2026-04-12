@@ -3,14 +3,17 @@ RTL_433 API Routes
 Endpoints for weather station and sensor data
 """
 
+import logging
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from utils.caching.cache_manager import CacheManager
 from utils.database import DatabaseManager
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/rtl433", tags=["RTL-433"])
 
@@ -24,6 +27,13 @@ def set_managers(db: DatabaseManager, cache: CacheManager):
     global _db_manager, _cache_manager
     _db_manager = db
     _cache_manager = cache
+
+
+def _get_db() -> DatabaseManager:
+    """Get database manager or raise error"""
+    if _db_manager is None:
+        raise HTTPException(status_code=503, detail="Database not initialized")
+    return _db_manager
 
 
 class RTL433Reading(BaseModel):
@@ -166,7 +176,8 @@ async def get_stats():
     # Ensure table exists
     _ensure_table()
 
-    with _db_manager.get_connection() as conn:
+    db = _get_db()
+    with db.get_connection() as conn:
         cursor = conn.cursor()
 
         cursor.execute("SELECT COUNT(*) FROM rtl433_readings")
@@ -204,7 +215,8 @@ async def clear_data():
     """
     _ensure_table()
 
-    with _db_manager.get_connection() as conn:
+    db = _get_db()
+    with db.get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("DELETE FROM rtl433_readings")
         deleted = cursor.rowcount
@@ -222,7 +234,8 @@ async def clear_data():
 
 def _ensure_table():
     """Create rtl433_readings table if not exists"""
-    with _db_manager.get_connection() as conn:
+    db = _get_db()
+    with db.get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
             """
@@ -254,7 +267,8 @@ def _get_readings_db(
     limit: int, offset: int, model: Optional[str], device_id: Optional[str]
 ) -> dict:
     """Get readings from database"""
-    with _db_manager.get_connection() as conn:
+    db = _get_db()
+    with db.get_connection() as conn:
         cursor = conn.cursor()
 
         # Build query with filters
@@ -296,7 +310,8 @@ def _get_readings_db(
 
 def _get_devices_db() -> dict:
     """Get device summary from database"""
-    with _db_manager.get_connection() as conn:
+    db = _get_db()
+    with db.get_connection() as conn:
         cursor = conn.cursor()
 
         cursor.execute(

@@ -3,14 +3,17 @@ FM Radio API Routes
 Endpoints for FM station scanning and recordings
 """
 
+import logging
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
 from utils.caching.cache_manager import CacheManager
 from utils.database import DatabaseManager
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/fm-radio", tags=["FM Radio"])
 
@@ -24,6 +27,13 @@ def set_managers(db: DatabaseManager, cache: CacheManager):
     global _db_manager, _cache_manager
     _db_manager = db
     _cache_manager = cache
+
+
+def _get_db() -> DatabaseManager:
+    """Get database manager or raise error"""
+    if _db_manager is None:
+        raise HTTPException(status_code=503, detail="Database not initialized")
+    return _db_manager
 
 
 class FMRecording(BaseModel):
@@ -156,7 +166,8 @@ async def get_stats():
 
     _ensure_table()
 
-    with _db_manager.get_connection() as conn:
+    db = _get_db()
+    with db.get_connection() as conn:
         cursor = conn.cursor()
 
         cursor.execute("SELECT COUNT(*) FROM fm_recordings")
@@ -190,7 +201,8 @@ async def clear_data():
     """
     _ensure_table()
 
-    with _db_manager.get_connection() as conn:
+    db = _get_db()
+    with db.get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute("DELETE FROM fm_recordings")
         deleted_recordings = cursor.rowcount
@@ -210,7 +222,8 @@ async def clear_data():
 
 def _ensure_table():
     """Create FM radio tables if not exist"""
-    with _db_manager.get_connection() as conn:
+    db = _get_db()
+    with db.get_connection() as conn:
         cursor = conn.cursor()
 
         cursor.execute(
@@ -252,7 +265,8 @@ def _ensure_table():
 
 def _get_recordings_db(limit: int, offset: int) -> dict:
     """Get recordings from database"""
-    with _db_manager.get_connection() as conn:
+    db = _get_db()
+    with db.get_connection() as conn:
         cursor = conn.cursor()
 
         cursor.execute("SELECT COUNT(*) FROM fm_recordings")
@@ -277,7 +291,8 @@ def _get_recordings_db(limit: int, offset: int) -> dict:
 
 def _get_stations_db() -> dict:
     """Get stations from database"""
-    with _db_manager.get_connection() as conn:
+    db = _get_db()
+    with db.get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
             """
