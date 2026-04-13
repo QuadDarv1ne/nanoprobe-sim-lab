@@ -1,18 +1,37 @@
 # Nanoprobe Sim Lab — TODO
 
-**Последнее обновление:** 2026-04-14 (Night - Dashboard)
+**Последнее обновление:** 2026-04-14 (Morning - Alerting API +17 тестов)
 
 ## Статус проекта
 
 - **Ветка:** `dev` (текущая), `main` (стабильная)
 - **Рабочее дерево:** чисто ✅
 - **Python:** 3.11 - 3.14
-- **Последний коммит:** d3b57cf
+- **Последний коммит:** aa610f2
 - **flake8:** 0 F/B ошибок ✅
-- **Тесты:** 444+ passed, +17 новых ✅
+- **Тесты:** 461+ passed, +17 новых ✅
 - **Coverage:** ~20% → ожидается +10-15% (цель: 80%+)
 
-## 📊 Проделанная работа (2026-04-14 Night - Dashboard Realtime)
+## 📊 Проделанная работа (2026-04-14 Morning - Alerting API)
+
+### Test Coverage - Alerting API
+✅ Добавлено 17 тестов:
+  - `test_alerting_api.py`: 17 тестов (все прошли)
+    - POST /send — отправка алерта (4 теста)
+    - POST /send-async — асинхронная отправка (1 тест)
+    - POST /resolve/{id} — закрытие алерта (1 тест)
+    - POST /acknowledge/{id} — подтверждение (1 тест)
+    - POST /silence/{id} — заглушение (2 теста)
+    - GET /active — активные алерты (2 теста)
+    - GET /statistics — статистика (1 тест)
+    - GET /history — история (3 теста)
+    - Validation (2 теста)
+
+✅ Все 17 тестов прошли успешно (0 failed)
+✅ Commit: aa610f2
+✅ Push в origin/dev
+
+---
 
 ### Test Coverage - Dashboard Realtime API
 ✅ Добавлено 17 тестов:
