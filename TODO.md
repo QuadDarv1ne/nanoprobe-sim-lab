@@ -1,18 +1,48 @@
 # Nanoprobe Sim Lab — TODO
 
-**Последнее обновление:** 2026-04-14 (Evening)
+**Последнее обновление:** 2026-04-14 (Night)
 
 ## Статус проекта
 
 - **Ветка:** `dev` (текущая), `main` (стабильная)
 - **Рабочее дерево:** чисто ✅
 - **Python:** 3.11 - 3.14
-- **Последний коммит:** f5c1a9e
+- **Последний коммит:** c2dfee6
 - **flake8:** 0 F/B ошибок ✅
-- **Тесты:** 394+ passed, +69 новых ✅
-- **Coverage:** ~20% → ожидается +5-8% (цель: 80%+)
+- **Тесты:** 427+ passed, +33 новых ✅
+- **Coverage:** ~20% → ожидается +8-12% (цель: 80%+)
 
-## 📊 Проделанная работа (2026-04-14 Evening - API Coverage Wave)
+## 📊 Проделанная работа (2026-04-14 Night - Reports & Analysis)
+
+### Test Coverage - API Routes (Reports & Analysis)
+✅ Добавлено 33 новых теста:
+  - `test_reports_api.py`: 16 тестов (174 строки)
+    - POST /reports — генерация PDF (5 типов: surface, defect, comparison, simulation, batch)
+    - GET /reports — список отчётов
+    - GET /reports/{id}/download — скачивание
+    - DELETE /reports/{id} — удаление
+    - Validation (3 теста)
+  - `test_analysis_api.py`: 17 тестов (171 строка)
+    - POST /defects — анализ дефектов (4 теста)
+    - GET /defects/history — история (3 теста)
+    - GET /defects/{id} — получение по ID (3 теста)
+    - DELETE /defects/{id} — удаление (1 тест)
+    - GET /defects/{id}/export — экспорт JSON/CSV (3 теста)
+    - Validation (3 теста)
+
+✅ Все 33 теста прошли успешно (0 failed)
+✅ Commit: c2dfee6
+✅ Push в origin/main и origin/dev
+
+### Итоги за день (все сессии)
+✅ Всего добавлено **102 новых теста** за день:
+  - Evening API Coverage Wave: 69 тестов (SSTV, Comparison, Export, ML)
+  - Night Reports & Analysis: 33 теста
+
+✅ Общее количество тестов: ~427+
+✅ Покрытие кода: ~1350 строк API роутов
+
+---
 
 ### Test Coverage - API Routes (4 модуля без покрытия)
 ✅ Добавлено 69 новых тестов:
