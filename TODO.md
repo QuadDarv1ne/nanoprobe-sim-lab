@@ -1,16 +1,48 @@
 # Nanoprobe Sim Lab — TODO
 
-**Последнее обновление:** 2026-04-14 (Morning - Weather API +12 тестов)
+**Последнее обновление:** 2026-04-14 (Afternoon - GraphQL API + RTL-433 API)
 
 ## Статус проекта
 
 - **Ветка:** `dev` (текущая), `main` (стабильная)
 - **Рабочее дерево:** чисто ✅
 - **Python:** 3.11 - 3.14
-- **Последний коммит:** 27e3d98
+- **Последний коммит:** 8a12326
 - **flake8:** 0 F/B ошибок ✅
-- **Тесты:** 485+ passed, +41 новых ✅
+- **Тесты:** 510+ passed, +66 новых за сессию ✅
 - **Coverage:** ~20% → ожидается +10-15% (цель: 80%+)
+
+## 📊 Проделанная работа (2026-04-14 Afternoon - GraphQL API)
+
+### Test Coverage - GraphQL API
+✅ Добавлено 10 тестов:
+  - `test_graphql_api.py`: 10 тестов (все прошли)
+    - GET /graphql/schema — получение схемы (4 теста)
+    - POST /graphql — endpoint (2 теста)
+    - Validation (4 теста)
+
+✅ Все 10 тестов прошли успешно (0 failed)
+✅ Commit: 8a12326
+✅ Push в origin/dev
+
+---
+
+## 📊 Проделанная работа (2026-04-14 Afternoon - RTL-433 API)
+
+### Test Coverage - RTL-433 API
+✅ Добавлено 15 тестов:
+  - `test_rtl433_api.py`: 15 тестов (все прошли)
+    - GET /readings — список показаний (5 тестов)
+    - GET /devices — список устройств (2 теста)
+    - GET /stats — статистика (1 тест)
+    - POST /clear — очистка данных (1 тест)
+    - Model validation (6 тестов)
+
+✅ Все 15 тестов прошли успешно (0 failed)
+✅ Commit: b5f353b
+✅ Push в origin/dev
+
+---
 
 ## 📊 Проделанная работа (2026-04-14 Morning - Weather API)
 
