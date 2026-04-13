@@ -1,16 +1,36 @@
 # Nanoprobe Sim Lab — TODO
 
-**Последнее обновление:** 2026-04-14 (Morning - FM Radio API +12 тестов)
+**Последнее обновление:** 2026-04-14 (Morning - Weather API +12 тестов)
 
 ## Статус проекта
 
 - **Ветка:** `dev` (текущая), `main` (стабильная)
 - **Рабочее дерево:** чисто ✅
 - **Python:** 3.11 - 3.14
-- **Последний коммит:** 735fa50
+- **Последний коммит:** 27e3d98
 - **flake8:** 0 F/B ошибок ✅
-- **Тесты:** 473+ passed, +29 новых ✅
+- **Тесты:** 485+ passed, +41 новых ✅
 - **Coverage:** ~20% → ожидается +10-15% (цель: 80%+)
+
+## 📊 Проделанная работа (2026-04-14 Morning - Weather API)
+
+### Test Coverage - Weather API
+✅ Добавлено 12 тестов:
+  - `test_weather_api.py`: 12 тестов (все прошли)
+    - GET /weather/{location} — прогноз погоды (7 тестов)
+      - Прогноз для Одинцово, Москвы, МКС
+      - Прогноз по координатам
+      - Ошибки (invalid location, API error)
+    - Validation (5 тестов)
+      - Weather codes mapping
+      - Response structure
+      - Locations constants
+
+✅ Все 12 тестов прошли успешно (0 failed)
+✅ Commit: 27e3d98
+✅ Push в origin/dev
+
+---
 
 ## 📊 Проделанная работа (2026-04-14 Morning - FM Radio API)
 
