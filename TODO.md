@@ -1,18 +1,47 @@
 # Nanoprobe Sim Lab — TODO
 
-**Последнее обновление:** 2026-04-14 (Night)
+**Последнее обновление:** 2026-04-14 (Night - Dashboard)
 
 ## Статус проекта
 
 - **Ветка:** `dev` (текущая), `main` (стабильная)
 - **Рабочее дерево:** чисто ✅
 - **Python:** 3.11 - 3.14
-- **Последний коммит:** c2dfee6
+- **Последний коммит:** d3b57cf
 - **flake8:** 0 F/B ошибок ✅
-- **Тесты:** 427+ passed, +33 новых ✅
-- **Coverage:** ~20% → ожидается +8-12% (цель: 80%+)
+- **Тесты:** 444+ passed, +17 новых ✅
+- **Coverage:** ~20% → ожидается +10-15% (цель: 80%+)
 
-## 📊 Проделанная работа (2026-04-14 Night - Reports & Analysis)
+## 📊 Проделанная работа (2026-04-14 Night - Dashboard Realtime)
+
+### Test Coverage - Dashboard Realtime API
+✅ Добавлено 17 тестов:
+  - `test_dashboard_realtime_api.py`: 17 тестов (16 passed, 1 skipped)
+    - GET /metrics/realtime — метрики реального времени (4 теста)
+    - GET /metrics/realtime/detailed — детальные метрики (2 теста)
+    - GET /activity/timeline — временная шкала (3 теста)
+    - GET /storage — статистика хранилища (3 теста)
+    - Endpoint existence (2 теста)
+    - Validation (3 теста)
+  - Исправления кода:
+    - Создан `api/routes/dashboard/activity.py` (заглушка для совместимости)
+    - Обновлён `__init__.py` для экспорта основного router
+
+✅ Все 16 тестов прошли успешно (0 failed, 1 skipped)
+✅ Commit: d3b57cf
+✅ Push в origin/main и origin/dev
+
+### Итоги за день (все сессии)
+✅ Всего добавлено **119 новых тестов** за день:
+  - Evening API Coverage Wave: 69 тестов (SSTV, Comparison, Export, ML)
+  - Night Reports & Analysis: 33 теста (Reports, Analysis)
+  - Night Dashboard: 17 тестов (Realtime metrics, storage, activity)
+
+✅ Общее количество тестов: ~444+
+✅ Покрытие кода: ~1650 строк API роутов
+✅ Исправлена структура dashboard модулей
+
+---
 
 ### Test Coverage - API Routes (Reports & Analysis)
 ✅ Добавлено 33 новых теста:
