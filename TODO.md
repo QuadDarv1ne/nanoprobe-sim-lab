@@ -1,16 +1,60 @@
 # Nanoprobe Sim Lab — TODO
 
-**Последнее обновление:** 2026-04-14 (Afternoon)
+**Последнее обновление:** 2026-04-14 (Evening)
 
 ## Статус проекта
 
 - **Ветка:** `dev` (текущая), `main` (стабильная)
-- **Рабочее дерево:** есть изменения ✅
+- **Рабочее дерево:** чисто ✅
 - **Python:** 3.11 - 3.14
-- **Последний коммит:** 81902f0
+- **Последний коммит:** f5c1a9e
 - **flake8:** 0 F/B ошибок ✅
-- **Тесты:** 200+ passed, +67 новых ✅
-- **Coverage:** ~20% → ожидается +3-5% (цель: 80%+)
+- **Тесты:** 394+ passed, +69 новых ✅
+- **Coverage:** ~20% → ожидается +5-8% (цель: 80%+)
+
+## 📊 Проделанная работа (2026-04-14 Evening - API Coverage Wave)
+
+### Test Coverage - API Routes (4 модуля без покрытия)
+✅ Добавлено 69 новых тестов:
+  - `test_sstv_advanced_api.py`: 26 тестов (280 строк кода)
+    - GET /status — статус SSTV системы (4 теста)
+    - GET /spectrum — спектр сигнала (6 тестов)
+    - GET /signal-strength — сила сигнала (4 теста)
+    - Device cache logic (4 теста)
+    - Receiver initialization (4 теста)
+    - WebSocket endpoint (1 тест + 2 skipped)
+    - Configuration ENV vars (2 теста)
+    - Shutdown handler (1 тест)
+  - `test_comparison_api.py`: 13 тестов (183 строки)
+    - POST /compare — сравнение поверхностей (5 тестов)
+    - GET /history — история сравнений (2 теста)
+    - GET /{id} — получение по ID (1 тест)
+    - Route existence (2 теста)
+    - Metrics validation (3 теста)
+  - `test_system_export_api.py`: 13 тестов (175 строк)
+    - GET /export/{format} — экспорт JSON/CSV/PDF (5 тестов)
+    - GET /export-bulk — массовый экспорт ZIP (3 теста)
+    - Validation (3 теста)
+    - Edge cases (2 теста)
+  - `test_ml_analysis_api.py`: 17 тестов (158 строк)
+    - POST /ml/analyze — анализ изображения (5 тестов)
+    - GET /ml/models — список моделей (1 тест)
+    - POST /ml/fine-tune — дообучение (4 теста)
+    - POST /ml/save-model — сохранение (2 теста)
+    - GET /ml/batch-analyze — пакетный анализ (3 теста)
+    - Validation (2 теста)
+
+✅ Все 69 тестов прошли успешно (0 failed)
+✅ Pre-commit hooks: black, isort, flake8 прошли
+✅ Commit: f5c1a9e
+✅ Push в origin/dev
+
+### Итоги покрытия API
+- **Покрытие кода:** ~1000 строк API роутов теперь имеют тесты
+- **Эндпоинтов покрыто:** 15+ новых эндпоинтов
+- **Модулей без покрытия:** осталось ~20 из 40+
+
+---
 
 ## 📊 Проделанная работа (2026-04-14 Afternoon - Wave 2)
 
