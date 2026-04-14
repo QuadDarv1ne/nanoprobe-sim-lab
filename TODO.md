@@ -2,9 +2,9 @@
 
 **Последнее обновление:** 2026-04-14
 **Ветка:** `dev` (текущая), `main` (стабильная) — **синхронизированы** ✅
-**Python:** 3.11 - 3.14
-**Последний коммит:** 7bbf5a7
-**Всего тестов:** 1227 collected, ~20% coverage
+**Python:** 3.9 - 3.12 (CI матрица)
+**Последний коммит:** 3d8f02a
+**Всего тестов:** 82 файла
 
 ---
 
@@ -18,22 +18,31 @@
    - Конфликтует с `api/routes/auth_routes/` (JWT-based)
    - **Решение:** удалить файл, обновить импорты если есть
 
-2. [ ] **Исправить 118 bare `except Exception:` без логирования**
-   - `utils/database.py` — 4 шт (lines 60, 129, 315, 1122)
-   - `api/routes/sstv_advanced.py` — 3 шт
+2. [ ] **Исправить 16 bare `except Exception:` без логирования**
+   - `utils/database.py` — 4 шт (lines 60, 129, 315, 1123)
+   - `api/routes/sstv_advanced.py` — 3 шт (lines 196, 280, 343)
    - `api/main.py` — 1 шт (line 621)
-   - `utils/caching/`, `utils/data/` — по 1 шт
+   - `api/sstv/session_manager.py` — 1 шт (line 43)
+   - `api/sstv/rtl_sstv_receiver.py` — 1 шт (line 496)
+   - `api/routes/sstv/health.py` — 1 шт (line 271)
+   - `utils/caching/` — 2 шт
+   - `utils/data/data_validator.py` — 1 шт (line 148)
+   - `utils/monitoring/system_health_monitor.py` — 1 шт (line 499)
+   - `utils/performance/optimization_orchestrator.py` — 1 шт (line 423)
    - **Решение:** заменить на `except Exception as e: logger.exception("...")`
 
 3. [ ] **Включить lint проверки в CI (`|| true` маскирует ошибки)**
-   - `.github/workflows/ci-cd.yml` — Black и MyPy используют `|| true`
-   - `.github/workflows/lint.yml` — MyPy использует `|| true`
+   - `.github/workflows/ci-cd.yml` line 67: `black --check --diff ... || true`
+   - `.github/workflows/ci-cd.yml` line 75: `mypy ... || true`
+   - `.github/workflows/lint.yml` line 36: `mypy ... || true`
+   - `.github/workflows/lint.yml` line 45: `mypy --strict ... || true`
    - CI всегда проходит даже при сломанном коде
    - **Решение:** убрать `|| true`, починить ошибки
+   - **Доп:** lint не проверяет `api/` директорию (основной код FastAPI)
 
 ### HIGH
 
-4. [ ] **Разбить `utils/database.py`** (1947 строк → модули)
+4. [ ] **Разбить `utils/database.py`** (2241 строка → модули)
    - models.py — SQLAlchemy модели
    - connection.py — connection pool, engine init
    - operations.py — CRUD операции
@@ -54,15 +63,9 @@
 
 ### MEDIUM
 
-7. [ ] **Удалить `src/web/archived/`** (2506 строк мёртвого кода)
-   - `web_dashboard.py` (1422 строки)
-   - `web_dashboard_integrated.py` (1084 строки)
-   - Блоатит репозиторий, замедляет CI
+7. [x] **Удалить `src/web/archived/`** — директория не существует (уже удалено)
 
-8. [ ] **Исправить CI: lint не проверяет `api/` директорию**
-   - `.github/workflows/lint.yml` проверяет только `src/`
-   - Основной код (FastAPI routes) не линтится в CI
-   - **Решение:** добавить `api/` в flake8/black/mypy пути
+8. [x] **Исправить CI: lint не проверяет `api/` директорию** — объединено с задачей #3
 
 9. [ ] **Убрать дублирование test jobs в CI**
    - `ci-cd.yml` и `tests.yml` оба запускают тесты
@@ -89,16 +92,17 @@
 ### Код
 - **API роуты:** 41 файл в `api/routes/` (26 top-level + subdirs)
 - **Utils:** 72 файла в `utils/` (15 поддиректорий)
-- **Тесты:** 82 test файла, 1227 collected, ~20% coverage
-- **Файлов >500 строк:** 30 (самый большой: database.py 1947)
+- **Тесты:** 82 test файла
+- **Файлов >500 строк:** 30 (самый большой: database.py 2241)
 
 ### Качество кода
 - **flake8:** 0 критических ошибок (F/E9) ✅
-- **bare except Exception:** 118 occurrences ⚠️
-- **print() в utils/:** 940 вызовов ⚠️
-- **print() всего в проекте:** 3614 вызовов ⚠️
+- **bare except Exception:** 16 occurrences ⚠️ (utils: 9, api: 7)
+- **print() в utils/:** 946 вызовов ⚠️
+- **print() всего в проекте:** 3622 вызовов ⚠️
 - **Pre-commit hooks:** black, isort, flake8 ✅
 - **CI lint:** сломан (`|| true` маскирует ошибки) ⚠️
+- **CI lint пути:** `src/ utils/ tests/` — `api/` не проверяется ⚠️
 
 ### Архитектура
 - **Backend:** FastAPI + JWT + 2FA TOTP + WebSocket + GraphQL
@@ -127,10 +131,21 @@
 - **Действие:** Удалить файл, проверить что ничего не ломается
 
 ### 2. Silent Exception Swallowing
-**Критичные файлы:**
-- `utils/database.py:60,129,315,1122` — core database operations
-- `api/routes/sstv_advanced.py:196,280,343` — SSTV routes
+**Критичные файлы (16 total):**
+
+**utils/ (9 шт):**
+- `utils/database.py:60,129,315,1123` — core database operations
+- `utils/caching/cache_manager.py:104` — cache operations
+- `utils/caching/redis_cache.py:304` — redis cache
+- `utils/data/data_validator.py:148` — data validation
+- `utils/monitoring/system_health_monitor.py:499` — health checks
+- `utils/performance/optimization_orchestrator.py:423` — optimization
+
+**api/ (7 шт):**
 - `api/main.py:621` — FastAPI app startup
+- `api/sstv/session_manager.py:43` — session management
+- `api/sstv/rtl_sstv_receiver.py:496` — RTL-SDR receiver
+- `api/routes/sstv_advanced.py:196,280,343` — SSTV routes
 - `api/routes/sstv/health.py:271` — health check
 
 **Паттерн:**
@@ -147,20 +162,27 @@ except Exception as e:
 ```
 
 ### 3. CI/CD Problems
-**Файлы:** `.github/workflows/ci-cd.yml`, `lint.yml`, `tests.yml`
+**Файлы:** `.github/workflows/ci-cd.yml`, `lint.yml`
 
 **Проблемы:**
 ```yaml
-# ci-cd.yml — lint step
-- run: black . || true  # BAD — ошибки игнорируются
-- run: mypy . || true   # BAD — type check игнорируется
+# ci-cd.yml line 67
+- run: black --check --diff src/ utils/ tests/ 2>&1 || true  # BAD
+
+# ci-cd.yml line 75
+- run: mypy src/ utils/ --ignore-missing-imports || true  # BAD
+
+# lint.yml line 36
+- run: mypy src/ utils/ --ignore-missing-imports || true  # BAD
+
+# lint.yml line 45
+- run: mypy --strict ... || true  # BAD
 ```
 
-- Lint проверяет только `src/`, но не `api/` (основной код)
-- `tests.yml` дублирует test job из `ci-cd.yml`
-- **Действие:** убрать `|| true`, добавить `api/` в lint paths
+- Lint проверяет только `src/ utils/ tests/`, но не `api/` (основной код)
+- **Действие:** убрать все `|| true`, добавить `api/` в lint paths
 
-### 4. utils/database.py (1947 строк)
+### 4. utils/database.py (2241 строка)
 **Что содержит:**
 - ConnectionPool class
 - Async wrappers
