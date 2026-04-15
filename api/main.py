@@ -618,8 +618,8 @@ async def websocket_endpoint(websocket: WebSocket):
         # Проверка что подключение ещё активно
         try:
             await manager.disconnect(websocket)
-        except Exception:
-            logger.debug("WebSocket already disconnected")
+        except Exception as e:
+            logger.debug(f"WebSocket already disconnected: {e}")
 
 
 # Фоновая задача для push-уведомлений подписчикам

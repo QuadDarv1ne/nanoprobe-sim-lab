@@ -101,8 +101,8 @@ class CacheManager:
                         if key not in config:
                             config[key] = value
                     return config
-            except Exception:
-                logger.warning("Failed to load cache config, using defaults")
+            except Exception as e:
+                logger.warning(f"Failed to load cache config: {e}")
                 return default_config
         else:
             # Создаем дефолтный файл конфигурации

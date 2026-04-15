@@ -40,7 +40,8 @@ class SSTVSessionManager:
         for ws in self.websocket_connections[:]:
             try:
                 await ws.send_json(message)
-            except Exception:
+            except Exception as e:
+                logger.debug(f"WebSocket send failed: {e}")
                 disconnected.append(ws)
         for ws in disconnected:
             await self.remove_websocket(ws)

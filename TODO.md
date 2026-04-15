@@ -3,8 +3,8 @@
 **Последнее обновление:** 2026-04-15
 **Ветка:** `dev` (текущая), `main` (стабильная)
 **Python:** 3.9 - 3.12 (CI матрица)
-**Последний коммит:** fadfbe4
-**Всего тестов:** 82 файла
+**Последний коммит:** 0a2de75
+**Всего тестов:** 80 файлов
 
 ---
 
@@ -18,13 +18,16 @@
    - Конфликтует с `api/routes/auth_routes/` (JWT-based)
    - **Решение:** удалить файл, обновить импорты если есть
 
-2. [ ] **Исправить bare `except Exception:` без логирования**
-   - ~60 в `tests/` (test scaffolding, низкий приоритет)
-   - **Исправлено:** database.py:1124, redis_cache.py:304, data_validator.py:148,
-     system_health_monitor.py:499, optimization_orchestrator.py:423,
-     web_dashboard_unified.py:352/386/403, cli/main.py:202/206/242
-   - **Осталось:** ~15 в production коде (низкий приоритет — cleanup при рефакторинге)
-   - **Оставшиеся паттерны:** intentional fallbacks (pass после except — допустимо для cleanup)
+2. [x] **Исправить bare `except Exception:` без логирования** — **ИСПРАВЛЕНО** ✅
+   - ~60 в `tests/` (test scaffolding, низкий приоритет, оставлено)
+   - ~22 в CLI/tools (rtl_sdr_tools/, components/) — низкий приоритет, оставлено
+   - **Исправлены все 16 в production коде:** api/main.py, api/sstv/session_manager.py,
+     api/sstv/rtl_sstv_receiver.py, api/routes/sstv_advanced.py, api/routes/sstv/health.py,
+     utils/db/connection.py (2), utils/db/operations.py, utils/caching/cache_manager.py,
+     utils/caching/redis_cache.py, utils/data/data_validator.py,
+     utils/monitoring/system_health_monitor.py, utils/performance/optimization_orchestrator.py,
+     src/web/web_dashboard_unified.py (4), src/cli/main.py (2), main.py
+   - Все заменены на `except Exception as e:` с `logger.exception()` / `logger.debug()`
 
 3. [x] **Включить lint проверки в CI (`|| true` маскирует ошибки)** — **ИСПРАВЛЕНО** ✅
    - Убраны все `|| true` из `ci-cd.yml` и `lint.yml`
@@ -41,11 +44,11 @@
    - `utils/database.py` — ре-экспорт для обратной совместимости
    - Все 14 тестов прошли ✅
 
-5. [ ] **Заменить print() на logging в `utils/`** (940 вызовов)
+5. [ ] **Заменить print() на logging в `utils/`** (946 вызовов в 44 файлах)
    - `utils/monitoring/` — много print вместо логов
    - `utils/backup_manager.py`, `config_validator.py`
    - **Приоритет:** сначала core модули, потом остальные
-   - **Исключение:** CLI инструменты (components/)
+   - **Исключение:** CLI инструменты (components/, rtl_sdr_tools/, scripts/)
 
 6. [ ] **Увеличить test coverage до 80%+**
    - 1227 тестов есть, но покрытие ~20% (много mock/stub)
@@ -98,7 +101,7 @@
 
 ### Качество кода
 - **flake8:** 0 критических ошибок (F/E9) ✅
-- **bare except Exception:** ~15 осталось в production ⚠️ (исправлено 10+)
+- **bare except Exception:** 0 в production ✅, ~60 в tests, ~22 в CLI/tools
 - **print() в utils/:** 946 вызовов ⚠️
 - **print() всего в проекте:** 3622 вызовов ⚠️
 - **Pre-commit hooks:** black, isort, flake8 ✅
@@ -128,36 +131,10 @@
 ### 1. Legacy Auth System — УДАЛЁН ✅
 **Файл:** `security/auth_manager.py` (540 строк) — удалён 2026-04-15
 
-### 2. Silent Exception Swallowing
-**Критичные файлы (16 total):**
-
-**utils/ (9 шт):**
-- `utils/database.py:60,129,315,1123` — core database operations
-- `utils/caching/cache_manager.py:104` — cache operations
-- `utils/caching/redis_cache.py:304` — redis cache
-- `utils/data/data_validator.py:148` — data validation
-- `utils/monitoring/system_health_monitor.py:499` — health checks
-- `utils/performance/optimization_orchestrator.py:423` — optimization
-
-**api/ (7 шт):**
-- `api/main.py:621` — FastAPI app startup
-- `api/sstv/session_manager.py:43` — session management
-- `api/sstv/rtl_sstv_receiver.py:496` — RTL-SDR receiver
-- `api/routes/sstv_advanced.py:196,280,343` — SSTV routes
-- `api/routes/sstv/health.py:271` — health check
-
-**Паттерн:**
-```python
-except Exception:  # BAD — ошибка молча игнорируется
-    pass
-```
-
-**Решение:**
-```python
-except Exception as e:
-    logger.exception("Failed to ...")
-    raise  # или return error response
-```
+### 2. Silent Exception Swallowing — ИСПРАВЛЕНО ✅
+**Все 16 production bare except исправлены 2026-04-15:**
+- Заменены на `except Exception as e:` с `logger.exception()` / `logger.debug()`
+- Осталось ~60 в tests/ (низкий приоритет) и ~22 в CLI/tools
 
 ### 3. CI/CD Problems
 **Файлы:** `.github/workflows/ci-cd.yml`, `lint.yml`
@@ -222,6 +199,7 @@ except Exception as e:
 - [x] Убран `--reload` из docker-compose.api.yml production
 - [x] Разбит `utils/database.py` (2241 строка) на модули `utils/db/`
 - [x] Исправлены bare except в sstv_decoder.py, sdr_interface.py, web_dashboard_unified.py
+- [x] Исправлены все 16 bare except в production коде (api/, utils/, src/, main.py)
 
 ---
 

@@ -18,11 +18,14 @@
 - FastAPI (для backend)
 """
 
+import logging
 import os
 import sys
 import threading
 import time
 import webbrowser
+
+logger = logging.getLogger(__name__)
 from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path
@@ -349,8 +352,8 @@ class UnifiedWebDashboard:
                     )
                     if response.status_code == 200:
                         return jsonify(response.json())
-                except Exception:
-                    self.logger.warning("Failed to fetch stats from FastAPI, using local data")
+                except Exception as e:
+                    self.logger.warning(f"Failed to fetch stats from FastAPI: {e}")
 
                 # Локальное получение статистики
                 db = self.database
@@ -383,15 +386,16 @@ class UnifiedWebDashboard:
             try:
                 response = requests.get(f"{self.fastapi_url}/health", timeout=3)
                 health["fastapi"] = "ok" if response.status_code == 200 else "error"
-            except Exception:
-                self.logger.debug("FastAPI health check failed")
+            except Exception as e:
+                self.logger.debug(f"FastAPI health check failed: {e}")
                 health["fastapi"] = "error"
 
             # Проверка БД
             try:
                 if self.database:
                     health["database"] = "ok"
-            except Exception:
+            except Exception as e:
+                logger.debug(f"Database health check error: {e}")
                 health["database"] = "error"
 
             # Проверка Sync Manager
@@ -401,8 +405,8 @@ class UnifiedWebDashboard:
                     sync_data = response.json()
                     health["sync_manager"] = "ok" if sync_data.get("running") else "standby"
                     health["sync_last_update"] = sync_data.get("last_sync_time")
-            except Exception:
-                self.logger.debug("Sync manager status check failed")
+            except Exception as e:
+                self.logger.debug(f"Sync manager status check failed: {e}")
                 health["sync_manager"] = "not_available"
 
             all_ok = all(

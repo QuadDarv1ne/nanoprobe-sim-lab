@@ -29,6 +29,7 @@ if sys.version_info < MIN_PYTHON_VERSION or sys.version_info >= (
     print(f"[ERROR] Требуется Python 3.11 - 3.14, текущая версия: {sys.version}")
     sys.exit(1)
 
+import logging
 import os
 import signal
 import socket
@@ -37,6 +38,8 @@ import time
 import webbrowser
 from pathlib import Path
 from typing import Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 # Автоопределение портов
 try:
@@ -332,8 +335,8 @@ def open_browser(mode: str):
 
     try:
         webbrowser.open(url)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Failed to open browser: {e}")
 
     time.sleep(1)
 

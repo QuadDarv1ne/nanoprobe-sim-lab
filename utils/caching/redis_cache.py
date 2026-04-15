@@ -301,8 +301,8 @@ def cached_sync(prefix: str = "api", expire: int = 300):
                 from api.state import get_redis
 
                 redis_instance = get_redis()
-            except Exception:
-                logger.debug("Redis not available, falling back to module cache")
+            except Exception as e:
+                logger.debug(f"Redis not available, falling back to module cache: {e}")
                 redis_instance = cache  # Fallback на модульный cache
 
             # Генерация ключа

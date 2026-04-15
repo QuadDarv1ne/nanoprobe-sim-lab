@@ -493,7 +493,8 @@ class SSTVDecoder:
                     if img is not None:
                         self._record_success(img)
                         return img
-                except Exception:
+                except Exception as e:
+                    logger.debug(f"Decode mode {mode_cls.__name__} failed: {e}")
                     continue  # Пробуем следующий режим
 
             logger.warning("SSTV декодирование не удалось ни в одном режиме")

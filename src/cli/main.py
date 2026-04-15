@@ -203,8 +203,8 @@ def _cleanup_processes():
             try:
                 process.kill()
                 print(f"✓ Процесс {name} уничтожен")
-            except Exception:
-                print(f"✗ Не удалось остановить процесс {name}")
+            except Exception as e:
+                print(f"✗ Не удалось остановить процесс {name}: {e}")
     _active_processes.clear()
 
 

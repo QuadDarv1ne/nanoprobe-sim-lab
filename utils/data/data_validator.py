@@ -145,8 +145,8 @@ class DataValidator:
         if not isinstance(value, str):
             try:
                 value = str(value)
-            except Exception:
-                logger.debug("Failed to convert value to string")
+            except Exception as e:
+                logger.debug(f"Failed to convert value to string: {e}")
                 return False  # Невозможно конвертировать в строку
 
         if len(value) < min_length:

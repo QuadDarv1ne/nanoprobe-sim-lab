@@ -38,8 +38,8 @@ class ConnectionPool:
     def return_connection(self, conn: sqlite3.Connection):
         try:
             self._pool.put_nowait(conn)
-        except Exception:
-            logger.debug("Connection pool full, closing connection")
+        except Exception as e:
+            logger.debug(f"Connection pool full, closing connection: {e}")
             conn.close()
 
     def _create_connection(self) -> sqlite3.Connection:
@@ -99,8 +99,8 @@ class AsyncConnectionPool:
     def return_connection(self, conn: sqlite3.Connection):
         try:
             self._pool.put_nowait(conn)
-        except Exception:
-            logger.debug("Async connection pool full, closing connection")
+        except Exception as e:
+            logger.debug(f"Async connection pool full, closing connection: {e}")
             conn.close()
 
     def _create_connection(self) -> sqlite3.Connection:

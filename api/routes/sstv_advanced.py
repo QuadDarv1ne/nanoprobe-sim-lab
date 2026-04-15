@@ -277,7 +277,8 @@ async def sstv_websocket_stream(websocket: WebSocket):
                         "message": "Still waiting for RTL-SDR device...",
                     }
                 )
-            except Exception:
+            except Exception as e:
+                logger.debug(f"Receiver reconnection wait interrupted: {e}")
                 break
     else:
         from api.sstv.rtl_sstv_receiver import get_receiver

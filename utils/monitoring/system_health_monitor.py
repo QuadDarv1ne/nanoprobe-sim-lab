@@ -1,6 +1,7 @@
 """Модуль мониторинга здоровья системы для проекта Лаборатория моделирования нанозонда."""
 
 import json
+import logging
 import os
 import queue
 import smtplib
@@ -17,6 +18,8 @@ from typing import Any, Callable, Dict, List, Optional
 
 import psutil
 import requests
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -496,7 +499,8 @@ class SystemHealthMonitor:
                 "hostname": socket.gethostname(),
                 "platform": f"{os.name}-{sys.platform}",
             }
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Could not retrieve system info: {e}")
             return {"info": "Could not retrieve system info"}
 
     def generate_health_report(self, output_path: str = None) -> str:

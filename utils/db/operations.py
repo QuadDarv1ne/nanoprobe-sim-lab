@@ -535,8 +535,8 @@ class DatabaseOperations:
             cursor = conn.cursor()
             try:
                 cursor.execute("SELECT COUNT(*) FROM reports")
-            except Exception:
-                logger.debug("reports table not found, falling back to exports")
+            except Exception as e:
+                logger.debug(f"reports table fallback error: {e}")
                 cursor.execute("SELECT COUNT(*) FROM exports WHERE export_format = 'PDF'")
             result = cursor.fetchone()[0]
             self._set_cache(cache_key, result)

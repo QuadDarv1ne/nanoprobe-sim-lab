@@ -1,9 +1,12 @@
 """Модуль оркестратора оптимизации для проекта Лаборатория моделирования нанозонда."""
 
 import json
+import logging
 import os
 import sys
 import time
+
+logger = logging.getLogger(__name__)
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List
@@ -420,7 +423,8 @@ class OptimizationOrchestrator:
                     str(psutil.Process().parent().exe()) if psutil.Process().parent() else "unknown"
                 ),
             }
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Could not retrieve system info: {e}")
             return {"info": "Could not retrieve system info"}
 
     def get_optimization_recommendations(self) -> List[str]:
