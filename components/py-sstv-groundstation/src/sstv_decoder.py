@@ -1,11 +1,14 @@
 """Модуль декодирования SSTV."""
 
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 from PIL import Image
+
+logger = logging.getLogger(__name__)
 
 
 class SSTVDecoder:
@@ -75,7 +78,8 @@ class SSTVDecoder:
                             self.metadata["source"] = str(audio_path)
                             print(f"✓ Успешно декодировано в режиме: {mode_name}")
                             return image
-                    except Exception:
+                    except Exception as e:
+                        logger.debug(f"Failed to decode with {mode_name}: {e}")
                         continue
 
                 print("Не удалось декодировать ни в одном из режимов")
@@ -309,8 +313,8 @@ class SSTVDecoder:
                 duration = n_frames / wav.getframerate()
                 self.metadata["duration_seconds"] = duration
                 self.metadata["sample_rate"] = wav.getframerate()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Failed to read WAV metadata: {e}")
 
         decoded_img = Image.new("RGB", (320, 240), color=(20, 20, 40))
         self.decoded_image = decoded_img

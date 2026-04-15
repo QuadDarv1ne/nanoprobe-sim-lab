@@ -351,7 +351,6 @@ class UnifiedWebDashboard:
                         return jsonify(response.json())
                 except Exception:
                     self.logger.warning("Failed to fetch stats from FastAPI, using local data")
-                    pass
 
                 # Локальное получение статистики
                 db = self.database

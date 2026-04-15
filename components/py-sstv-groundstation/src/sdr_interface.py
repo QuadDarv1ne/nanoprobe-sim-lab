@@ -1,5 +1,6 @@
 """SDR интерфейс для приема SSTV сигналов."""
 
+import logging
 import queue
 import threading
 import time
@@ -7,6 +8,8 @@ import wave
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
+
+logger = logging.getLogger(__name__)
 
 import numpy as np
 
@@ -196,8 +199,8 @@ class SDRInterface:
                 if self.center_freq < 24:  # Если частота < 24 МГц
                     self.sdr.direct_sampling = 1
                     print("  Включен прямой режим (direct sampling)")
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Failed to enable direct sampling: {e}")
 
     def get_frequency_range(self) -> Tuple[float, float]:
         """

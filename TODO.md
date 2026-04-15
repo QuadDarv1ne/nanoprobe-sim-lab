@@ -33,13 +33,13 @@
 
 ### HIGH
 
-4. [ ] **Разбить `utils/database.py`** (2241 строка → модули)
-   - models.py — SQLAlchemy модели
-   - connection.py — connection pool, engine init
-   - operations.py — CRUD операции
-   - users.py — user management
-   - sessions.py — session management
-   - **Цель:** файлы <400 строк каждый
+4. [x] **Разбить `utils/database.py`** (2241 строка → модули) — **РЕФАКТОРИНГ ЗАВЕРШЁН** ✅
+   - `utils/db/connection.py` — ConnectionPool, AsyncConnectionPool
+   - `utils/db/schema.py` — init_database_schema, get_database_stats
+   - `utils/db/operations.py` — все CRUD операции, кэширование, пользователи
+   - `utils/db/__init__.py` — DatabaseManager (объединяет всё)
+   - `utils/database.py` — ре-экспорт для обратной совместимости
+   - Все 14 тестов прошли ✅
 
 5. [ ] **Заменить print() на logging в `utils/`** (940 вызовов)
    - `utils/monitoring/` — много print вместо логов
@@ -94,7 +94,7 @@
 - **API роуты:** 41 файл в `api/routes/` (26 top-level + subdirs)
 - **Utils:** 72 файла в `utils/` (15 поддиректорий)
 - **Тесты:** 82 test файла
-- **Файлов >500 строк:** 30 (самый большой: database.py 2241)
+- **Файлов >500 строк:** 29 (database.py разбит на utils/db/)
 
 ### Качество кода
 - **flake8:** 0 критических ошибок (F/E9) ✅
@@ -180,27 +180,14 @@ except Exception as e:
 - Lint проверяет только `src/ utils/ tests/`, но не `api/` (основной код)
 - **Действие:** убрать все `|| true`, добавить `api/` в lint paths
 
-### 4. utils/database.py (2241 строка)
-**Что содержит:**
-- ConnectionPool class
-- Async wrappers
-- User management (create, get, update, delete, verify)
-- Scan storage
-- Session management
-- Multiple query methods
-- Migration helpers
-
-**План разбиения:**
-```
-utils/database.py (1947) →
-  utils/db/connection.py (~150) — engine, pool, init
-  utils/db/models.py (~400) — SQLAlchemy models
-  utils/db/users.py (~300) — user CRUD
-  utils/db/scans.py (~300) — scan CRUD
-  utils/db/sessions.py (~200) — session management
-  utils/db/queries.py (~400) — generic query helpers
-  utils/db/__init__.py — exports
-```
+### 4. utils/database.py — РЕФАКТОРИНГ ЗАВЕРШЁН ✅
+**Было:** 2241 строка в одном файле
+**Стало:** 4 модуля в `utils/db/`:
+- `connection.py` (~120 строк) — ConnectionPool, AsyncConnectionPool
+- `schema.py` (~280 строк) — схема БД, индексы, статистика
+- `operations.py` (~480 строк) — все CRUD операции, кэширование
+- `__init__.py` (~140 строк) — DatabaseManager, get_database
+- `utils/database.py` — ре-экспорт для обратной совместимости
 
 ### 5. print() → logging
 **Приоритетные файлы:**
@@ -233,6 +220,8 @@ utils/database.py (1947) →
 - [x] Удалены дублирующие release workflows (build.yml, release.yml, publish-release.yml)
 - [x] Удалён dead code `src/web/archived/` (133KB)
 - [x] Убран `--reload` из docker-compose.api.yml production
+- [x] Разбит `utils/database.py` (2241 строка) на модули `utils/db/`
+- [x] Исправлены bare except в sstv_decoder.py, sdr_interface.py, web_dashboard_unified.py
 
 ---
 
