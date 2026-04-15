@@ -3,7 +3,7 @@
 **Последнее обновление:** 2026-04-15
 **Ветка:** `dev` (текущая), `main` (стабильная)
 **Python:** 3.9 - 3.12 (CI матрица)
-**Последний коммит:** 6c785c5
+**Последний коммит:** fadfbe4
 **Всего тестов:** 82 файла
 
 ---
@@ -58,31 +58,33 @@
 
 8. [x] **Исправить CI: lint не проверяет `api/` директорию** — объединено с задачей #3
 
-9. [x] **Убрать дублирование test jobs в CI** — **УДАЛЕНО** ✅
-   - Удалены `tests.yml` и `lint.yml` (дублируют `ci-cd.yml`)
-   - Осталось 10 workflow файлов вместо 12
-   - **Остались дубликаты:** build.yml / auto-release.yml / release.yml (все на push tags v*)
+9. [x] **Убрать дублирование CI workflows** — **УДАЛЕНО** ✅
+   - Удалены `tests.yml` + `lint.yml` (дублируют `ci-cd.yml`)
+   - Удалены `build.yml` + `release.yml` + `publish-release.yml` (дублируют `auto-release.yml`)
+   - Осталось 7 workflow файлов вместо 12
+   - **Остался:** `auto-release.yml` (release + Docker), `deploy.yml`, `release-drafter.yml`
 
 10. [x] **Исправить `.env` — inline комментарии ломают dotenv** — **ИСПРАВЛЕНО** ✅
     - `ADMIN_PASSWORD= # comment` — dotenv читает комментарий как значение
     - Убраны inline комментарии из ADMIN_PASSWORD и USER_PASSWORD
     - Тест `test_login_success` теперь проходит
 
-11. [ ] **Исправить `docker-compose.api.yml` — `--reload` в production**
-    - uvicorn reload mode не должен быть в production config
-    - **Решение:** вынести в docker-compose.dev.yml
+11. [x] **Исправить `docker-compose.api.yml` — `--reload` в production** — **ИСПРАВЛЕНО** ✅
+    - Убран `--reload` из uvicorn command
+
+12. [x] **Убрать `|| true` из всех CI workflows** — **ИСПРАВЛЕНО** ✅
+    - Убраны из `security.yml`, `benchmark.yml`, `docs-generator.yml`
+    - CI теперь будет падать при реальных проблемах
 
 ### LOW
 
-12. [ ] Оптимизировать время тестов (>3min для 1227 тестов)
+13. [ ] Оптимизировать время тестов (>3min для 1227 тестов)
     - Добавить pytest markers (slow/fast)
     - Настроить pytest-xdist для параллельного запуска
-13. [ ] Решить SQLite vs PostgreSQL (есть guide в docs/)
-14. [ ] Мигрировать frontend на Next.js (убрать Flask legacy)
-15. [ ] Откалибровать TCXO (--freq-correction для RTL-SDR)
-16. [ ] Исправить E501 строки (HTML/CSS/SQL/config)
-17. [ ] Удалить `src/web/archived/` файлы (dead code в дереве)
-18. [ ] Оставшиеся `|| true` в CI: benchmark.yml, security.yml, docs-generator.yml
+14. [ ] Решить SQLite vs PostgreSQL (есть guide в docs/)
+15. [ ] Мигрировать frontend на Next.js (убрать Flask legacy)
+16. [ ] Откалибровать TCXO (--freq-correction для RTL-SDR)
+17. [ ] Исправить E501 строки (HTML/CSS/SQL/config)
 
 ---
 
@@ -102,14 +104,16 @@
 - **Pre-commit hooks:** black, isort, flake8 ✅
 - **CI lint:** исправлен ✅ (убраны `|| true`, добавлен `api/`)
 - **UTF-8 BOM:** 10 файлов в `api/routes/` начинаются с BOM ⚠️
-- **CI дубликаты:** удалены tests.yml + lint.yml ✅ (осталось 10 workflow)
+- **CI дубликаты:** удалены 5 дублирующих workflow ✅ (осталось 7)
+- **Dead code:** удалён `src/web/archived/` (133KB unused files) ✅
+- **docker-compose:** убран `--reload` из production ✅
 
 ### Архитектура
 - **Backend:** FastAPI + JWT + 2FA TOTP + WebSocket + GraphQL
 - **Frontend:** Next.js v2.0 (production) + Flask v1.0 (legacy)
 - **Database:** SQLAlchemy + Alembic (SQLite, есть PostgreSQL guide)
 - **Cache:** Redis integration
-- **CI/CD:** 10 GitHub Actions workflows (3 дублируются — release workflows)
+- **CI/CD:** 7 GitHub Actions workflows (без дубликатов)
 
 ### RTL-SDR V4
 - ✅ FM-радиовещание, ADS-B, NOAA, SSTV, RTL_433, POCSAG
@@ -225,6 +229,10 @@ utils/database.py (1947) →
 - [x] Исправлен .env — inline комментарии ломали dotenv
 - [x] Исправлен data/.admin_password — trailing spaces ломали auth тест
 - [x] Добавлено логирование в bare except (10+ файлов)
+- [x] Убраны `|| true` из security.yml, benchmark.yml, docs-generator.yml
+- [x] Удалены дублирующие release workflows (build.yml, release.yml, publish-release.yml)
+- [x] Удалён dead code `src/web/archived/` (133KB)
+- [x] Убран `--reload` из docker-compose.api.yml production
 
 ---
 
