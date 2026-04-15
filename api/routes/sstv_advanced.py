@@ -9,12 +9,14 @@
 """
 
 import asyncio
+import io
 import logging
 import os
+import struct
 import time
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Query, Response, WebSocket, WebSocketDisconnect
 
 from api.error_handlers import ServiceUnavailableError
 
@@ -292,21 +294,27 @@ async def sstv_websocket_stream(websocket: WebSocket):
                     # Отправляем спектр
                     freqs, power = receiver.get_spectrum(num_points=512)
                     if freqs is not None and power is not None:
+                        strength = receiver.get_signal_strength()
                         await websocket.send_json(
                             {
                                 "type": "spectrum",
                                 "frequencies": freqs.tolist()[-100:],
                                 "power_db": power.tolist()[-100:],
+                                "strength_dbfs": strength,
+                                "strength_percent": _strength_to_percent(strength),
                                 "timestamp": datetime.now(timezone.utc).isoformat(),
                             }
                         )
 
                     # Отправляем силу сигнала
                     strength = receiver.get_signal_strength()
+                    strength_percent = _strength_to_percent(strength)
                     await websocket.send_json(
                         {
                             "type": "signal_strength",
                             "strength": strength,
+                            "strength_dbfs": strength,
+                            "strength_percent": strength_percent,
                             "timestamp": datetime.now(timezone.utc).isoformat(),
                         }
                     )
@@ -326,6 +334,88 @@ async def sstv_websocket_stream(websocket: WebSocket):
         logger.error(f"SSTV WebSocket ошибка: {e}")
     finally:
         await session_manager.remove_websocket(websocket)
+
+
+def _strength_to_percent(dbfs: float) -> float:
+    """Convert dBFS value to 0-100 percentage.
+
+    dBFS range is typically -100 (no signal) to 0 (full scale).
+    """
+    # Clamp and normalize: -100 dBFS -> 0%, 0 dBFS -> 100%
+    clamped = max(-100.0, min(0.0, dbfs))
+    return clamped + 100.0  # Maps [-100, 0] to [0, 100]
+
+
+# ============================================
+# Raw IQ Endpoint
+# ============================================
+
+
+@router.get("/iq/raw", summary="Raw IQ samples")
+async def get_raw_iq(
+    format: str = Query("json", description="Output format: csv, binary, json"),
+    count: int = Query(1024, ge=1, le=65536, description="Number of samples"),
+    offset: int = Query(0, ge=0, description="Sample offset"),
+):
+    """Get raw complex IQ samples from the receiver.
+
+    Supports JSON, CSV, and binary output formats.
+    """
+    device = _check_device_fast()
+    if not device["available"]:
+        raise ServiceUnavailableError(f"SSTV receiver not available: {device['error']}")
+
+    try:
+        from api.sstv.rtl_sstv_receiver import get_receiver
+
+        receiver = get_receiver()
+
+        if not _init_receiver_safe():
+            raise ServiceUnavailableError("Failed to initialize RTL-SDR device")
+
+        total_samples = count + offset
+        samples = receiver.read_samples(total_samples)
+        if samples is None or len(samples) < offset + count:
+            raise ServiceUnavailableError("Failed to read IQ samples")
+
+        # Slice requested range
+        iq_data = samples[offset : offset + count]
+
+        if format == "csv":
+            lines = ["I,Q"]
+            for s in iq_data:
+                lines.append(f"{s.real:.6f},{s.imag:.6f}")
+            return Response(
+                content="\n".join(lines),
+                media_type="text/csv",
+                headers={"Content-Disposition": "attachment; filename=iq_samples.csv"},
+            )
+
+        elif format == "binary":
+            # Complex64: each sample is 2 float32 values (I, Q)
+            buf = io.BytesIO()
+            for s in iq_data:
+                buf.write(struct.pack("<ff", s.real, s.imag))
+            return Response(
+                content=buf.getvalue(),
+                media_type="application/octet-stream",
+                headers={"Content-Disposition": "attachment; filename=iq_samples.bin"},
+            )
+
+        else:  # json (default)
+            return {
+                "samples": [{"i": float(s.real), "q": float(s.imag)} for s in iq_data],
+                "count": len(iq_data),
+                "sample_rate": receiver.sample_rate,
+                "frequency_mhz": receiver.frequency,
+                "offset": offset,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+
+    except ServiceUnavailableError:
+        raise
+    except Exception as e:
+        raise ServiceUnavailableError(f"Raw IQ error: {str(e)}")
 
 
 # ============================================

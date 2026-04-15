@@ -13,6 +13,7 @@ import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 from subprocess import DEVNULL
+from typing import Optional
 
 from fastapi import APIRouter, BackgroundTasks
 from fastapi.responses import FileResponse
@@ -23,6 +24,8 @@ from api.routes.sstv.helpers import SSTV_AVAILABLE, get_app_state, get_sstv_deco
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+_trigger_recorder: Optional[object] = None
 
 
 @router.post("/record/start")
@@ -397,3 +400,78 @@ async def decode_existing_recording(
     except Exception as e:
         logger.error(f"Decode recording error: {e}")
         raise ServiceUnavailableError(f"Ошибка декодирования: {str(e)}")
+
+
+# ── Trigger-based Recording endpoints ──────────────────────────────────────
+
+
+def _get_trigger_recorder():
+    """Get or create the global TriggerRecorder instance."""
+    global _trigger_recorder
+    if _trigger_recorder is None:
+        from api.sstv.rtl_sstv_receiver import get_receiver
+        from utils.sdr.trigger_recorder import TriggerRecorder
+
+        receiver = get_receiver()
+        receiver.initialize()
+        _trigger_recorder = TriggerRecorder(
+            receiver=receiver,
+            output_dir="output/sstv/triggered",
+        )
+        set_app_state("trigger_recorder", _trigger_recorder)
+    return _trigger_recorder
+
+
+@router.post("/trigger/start")
+async def start_trigger_recording(
+    trigger_type: str = "squelch",
+    threshold: Optional[float] = None,
+):
+    """
+    Start trigger-based recording.
+
+    Args:
+        trigger_type: 'squelch', 'vis', or 'manual'.
+        threshold: dBFS level for squelch trigger (e.g. -30.0).
+    """
+    if trigger_type not in ("squelch", "vis", "manual"):
+        raise ValidationError(
+            f"Invalid trigger_type: {trigger_type}. Must be squelch, vis, or manual"
+        )
+
+    try:
+        recorder = _get_trigger_recorder()
+        result = recorder.start_recording(trigger_type=trigger_type, threshold=threshold)
+        return result
+    except Exception as e:
+        logger.error(f"Trigger start error: {e}")
+        raise ServiceUnavailableError(f"Не удалось начать триггерную запись: {str(e)}")
+
+
+@router.post("/trigger/stop")
+async def stop_trigger_recording():
+    """Stop trigger-based recording."""
+    recorder = get_app_state("trigger_recorder")
+    if recorder is None:
+        return {"status": "not_running", "message": "Trigger recording not active"}
+
+    try:
+        result = recorder.stop_recording()
+        return result
+    except Exception as e:
+        logger.error(f"Trigger stop error: {e}")
+        raise ServiceUnavailableError(f"Не удалось остановить триггерную запись: {str(e)}")
+
+
+@router.get("/trigger/status")
+async def get_trigger_status():
+    """Get trigger recorder status."""
+    recorder = get_app_state("trigger_recorder")
+    if recorder is None:
+        return {"status": "not_initialized", "monitoring": False}
+
+    try:
+        return recorder.get_status()
+    except Exception as e:
+        logger.error(f"Trigger status error: {e}")
+        raise ServiceUnavailableError(f"Ошибка получения статуса: {str(e)}")

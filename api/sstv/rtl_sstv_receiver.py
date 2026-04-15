@@ -184,6 +184,7 @@ class RTLSDRReceiver:
         self.sdr: Optional[Any] = None
         self.is_running = False
         self._hann_window: Optional[np.ndarray] = None
+        self._ring_buffer = None
 
         self.stats = {
             "samples_received": 0,
@@ -297,6 +298,8 @@ class RTLSDRReceiver:
                 if not self.is_running:
                     raise StopIteration
                 iq_chunks.append(samples.copy())
+                if self._ring_buffer is not None:
+                    self._ring_buffer.write(samples)
                 elapsed = time.time() - start_time
                 if progress_callback:
                     progress_callback(elapsed / duration)
@@ -410,6 +413,21 @@ class RTLSDRReceiver:
         except Exception as e:
             logger.error(f"Ошибка установки усиления: {e}")
             return False
+
+    def set_ring_buffer(self, buffer):
+        """Attach a SharedRingBuffer for streaming IQ data."""
+        from utils.sdr.ring_buffer import SharedRingBuffer
+
+        if buffer is not None and not isinstance(buffer, SharedRingBuffer):
+            raise TypeError("buffer must be a SharedRingBuffer instance")
+        self._ring_buffer = buffer
+        logger.info("Ring buffer %s", "attached" if buffer else "detached")
+
+    def get_ring_buffer_samples(self, count: int) -> np.ndarray:
+        """Read samples from the attached ring buffer."""
+        if self._ring_buffer is None:
+            return np.array([], dtype=np.complex64)
+        return self._ring_buffer.read(count)
 
     def close(self):
         """Закрывает устройство."""
@@ -558,16 +576,43 @@ _receiver: Optional[RTLSDRReceiver] = None
 _decoder: Optional[SSTVDecoder] = None
 
 
+def get_resource_manager():
+    """Return the SDR resource manager singleton for integration."""
+    from utils.sdr.sdr_resource_manager import get_sdr_resource_manager
+
+    return get_sdr_resource_manager()
+
+
 def get_receiver() -> RTLSDRReceiver:
     global _receiver
     if _receiver is None:
+        freq = float(os.getenv("SSTV_FREQUENCY", "145.800"))
+        gain = float(os.getenv("SSTV_GAIN", "30.0"))
+        sample_rate = float(os.getenv("SSTV_SAMPLE_RATE", "2400000"))
+        bias_tee = os.getenv("SSTV_BIAS_TEE", "0") == "1"
+        agc = os.getenv("SSTV_AGC", "0") == "1"
+        ppm = float(os.getenv("SSTV_PPM", "0"))
+
+        # Check with resource manager before creating receiver
+        rm = get_resource_manager()
+        granted, msg = rm.request_access(
+            task_name="sstv_receiver",
+            priority=60,  # PRIORITY_SSTV
+            frequency=freq,
+            gain=gain,
+        )
+        if not granted:
+            logger.warning(f"SDR resource manager queued sstv_receiver: {msg}")
+        else:
+            logger.debug(f"SDR resource manager: {msg}")
+
         _receiver = RTLSDRReceiver(
-            frequency=float(os.getenv("SSTV_FREQUENCY", "145.800")),
-            gain=float(os.getenv("SSTV_GAIN", "30.0")),
-            sample_rate=float(os.getenv("SSTV_SAMPLE_RATE", "2400000")),
-            bias_tee=os.getenv("SSTV_BIAS_TEE", "0") == "1",
-            agc=os.getenv("SSTV_AGC", "0") == "1",
-            freq_correction_ppm=float(os.getenv("SSTV_PPM", "0")),
+            frequency=freq,
+            gain=gain,
+            sample_rate=sample_rate,
+            bias_tee=bias_tee,
+            agc=agc,
+            freq_correction_ppm=ppm,
         )
     return _receiver
 

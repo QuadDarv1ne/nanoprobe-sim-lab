@@ -8,7 +8,7 @@ SSTV Satellites endpoints
 import asyncio
 import logging
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from fastapi import APIRouter, Query
@@ -19,6 +19,66 @@ from api.routes.sstv.helpers import REDIS_AVAILABLE, get_redis_cache, get_satell
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+# ── TLE Predictive Cache ────────────────────────────────────────────────
+
+_tle_cache: dict = {
+    "data": None,
+    "last_fetch": None,
+    "expires_at": None,
+    "satellites_updated": 0,
+}
+
+TLE_CACHE_TTL = timedelta(days=3)
+
+
+def _refresh_tle_from_source(tracker) -> int:
+    """Fetch fresh TLE data from Celestrak via the tracker.
+
+    Returns the number of satellites updated, or 0 on failure.
+    """
+    updated = tracker.update_tle_from_celestrak()
+    if updated > 0:
+        tracker.save_tle("data/tle_data.json")
+        _tle_cache["data"] = updated
+        _tle_cache["last_fetch"] = datetime.now(timezone.utc)
+        _tle_cache["expires_at"] = datetime.now(timezone.utc) + TLE_CACHE_TTL
+        _tle_cache["satellites_updated"] = updated
+        logger.info(
+            "TLE cache refreshed: %d satellites, expires at %s",
+            updated,
+            _tle_cache["expires_at"].isoformat(),
+        )
+    return updated
+
+
+async def _auto_refresh_tle_background():
+    """Background task that refreshes TLE if the cache is stale."""
+    tracker = get_satellite_tracker()
+    if not tracker:
+        logger.warning("TLE auto-refresh skipped: satellite tracker unavailable")
+        return
+
+    now = datetime.now(timezone.utc)
+    expires = _tle_cache.get("expires_at")
+
+    if expires and now < expires:
+        logger.debug("TLE cache still valid (expires %s), skipping refresh", expires.isoformat())
+        return
+
+    logger.info("TLE cache expired or missing — refreshing from Celestrak")
+    try:
+        updated = await asyncio.get_event_loop().run_in_executor(
+            None,
+            _refresh_tle_from_source,
+            tracker,
+        )
+        if updated > 0:
+            from api.routes.sstv.helpers import set_app_state
+
+            set_app_state("satellite_tracker", None)
+    except Exception:
+        logger.exception("TLE auto-refresh failed")
 
 
 @router.get("/iss/schedule")
