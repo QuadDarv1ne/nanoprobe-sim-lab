@@ -146,6 +146,7 @@ class DataValidator:
             try:
                 value = str(value)
             except Exception:
+                logger.debug("Failed to convert value to string")
                 return False  # Невозможно конвертировать в строку
 
         if len(value) < min_length:

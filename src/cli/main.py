@@ -204,7 +204,7 @@ def _cleanup_processes():
                 process.kill()
                 print(f"✓ Процесс {name} уничтожен")
             except Exception:
-                pass
+                print(f"✗ Не удалось остановить процесс {name}")
     _active_processes.clear()
 
 
@@ -239,8 +239,8 @@ def main():
 
         cache_manager = CacheManager(str(project_root))
         cache_manager.auto_cleanup()
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"⚠ Ошибка инициализации кэша: {e}")
 
     show_header()
     show_project_overview()

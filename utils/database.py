@@ -1123,6 +1123,7 @@ class DatabaseManager:
                 cursor.execute("SELECT COUNT(*) FROM reports")
             except Exception:
                 # Если таблица reports не существует, используем exports
+                logger.debug("reports table not found, falling back to exports")
                 cursor.execute("SELECT COUNT(*) FROM exports WHERE export_format = 'PDF'")
             result = cursor.fetchone()[0]
             self._set_cache(cache_key, result)

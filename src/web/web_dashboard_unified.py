@@ -350,6 +350,7 @@ class UnifiedWebDashboard:
                     if response.status_code == 200:
                         return jsonify(response.json())
                 except Exception:
+                    self.logger.warning("Failed to fetch stats from FastAPI, using local data")
                     pass
 
                 # Локальное получение статистики
@@ -384,6 +385,7 @@ class UnifiedWebDashboard:
                 response = requests.get(f"{self.fastapi_url}/health", timeout=3)
                 health["fastapi"] = "ok" if response.status_code == 200 else "error"
             except Exception:
+                self.logger.debug("FastAPI health check failed")
                 health["fastapi"] = "error"
 
             # Проверка БД
@@ -401,6 +403,7 @@ class UnifiedWebDashboard:
                     health["sync_manager"] = "ok" if sync_data.get("running") else "standby"
                     health["sync_last_update"] = sync_data.get("last_sync_time")
             except Exception:
+                self.logger.debug("Sync manager status check failed")
                 health["sync_manager"] = "not_available"
 
             all_ok = all(
