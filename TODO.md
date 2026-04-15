@@ -3,7 +3,7 @@
 **Последнее обновление:** 2026-04-16
 **Ветка:** `dev` (текущая), `main` (стабильная)
 **Python:** 3.11 - 3.14 (CI матрица)
-**Последний коммит:** f0bc1c7
+**Последний коммит:** efeab7d
 **Всего тестов:** 1236 тестов (100% pass)
 
 ---
@@ -26,10 +26,11 @@
    - Убраны все `|| true` из `ci-cd.yml` и `lint.yml`
    - Добавлен `api/` во все lint пути (black, flake8, mypy)
 
-4. [x] **Коммит всех staged изменений** — **В ПРОЦЕССЕ** ⚠️
+4. [x] **Коммит всех staged изменений** — **ЗАВЕРШЁНО** ✅
    - 16 новых файлов в utils/sdr/, utils/ml/, utils/i18n/
    - Обновлённые API routes для SSTV
    - Интеграционные тесты для RTL-SDR
+   - **Последний коммит:** efeab7d
 
 ### HIGH
 
@@ -71,8 +72,8 @@
     - API: `POST /api/v1/sstv/calibration/automated`
 
 11. [ ] **Заменить print() на logging в `utils/`** (~900 вызовов)
-    - **Исправлено:** 19 print() → logger
-    - **Осталось:** data_manager.py (27), deployment_manager.py (19), performance_*.py и др.
+    - **Исправлено:** 56 print() → logger (19 + 37 в deployment_manager.py)
+    - **Осталось:** performance_*.py, ai/*.py, caching/*.py и др.
 
 12. [ ] **Увеличить test coverage до 80%+**
     - 1236 тестов есть, но покрытие ~20%
