@@ -1,9 +1,9 @@
 # Nanoprobe Sim Lab — TODO
 
-**Последнее обновление:** 2026-04-14
-**Ветка:** `dev` (текущая), `main` (стабильная) — **синхронизированы** ✅
+**Последнее обновление:** 2026-04-15
+**Ветка:** `dev` (текущая), `main` (стабильная)
 **Python:** 3.9 - 3.12 (CI матрица)
-**Последний коммит:** 3d8f02a
+**Последний коммит:** 6c785c5
 **Всего тестов:** 82 файла
 
 ---
@@ -12,33 +12,25 @@
 
 ### CRITICAL (исправить в первую очередь)
 
-1. [ ] **Убрать legacy `security/auth_manager.py`** (540 строк)
+1. [x] **Убрать legacy `security/auth_manager.py`** (540 строк) — **УДАЛЁН** ✅
    - Flask-based auth, не используется FastAPI
    - Импортирует flask, имеет свою отдельную auth.db
    - Конфликтует с `api/routes/auth_routes/` (JWT-based)
    - **Решение:** удалить файл, обновить импорты если есть
 
-2. [ ] **Исправить 16 bare `except Exception:` без логирования**
-   - `utils/database.py` — 4 шт (lines 60, 129, 315, 1123)
-   - `api/routes/sstv_advanced.py` — 3 шт (lines 196, 280, 343)
-   - `api/main.py` — 1 шт (line 621)
-   - `api/sstv/session_manager.py` — 1 шт (line 43)
-   - `api/sstv/rtl_sstv_receiver.py` — 1 шт (line 496)
-   - `api/routes/sstv/health.py` — 1 шт (line 271)
-   - `utils/caching/` — 2 шт
-   - `utils/data/data_validator.py` — 1 шт (line 148)
-   - `utils/monitoring/system_health_monitor.py` — 1 шт (line 499)
-   - `utils/performance/optimization_orchestrator.py` — 1 шт (line 423)
+2. [ ] **Исправить 117 bare `except Exception:` без логирования**
+   - ~60 в `tests/` (test scaffolding, низкий приоритет)
+   - ~36 в `utils/` (15+ файлов)
+   - ~7 в `api/`
+   - ~11 в `rtl_sdr_tools/`
+   - ~8 в `components/py-sstv-groundstation/`
+   - **Исправлено:** database.py:315, sstv_advanced.py:196+343, api/main.py:621
    - **Решение:** заменить на `except Exception as e: logger.exception("...")`
 
-3. [ ] **Включить lint проверки в CI (`|| true` маскирует ошибки)**
-   - `.github/workflows/ci-cd.yml` line 67: `black --check --diff ... || true`
-   - `.github/workflows/ci-cd.yml` line 75: `mypy ... || true`
-   - `.github/workflows/lint.yml` line 36: `mypy ... || true`
-   - `.github/workflows/lint.yml` line 45: `mypy --strict ... || true`
-   - CI всегда проходит даже при сломанном коде
-   - **Решение:** убрать `|| true`, починить ошибки
-   - **Доп:** lint не проверяет `api/` директорию (основной код FastAPI)
+3. [x] **Включить lint проверки в CI (`|| true` маскирует ошибки)** — **ИСПРАВЛЕНО** ✅
+   - Убраны все `|| true` из `ci-cd.yml` и `lint.yml`
+   - Добавлен `api/` во все lint пути (black, flake8, mypy)
+   - CI теперь будет падать при ошибках линтинга
 
 ### HIGH
 
@@ -97,12 +89,13 @@
 
 ### Качество кода
 - **flake8:** 0 критических ошибок (F/E9) ✅
-- **bare except Exception:** 16 occurrences ⚠️ (utils: 9, api: 7)
+- **bare except Exception:** ~117 total ⚠️ (utils: ~36, api: ~7, tests: ~60, rtl_sdr_tools: ~11, components: ~8)
+- **Исправлено:** 4 bare except в production коде
 - **print() в utils/:** 946 вызовов ⚠️
 - **print() всего в проекте:** 3622 вызовов ⚠️
 - **Pre-commit hooks:** black, isort, flake8 ✅
-- **CI lint:** сломан (`|| true` маскирует ошибки) ⚠️
-- **CI lint пути:** `src/ utils/ tests/` — `api/` не проверяется ⚠️
+- **CI lint:** исправлен ✅ (убраны `|| true`, добавлен `api/`)
+- **UTF-8 BOM:** 10 файлов в `api/routes/` начинаются с BOM ⚠️
 
 ### Архитектура
 - **Backend:** FastAPI + JWT + 2FA TOTP + WebSocket + GraphQL
@@ -121,14 +114,8 @@
 
 ## 🔍 Детальные пометки по проблемам
 
-### 1. Legacy Auth System
-**Файл:** `security/auth_manager.py` (540 строк)
-**Проблема:** Flask-based auth, полностью отдельная система
-- Использует `from flask import g, jsonify, request`
-- Имеет свою `auth.db` SQLite базу
-- Реализует `@require_auth` Flask декоратор
-- **Не импортируется** ни одним FastAPI роутом
-- **Действие:** Удалить файл, проверить что ничего не ломается
+### 1. Legacy Auth System — УДАЛЁН ✅
+**Файл:** `security/auth_manager.py` (540 строк) — удалён 2026-04-15
 
 ### 2. Silent Exception Swallowing
 **Критичные файлы (16 total):**

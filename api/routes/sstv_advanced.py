@@ -193,8 +193,8 @@ async def get_sstv_spectrum(
         if abs(receiver.frequency - frequency) > 0.001:
             try:
                 receiver.set_frequency(frequency)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Failed to set frequency: {e}")
 
         freqs, power = receiver.get_spectrum(num_points=min(points, 1024))
 
@@ -340,6 +340,6 @@ async def shutdown_sstv():
 
             receiver = get_receiver()
             receiver.close()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.error(f"SSTV shutdown error: {e}")
     logger.info("SSTV Advanced API shutdown")

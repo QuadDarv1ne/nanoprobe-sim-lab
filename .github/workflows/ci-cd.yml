@@ -62,15 +62,15 @@ jobs:
 
     - name: Run Black formatter check
       run: |
-        black --check --diff src/ utils/ tests/ 2>&1 || true
+        black --check --diff src/ utils/ tests/ api/ 2>&1
 
     - name: Run Flake8 linter
       run: |
-        flake8 src/ utils/ tests/ --max-line-length=100 --ignore=E203,W503
+        flake8 src/ utils/ tests/ api/ --max-line-length=100 --ignore=E203,W503
 
     - name: Run MyPy type checker
       run: |
-        mypy src/ utils/ --ignore-missing-imports || true
+        mypy src/ utils/ api/ --ignore-missing-imports
 
   build:
     name: Build Docker Image

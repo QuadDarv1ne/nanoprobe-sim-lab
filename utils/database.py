@@ -312,7 +312,8 @@ class DatabaseManager:
                     cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
                     count = cursor.fetchone()[0]
                     tables[table_name] = count
-                except Exception:
+                except Exception as e:
+                    logger.warning(f"Failed to count rows in {table_name}: {e}")
                     tables[table_name] = 0
 
             results["table_row_counts"] = tables
@@ -1536,8 +1537,9 @@ class DatabaseManager:
 
                 cache_key = hashlib.md5("|".join(cache_key_parts).encode()).hexdigest()
 
-                # Проверка кэша
-                cached = self._get_cached(cache_key)  # noqa: F821
+                # Проверка кэша (args[0] — это self/instance)
+                instance = args[0]
+                cached = instance._get_cached(cache_key)
                 if cached is not None:
                     return cached
 
@@ -1545,7 +1547,7 @@ class DatabaseManager:
                 result = func(*args, **kwargs)
 
                 # Кэширование результата
-                self._cache_result(cache_key, result, ttl=ttl)  # noqa: F821
+                instance._cache_result(cache_key, result, ttl=ttl)
                 return result
 
             return wrapper
@@ -2084,7 +2086,7 @@ class DatabaseManager:
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cutoff = datetime.now(timezone.utc)
-            cutoff = cutoff.replace(day=cutoff.day - days)
+            cutoff = cutoff - timedelta(days=days)
             cursor.execute(
                 "DELETE FROM performance_metrics WHERE timestamp < ?", (cutoff.isoformat(),)
             )

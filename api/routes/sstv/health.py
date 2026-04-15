@@ -269,7 +269,7 @@ async def check_rtlsdr_device():
                     try:
                         sdr.close()
                     except Exception:
-                        pass
+                        pass  # Device close may fail, ignore
 
         except ImportError:
             _device_check_cache["result"] = {

@@ -619,7 +619,7 @@ async def websocket_endpoint(websocket: WebSocket):
         try:
             await manager.disconnect(websocket)
         except Exception:
-            pass  # Уже отключено, это нормально
+            logger.debug("WebSocket already disconnected")
 
 
 # Фоновая задача для push-уведомлений подписчикам
