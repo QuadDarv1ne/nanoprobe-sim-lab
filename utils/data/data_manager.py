@@ -1,12 +1,15 @@
 """Модуль управления данными для проекта Лаборатория моделирования нанозонда."""
 
 import json
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 
 class DataManager:
@@ -45,10 +48,10 @@ class DataManager:
         try:
             filepath = self.output_dir / filename
             np.savetxt(filepath, surface_data)
-            print(f"Данные поверхности сохранены: {filepath}")
+            logger.info("Surface data saved: %s", filepath)
             return True
         except Exception as e:
-            print(f"Ошибка при сохранении данных поверхности: {e}")
+            logger.error("Error saving surface data: %s", e)
             return False
 
     def load_surface_data(self, filename: str) -> Optional[np.ndarray]:
@@ -68,13 +71,13 @@ class DataManager:
 
             if filepath.exists():
                 data = np.loadtxt(filepath)
-                print(f"Данные поверхности загружены: {filepath}")
+                logger.info("Surface data loaded: %s", filepath)
                 return data
             else:
-                print(f"Файл с данными поверхности не найден: {filepath}")
+                logger.warning("Surface data file not found: %s", filepath)
                 return None
         except Exception as e:
-            print(f"Ошибка при загрузке данных поверхности: {e}")
+            logger.error("Error loading surface data: %s", e)
             return None
 
     def save_scan_results(self, scan_data: np.ndarray, filename: str) -> bool:
@@ -91,10 +94,10 @@ class DataManager:
         try:
             filepath = self.output_dir / filename
             np.savetxt(filepath, scan_data)
-            print(f"Результаты сканирования сохранены: {filepath}")
+            logger.info("Scan results saved: %s", filepath)
             return True
         except Exception as e:
-            print(f"Ошибка при сохранении результатов сканирования: {e}")
+            logger.error("Error saving scan results: %s", e)
             return False
 
     def load_scan_results(self, filename: str) -> Optional[np.ndarray]:
@@ -114,13 +117,13 @@ class DataManager:
 
             if filepath.exists():
                 data = np.loadtxt(filepath)
-                print(f"Результаты сканирования загружены: {filepath}")
+                logger.info("Scan results loaded: %s", filepath)
                 return data
             else:
-                print(f"Файл с результатами сканирования не найден: {filepath}")
+                logger.warning("Scan results file not found: %s", filepath)
                 return None
         except Exception as e:
-            print(f"Ошибка при загрузке результатов сканирования: {e}")
+            logger.error("Error loading scan results: %s", e)
             return None
 
     def save_image_analysis_results(self, results: Dict[str, Any], filename: str) -> bool:
@@ -138,10 +141,10 @@ class DataManager:
             filepath = self.output_dir / filename
             with open(filepath, "w", encoding="utf-8") as f:
                 json.dump(results, f, indent=2, ensure_ascii=False)
-            print(f"Результаты анализа изображений сохранены: {filepath}")
+            logger.info("Image analysis results saved: %s", filepath)
             return True
         except Exception as e:
-            print(f"Ошибка при сохранении результатов анализа изображений: {e}")
+            logger.error("Error saving image analysis results: %s", e)
             return False
 
     def load_image_analysis_results(self, filename: str) -> Optional[Dict[str, Any]]:
@@ -162,13 +165,13 @@ class DataManager:
             if filepath.exists():
                 with open(filepath, "r", encoding="utf-8") as f:
                     results = json.load(f)
-                print(f"Результаты анализа изображений загружены: {filepath}")
+                logger.info("Image analysis results loaded: %s", filepath)
                 return results
             else:
-                print(f"Файл с результатами анализа изображений не найден: {filepath}")
+                logger.warning("Image analysis results file not found: %s", filepath)
                 return None
         except Exception as e:
-            print(f"Ошибка при загрузке результатов анализа изображений: {e}")
+            logger.error("Error loading image analysis results: %s", e)
             return None
 
     def save_sstv_results(self, image_data, filename: str) -> bool:
@@ -191,10 +194,10 @@ class DataManager:
             else:
                 # Если это numpy массив
                 np.save(filepath.with_suffix(".npy"), image_data)
-            print(f"Результаты SSTV декодирования сохранены: {filepath}")
+            logger.info("SSTV decoding results saved: %s", filepath)
             return True
         except Exception as e:
-            print(f"Ошибка при сохранении результатов SSTV декодирования: {e}")
+            logger.error("Error saving SSTV decoding results: %s", e)
             return False
 
     def save_simulation_metadata(
@@ -217,10 +220,10 @@ class DataManager:
             filepath = self.output_dir / filename
             with open(filepath, "w", encoding="utf-8") as f:
                 json.dump(metadata, f, indent=2, ensure_ascii=False)
-            print(f"Метаданные симуляции сохранены: {filepath}")
+            logger.info("Simulation metadata saved: %s", filepath)
             return True
         except Exception as e:
-            print(f"Ошибка при сохранении метаданных симуляции: {e}")
+            logger.error("Error saving simulation metadata: %s", e)
             return False
 
     def load_simulation_metadata(
@@ -243,13 +246,13 @@ class DataManager:
             if filepath.exists():
                 with open(filepath, "r", encoding="utf-8") as f:
                     metadata = json.load(f)
-                print(f"Метаданные симуляции загружены: {filepath}")
+                logger.info("Simulation metadata loaded: %s", filepath)
                 return metadata
             else:
-                print(f"Файл с метаданными симуляции не найден: {filepath}")
+                logger.warning("Simulation metadata file not found: %s", filepath)
                 return None
         except Exception as e:
-            print(f"Ошибка при загрузке метаданных симуляции: {e}")
+            logger.error("Error loading simulation metadata: %s", e)
             return None
 
     def export_to_csv(self, data: Union[np.ndarray, pd.DataFrame], filename: str) -> bool:
@@ -272,13 +275,13 @@ class DataManager:
             elif isinstance(data, pd.DataFrame):
                 data.to_csv(filepath, index=False)
             else:
-                print("Неподдерживаемый тип данных для экспорта в CSV")
+                logger.error("Unsupported data type for CSV export")
                 return False
 
-            print(f"Данные экспортированы в CSV: {filepath}")
+            logger.info("Data exported to CSV: %s", filepath)
             return True
         except Exception as e:
-            print(f"Ошибка при экспорте в CSV: {e}")
+            logger.error("Error exporting to CSV: %s", e)
             return False
 
     def get_recent_files(self, extension: str = "", count: int = 5) -> List[Path]:
@@ -327,9 +330,9 @@ class DataManager:
                     try:
                         file.unlink()
                         deleted_count += 1
-                        print(f"Удален старый файл: {file}")
+                        logger.info("Deleted old file: %s", file)
                     except Exception as e:
-                        print(f"Ошибка при удалении файла {file}: {e}")
+                        logger.error("Error deleting file %s: %s", file, e)
 
         return deleted_count
 
