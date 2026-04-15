@@ -96,14 +96,14 @@ class DeploymentManager:
             if requirements_path.exists():
                 subprocess.run([str(pip_path), "install", "-r", str(requirements_path)], check=True)
 
-            print(f"✓ Виртуальное окружение создано: {env_path}")
+            logger.info(f"Виртуальное окружение создано: {env_path}")
             return True
 
         except subprocess.CalledProcessError as e:
-            print(f"❌ Ошибка создания виртуального окружения: {e}")
+            logger.error(f"Ошибка создания виртуального окружения: {e}")
             return False
         except Exception as e:
-            print(f"❌ Неожиданная ошибка: {e}")
+            logger.error(f"Неожиданная ошибка: {e}")
             return False
 
     def generate_dockerfile(self, output_path: str = None) -> str:
@@ -154,7 +154,7 @@ CMD ["python", "start.py", "help"]
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(dockerfile_content)
 
-        print(f"✓ Dockerfile сгенерирован: {output_path}")
+        logger.info(f"Dockerfile сгенерирован: {output_path}")
         return output_path
 
     def generate_docker_compose(self, output_path: str = None) -> str:
@@ -216,7 +216,7 @@ volumes:
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(compose_content)
 
-        print(f"✓ docker-compose.yml сгенерирован: {output_path}")
+        logger.info(f"docker-compose.yml сгенерирован: {output_path}")
         return output_path
 
     def build_docker_image(self, image_name: str = "nanoprobe-lab", tag: str = "latest") -> bool:
@@ -231,7 +231,7 @@ volumes:
             Успешность сборки
         """
         if not self.docker_available:
-            print("❌ Docker недоступен")
+            logger.warning("Docker недоступен")
             return False
 
         try:
@@ -242,20 +242,20 @@ volumes:
 
             # Собираем образ
             full_image_name = f"{image_name}:{tag}"
-            print(f"Сборка Docker образа: {full_image_name}")
+            logger.info(f"Сборка Docker образа: {full_image_name}")
 
             subprocess.run(
                 ["docker", "build", "-t", full_image_name, "."], cwd=self.project_root, check=True
             )
 
-            print(f"✓ Docker образ собран: {full_image_name}")
+            logger.info(f"Docker образ собран: {full_image_name}")
             return True
 
         except subprocess.CalledProcessError as e:
-            print(f"❌ Ошибка сборки Docker образа: {e}")
+            logger.error(f"Ошибка сборки Docker образа: {e}")
             return False
         except Exception as e:
-            print(f"❌ Неожиданная ошибка: {e}")
+            logger.error(f"Неожиданная ошибка: {e}")
             return False
 
     def run_container(
@@ -273,7 +273,7 @@ volumes:
             Успешность запуска
         """
         if not self.docker_available:
-            print("❌ Docker недоступен")
+            logger.warning("Docker недоступен")
             return False
 
         if ports is None:
@@ -310,15 +310,15 @@ volumes:
 
             subprocess.run(cmd, cwd=self.project_root, check=True)
 
-            print("✓ Контейнер запущен: nanoprobe-lab")
-            print("  Доступен по адресу: http://localhost:5000")
+            logger.info("Контейнер запущен: nanoprobe-lab")
+            logger.info("  Доступен по адресу: http://localhost:5000")
             return True
 
         except subprocess.CalledProcessError as e:
-            print(f"❌ Ошибка запуска контейнера: {e}")
+            logger.error(f"❌ Ошибка запуска контейнера: {e}")
             return False
         except Exception as e:
-            print(f"❌ Неожиданная ошибка: {e}")
+            logger.error(f"Неожиданная ошибка: {e}")
 
             return False
 
@@ -359,7 +359,7 @@ WantedBy=multi-user.target
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(service_content)
 
-        print(f"✓ Systemd service файл сгенерирован: {output_path}")
+        logger.info(f"✓ Systemd service файл сгенерирован: {output_path}")
         return output_path
 
     def create_deployment_package(self, package_name: str = None) -> str:
@@ -445,11 +445,11 @@ echo "Для запуска используйте: docker-compose up -d"
             if os.name != "nt":
                 install_script.chmod(0o755)
 
-            print(f"✓ Пакет развертывания создан: {package_dir}")
+            logger.info(f"✓ Пакет развертывания создан: {package_dir}")
             return str(package_dir)
 
         except Exception as e:
-            print(f"❌ Ошибка создания пакета: {e}")
+            logger.error(f"❌ Ошибка создания пакета: {e}")
             return ""
 
     def generate_kubernetes_manifests(self, output_dir: str = None) -> str:
@@ -572,7 +572,7 @@ spec:
         with open(k8s_dir / "pvcs.yaml", "w", encoding="utf-8") as f:
             f.write(pvc_content)
 
-        print(f"✓ Манифесты Kubernetes сгенерированы: {k8s_dir}")
+        logger.info(f"✓ Манифесты Kubernetes сгенерированы: {k8s_dir}")
         return str(k8s_dir)
 
     def get_deployment_status(self) -> Dict[str, Any]:
@@ -613,63 +613,63 @@ spec:
 
 def main():
     """Главная функция для демонстрации менеджера развертывания"""
-    print("=== МЕНЕДЖЕР РАЗВЕРТЫВАНИЯ ===")
+    logger.info("=== МЕНЕДЖЕР РАЗВЕРТЫВАНИЯ ===")
 
     # Создаем менеджер развертывания
     deploy_manager = DeploymentManager()
 
-    print("✓ Менеджер развертывания инициализирован")
-    print(f"✓ Корневая директория: {deploy_manager.project_root}")
-    print(f"✓ Docker доступен: {deploy_manager.docker_available}")
-    print(f"✓ Директория развертывания: {deploy_manager.deployment_dir}")
+    logger.info("✓ Менеджер развертывания инициализирован")
+    logger.info(f"✓ Корневая директория: {deploy_manager.project_root}")
+    logger.info(f"✓ Docker доступен: {deploy_manager.docker_available}")
+    logger.info(f"✓ Директория развертывания: {deploy_manager.deployment_dir}")
 
     # Показываем статус
     status = deploy_manager.get_deployment_status()
-    print("\nСтатус развертывания:")
-    print(f"  - Сгенерированные файлы: {len(status['generated_files'])}")
-    print(f"  - Запущенные контейнеры: {len(status['running_containers'])}")
+    logger.info("\nСтатус развертывания:")
+    logger.info(f"  - Сгенерированные файлы: {len(status['generated_files'])}")
+    logger.info(f"  - Запущенные контейнеры: {len(status['running_containers'])}")
 
     # Создаем виртуальное окружение
-    print("\nСоздание виртуального окружения...")
+    logger.info("\nСоздание виртуального окружения...")
     venv_success = deploy_manager.create_virtual_environment()
-    print(f"  Результат: {'Успешно' if venv_success else 'Ошибка'}")
+    logger.error(f"  Результат: {'Успешно' if venv_success else 'Ошибка'}")
 
     # Генерируем Dockerfile
-    print("\nГенерация Dockerfile...")
+    logger.info("\nГенерация Dockerfile...")
     dockerfile_path = deploy_manager.generate_dockerfile()
-    print(f"  Создан: {dockerfile_path}")
+    logger.info(f"  Создан: {dockerfile_path}")
 
     # Генерируем docker-compose
-    print("\nГенерация docker-compose.yml...")
+    logger.info("\nГенерация docker-compose.yml...")
     compose_path = deploy_manager.generate_docker_compose()
-    print(f"  Создан: {compose_path}")
+    logger.info(f"  Создан: {compose_path}")
 
     # Генерируем systemd service
-    print("\nГенерация systemd service...")
+    logger.info("\nГенерация systemd service...")
     service_path = deploy_manager.generate_systemd_service()
-    print(f"  Создан: {service_path}")
+    logger.info(f"  Создан: {service_path}")
 
     # Создаем пакет развертывания
-    print("\nСоздание пакета развертывания...")
+    logger.info("\nСоздание пакета развертывания...")
     package_path = deploy_manager.create_deployment_package()
-    print(f"  Создан: {package_path}")
+    logger.info(f"  Создан: {package_path}")
 
     # Генерируем Kubernetes манифесты
-    print("\nГенерация Kubernetes манифестов...")
+    logger.info("\nГенерация Kubernetes манифестов...")
     k8s_path = deploy_manager.generate_kubernetes_manifests()
-    print(f"  Созданы в: {k8s_path}")
+    logger.info(f"  Созданы в: {k8s_path}")
 
-    print("\nМенеджер развертывания успешно протестирован")
-    print("\nДоступные функции:")
-    print("- Создание виртуального окружения: create_virtual_environment()")
-    print("- Генерация Dockerfile: generate_dockerfile()")
-    print("- Генерация docker-compose: generate_docker_compose()")
-    print("- Сборка Docker образа: build_docker_image()")
-    print("- Запуск контейнера: run_container()")
-    print("- Генерация systemd service: generate_systemd_service()")
-    print("- Создание пакета развертывания: create_deployment_package()")
-    print("- Генерация Kubernetes манифестов: generate_kubernetes_manifests()")
-    print("- Получение статуса: get_deployment_status()")
+    logger.info("\nМенеджер развертывания успешно протестирован")
+    logger.info("\nДоступные функции:")
+    logger.info("- Создание виртуального окружения: create_virtual_environment()")
+    logger.info("- Генерация Dockerfile: generate_dockerfile()")
+    logger.info("- Генерация docker-compose: generate_docker_compose()")
+    logger.info("- Сборка Docker образа: build_docker_image()")
+    logger.info("- Запуск контейнера: run_container()")
+    logger.info("- Генерация systemd service: generate_systemd_service()")
+    logger.info("- Создание пакета развертывания: create_deployment_package()")
+    logger.info("- Генерация Kubernetes манифестов: generate_kubernetes_manifests()")
+    logger.info("- Получение статуса: get_deployment_status()")
 
 
 if __name__ == "__main__":
