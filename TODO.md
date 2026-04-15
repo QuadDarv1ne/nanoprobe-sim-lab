@@ -3,7 +3,7 @@
 **Последнее обновление:** 2026-04-15
 **Ветка:** `dev` (текущая), `main` (стабильная)
 **Python:** 3.9 - 3.12 (CI матрица)
-**Последний коммит:** 0a2de75
+**Последний коммит:** ba613e2
 **Всего тестов:** 80 файлов
 
 ---
@@ -44,11 +44,37 @@
    - `utils/database.py` — ре-экспорт для обратной совместимости
    - Все 14 тестов прошли ✅
 
-5. [ ] **Заменить print() на logging в `utils/`** (946 вызовов в 44 файлах)
-   - `utils/monitoring/` — много print вместо логов
-   - `utils/backup_manager.py`, `config_validator.py`
-   - **Приоритет:** сначала core модули, потом остальные
-   - **Исключение:** CLI инструменты (components/, rtl_sdr_tools/, scripts/)
+5. [ ] **Заменить print() на logging в `utils/`** (925 осталось, 28 файлов в production)
+   - **Исправлено:** config_manager.py (9), performance_monitoring_center.py (3),
+     system_health_monitor.py (7) — 19 print() → logger
+   - **Осталось в production коде (28 файлов):**
+     - `utils/data/data_manager.py` (27 print) — data persistence
+     - `utils/deployment/deployment_manager.py` (19 print) — deployment ops
+     - `utils/performance_verification_framework.py` (20 print) — verification
+     - `utils/performance/optimization_orchestrator.py` (12 print) — optimization
+     - `utils/api/space_image_downloader.py` (12 print) — image downloading
+     - `utils/location_manager.py` (10 print) — location ops
+     - `utils/performance/memory_tracker.py` (12 print) — memory tracking
+     - `utils/performance/performance_profiler.py` (13 print) — profiling
+     - `utils/performance/performance_benchmark.py` (12 print) — benchmarking
+     - `utils/reporting/report_generator.py` (9 print) — report generation
+     - `utils/performance/resource_optimizer.py` (4 print) — resource optimization
+     - `utils/config/config_optimizer.py` (5 print) — config optimization
+     - `utils/logger_analyzer.py` (5 print) — log analysis
+     - `utils/monitoring/realtime_dashboard.py` (4 print) — dashboard
+     - `utils/monitoring/system_monitor.py` (1 print) — monitoring loop
+     - `utils/caching/cache_manager.py` (1 print) — cache cleanup
+     - `utils/core/error_handler.py` (1 print) — error handling
+     - `utils/data/data_integrity.py` (1 print) — integrity check
+     - `utils/batch_processor.py` (2 print) — batch processing
+     - `utils/ai/model_trainer.py` (2 print) — model training
+     - `utils/ai/machine_learning.py` (3 print) — ML ops
+     - `utils/analytics.py` (1 print) — analytics
+     - `utils/visualizer.py` (2 print) — visualization
+     - `utils/reporting/documentation_generator.py` (3 print) — doc generation
+     - `utils/test_framework.py` (4 print) — test framework
+     - `utils/core/cli_utils.py` (15 print) — это CLI утилиты, оставить print
+   - **Исключение:** CLI инструменты (components/, rtl_sdr_tools/, scripts/, cli_utils.py)
 
 6. [ ] **Увеличить test coverage до 80%+**
    - 1227 тестов есть, но покрытие ~20% (много mock/stub)
@@ -102,8 +128,8 @@
 ### Качество кода
 - **flake8:** 0 критических ошибок (F/E9) ✅
 - **bare except Exception:** 0 в production ✅, ~60 в tests, ~22 в CLI/tools
-- **print() в utils/:** 946 вызовов ⚠️
-- **print() всего в проекте:** 3622 вызовов ⚠️
+- **print() в utils/:** ~925 вызовов ⚠️ (19 исправлено → logger)
+- **print() всего в проекте:** ~3600 вызовов ⚠️
 - **Pre-commit hooks:** black, isort, flake8 ✅
 - **CI lint:** исправлен ✅ (убраны `|| true`, добавлен `api/`)
 - **UTF-8 BOM:** 10 файлов в `api/routes/` начинаются с BOM ⚠️
@@ -200,6 +226,8 @@
 - [x] Разбит `utils/database.py` (2241 строка) на модули `utils/db/`
 - [x] Исправлены bare except в sstv_decoder.py, sdr_interface.py, web_dashboard_unified.py
 - [x] Исправлены все 16 bare except в production коде (api/, utils/, src/, main.py)
+- [x] Заменены print() на logging в config_manager.py, performance_monitoring_center.py,
+  system_health_monitor.py (19 print → logger)
 
 ---
 
