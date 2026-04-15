@@ -1,6 +1,7 @@
 """Модуль мониторинга системы для проекта Лаборатория моделирования нанозонда."""
 
 import json
+import logging
 import threading
 import time
 import tkinter as tk
@@ -14,6 +15,8 @@ import matplotlib.pyplot as plt
 import psutil
 from matplotlib.animation import FuncAnimation
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+logger = logging.getLogger(__name__)
 
 
 class SystemMonitor:
@@ -105,7 +108,7 @@ class SystemMonitor:
                 time.sleep(self.update_interval)
 
             except Exception as e:
-                print(f"Ошибка в цикле мониторинга: {e}")
+                logger.error("Error in monitoring loop: %s", e)
                 time.sleep(self.update_interval)
 
     def get_current_metrics(self) -> Dict[str, Any]:

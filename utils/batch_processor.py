@@ -909,7 +909,7 @@ class FolderWatcher:
             try:
                 self._check_new_files()
             except Exception as e:
-                print(f"Ошибка в наблюдателе: {e}")
+                logger.error("Error in watcher: %s", e)
 
             time.sleep(interval)
 
@@ -923,7 +923,7 @@ class FolderWatcher:
 
     def _process_new_file(self, file_path: Path):
         """Обработка нового файла"""
-        print(f"Обнаружен новый файл: {file_path}")
+        logger.info("Detected new file: %s", file_path)
 
         # Добавление в пакетную обработку
         job_id = self.processor.process_image_batch(

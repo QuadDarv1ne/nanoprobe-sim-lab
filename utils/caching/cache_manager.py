@@ -256,7 +256,7 @@ class CacheManager:
                             deleted_size += cache_info.size_bytes
                             deleted_count += cache_info.file_count
                     except OSError as e:
-                        print(f"Ошибка при удалении {cache_info.path}: {e}")
+                        logger.error("Error removing %s: %s", cache_info.path, e)
 
         # Очищаем системный кэш Python
         self._cleanup_python_cache()

@@ -1,11 +1,14 @@
 """Модуль визуализации для проекта Лаборатория моделирования нанозонда."""
 
+import logging
 from pathlib import Path
 from typing import Optional, Tuple
 
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 
 class SurfaceVisualizer:
@@ -430,11 +433,11 @@ class ProjectVisualizer:
                 )
                 plt.close(fig5)
 
-            print(f"Визуализации сохранены в директорию: {output_path}")
+            logger.info("Visualizations saved to: %s", output_path)
             return True
 
         except Exception as e:
-            print(f"Ошибка при создании визуализаций: {e}")
+            logger.error("Error creating visualizations: %s", e)
             return False
 
 

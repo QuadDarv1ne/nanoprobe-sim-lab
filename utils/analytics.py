@@ -562,7 +562,7 @@ class ProjectAnalytics:
         """
         with open(filename, "w", encoding="utf-8") as f:
             json.dump(report, f, indent=2, ensure_ascii=False, default=str)
-        print(f"Аналитический отчет сохранен: {filename}")
+        logger.info("Analytics report saved: %s", filename)
 
 
 def main():

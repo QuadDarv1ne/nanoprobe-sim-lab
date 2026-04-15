@@ -164,7 +164,7 @@ class ErrorHandler:
                 with open(self.log_file, "w", encoding="utf-8") as f:
                     json.dump(serializable_errors, f, ensure_ascii=False, default=str)
         except Exception as e:
-            print(f"Ошибка сохранения истории ошибок: {e}")
+            logger.error("Error saving error history: %s", e)
 
     def _maybe_cleanup(self):
         """Периодическая очистка старых ошибок"""

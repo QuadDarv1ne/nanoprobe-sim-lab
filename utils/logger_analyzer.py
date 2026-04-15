@@ -101,7 +101,7 @@ class AdvancedLoggerAnalyzer:
                     entries.append(entry)
 
         except Exception as e:
-            print(f"Ошибка парсинга файла {file_path}: {e}")
+            logger.error("Error parsing log file %s: %s", file_path, e)
 
         return entries
 
@@ -174,7 +174,7 @@ class AdvancedLoggerAnalyzer:
         all_entries = []
 
         for log_file in log_files:
-            print(f"Загрузка логов из: {log_file}")
+            logger.info("Loading logs from: %s", log_file)
             entries = self.parse_log_file(log_file)
             all_entries.extend(entries)
 
@@ -433,7 +433,7 @@ class AdvancedLoggerAnalyzer:
             logs = self.log_entries
 
         if not logs:
-            print("Нет данных для визуализации")
+            logger.warning("No data for visualization")
             return ""
 
         if output_path is None:
@@ -515,7 +515,7 @@ class AdvancedLoggerAnalyzer:
             Путь к сохраненному файлу
         """
         if not logs:
-            print("Нет логов для экспорта")
+            logger.warning("No logs to export")
             return ""
 
         if format_type.lower() == "csv":
@@ -574,7 +574,7 @@ class AdvancedLoggerAnalyzer:
         def monitor():
             file_path = Path(log_file_path)
             if not file_path.exists():
-                print(f"Файл {log_file_path} не существует")
+                logger.error("Log file %s does not exist", log_file_path)
                 return
 
             # Начинаем читать с конца файла

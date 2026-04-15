@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Optional
@@ -10,6 +11,8 @@ import numpy as np
 import pandas as pd
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
+
+logger = logging.getLogger(__name__)
 
 
 class DataIntegrityChecker:
@@ -52,7 +55,7 @@ class DataIntegrityChecker:
                 data = f.read()
             return self.calculate_checksum(data)
         except Exception as e:
-            print(f"Ошибка чтения файла {file_path}: {e}")
+            logger.error("Error reading file %s: %s", file_path, e)
             return None
 
     def verify_file_integrity(self, file_path: str, expected_checksum: str) -> bool:
