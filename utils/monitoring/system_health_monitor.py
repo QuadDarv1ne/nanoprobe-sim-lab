@@ -21,6 +21,8 @@ import requests
 
 logger = logging.getLogger(__name__)
 
+logger = logging.getLogger(__name__)
+
 
 @dataclass
 class HealthMetric:
@@ -164,7 +166,7 @@ class SystemHealthMonitor:
                 "timestamp": datetime.now(timezone.utc),
             }
         except Exception as e:
-            print(f"Ошибка получения метрик системы: {e}")
+            logger.error("Error getting system metrics: %s", e)
             return {}
 
     def evaluate_metric_severity(self, metric_name: str, value: float) -> str:
@@ -252,7 +254,7 @@ class SystemHealthMonitor:
                     try:
                         handler(alert)
                     except Exception as e:
-                        print(f"Ошибка в обработчике оповещений: {e}")
+                        logger.error("Error in alert handler: %s", e)
 
                 # Отправляем уведомления
                 self.send_notifications(alert)
@@ -271,7 +273,7 @@ class SystemHealthMonitor:
                 elif channel["type"] == "console":
                     self._send_console_notification(alert)
             except Exception as e:
-                print(f"Ошибка отправки уведомления через {channel['type']}: {e}")
+                logger.error("Error sending notification via %s: %s", channel["type"], e)
 
     def _send_email_notification(self, alert: HealthAlert, config: Dict[str, Any]):
         """Отправляет уведомление по email"""
@@ -303,7 +305,7 @@ class SystemHealthMonitor:
             server.quit()
 
         except Exception as e:
-            print(f"Ошибка отправки email уведомления: {e}")
+            logger.error("Error sending email notification: %s", e)
 
     def _send_webhook_notification(self, alert: HealthAlert, config: Dict[str, Any]):
         """Отправляет уведомление через webhook"""
@@ -322,11 +324,13 @@ class SystemHealthMonitor:
             response.raise_for_status()
 
         except Exception as e:
-            print(f"Ошибка отправки webhook уведомления: {e}")
+            logger.error("Error sending webhook notification: %s", e)
 
     def _send_console_notification(self, alert: HealthAlert):
         """Отправляет уведомление в консоль"""
-        print(f"[{alert.severity.upper()}] {alert.message} (Value: {alert.current_value})")
+        logger.info(
+            "[%s] %s (Value: %s)", alert.severity.upper(), alert.message, alert.current_value
+        )
 
     def calculate_health_score(self) -> float:
         """
@@ -457,7 +461,7 @@ class SystemHealthMonitor:
                     time.sleep(interval)
 
                 except Exception as e:
-                    print(f"Ошибка в мониторинге здоровья системы: {e}")
+                    logger.error("Error in system health monitoring: %s", e)
                     time.sleep(interval)
 
         self.monitoring_thread = threading.Thread(target=monitor, daemon=True)

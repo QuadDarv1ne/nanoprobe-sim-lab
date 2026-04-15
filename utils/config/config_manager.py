@@ -5,11 +5,14 @@
 """
 
 import json
+import logging
 import os
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class ConfigManager:
@@ -74,9 +77,7 @@ class ConfigManager:
             Словарь с параметрами конфигурации.
         """
         if not os.path.exists(self.config_file):
-            print(
-                f"Файл конфигурации {self.config_file} не найден. Создается стандартная конфигурация."
-            )
+            logger.info("Config file %s not found. Creating default config.", self.config_file)
             self.create_default_config()
 
         try:
@@ -87,10 +88,10 @@ class ConfigManager:
                 )
                 return data if isinstance(data, dict) else {}
         except json.JSONDecodeError as e:
-            print(f"Ошибка при загрузке конфигурации: {e}")
+            logger.error("Failed to load config: %s", e)
             return self.get_default_config()
         except Exception as e:
-            print(f"Неожиданная ошибка при загрузке конфигурации: {e}")
+            logger.error("Unexpected error loading config: %s", e)
             return self.get_default_config()
 
     def save_config(self) -> bool:
@@ -107,7 +108,7 @@ class ConfigManager:
                 self._last_modified = datetime.now(timezone.utc)
                 return True
             except Exception as e:
-                print(f"Ошибка при сохранении конфигурации: {e}")
+                logger.error("Failed to save config: %s", e)
                 return False
 
     def get(self, key: str, default: Any = None) -> Any:
@@ -238,7 +239,7 @@ class ConfigManager:
         default_config = self.get_default_config()
         self.config = default_config
         self.save_config()
-        print(f"Создан стандартный файл конфигурации: {self.config_file}")
+        logger.info("Created default config file: %s", self.config_file)
 
     def update_component_config(self, component_name: str, new_config: Dict[str, Any]) -> bool:
         """
@@ -255,7 +256,7 @@ class ConfigManager:
             self.config["components"][component_name]["config"].update(new_config)
             return self.save_config()
         else:
-            print(f"Компонент {component_name} не найден в конфигурации")
+            logger.warning("Component %s not found in config", component_name)
             return False
 
     def get_component_config(self, component_name: str) -> Optional[Dict[str, Any]]:
@@ -271,7 +272,7 @@ class ConfigManager:
         if "components" in self.config and component_name in self.config["components"]:
             return self.config["components"][component_name]["config"]
         else:
-            print(f"Компонент {component_name} не найден в конфигурации")
+            logger.warning("Component %s not found in config", component_name)
             return None
 
     def validate_config(self) -> bool:
@@ -284,14 +285,14 @@ class ConfigManager:
         required_keys = ["project", "components", "paths"]
         for key in required_keys:
             if key not in self.config:
-                print(f"Отсутствует обязательный раздел конфигурации: {key}")
+                logger.warning("Missing required config section: %s", key)
                 return False
 
         # Проверяем наличие необходимых компонентов
         required_components = ["spm_simulator", "surface_analyzer", "sstv_groundstation"]
         for comp in required_components:
             if comp not in self.config["components"]:
-                print(f"Отсутствует обязательный компонент: {comp}")
+                logger.warning("Missing required component: %s", comp)
                 return False
 
         return True

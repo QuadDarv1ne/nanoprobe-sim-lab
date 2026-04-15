@@ -1,6 +1,5 @@
-"""Модуль центра мониторинга производительности для проекта Лаборатория моделирования нанозонда."""
-
 import json
+import logging
 import os
 import statistics
 import sys
@@ -8,6 +7,8 @@ import threading
 import time
 from collections import defaultdict, deque
 from dataclasses import dataclass
+
+logger = logging.getLogger(__name__)
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
@@ -311,7 +312,7 @@ class PerformanceMonitoringCenter:
                 try:
                     handler(alert)
                 except Exception as e:
-                    print(f"Ошибка в обработчике оповещений: {e}")
+                    logger.error("Error in alert handler: %s", e)
 
         # Анализируем тренды
         for metric_name in current_metrics.keys():
@@ -325,7 +326,7 @@ class PerformanceMonitoringCenter:
             try:
                 exporter(current_metrics)
             except Exception as e:
-                print(f"Ошибка в экспортере данных: {e}")
+                logger.error("Error in data exporter: %s", e)
 
         self.stats["total_checks"] += 1
 
@@ -349,7 +350,7 @@ class PerformanceMonitoringCenter:
                     self.collect_and_process_metrics()
                     time.sleep(interval)
                 except Exception as e:
-                    print(f"Ошибка в мониторинге: {e}")
+                    logger.error("Error in monitoring: %s", e)
                     time.sleep(interval)
 
         self.monitoring_thread = threading.Thread(target=monitor, daemon=True)
