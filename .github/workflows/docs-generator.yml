@@ -28,11 +28,11 @@ jobs:
 
       - name: Generate API documentation
         run: |
-          python utils/documentation_generator.py || true
+          python utils/documentation_generator.py
 
       - name: Build MkDocs site
         run: |
-          mkdocs build || true
+          mkdocs build
 
       - name: Upload documentation artifact
         uses: actions/upload-artifact@v4

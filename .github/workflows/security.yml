@@ -29,7 +29,7 @@ jobs:
 
     - name: Run Bandit security lint
       run: |
-        bandit -r src/ utils/ api/ -f json -o bandit-report.json || true
+        bandit -r src/ utils/ api/ -f json -o bandit-report.json
 
     - name: Upload Bandit report
       uses: actions/upload-artifact@v4
@@ -40,11 +40,11 @@ jobs:
 
     - name: Run Safety check
       run: |
-        safety check -r requirements.txt --json || true
+        safety check -r requirements.txt
 
     - name: Run pip-audit
       run: |
-        pip-audit -r requirements.txt || true
+        pip-audit -r requirements.txt
 
     - name: Check for secrets in code
       run: |

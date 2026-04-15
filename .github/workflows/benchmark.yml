@@ -27,7 +27,7 @@ jobs:
 
     - name: Run benchmarks
       run: |
-        pytest tests/ -v --tb=short --benchmark-only --benchmark-json=benchmark.json || true
+        pytest tests/ -v --tb=short --benchmark-only --benchmark-json=benchmark.json
 
     - name: Upload benchmark results
       uses: actions/upload-artifact@v4
