@@ -201,7 +201,7 @@ class SurfacePredictionModel:
             "is_trained": self.is_trained,
         }
         joblib.dump(model_data, filepath)
-        print(f"Модель сохранена: {filepath}")
+        logger.info(f"Модель сохранена: {filepath}")
 
     def load_model(self, filepath: str):
         """
@@ -215,7 +215,7 @@ class SurfacePredictionModel:
         self.scaler = model_data["scaler"]
         self.label_encoder = model_data["label_encoder"]
         self.is_trained = model_data["is_trained"]
-        print(f"Модель загружена: {filepath}")
+        logger.info(f"Модель загружена: {filepath}")
 
 
 class ImageAnalysisPredictor:
@@ -620,18 +620,18 @@ class ProjectMLPipeline:
         self.image_predictor = joblib.load(dir_path / "image_model.pkl")
         self.sstv_predictor = joblib.load(dir_path / "sstv_model.pkl")
 
-        print(f"Все модели загружены из директории: {directory}")
+        logger.info(f"Все модели загружены из директории: {directory}")
 
 
 def main():
     """Главная функция для демонстрации возможностей ML модуля"""
-    print("=== МОДУЛЬ МАШИННОГО ОБУЧЕНИЯ ПРОЕКТА ===")
+    logger.info("=== МОДУЛЬ МАШИННОГО ОБУЧЕНИЯ ПРОЕКТА ===")
 
     # Создаем ML пайплайн
     ml_pipeline = ProjectMLPipeline()
 
     # Создаем тестовые данные
-    print("Создание тестовых данных...")
+    logger.info("Создание тестовых данных...")
 
     # Тестовые данные поверхности
     x = np.linspace(-2, 2, 50)
@@ -651,10 +651,10 @@ def main():
 
     predictions = ml_pipeline.make_predictions(input_data)
 
-    print("✓ Предсказания выполнены")
-    print(f"Предсказания: {predictions}")
+    logger.info("✓ Предсказания выполнены")
+    logger.info(f"Предсказания: {predictions}")
 
-    print("ML модуль успешно протестирован")
+    logger.info("ML модуль успешно протестирован")
 
 
 if __name__ == "__main__":
