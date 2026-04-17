@@ -3,7 +3,7 @@
 **Последнее обновление:** 2026-04-17
 **Ветка:** `dev` (текущая), `main` (стабильная)
 **Python:** 3.11 - 3.14 (CI матрица)
-**Последний коммит:** (pending)
+**Последний коммит:** a9911db
 **Всего тестов:** 1253 теста (100% pass)
 
 ---
@@ -65,11 +65,13 @@
    - Триггеры: squelch (dBFS), VIS-код SSTV, manual
    - API endpoints: /trigger/start, /trigger/stop, /trigger/status
 
-10. [ ] **Автоматическая коррекция PPM для RTL-SDR v4**
-    - Реализовать `_calculate_ppm_from_signal()` в rtl_sdr_calibration.py
-    - Метод: `rtl_test -p` для оценки PPM по известной частоте
+10. [x] **Автоматическая коррекция PPM для RTL-SDR v4** — **РЕАЛИЗОВАНО** ✅
+    - `utils/sdr/rtl_sdr_calibration.py` — перемещён в utils/sdr/
+    - `_calculate_ppm_from_signal()` — метод через `rtl_test -p`
     - Сохранение в `config/device_calibration.json`
     - API: `POST /api/v1/sstv/calibration/automated`
+    - `GET /api/v1/sstv/calibration/status` — статус калибровки
+    - `POST /api/v1/sstv/calibration/reset` — сброс калибровки
 
 11. [ ] **Заменить print() на logging в `utils/`** (~900 вызовов)
     - **Исправлено:** 64 print() → logger (19 + 37 + 8)
