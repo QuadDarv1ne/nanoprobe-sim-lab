@@ -3,6 +3,7 @@
 import configparser
 import copy
 import json
+import logging
 import threading
 import time
 from dataclasses import asdict, dataclass
@@ -12,6 +13,8 @@ from typing import Any, Dict, List
 
 import psutil
 import toml
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
