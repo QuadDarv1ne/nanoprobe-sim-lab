@@ -158,6 +158,16 @@ def register_routes(app: FastAPI):
     except ImportError as e:
         logger.warning(f"Sync Manager routes disabled: {e}")
 
+
+# Satellite Auto-Capture API (NOAA/Meteor)
+try:
+    from api.routes import satellite_capture
+
+    app.include_router(satellite_capture.router, prefix="/api/v1", tags=["Satellite Auto-Capture"])
+    logger.info("Satellite Auto-Capture routes registered")
+except ImportError as e:
+    logger.warning(f"Satellite Auto-Capture routes disabled: {e}")
+
     # SSTV Ground Station API
     try:
         from api.routes import sstv

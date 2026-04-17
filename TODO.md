@@ -1,9 +1,9 @@
 # Nanoprobe Sim Lab — TODO
 
-**Последнее обновление:** 2026-04-16
+**Последнее обновление:** 2026-04-17
 **Ветка:** `dev` (текущая), `main` (стабильная)
 **Python:** 3.11 - 3.14 (CI матрица)
-**Последний коммит:** fa358e1
+**Последний коммит:** (pending)
 **Всего тестов:** 1253 теста (100% pass)
 
 ---
@@ -102,10 +102,19 @@
     - Интервал: 3 дня (Celestrak API)
     - Background task: _auto_refresh_tle_background()
 
-17. [ ] **Автоматический захват NOAA APT / Meteor LRPT**
+17. [x] **Автоматический захват NOAA APT / Meteor LRPT** — **РЕАЛИЗОВАНО** ✅
     - `utils/sdr/noaa_capture.py` — NOAA APT capture + decode
     - `utils/sdr/meteor_capture.py` — Meteor LRPT capture + decode
     - Фоновый планировщик: предсказание → автозапись → декодирование
+    - API endpoints:
+      - `POST /api/v1/satellite-capture/noaa/start` — начать захват NOAA
+      - `POST /api/v1/satellite-capture/noaa/stop` — остановить захват NOAA
+      - `GET /api/v1/satellite-capture/noaa/status` — статус NOAA захвата
+      - `POST /api/v1/satellite-capture/noaa/schedule` — запланировать захват NOAA
+      - `POST /api/v1/satellite-capture/meteor/start` — начать захват Meteor
+      - `POST /api/v1/satellite-capture/meteor/stop` — остановить захват Meteor
+      - `GET /api/v1/satellite-capture/meteor/status` — статус Meteor захвата
+      - `POST /api/v1/satellite-capture/meteor/schedule` — запланировать захват Meteor
 
 18. [x] **Удалить `src/web/archived/`** — уже удалено ✅
 
