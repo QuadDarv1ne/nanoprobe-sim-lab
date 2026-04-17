@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 def register_routes(app: FastAPI):
     """Регистрация всех API роутов"""
-
     # ============================================
     # Основные роуты (обязательные)
     # ============================================
@@ -97,7 +96,6 @@ def register_routes(app: FastAPI):
     # ============================================
     # Опциональные роуты (с проверкой импорта)
     # ============================================
-
     # Dashboard API
     try:
         from api.routes import dashboard
@@ -158,15 +156,16 @@ def register_routes(app: FastAPI):
     except ImportError as e:
         logger.warning(f"Sync Manager routes disabled: {e}")
 
+    # Satellite Auto-Capture API (NOAA/Meteor)
+    try:
+        from api.routes import satellite_capture
 
-# Satellite Auto-Capture API (NOAA/Meteor)
-try:
-    from api.routes import satellite_capture
-
-    app.include_router(satellite_capture.router, prefix="/api/v1", tags=["Satellite Auto-Capture"])
-    logger.info("Satellite Auto-Capture routes registered")
-except ImportError as e:
-    logger.warning(f"Satellite Auto-Capture routes disabled: {e}")
+        app.include_router(
+            satellite_capture.router, prefix="/api/v1", tags=["Satellite Auto-Capture"]
+        )
+        logger.info("Satellite Auto-Capture routes registered")
+    except ImportError as e:
+        logger.warning(f"Satellite Auto-Capture routes disabled: {e}")
 
     # SSTV Ground Station API
     try:
@@ -192,11 +191,10 @@ except ImportError as e:
         cache = get_cache_manager()
         if state_db and cache:
             rtl433.set_managers(state_db, cache)
-
         app.include_router(rtl433.router, prefix="/api/v1", tags=["RTL-433 Sensors"])
-        logger.info("RTL_433 Weather Sensor routes registered")
+        logger.info("RTL-433 Weather Sensor routes registered")
     except (ImportError, RuntimeError) as e:
-        logger.warning(f"RTL_433 routes disabled: {e}")
+        logger.warning(f"RTL-433 routes disabled: {e}")
 
     # ADS-B Aircraft Tracker (1090 MHz)
     try:
@@ -207,7 +205,6 @@ except ImportError as e:
         cache = get_cache_manager()
         if state_db and cache:
             adsb.set_managers(state_db, cache)
-
         app.include_router(adsb.router, prefix="/api/v1", tags=["ADS-B Aircraft Tracker"])
         logger.info("ADS-B Aircraft Tracker routes registered")
     except (ImportError, RuntimeError) as e:
@@ -222,7 +219,6 @@ except ImportError as e:
         cache = get_cache_manager()
         if state_db and cache:
             fm_radio.set_managers(state_db, cache)
-
         app.include_router(fm_radio.router, prefix="/api/v1", tags=["FM Radio"])
         logger.info("FM Radio routes registered")
     except (ImportError, RuntimeError) as e:
