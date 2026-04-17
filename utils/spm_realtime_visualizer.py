@@ -5,6 +5,7 @@
 
 import base64
 import json
+import logging
 import time
 from datetime import datetime, timezone
 from io import BytesIO
@@ -12,6 +13,8 @@ from threading import Lock
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 try:
     import matplotlib.animation as animation
