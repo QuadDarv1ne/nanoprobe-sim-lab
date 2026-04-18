@@ -221,7 +221,9 @@ class SatelliteTracker:
             float: Угол возвышения в градусах
         """
         # GMST (Greenwich Mean Sidereal Time) для перевода ECI → ECEF
-        jd = (dt - datetime(2000, 1, 1, 12)).total_seconds() / 86400.0 + 2451545.0
+        jd = (
+            dt.replace(tzinfo=None) - datetime(2000, 1, 1, 12)
+        ).total_seconds() / 86400.0 + 2451545.0
         gmst_rad = (280.46061837 + 360.98564736629 * (jd - 2451545.0)) % 360
         gmst_rad = np.radians(gmst_rad)
 
