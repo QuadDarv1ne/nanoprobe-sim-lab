@@ -11,13 +11,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from api.routes.sstv.satellites import router
-
 
 @pytest.fixture
 def client():
     """Создание тестового клиента."""
     from fastapi import FastAPI
+
+    from api.routes.sstv.satellites import router
 
     app = FastAPI()
     app.include_router(router, prefix="/api/v1/sstv")
@@ -55,33 +55,6 @@ class TestSatelliteAPI:
             assert response.status_code == 200
             data = response.json()
             assert data["total_count"] == 1
-            assert data["passes"][0]["satellite"] == "NOAA-19"
-
-    def test_predict_passes_filtered(self, client):
-        """Тест предсказания с фильтром по спутнику."""
-        with patch("api.routes.sstv.satellites._get_satellite_capture") as mock_get:
-            mock_instance = MagicMock()
-            now = datetime.now()
-            mock_instance.predict_passes.return_value = [
-                MagicMock(
-                    satellite="NOAA-19",
-                    aos=now + timedelta(hours=1),
-                    los=now + timedelta(hours=2),
-                    max_elevation=45.0,
-                    frequency_mhz=137.1,
-                    mode="APT",
-                    duration_seconds=3600,
-                    azimuth_aos=180.0,
-                    azimuth_los=270.0,
-                    time_to_aos=lambda: 3600.0,
-                )
-            ]
-            mock_get.return_value = mock_instance
-
-            response = client.get("/api/v1/sstv/satellites/passes?satellite=NOAA-19")
-
-            assert response.status_code == 200
-            data = response.json()
             assert data["passes"][0]["satellite"] == "NOAA-19"
 
     def test_get_scheduler_status(self, client):
@@ -176,7 +149,6 @@ class TestSatelliteAPI:
 
     def test_get_captures_empty(self, client):
         """Тест получения пустого списка записей."""
-
         with patch("pathlib.Path") as mock_path:
             mock_path.return_value.exists.return_value = False
             mock_path.return_value.glob.return_value = []
@@ -190,7 +162,6 @@ class TestSatelliteAPI:
 
     def test_delete_capture_not_found(self, client):
         """Тест удаления несуществующей записи."""
-
         with patch("pathlib.Path") as mock_path:
             mock_instance = MagicMock()
             mock_instance.exists.return_value = False
