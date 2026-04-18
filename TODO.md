@@ -14,7 +14,7 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** `abd1056` — test: добавить тесты для hardware_health.py
+**Last commit:** `f0e3883` — test: добавить тесты для signal_classifier.py
 
 ---
 
@@ -27,7 +27,8 @@
 | DatabaseOperations | 30+ | ✅ |
 | sstv_advanced_api.py | 50+ | ✅ |
 | hardware_health.py | 25+ | ✅ |
-| **Всего** | **1325+** | 📈 |
+| signal_classifier.py | 25+ | ✅ |
+| **Всего** | **1350+** | 📈 |
 
 ---
 
@@ -52,8 +53,8 @@
   - ✅ Тесты для `DatabaseOperations` (30+ тестов)
   - ✅ Тесты для `sstv_advanced_api.py` (50+ тестов)
   - ✅ Тесты для `hardware_health.py` (25+ тестов)
+  - ✅ Тесты для `signal_classifier.py` (25+ тестов)
 - **Приоритетные модули:**
-  - `utils/ml/signal_classifier.py` — классификация сигналов
   - `utils/ml/defect_analyzer.py` — анализ дефектов
 
 ---
