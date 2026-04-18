@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 def register_routes(app: FastAPI):
     """Регистрация всех API роутов"""
+
     # ============================================
     # Основные роуты (обязательные)
     # ============================================
@@ -81,6 +82,7 @@ def register_routes(app: FastAPI):
         backup_dir.mkdir(parents=True, exist_ok=True)
         ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         backup_path = backup_dir / f"nanoprobe_{ts}.db"
+
         try:
             shutil.copy2(str(db.db_path), str(backup_path))
             return {
@@ -96,6 +98,7 @@ def register_routes(app: FastAPI):
     # ============================================
     # Опциональные роуты (с проверкой импорта)
     # ============================================
+
     # Dashboard API
     try:
         from api.routes import dashboard
@@ -179,6 +182,19 @@ def register_routes(app: FastAPI):
 
         app.include_router(sstv_advanced.router, prefix="/api/v1/sstv", tags=["SSTV Advanced"])
         logger.info("SSTV Advanced routes registered")
+
+        # SSTV Calibration API (PPM auto-calibration)
+        from api.routes.sstv import calibration
+
+        app.include_router(calibration.router, prefix="/api/v1/sstv", tags=["SSTV Calibration"])
+        logger.info("SSTV Calibration routes registered")
+
+        # SSTV Satellite Auto-Capture API (NOAA/Meteor)
+        from api.routes.sstv import satellites
+
+        app.include_router(satellites.router, prefix="/api/v1/sstv", tags=["SSTV Satellites"])
+        logger.info("SSTV Satellite Capture routes registered")
+
     except ImportError as e:
         logger.warning(f"SSTV Ground Station routes disabled: {e}")
 
