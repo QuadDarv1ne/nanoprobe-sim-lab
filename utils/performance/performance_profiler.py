@@ -12,6 +12,7 @@ import logging
 import pstats
 import threading
 import time
+import tracemalloc
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from functools import wraps
@@ -28,7 +29,6 @@ try:
 except ImportError:
     memory_profiler = None
     logger.warning("memory_profiler not installed. Install with 'pip install memory-profiler'")
-import tracemalloc
 
 
 @dataclass
