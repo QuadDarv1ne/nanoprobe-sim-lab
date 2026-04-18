@@ -86,8 +86,8 @@ class SharedRingBuffer:
         self._fd = open(self._mmap_path, "r+b" if self._mmap_path.exists() else "w+b")
         self._fd.truncate(HEADER_SIZE + self._data_size)
         self._buf = mmap.mmap(self._fd.fileno(), HEADER_SIZE + self._data_size)
-        self._header = self._buf[:HEADER_SIZE]
-        self._data = self._buf[HEADER_SIZE:]
+        self._header = memoryview(self._buf)[:HEADER_SIZE]
+        self._data = memoryview(self._buf)[HEADER_SIZE:]
 
         existing = self._read_header()
         if existing is None or existing[0] != self.capacity:
@@ -102,9 +102,8 @@ class SharedRingBuffer:
             logger.info("RingBuffer attached to existing mmap '%s'", self.name)
 
     def _write_header(self, capacity, head, tail, flags):
-        struct.pack_into(
-            HEADER_FORMAT, self._header, 0, MAGIC, VERSION, capacity, head, tail, flags
-        )
+        header_bytes = struct.pack(HEADER_FORMAT, MAGIC, VERSION, capacity, head, tail, flags)
+        self._header[: len(header_bytes)] = header_bytes
 
     def _read_header(self):
         if len(self._header) < HEADER_SIZE:

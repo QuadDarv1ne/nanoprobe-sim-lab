@@ -331,7 +331,7 @@ async def health_check():
         return result
     except Exception as e:
         tb = traceback.format_exc()
-        print(f"HEALTH ERROR: {e}\n{tb}")  # noqa: T201
+        logger.error(f"HEALTH ERROR: {e}\n{tb}")
         return {"error": str(e), "traceback": tb}
 
 

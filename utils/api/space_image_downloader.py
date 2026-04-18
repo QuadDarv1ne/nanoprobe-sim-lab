@@ -1,5 +1,6 @@
 """Модуль загрузки и обработки космических снимков."""
 
+import logging
 from datetime import datetime, timezone
 from io import BytesIO
 from pathlib import Path
@@ -13,6 +14,8 @@ try:
     HAS_PANDAS = True
 except ImportError:
     HAS_PANDAS = False
+
+logger = logging.getLogger(__name__)
 
 
 class SpaceImageDownloader:
@@ -58,7 +61,7 @@ class SpaceImageDownloader:
             response.raise_for_status()
             return response.json()
         except requests.RequestException as e:
-            print(f"Ошибка поиска Hubble: {e}")
+            logger.error(f"Ошибка поиска Hubble: {e}")
             return []
 
     def search_nasa(
@@ -89,7 +92,7 @@ class SpaceImageDownloader:
             data = response.json()
             return data.get("collection", {}).get("items", [])
         except requests.RequestException as e:
-            print(f"Ошибка поиска NASA: {e}")
+            logger.error(f"Ошибка поиска NASA: {e}")
             return []
 
     def download_image(
