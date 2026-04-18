@@ -8,6 +8,7 @@
 import cProfile
 import io
 import json
+import logging
 import pstats
 import threading
 import time
@@ -20,11 +21,13 @@ from typing import Any, Callable, Dict, List
 import matplotlib.pyplot as plt
 import psutil
 
+logger = logging.getLogger(__name__)
+
 try:
     import memory_profiler
 except ImportError:
     memory_profiler = None
-    print("Warning: memory_profiler not installed. Install with 'pip install memory-profiler'")
+    logger.warning("memory_profiler not installed. Install with 'pip install memory-profiler'")
 import tracemalloc
 
 
@@ -139,7 +142,7 @@ class PerformanceProfiler:
                     self.resource_usage_history.append(resource_usage)
 
                 except Exception as e:
-                    print(f"Ошибка мониторинга ресурсов: {e}")
+                    logger.error(f"Ошибка мониторинга ресурсов: {e}")
 
                 time.sleep(interval)
 
