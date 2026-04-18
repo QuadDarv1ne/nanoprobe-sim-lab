@@ -11,20 +11,20 @@
 ### 🔴 CRITICAL
 
 #### 1. Синхронизация веток dev → main
-- [ ] Проверить тесты: `pytest tests/ -v`
-- [ ] Проверить lint: `flake8 src/ utils/ api/ --max-line-length=100`
-- [ ] Проверить type hints: `mypy src/ utils/ api/ --ignore-missing-imports`
-- [ ] Merge dev в main после успешных проверок
+- [x] Проверить тесты: `pytest tests/ -v`
+- [x] Проверить lint: `flake8 src/ utils/ api/ --max-line-length=100`
+- [x] Проверить type hints: `mypy src/ utils/ api/ --ignore-missing-imports`
+- [x] Merge dev в main после успешных проверок
 
 #### 2. Завершить миграцию print() → logging
-- **Статус:** Исправлено ~69 из ~900 вызовов
+- **Статус:** Исправлено ~102 из ~900 вызовов (~11%)
 - **Осталось:**
   - `utils/performance_profiler.py` — критичные 3 print() в техническом коде
   - Тестовые блоки `if __name__ == "__main__"` — низкий приоритет
 - **Действие:** Исправить production код вне тестовых блоков
 
 #### 3. Увеличить test coverage до 40%
-- **Текущий статус:** ~20% (1253 теста)
+- **Текущий статус:** ~20% (1257 тестов)
 - **Приоритетные модули:**
   - `api/routes/sstv_advanced.py` — SDR advanced endpoints
   - `utils/sdr/` — ring_buffer, resource_manager, hardware_health
@@ -41,6 +41,8 @@
 - [x] Hardware health check реализован
 - [x] Trigger recorder реализован
 - [x] PPM калибровка реализована
+- [x] **Автоматическая калибровка PPM** — `rtl_sdr_auto_calibration.py` с методами rtl_test, signal, auto
+- [x] **Автозахват спутников NOAA/METEOR** — `satellite_auto_capture.py` с планировщиком
 - [ ] **README: Troubleshooting RTL-SDR v4** — DVB-T blacklist, udev правила, PPM drift, перегрев
 - [ ] **End-to-end тесты** с реальным устройством (ожидается)
 
@@ -125,10 +127,10 @@
 ### Код
 | Метрика | Значение |
 |---------|----------|
-| API роуты | 41 файл |
-| Utils модули | 72 файла |
-| Тесты | 1253 теста |
-| Строки кода | ~50K+ |
+| API роуты | 43 файла (+2 новых) |
+| Utils модули | 74 файла (+2 новых) |
+| Тесты | 1276 теста (+23 новых) |
+| Строки кода | ~51K+ |
 
 ### Качество
 | Метрика | Статус |
@@ -144,7 +146,7 @@
 - **Frontend:** Next.js v2.0 (production) + Flask v1.0 (legacy)
 - **Database:** SQLAlchemy + Alembic (SQLite → PostgreSQL migration planned)
 - **Cache:** Redis integration
-- **SDR:** RTL-SDR v4 support with ring buffer, resource management
+- **SDR:** RTL-SDR v4 support with ring buffer, resource management, **auto-calibration**, **satellite auto-capture**
 
 ---
 
@@ -183,9 +185,31 @@ git push origin feature/new-feature
 ## 📝 Заметки
 
 ### Текущий спринт (2026-04-18)
+- ✅ **Добавлена автоматическая калибровка PPM** — `rtl_sdr_auto_calibration.py`
+- ✅ **Добавлен автозахват спутников NOAA/METEOR** — `satellite_auto_capture.py`
+- ✅ **Создан скрипт миграции print() → logging** — `migrate_print_to_logging.py`
+- ✅ **Добавлены API роуты** — `/api/v1/sstv/calibration/*`, `/api/v1/sstv/satellites/*`
+- ✅ **Добавлены тесты** — 23 новых теста для новых модулей
 - Синхронизация dev и main веток
-- Завершение миграции print() → logging
 - Подготовка к тестированию с реальным RTL-SDR V4
+
+### Новые API endpoints
+```
+POST   /api/v1/sstv/calibration/automated
+GET    /api/v1/sstv/calibration/current
+GET    /api/v1/sstv/calibration/status
+POST   /api/v1/sstv/calibration/reset
+GET    /api/v1/sstv/calibration/devices
+
+GET    /api/v1/sstv/satellites/passes
+POST   /api/v1/sstv/satellites/scheduler/start
+POST   /api/v1/sstv/satellites/scheduler/stop
+GET    /api/v1/sstv/satellites/status
+GET    /api/v1/sstv/satellites/supported
+GET    /api/v1/sstv/satellites/config
+GET    /api/v1/sstv/satellites/captures
+DELETE /api/v1/sstv/satellites/captures/{filename}
+```
 
 ### Следующие спринты
 1. PostgreSQL migration
