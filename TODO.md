@@ -14,7 +14,7 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** `db0d521` — test: добавить тесты для DatabaseOperations
+**Last commit:** `fc56481` — test: добавить тесты для DatabaseOperations (исправлено)
 
 ---
 
