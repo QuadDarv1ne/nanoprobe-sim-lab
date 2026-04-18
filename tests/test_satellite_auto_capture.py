@@ -137,7 +137,11 @@ class TestSatelliteAutoCapture:
 
     def test_add_capture_handler(self, capture):
         """Тест добавления обработчика захвата."""
-        handler = MagicMock()
+
+        def handler(pass_):
+            pass
+
+        handler.__name__ = "test_handler"
         capture.add_capture_handler(handler)
         assert handler in capture._capture_handlers
 

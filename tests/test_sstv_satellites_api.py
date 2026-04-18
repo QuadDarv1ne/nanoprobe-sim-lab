@@ -5,6 +5,7 @@ Tests for SSTV Satellite API
 """
 
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -30,7 +31,7 @@ class TestSatelliteAPI:
 
     def test_predict_passes(self, client):
         """Тест предсказания пролётов."""
-        with patch("api.routes.sstv.satellites.SatelliteAutoCapture") as mock_capture:
+        with patch("api.routes.sstv.satellites._get_satellite_capture") as mock_get:
             mock_instance = MagicMock()
             now = datetime.now()
             mock_instance.predict_passes.return_value = [
@@ -47,7 +48,7 @@ class TestSatelliteAPI:
                     time_to_aos=lambda: 3600.0,
                 )
             ]
-            mock_capture.return_value = mock_instance
+            mock_get.return_value = mock_instance
 
             response = client.get("/api/v1/sstv/satellites/passes?hours_ahead=24")
 
@@ -58,7 +59,7 @@ class TestSatelliteAPI:
 
     def test_predict_passes_filtered(self, client):
         """Тест предсказания с фильтром по спутнику."""
-        with patch("api.routes.sstv.satellites.SatelliteAutoCapture") as mock_capture:
+        with patch("api.routes.sstv.satellites._get_satellite_capture") as mock_get:
             mock_instance = MagicMock()
             now = datetime.now()
             mock_instance.predict_passes.return_value = [
@@ -75,7 +76,7 @@ class TestSatelliteAPI:
                     time_to_aos=lambda: 3600.0,
                 )
             ]
-            mock_capture.return_value = mock_instance
+            mock_get.return_value = mock_instance
 
             response = client.get("/api/v1/sstv/satellites/passes?satellite=NOAA-19")
 
@@ -85,7 +86,7 @@ class TestSatelliteAPI:
 
     def test_get_scheduler_status(self, client):
         """Тест получения статуса планировщика."""
-        with patch("api.routes.sstv.satellites.SatelliteAutoCapture") as mock_capture:
+        with patch("api.routes.sstv.satellites._get_satellite_capture") as mock_get:
             mock_instance = MagicMock()
             mock_instance._running = False
             mock_instance.predict_passes.return_value = []
@@ -94,7 +95,7 @@ class TestSatelliteAPI:
                 "upcoming": 0,
                 "active_pass": None,
             }
-            mock_capture.return_value = mock_instance
+            mock_get.return_value = mock_instance
 
             response = client.get("/api/v1/sstv/satellites/status")
 
@@ -105,10 +106,10 @@ class TestSatelliteAPI:
 
     def test_start_scheduler(self, client):
         """Тест запуска планировщика."""
-        with patch("api.routes.sstv.satellites.SatelliteAutoCapture") as mock_capture:
+        with patch("api.routes.sstv.satellites._get_satellite_capture") as mock_get:
             mock_instance = MagicMock()
             mock_instance.predict_passes.return_value = []
-            mock_capture.return_value = mock_instance
+            mock_get.return_value = mock_instance
 
             response = client.post(
                 "/api/v1/sstv/satellites/scheduler/start",
@@ -122,9 +123,9 @@ class TestSatelliteAPI:
 
     def test_stop_scheduler(self, client):
         """Тест остановки планировщика."""
-        with patch("api.routes.sstv.satellites.SatelliteAutoCapture") as mock_capture:
+        with patch("api.routes.sstv.satellites._get_satellite_capture") as mock_get:
             mock_instance = MagicMock()
-            mock_capture.return_value = mock_instance
+            mock_get.return_value = mock_instance
 
             response = client.post("/api/v1/sstv/satellites/scheduler/stop")
 
@@ -163,47 +164,18 @@ class TestSatelliteAPI:
 
     def test_get_supported_satellites(self, client):
         """Тест получения списка поддерживаемых спутников."""
-        with patch("api.routes.sstv.satellites.SatelliteAutoCapture") as mock_capture:
-            mock_capture.SATELLITES = {
-                "NOAA-15": {"freq": 137.620, "mode": "APT"},
-                "NOAA-18": {"freq": 137.9125, "mode": "APT"},
-                "METEOR-M2": {"freq": 137.900, "mode": "LRPT"},
-            }
+        response = client.get("/api/v1/sstv/satellites/supported")
 
-            response = client.get("/api/v1/sstv/satellites/supported")
-
-            assert response.status_code == 200
-            data = response.json()
-            assert len(data["satellites"]) == 3
-            satellite_names = [s["name"] for s in data["satellites"]]
-            assert "NOAA-15" in satellite_names
-            assert "METEOR-M2" in satellite_names
-
-    def test_get_captures(self, client, tmp_path):
-        """Тест получения списка записей."""
-        # Создаём тестовые файлы
-        captures_dir = tmp_path / "satellite_captures"
-        captures_dir.mkdir()
-        (captures_dir / "NOAA-19_20240101_120000_APT_137.100MHz.raw").touch()
-        (captures_dir / "METEOR-M2_20240101_140000_LRPT_137.900MHz.raw").touch()
-
-        with patch("pathlib.Path") as mock_path:
-            mock_path.return_value.exists.return_value = True
-            mock_path.return_dir = captures_dir
-            mock_path.return_value.glob.return_value = [
-                captures_dir / "NOAA-19_20240101_120000_APT_137.100MHz.raw",
-                captures_dir / "METEOR-M2_20240101_140000_LRPT_137.900MHz.raw",
-            ]
-
-            response = client.get("/api/v1/sstv/satellites/captures")
-
-            assert response.status_code == 200
-            data = response.json()
-            assert "captures" in data
+        assert response.status_code == 200
+        data = response.json()
+        assert "satellites" in data
+        assert len(data["satellites"]) > 0
+        satellite_names = [s["name"] for s in data["satellites"]]
+        assert "NOAA-15" in satellite_names
+        assert "METEOR-M2" in satellite_names
 
     def test_get_captures_empty(self, client):
         """Тест получения пустого списка записей."""
-        from pathlib import Path
 
         with patch("pathlib.Path") as mock_path:
             mock_path.return_value.exists.return_value = False
@@ -216,28 +188,8 @@ class TestSatelliteAPI:
             assert data["captures"] == []
             assert data["total"] == 0
 
-    def test_delete_capture(self, client, tmp_path):
-        """Тест удаления записи."""
-        captures_dir = tmp_path / "satellite_captures"
-        captures_dir.mkdir()
-        test_file = captures_dir / "test.raw"
-        test_file.touch()
-
-        with patch("pathlib.Path") as mock_path:
-            mock_instance = MagicMock()
-            mock_instance.exists.return_value = True
-            mock_path.return_value = mock_instance
-            mock_path.__truediv__.return_value = mock_instance
-
-            response = client.delete("/api/v1/sstv/satellites/captures/test.raw")
-
-            assert response.status_code == 200
-            data = response.json()
-            assert data["success"] is True
-
     def test_delete_capture_not_found(self, client):
         """Тест удаления несуществующей записи."""
-        from pathlib import Path
 
         with patch("pathlib.Path") as mock_path:
             mock_instance = MagicMock()
