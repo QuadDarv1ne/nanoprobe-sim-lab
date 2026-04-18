@@ -14,7 +14,7 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** `b67f711` — docs: обновить TODO.md с актуальным статусом
+**Last commit:** `abd1056` — test: добавить тесты для hardware_health.py
 
 ---
 
@@ -26,7 +26,8 @@
 | sdr_resource_manager.py | 17 | ✅ |
 | DatabaseOperations | 30+ | ✅ |
 | sstv_advanced_api.py | 50+ | ✅ |
-| **Всего** | **1300+** | 📈 |
+| hardware_health.py | 25+ | ✅ |
+| **Всего** | **1325+** | 📈 |
 
 ---
 
@@ -50,8 +51,8 @@
   - ✅ Тесты для `sdr_resource_manager.py` (17 тестов)
   - ✅ Тесты для `DatabaseOperations` (30+ тестов)
   - ✅ Тесты для `sstv_advanced_api.py` (50+ тестов)
+  - ✅ Тесты для `hardware_health.py` (25+ тестов)
 - **Приоритетные модули:**
-  - `utils/sdr/hardware_health.py` — мониторинг оборудования
   - `utils/ml/signal_classifier.py` — классификация сигналов
   - `utils/ml/defect_analyzer.py` — анализ дефектов
 
