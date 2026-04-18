@@ -6,7 +6,6 @@ Maintains a pre-trigger buffer (2 seconds of samples).
 """
 
 import logging
-import time
 from datetime import datetime, timezone
 from pathlib import Path
 from threading import Lock, Thread

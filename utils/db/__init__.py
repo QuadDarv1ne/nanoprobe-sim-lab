@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager, contextmanager
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from utils.db.connection import AsyncConnectionPool, ConnectionPool
+from utils.db.connection import ConnectionPool
 from utils.db.operations import DatabaseOperations
 from utils.db.schema import get_database_stats, init_database_schema
 

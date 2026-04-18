@@ -5,7 +5,7 @@ import logging
 import sqlite3
 import threading
 from queue import Empty, Queue
-from typing import Any, Dict
+from typing import Dict
 
 logger = logging.getLogger(__name__)
 
