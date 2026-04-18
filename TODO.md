@@ -1,8 +1,18 @@
 # Nanoprobe Sim Lab — TODO
+
 **Последнее обновление:** 2026-04-18
 **Текущая ветка:** `dev`
 **Целевая ветка:** `main`
 **Python:** 3.11 - 3.14
+
+---
+
+## 📊 Статус синхронизации
+
+| Ветка | Статус | Отставание |
+|-------|--------|------------|
+| `dev` | ⚠️ Local ahead by 1 commit | Нужно push |
+| `main` | ⚠️ Behind dev | Нужно merge + push |
 
 ---
 
@@ -14,74 +24,97 @@
 - [x] Проверить тесты: `pytest tests/ -v`
 - [x] Проверить lint: `flake8 src/ utils/ api/ --max-line-length=100`
 - [x] Проверить type hints: `mypy src/ utils/ api/ --ignore-missing-imports`
-- [x] Merge dev в main после успешных проверок
+- [ ] **MERGE dev в main** — выполнить после подтверждения
+- [ ] **PUSH изменений** — `git push origin main`
+
+**Команды:**
+```bash
+git checkout main
+git pull origin main
+git merge dev
+git push origin main
+```
 
 #### 2. Завершить миграцию print() → logging
-- **Статус:** Исправлено ~106 из ~900 вызовов (~12%) - критичные print() исправлены
-- **Осталось:**
-  - `utils/performance_profiler.py` — критичные 3 print() в техническом коде
-  - Тестовые блоки `if __name__ == "__main__"` — низкий приоритет
-- **Действие:** Исправить production код вне тестовых блоков
+**Статус:** Исправлено ~106 из ~900 вызовов (~12%) — критичные print() исправлены
+
+**Осталось:**
+- `utils/performance_profiler.py` — критичные 3 print() в техническом коде
+- Тестовые блоки `if __name__ == "__main__"` — низкий приоритет
+
+**Действие:** Исправить production код вне тестовых блоков
 
 #### 3. Увеличить test coverage до 40%
-- **Текущий статус:** ~20% (1257 тестов)
-- **Приоритетные модули:**
-  - `api/routes/sstv_advanced.py` — SDR advanced endpoints
-  - `utils/sdr/` — ring_buffer, resource_manager, hardware_health
-  - `utils/db/operations.py` — CRUD операции
-  - `utils/ml/` — signal_classifier, defect_analyzer
+**Текущий статус:** ~20% (1257 тестов)
+
+**Приоритетные модули:**
+- `api/routes/sstv_advanced.py` — SDR advanced endpoints
+- `utils/sdr/` — ring_buffer, resource_manager, hardware_health
+- `utils/db/operations.py` — CRUD операции
+- `utils/ml/` — signal_classifier, defect_analyzer
 
 ---
 
 ### 🟡 HIGH
 
 #### 4. RTL-SDR V4 Production Ready
-- [x] Ring buffer реализован
-- [x] Resource manager реализован
-- [x] Hardware health check реализован
-- [x] Trigger recorder реализован
-- [x] PPM калибровка реализована
-- [x] **Автоматическая калибровка PPM** — `rtl_sdr_auto_calibration.py` с методами rtl_test, signal, auto
-- [x] **Автозахват спутников NOAA/METEOR** — `satellite_auto_capture.py` с планировщиком
+**Реализовано:**
+- [x] Ring buffer
+- [x] Resource manager
+- [x] Hardware health check
+- [x] Trigger recorder
+- [x] PPM калибровка
+- [x] Автоматическая калибровка PPM — `rtl_sdr_auto_calibration.py`
+- [x] Автозахват спутников NOAA/METEOR — `satellite_auto_capture.py`
+
+**Осталось:**
 - [ ] **README: Troubleshooting RTL-SDR v4** — DVB-T blacklist, udev правила, PPM drift, перегрев
 - [ ] **End-to-end тесты** с реальным устройством (ожидается)
 
 #### 5. Next.js Frontend v2.0
+**Реализовано:**
 - [x] Базовая реализация
 - [x] TypeScript + Tailwind CSS
 - [x] Zustand state management
+
+**Осталось:**
 - [ ] **WebGL/Canvas водопад спектра** — `frontend/src/components/sstv/WaterfallDisplay.tsx`
 - [ ] **Миграция всех фич** из Flask dashboard v1.0
 - [ ] **PWA оптимизация** — service worker, offline mode
 
 #### 6. PostgreSQL Migration
-- **Статус:** Гайд создан, но миграция не выполнена
-- **Сложность:** 10-15 часов
-- **Действия:**
-  - [ ] Установить PostgreSQL
-  - [ ] Настроить alembic для PostgreSQL
-  - [ ] Мигрировать данные из SQLite
-  - [ ] Обновить `.env` и конфиги
-  - [ ] Протестировать под нагрузкой
+**Статус:** Гайд создан, но миграция не выполнена
+**Сложность:** 10-15 часов
+
+**Действия:**
+- [ ] Установить PostgreSQL
+- [ ] Настроить alembic для PostgreSQL
+- [ ] Мигрировать данные из SQLite
+- [ ] Обновить `.env` и конфиги
+- [ ] Протестировать под нагрузкой
 
 ---
 
 ### 🟢 MEDIUM
 
 #### 7. AI/ML Features
+**Реализовано:**
 - [x] TensorFlow Lite классификация сигналов
 - [x] AI анализ дефектов
+
+**Осталось:**
 - [ ] **Обучение моделей** — собрать датасет сигналов
 - [ ] **Интеграция с внешними API** — NASA, Zenodo, Figshare
 - [ ] **Model versioning** — MLflow или аналог
 
 #### 8. Mobile Application
-- **Технологии:** React Native или Flutter
-- **Фичи:**
-  - Просмотр захваченных изображений
-  - Расписание пролётов спутников
-  - Уведомления о SSTV передачах с МКС
-  - Управление захватом (старт/стоп)
+**Технологии:** React Native или Flutter
+
+**Фичи:**
+- Просмотр захваченных изображений
+- Расписание пролётов спутников
+- Уведомления о SSTV передачах с МКС
+- Управление захватом (старт/стоп)
 
 #### 9. Performance Optimization
 - [ ] **Redis кэширование** — полностью реализовать
@@ -90,9 +123,12 @@
 - [ ] **CDN для статики** — Next.js frontend
 
 #### 10. Security Hardening
+**Реализовано:**
 - [x] JWT + 2FA TOTP
 - [x] Rate limiting
 - [x] Security headers
+
+**Осталось:**
 - [ ] **Penetration testing** — внешняя аудит безопасности
 - [ ] **Secrets management** — HashiCorp Vault или аналог
 - [ ] **Audit logging** — логирование всех действий пользователей
@@ -108,8 +144,11 @@
 - [ ] **Changelog automation** — auto-generate from commit messages
 
 #### 12. DevOps Improvements
+**Реализовано:**
 - [x] Docker Compose
 - [x] Kubernetes manifests
+
+**Осталось:**
 - [ ] **Monitoring dashboard** — Prometheus + Grafana
 - [ ] **Log aggregation** — ELK stack или Loki
 - [ ] **Backup automation** — автоматические бэкапы БД
@@ -125,6 +164,7 @@
 ## 📊 Статистика проекта
 
 ### Код
+
 | Метрика | Значение |
 |---------|----------|
 | API роуты | 43 файла (+2 новых) |
@@ -133,6 +173,7 @@
 | Строки кода | ~51K+ |
 
 ### Качество
+
 | Метрика | Статус |
 |---------|--------|
 | flake8 критические | 0 ✅ |
@@ -142,17 +183,19 @@
 | Test coverage | ~20% 📈 |
 
 ### Архитектура
+
 - **Backend:** FastAPI + JWT + 2FA TOTP + WebSocket + GraphQL
 - **Frontend:** Next.js v2.0 (production) + Flask v1.0 (legacy)
 - **Database:** SQLAlchemy + Alembic (SQLite → PostgreSQL migration planned)
 - **Cache:** Redis integration
-- **SDR:** RTL-SDR v4 support with ring buffer, resource management, **auto-calibration**, **satellite auto-capture**
+- **SDR:** RTL-SDR v4 support with ring buffer, resource management, auto-calibration, satellite auto-capture
 
 ---
 
 ## 🔄 Workflow
 
 ### Правила работы
+
 1. **Работать в `dev`** — все изменения сначала в dev
 2. **Проверки перед merge** — tests + lint + mypy
 3. **Merge в `main`** — только после успешных проверок
@@ -160,6 +203,7 @@
 5. **Качество важнее количества** — фокус на реальные проблемы
 
 ### Git workflow
+
 ```bash
 # Создать ветку для фичи
 git checkout dev
@@ -185,33 +229,35 @@ git push origin feature/new-feature
 ## 📝 Заметки
 
 ### Текущий спринт (2026-04-18)
+
 - ✅ **Добавлена автоматическая калибровка PPM** — `rtl_sdr_auto_calibration.py`
 - ✅ **Добавлен автозахват спутников NOAA/METEOR** — `satellite_auto_capture.py`
 - ✅ **Создан скрипт миграции print() → logging** — `migrate_print_to_logging.py`
 - ✅ **Добавлены API роуты** — `/api/v1/sstv/calibration/*`, `/api/v1/sstv/satellites/*`
 - ✅ **Добавлены тесты** — 23 новых теста для новых модулей
-- Синхронизация dev и main веток
-- Подготовка к тестированию с реальным RTL-SDR V4
+- ⚠️ **Синхронизация dev и main веток** — требуется merge
 
 ### Новые API endpoints
-```
-POST   /api/v1/sstv/calibration/automated
-GET    /api/v1/sstv/calibration/current
-GET    /api/v1/sstv/calibration/status
-POST   /api/v1/sstv/calibration/reset
-GET    /api/v1/sstv/calibration/devices
 
-GET    /api/v1/sstv/satellites/passes
-POST   /api/v1/sstv/satellites/scheduler/start
-POST   /api/v1/sstv/satellites/scheduler/stop
-GET    /api/v1/sstv/satellites/status
-GET    /api/v1/sstv/satellites/supported
-GET    /api/v1/sstv/satellites/config
-GET    /api/v1/sstv/satellites/captures
+```
+POST /api/v1/sstv/calibration/automated
+GET  /api/v1/sstv/calibration/current
+GET  /api/v1/sstv/calibration/status
+POST /api/v1/sstv/calibration/reset
+GET  /api/v1/sstv/calibration/devices
+
+GET  /api/v1/sstv/satellites/passes
+POST /api/v1/sstv/satellites/scheduler/start
+POST /api/v1/sstv/satellites/scheduler/stop
+GET  /api/v1/sstv/satellites/status
+GET  /api/v1/sstv/satellites/supported
+GET  /api/v1/sstv/satellites/config
+GET  /api/v1/sstv/satellites/captures
 DELETE /api/v1/sstv/satellites/captures/{filename}
 ```
 
 ### Следующие спринты
+
 1. PostgreSQL migration
 2. Next.js WebGL waterfall
 3. Mobile app MVP
@@ -220,6 +266,7 @@ DELETE /api/v1/sstv/satellites/captures/{filename}
 ---
 
 ## 🔗 Ресурсы
+
 - **RTL-SDR Blog:** https://www.rtl-sdr.com/
 - **Celestrak TLE:** https://celestrak.org/
 - **Satnobs:** https://satnobs.io/
