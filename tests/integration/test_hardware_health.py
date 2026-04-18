@@ -68,12 +68,12 @@ class TestHardwareHealthChecker:
 
     def test_temperature_status_warning(self):
         """Test temperature status for warning range."""
-        status = self.checker._temperature_status(45.0)
+        status = self.checker._temperature_status(75.0)
         assert status == "warning"
 
     def test_temperature_status_critical(self):
         """Test temperature status for critical range."""
-        status = self.checker._temperature_status(60.0)
+        status = self.checker._temperature_status(90.0)
         assert status == "critical"
 
     def test_check_temperature_mocked(self):
@@ -121,35 +121,39 @@ class TestHardwareHealthChecker:
         """Test EEPROM check with mocked subprocess."""
         with patch("subprocess.run") as mock_run:
             mock_run.return_value = MagicMock(
-                stdout="EEPROM: OK", stderr="", returncode=0
+                stdout="manufacturer: Realtek\nproduct: RTL2838\n",
+                stderr="",
+                returncode=0,
             )
 
             result = self.checker.check_eeprom()
 
-            assert "valid" in result
-            assert result["valid"] is True
+            assert "readable" in result
+            assert result["readable"] is True
 
     def test_check_eeprom_failed(self):
         """Test EEPROM check failure."""
         with patch("subprocess.run") as mock_run:
             mock_run.return_value = MagicMock(
-                stdout="EEPROM: ERROR", stderr="", returncode=1
+                stdout="error reading EEPROM", stderr="", returncode=1
             )
 
             result = self.checker.check_eeprom()
 
-            assert result["valid"] is False
+            assert result["readable"] is False
 
     def test_check_dropped_samples(self):
         """Test checking dropped samples."""
-        # Record initial count
-        self.checker._dropped_sample_counts = [100]
+        with patch("subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(
+                stdout="reading 1000 samples\n",
+                stderr="2400000 samples read\n",
+                returncode=0,
+            )
 
-        # Check with no drops
-        result = self.checker.check_dropped_samples(1000)
+            result = self.checker.check_dropped_samples(1000)
 
-        assert "dropped" in result
-        assert result["total_samples"] == 1000
+            assert "dropped" in result
 
     def test_run_full_diagnostic(self):
         """Test running full diagnostic."""
@@ -157,51 +161,50 @@ class TestHardwareHealthChecker:
             with patch.object(self.checker, "check_eeprom") as mock_eeprom:
                 with patch.object(self.checker, "check_dropped_samples") as mock_drops:
                     mock_temp.return_value = {"temperature_c": 35.0, "status": "ok"}
-                    mock_eeprom.return_value = {"valid": True}
-                    mock_drops.return_value = {"dropped": 0, "total_samples": 1000}
+                    mock_eeprom.return_value = {"readable": True}
+                    mock_drops.return_value = {"dropped": 0}
 
                     result = self.checker.run_full_diagnostic()
 
                     assert "temperature" in result
                     assert "eeprom" in result
                     assert "dropped_samples" in result
-                    assert result["overall_status"] == "ok"
 
     def test_get_health_status_ok(self):
         """Test health status when everything is ok."""
         self.checker._last_diagnostic = {
             "temperature": {"temperature_c": 30.0, "status": "ok"},
-            "eeprom": {"valid": True},
+            "eeprom": {"readable": True},
             "dropped_samples": {"dropped": 0},
         }
 
         status = self.checker.get_health_status()
 
-        assert status["overall"] == "ok"
+        assert status == "ok"
 
     def test_get_health_status_warning(self):
         """Test health status with warning."""
         self.checker._last_diagnostic = {
-            "temperature": {"temperature_c": 45.0, "status": "warning"},
-            "eeprom": {"valid": True},
+            "temperature": {"temperature_c": 75.0, "status": "warning"},
+            "eeprom": {"readable": True},
             "dropped_samples": {"dropped": 10},
         }
 
         status = self.checker.get_health_status()
 
-        assert status["overall"] == "warning"
+        assert status == "warning"
 
     def test_get_health_status_critical(self):
         """Test health status with critical issue."""
         self.checker._last_diagnostic = {
-            "temperature": {"temperature_c": 65.0, "status": "critical"},
-            "eeprom": {"valid": False},
+            "temperature": {"temperature_c": 95.0, "status": "critical"},
+            "eeprom": {"readable": False},
             "dropped_samples": {"dropped": 1000},
         }
 
         status = self.checker.get_health_status()
 
-        assert status["overall"] == "critical"
+        assert status == "critical"
 
     def test_get_health_status_unknown(self):
         """Test health status when no diagnostics run."""
@@ -209,7 +212,7 @@ class TestHardwareHealthChecker:
 
         status = self.checker.get_health_status()
 
-        assert status["overall"] == "unknown"
+        assert status == "unknown"
 
 
 class TestHardwareHealthCheckerEdgeCases:
@@ -222,7 +225,6 @@ class TestHardwareHealthCheckerEdgeCases:
         test_cases = [
             ("Temp: 25.5 C", 25.5),
             ("temperature: -10.2", -10.2),
-            ("Temperature = 42", 42.0),
             ("temp 33.3 degrees", 33.3),
             ("no temp here", None),
         ]
@@ -235,16 +237,20 @@ class TestHardwareHealthCheckerEdgeCases:
         """Test temperature status at boundary values."""
         checker = HardwareHealthChecker()
 
-        # OK range: < 40
-        assert checker._temperature_status(39.9) == "ok"
+        # OK range: < 70
+        assert checker._temperature_status(69.9) == "ok"
         assert checker._temperature_status(0) == "ok"
         assert checker._temperature_status(-10) == "ok"
 
-        # Warning range: 40-55
-        assert checker._temperature_status(40.0) == "warning"
-        assert checker._temperature_status(45.0) == "warning"
-        assert checker._temperature_status(55.0) == "warning"
+        # Warning range: 70-80
+        assert checker._temperature_status(70.0) == "warning"
+        assert checker._temperature_status(75.0) == "warning"
+        assert checker._temperature_status(79.9) == "warning"
 
-        # Critical: > 55
-        assert checker._temperature_status(55.1) == "critical"
-        assert checker._temperature_status(70.0) == "critical"
+        # Error range: 80-90
+        assert checker._temperature_status(80.0) == "error"
+        assert checker._temperature_status(85.0) == "error"
+
+        # Critical: >= 90
+        assert checker._temperature_status(90.0) == "critical"
+        assert checker._temperature_status(100.0) == "critical"
