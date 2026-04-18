@@ -14,7 +14,7 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** `f0e3883` — test: добавить тесты для signal_classifier.py
+**Last commit:** `6dbb584` — fix: исправить совместимость signal_classifier с Python 3.14 и NumPy
 
 ---
 
@@ -27,8 +27,11 @@
 | DatabaseOperations | 30+ | ✅ |
 | sstv_advanced_api.py | 50+ | ✅ |
 | hardware_health.py | 25+ | ✅ |
-| signal_classifier.py | 25+ | ✅ |
-| **Всего** | **1350+** | 📈 |
+| signal_classifier.py | 20 | ✅ **FIXED** |
+| defect_analyzer.py | 14 | ✅ |
+| satellite_auto_capture.py | 23 | ✅ |
+| rtl_sdr_auto_calibration.py | 15 | ✅ |
+| **Всего** | **1390+** | 📈 |
 
 ---
 
@@ -46,16 +49,19 @@
   - Тестовые блоки `if __name__ == "__main__"` — низкий приоритет (CLI утилиты)
 
 #### 2. Test coverage ~20% → 40%
-- **Текущий статус:** ~20% (1300+ тестов)
+- **Текущий статус:** ~20% (1390+ тестов)
 - **Выполнено:**
   - ✅ Тесты для `ring_buffer.py` (20+ тестов)
   - ✅ Тесты для `sdr_resource_manager.py` (17 тестов)
   - ✅ Тесты для `DatabaseOperations` (30+ тестов)
   - ✅ Тесты для `sstv_advanced_api.py` (50+ тестов)
   - ✅ Тесты для `hardware_health.py` (25+ тестов)
-  - ✅ Тесты для `signal_classifier.py` (25+ тестов)
+  - ✅ **Тесты для `signal_classifier.py` (20 тестов) — FIXED Python 3.14 compatibility**
+  - ✅ Тесты для `defect_analyzer.py` (14 тестов)
+  - ✅ Тесты для `satellite_auto_capture.py` (23 теста)
+  - ✅ Тесты для `rtl_sdr_auto_calibration.py` (15 тестов)
 - **Приоритетные модули:**
-  - `utils/ml/defect_analyzer.py` — анализ дефектов
+  - `utils/ml/defect_analyzer.py` — анализ дефектов ✅ (тесты добавлены)
 
 ---
 
@@ -240,6 +246,7 @@ git push origin feature/new-feature
 - ✅ **Добавлены API роуты** — `/api/v1/sstv/calibration/*`, `/api/v1/sstv/satellites/*`
 - ✅ **Добавлены тесты** — 23 новых теста для новых модулей
 - ✅ **Синхронизация dev и main веток** — выполнено
+- ✅ **FIXED: signal_classifier.py совместимость с Python 3.14** — добавлены методы `_calculate_energy` и `_calculate_spectral_width`, исправлена обработка комплексных данных в FFT
 
 ### Новые API endpoints
 
