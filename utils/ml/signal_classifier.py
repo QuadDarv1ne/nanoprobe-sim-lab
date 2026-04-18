@@ -49,6 +49,58 @@ class SignalClassifier:
         if model_path and TFLITE_AVAILABLE:
             self._load_model(model_path)
 
+    @staticmethod
+    def _calculate_energy(samples: np.ndarray) -> float:
+        """Calculate signal energy.
+
+        Args:
+            samples: Complex IQ samples.
+
+        Returns:
+            Signal energy (mean squared amplitude).
+        """
+        # Handle complex samples by computing magnitude squared
+        if np.iscomplexobj(samples):
+            return float(np.mean(np.abs(samples) ** 2))
+        return float(np.mean(samples**2))
+
+    @staticmethod
+    def _calculate_spectral_width(samples: np.ndarray) -> float:
+        """Calculate spectral width of the signal.
+
+        Args:
+            samples: Complex IQ samples.
+
+        Returns:
+            Spectral width as fraction of sample rate.
+        """
+        # For complex IQ samples, compute FFT of the analytic signal
+        # Convert to float64 for compatibility
+        if np.iscomplexobj(samples):
+            # Use complex FFT for IQ data
+            samples_float = samples.astype(np.complex128)
+            fft_result = np.fft.fft(samples_float)
+        else:
+            samples_float = samples.astype(np.float64)
+            fft_result = np.fft.rfft(samples_float)
+
+        # Compute power spectrum
+        power = np.abs(fft_result) ** 2
+        power_norm = power / (power.sum() + 1e-12)
+
+        # Find bandwidth containing 90% of energy
+        sorted_power = np.sort(power_norm)[::-1]
+        cumsum = np.cumsum(sorted_power)
+        total_energy = cumsum[-1] if len(cumsum) > 0 else 1.0
+        bw_idx = int(np.searchsorted(cumsum, 0.9 * total_energy))
+
+        # Ensure minimum width of 1 bin for non-zero signals
+        # This handles very narrowband signals (pure tones)
+        if bw_idx == 0 and power.max() > 0:
+            bw_idx = 1
+
+        return bw_idx / len(power_norm)
+
     def _load_model(self, path: str) -> None:
         """Load a TFLite model from file."""
         try:
@@ -95,7 +147,7 @@ class SignalClassifier:
         if not frames:
             frames = [samples[:frame_size]]
 
-        frame_array = np.array(frames)
+        frame_array = np.array(frames, dtype=np.float64)
 
         # FFT magnitude spectrum
         spectrum = np.abs(np.fft.rfft(frame_array, n=frame_size))
@@ -149,8 +201,14 @@ class SignalClassifier:
         - sstv (medium bandwidth, specific frequency range)
         """
         try:
+            # Convert complex samples to real (magnitude) for FFT
+            if np.iscomplexobj(samples):
+                samples_real = np.abs(samples).astype(np.float64)
+            else:
+                samples_real = samples.astype(np.float64)
+
             # Compute power spectral density
-            fft_result = np.fft.rfft(samples)
+            fft_result = np.fft.rfft(samples_real)
             power = np.abs(fft_result) ** 2
             power_norm = power / (power.max() + 1e-12)
 
@@ -172,8 +230,8 @@ class SignalClassifier:
                 confidence = min(0.9, bw_fraction / 0.2)
                 return "fm", confidence
 
-            # Find dominant frequency
-            freqs = np.fft.rfftfreq(len(samples), 1.0 / sample_rate)
+            # Find dominant frequency (use real samples for frequency calculation)
+            freqs = np.fft.rfftfreq(len(samples_real), 1.0 / sample_rate)
             dominant_freq = float(freqs[np.argmax(power)])
 
             # CW: very narrow, single tone
