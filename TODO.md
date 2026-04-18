@@ -11,8 +11,10 @@
 
 | Ветка | Статус | Отставание |
 |-------|--------|------------|
-| `dev` | ⚠️ Local ahead by 1 commit | Нужно push |
-| `main` | ⚠️ Behind dev | Нужно merge + push |
+| `dev` | ✅ Синхронизирована | - |
+| `main` | ✅ Синхронизирована | - |
+
+**Last commit:** `b0f83fd` — docs: обновить TODO.md с актуальным статусом проекта и задачами
 
 ---
 
@@ -20,44 +22,26 @@
 
 ### 🔴 CRITICAL
 
-#### 1. Синхронизация веток dev → main
-- [x] Проверить тесты: `pytest tests/ -v`
-- [x] Проверить lint: `flake8 src/ utils/ api/ --max-line-length=100`
-- [x] Проверить type hints: `mypy src/ utils/ api/ --ignore-missing-imports`
-- [ ] **MERGE dev в main** — выполнить после подтверждения
-- [ ] **PUSH изменений** — `git push origin main`
+#### 1. Миграция print() → logging
+- **Статус:** Исправлено ~106 из ~900 вызовов (~12%)
+- **Осталось:**
+  - `utils/performance_profiler.py` — критичные 3 print() в техническом коде
+  - Тестовые блоки `if __name__ == "__main__"` — низкий приоритет
+- **Действие:** Исправить production код вне тестовых блоков
 
-**Команды:**
-```bash
-git checkout main
-git pull origin main
-git merge dev
-git push origin main
-```
-
-#### 2. Завершить миграцию print() → logging
-**Статус:** Исправлено ~106 из ~900 вызовов (~12%) — критичные print() исправлены
-
-**Осталось:**
-- `utils/performance_profiler.py` — критичные 3 print() в техническом коде
-- Тестовые блоки `if __name__ == "__main__"` — низкий приоритет
-
-**Действие:** Исправить production код вне тестовых блоков
-
-#### 3. Увеличить test coverage до 40%
-**Текущий статус:** ~20% (1257 тестов)
-
-**Приоритетные модули:**
-- `api/routes/sstv_advanced.py` — SDR advanced endpoints
-- `utils/sdr/` — ring_buffer, resource_manager, hardware_health
-- `utils/db/operations.py` — CRUD операции
-- `utils/ml/` — signal_classifier, defect_analyzer
+#### 2. Увеличить test coverage до 40%
+- **Текущий статус:** ~20% (1276 тестов)
+- **Приоритетные модули:**
+  - `api/routes/sstv_advanced.py` — SDR advanced endpoints
+  - `utils/sdr/` — ring_buffer, resource_manager, hardware_health
+  - `utils/db/operations.py` — CRUD операции
+  - `utils/ml/` — signal_classifier, defect_analyzer
 
 ---
 
 ### 🟡 HIGH
 
-#### 4. RTL-SDR V4 Production Ready
+#### 3. RTL-SDR V4 Production Ready
 **Реализовано:**
 - [x] Ring buffer
 - [x] Resource manager
@@ -71,7 +55,7 @@ git push origin main
 - [ ] **README: Troubleshooting RTL-SDR v4** — DVB-T blacklist, udev правила, PPM drift, перегрев
 - [ ] **End-to-end тесты** с реальным устройством (ожидается)
 
-#### 5. Next.js Frontend v2.0
+#### 4. Next.js Frontend v2.0
 **Реализовано:**
 - [x] Базовая реализация
 - [x] TypeScript + Tailwind CSS
@@ -82,7 +66,7 @@ git push origin main
 - [ ] **Миграция всех фич** из Flask dashboard v1.0
 - [ ] **PWA оптимизация** — service worker, offline mode
 
-#### 6. PostgreSQL Migration
+#### 5. PostgreSQL Migration
 **Статус:** Гайд создан, но миграция не выполнена
 **Сложность:** 10-15 часов
 
@@ -97,7 +81,7 @@ git push origin main
 
 ### 🟢 MEDIUM
 
-#### 7. AI/ML Features
+#### 6. AI/ML Features
 **Реализовано:**
 - [x] TensorFlow Lite классификация сигналов
 - [x] AI анализ дефектов
@@ -107,7 +91,7 @@ git push origin main
 - [ ] **Интеграция с внешними API** — NASA, Zenodo, Figshare
 - [ ] **Model versioning** — MLflow или аналог
 
-#### 8. Mobile Application
+#### 7. Mobile Application
 **Технологии:** React Native или Flutter
 
 **Фичи:**
@@ -116,13 +100,13 @@ git push origin main
 - Уведомления о SSTV передачах с МКС
 - Управление захватом (старт/стоп)
 
-#### 9. Performance Optimization
+#### 8. Performance Optimization
 - [ ] **Redis кэширование** — полностью реализовать
 - [ ] **Database connection pooling** — оптимизация
 - [ ] **WebSocket scaling** — Redis pub/sub для horizontal scaling
 - [ ] **CDN для статики** — Next.js frontend
 
-#### 10. Security Hardening
+#### 9. Security Hardening
 **Реализовано:**
 - [x] JWT + 2FA TOTP
 - [x] Rate limiting
@@ -137,13 +121,13 @@ git push origin main
 
 ### 🔵 LOW
 
-#### 11. Documentation
+#### 10. Documentation
 - [ ] **API Reference** — автогенерация из OpenAPI spec
 - [ ] **User guides** — пошаговые инструкции для новичков
 - [ ] **Video tutorials** — демонстрация возможностей
 - [ ] **Changelog automation** — auto-generate from commit messages
 
-#### 12. DevOps Improvements
+#### 11. DevOps Improvements
 **Реализовано:**
 - [x] Docker Compose
 - [x] Kubernetes manifests
@@ -153,7 +137,7 @@ git push origin main
 - [ ] **Log aggregation** — ELK stack или Loki
 - [ ] **Backup automation** — автоматические бэкапы БД
 
-#### 13. Code Quality
+#### 12. Code Quality
 - [ ] **Pre-commit hooks** — полностью настроить
 - [ ] **Code coverage badges** — в README
 - [ ] **Dependency updates** — Dependabot или Renovate
@@ -235,24 +219,23 @@ git push origin feature/new-feature
 - ✅ **Создан скрипт миграции print() → logging** — `migrate_print_to_logging.py`
 - ✅ **Добавлены API роуты** — `/api/v1/sstv/calibration/*`, `/api/v1/sstv/satellites/*`
 - ✅ **Добавлены тесты** — 23 новых теста для новых модулей
-- ⚠️ **Синхронизация dev и main веток** — требуется merge
+- ✅ **Синхронизация dev и main веток** — выполнено
 
 ### Новые API endpoints
 
 ```
 POST /api/v1/sstv/calibration/automated
-GET  /api/v1/sstv/calibration/current
-GET  /api/v1/sstv/calibration/status
+GET /api/v1/sstv/calibration/current
+GET /api/v1/sstv/calibration/status
 POST /api/v1/sstv/calibration/reset
-GET  /api/v1/sstv/calibration/devices
-
-GET  /api/v1/sstv/satellites/passes
+GET /api/v1/sstv/calibration/devices
+GET /api/v1/sstv/satellites/passes
 POST /api/v1/sstv/satellites/scheduler/start
 POST /api/v1/sstv/satellites/scheduler/stop
-GET  /api/v1/sstv/satellites/status
-GET  /api/v1/sstv/satellites/supported
-GET  /api/v1/sstv/satellites/config
-GET  /api/v1/sstv/satellites/captures
+GET /api/v1/sstv/satellites/status
+GET /api/v1/sstv/satellites/supported
+GET /api/v1/sstv/satellites/config
+GET /api/v1/sstv/satellites/captures
 DELETE /api/v1/sstv/satellites/captures/{filename}
 ```
 
