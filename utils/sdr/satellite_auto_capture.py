@@ -11,10 +11,8 @@
     pip install skyfield requests
 """
 
-import json
 import logging
 import os
-import re
 import subprocess
 import threading
 import time

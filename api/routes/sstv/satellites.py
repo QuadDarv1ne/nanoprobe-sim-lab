@@ -1,359 +1,267 @@
 ﻿"""
-SSTV Satellites endpoints
+SSTV Satellite Capture API Router
 
-Спутники, расписание МКС, TLE данные,
-позиция спутников.
+API для автоматического захвата спутниковых сигналов (NOAA APT, METEOR LRPT).
 """
 
-import asyncio
 import logging
-import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Query
-
-from api.error_handlers import NotFoundError, ServiceUnavailableError
-from api.routes.sstv.helpers import REDIS_AVAILABLE, get_redis_cache, get_satellite_tracker
+from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
-
-router = APIRouter()
-
-# ── TLE Predictive Cache ────────────────────────────────────────────────
-
-_tle_cache: dict = {
-    "data": None,
-    "last_fetch": None,
-    "expires_at": None,
-    "satellites_updated": 0,
-}
-
-TLE_CACHE_TTL = timedelta(days=3)
+router = APIRouter(prefix="/satellites", tags=["SSTV Satellites"])
 
 
-def _refresh_tle_from_source(tracker) -> int:
-    """Fetch fresh TLE data from Celestrak via the tracker.
+# Pydantic Models
+class SatellitePassResponse(BaseModel):
+    """Ответ с информацией о пролёте спутника."""
 
-    Returns the number of satellites updated, or 0 on failure.
-    """
-    updated = tracker.update_tle_from_celestrak()
-    if updated > 0:
-        tracker.save_tle("data/tle_data.json")
-        _tle_cache["data"] = updated
-        _tle_cache["last_fetch"] = datetime.now(timezone.utc)
-        _tle_cache["expires_at"] = datetime.now(timezone.utc) + TLE_CACHE_TTL
-        _tle_cache["satellites_updated"] = updated
-        logger.info(
-            "TLE cache refreshed: %d satellites, expires at %s",
-            updated,
-            _tle_cache["expires_at"].isoformat(),
-        )
-    return updated
+    satellite: str
+    aos: str
+    los: str
+    max_elevation: float
+    frequency_mhz: float
+    mode: str
+    duration_seconds: int
+    azimuth_aos: float
+    azimuth_los: float
+    time_to_aos: Optional[float] = None
 
 
-async def _auto_refresh_tle_background():
-    """Background task that refreshes TLE if the cache is stale."""
-    tracker = get_satellite_tracker()
-    if not tracker:
-        logger.warning("TLE auto-refresh skipped: satellite tracker unavailable")
-        return
+class CaptureConfig(BaseModel):
+    """Конфигурация захвата."""
 
-    now = datetime.now(timezone.utc)
-    expires = _tle_cache.get("expires_at")
+    device_index: int = Field(default=0, ge=0, le=7)
+    sample_rate: int = Field(default=2400000, description="Частота дискретизации")
+    output_dir: str = Field(default="data/satellite_captures")
+    min_elevation: float = Field(default=5.0, ge=0, le=90)
+    pre_record_offset: int = Field(default=120, description="Предзапись до AOS (сек)")
+    post_record_offset: int = Field(default=60, description="Дописывание после LOS (сек)")
 
-    if expires and now < expires:
-        logger.debug("TLE cache still valid (expires %s), skipping refresh", expires.isoformat())
-        return
 
-    logger.info("TLE cache expired or missing — refreshing from Celestrak")
+class SchedulerStatus(BaseModel):
+    """Статус планировщика."""
+
+    running: bool
+    active_pass: Optional[Dict[str, Any]] = None
+    upcoming_passes: int = 0
+    next_pass: Optional[SatellitePassResponse] = None
+    last_update: str
+
+
+class StartSchedulerRequest(BaseModel):
+    """Запрос на запуск планировщика."""
+
+    hours_ahead: int = Field(default=24, ge=1, le=168)
+
+
+# Helper Functions
+def _get_satellite_capture(device_index: int = 0):
+    """Получение экземпляра SatelliteAutoCapture."""
     try:
-        updated = await asyncio.get_event_loop().run_in_executor(
-            None,
-            _refresh_tle_from_source,
-            tracker,
+        from utils.sdr.satellite_auto_capture import SatelliteAutoCapture
+
+        return SatelliteAutoCapture(
+            location_lat=55.75,
+            location_lon=37.61,
+            output_dir="data/satellite_captures",
+            device_index=device_index,
         )
-        if updated > 0:
-            from api.routes.sstv.helpers import set_app_state
+    except ImportError:
+        logger.error("satellite_auto_capture module not found")
+        return None
+    except Exception as e:
+        logger.error("Ошибка инициализации SatelliteAutoCapture: %s", e)
+        return None
 
-            set_app_state("satellite_tracker", None)
-    except Exception:
-        logger.exception("TLE auto-refresh failed")
 
-
-@router.get("/iss/schedule")
-async def get_iss_schedule(
-    hours_ahead: int = Query(default=24, ge=1, le=72),
-    min_elevation: float = Query(default=10.0, ge=0, le=90),
+# API Endpoints
+@router.get("/passes", summary="Предсказать пролёты")
+async def predict_passes(
+    hours_ahead: int = Query(48, ge=1, le=168),
+    satellite: Optional[str] = Query(None),
+    device_index: int = Query(0, ge=0, le=7),
 ):
-    """Получает расписание пролётов МКС (ISS)."""
-    tracker = get_satellite_tracker()
-    if not tracker:
-        raise ServiceUnavailableError("Satellite tracker недоступен")
-
-    cache_key = f"iss_schedule:{hours_ahead}:{min_elevation}"
-    redis_cache = get_redis_cache()
-
-    if redis_cache and REDIS_AVAILABLE:
-        cached = redis_cache.get(cache_key)
-        if cached:
-            return {"status": "success", "cached": True, "data": cached}
+    """Предсказать пролёты спутников на ближайшие N часов."""
+    capture = _get_satellite_capture(device_index)
+    if not capture:
+        raise HTTPException(status_code=500, detail="Модуль захвата недоступен")
 
     try:
-        passes = await asyncio.get_event_loop().run_in_executor(
-            None,
-            lambda: tracker.get_pass_predictions(
-                satellite_name="iss",
-                hours_ahead=hours_ahead,
-                min_elevation=min_elevation,
-            ),
-        )
+        passes = capture.predict_passes(hours_ahead=hours_ahead)
+        if satellite:
+            passes = [p for p in passes if p.satellite == satellite]
 
-        result = []
-        for pass_info in passes:
-            result.append(
-                {
-                    "aos": pass_info["aos"].isoformat(),
-                    "los": pass_info["los"].isoformat(),
-                    "max_elevation": pass_info["max_elevation"],
-                    "frequency_mhz": pass_info["frequency"],
-                    "duration_minutes": pass_info["duration_minutes"],
-                    "mode": ("SSTV Martin 1" if pass_info["frequency"] == 145.800 else "Unknown"),
-                }
+        now = datetime.now()
+        pass_responses = []
+        for p in passes:
+            pass_responses.append(
+                SatellitePassResponse(
+                    satellite=p.satellite,
+                    aos=p.aos.isoformat(),
+                    los=p.los.isoformat(),
+                    max_elevation=p.max_elevation,
+                    frequency_mhz=p.frequency_mhz,
+                    mode=p.mode,
+                    duration_seconds=p.duration_seconds(),
+                    azimuth_aos=p.azimuth_aos,
+                    azimuth_los=p.azimuth_los,
+                    time_to_aos=p.time_to_aos() if p.aos > now else None,
+                )
             )
 
-        if redis_cache and REDIS_AVAILABLE:
-            redis_cache.set(cache_key, result, expire=300)
+        return {"passes": pass_responses, "total_count": len(pass_responses)}
+    except Exception as e:
+        logger.error("Ошибка предсказания пролётов: %s", e)
+        raise HTTPException(status_code=500, detail=f"Ошибка: {str(e)}")
 
+
+@router.get("/status", summary="Статус планировщика")
+async def get_scheduler_status(device_index: int = Query(0, ge=0, le=7)):
+    """Получить статус планировщика автозахвата."""
+    capture = _get_satellite_capture(device_index)
+    if not capture:
+        raise HTTPException(status_code=500, detail="Модуль захвата недоступен")
+
+    try:
+        capture.predict_passes(hours_ahead=24)
+        summary = capture.get_passes_summary()
         return {
-            "status": "success",
-            "cached": False,
-            "count": len(result),
-            "data": result,
+            "running": capture._running,
+            "upcoming_passes": summary.get("upcoming", 0),
+            "active_pass": summary.get("active_pass"),
+            "last_update": datetime.now(timezone.utc).isoformat(),
         }
-
     except Exception as e:
-        logger.exception("Failed to get ISS schedule: %s", e)
-        raise ServiceUnavailableError("Не удалось получить расписание МКС")
+        logger.error("Ошибка получения статуса: %s", e)
+        raise HTTPException(status_code=500, detail=f"Ошибка: {str(e)}")
 
 
-@router.get("/iss/next-pass")
-async def get_iss_next_pass(
-    min_elevation: float = Query(default=10.0, ge=0, le=90),
+@router.post("/scheduler/start", summary="Запустить планировщик")
+async def start_scheduler(
+    request: StartSchedulerRequest,
+    device_index: int = Query(0, ge=0, le=7),
 ):
-    """Получает следующий пролёт МКС."""
-    tracker = get_satellite_tracker()
-    if not tracker:
-        raise ServiceUnavailableError("Satellite tracker недоступен")
-
-    cache_key = "iss_next_pass"
-    redis_cache = get_redis_cache()
-
-    if redis_cache and REDIS_AVAILABLE:
-        cached = redis_cache.get(cache_key)
-        if cached:
-            return {"status": "success", "cached": True, "data": cached}
+    """Запустить планировщик автозахвата спутников."""
+    capture = _get_satellite_capture(device_index)
+    if not capture:
+        raise HTTPException(status_code=500, detail="Модуль захвата недоступен")
 
     try:
-        next_pass = await asyncio.get_event_loop().run_in_executor(
-            None, lambda: tracker.get_next_pass("iss")
-        )
-
-        if not next_pass:
-            return {
-                "status": "success",
-                "message": "No passes found in next 24 hours",
-                "data": None,
-            }
-
-        result = {
-            "aos": next_pass["aos"].isoformat(),
-            "los": next_pass["los"].isoformat(),
-            "max_elevation": round(next_pass["max_elevation"], 1),
-            "frequency_mhz": next_pass["frequency"],
-            "duration_minutes": round(next_pass["duration_minutes"], 1),
-            "time_until_aos": next_pass.get(
-                "time_until_aos",
-                str(next_pass["aos"] - datetime.now(timezone.utc)),
-            ),
-        }
-
-        if redis_cache and REDIS_AVAILABLE:
-            redis_cache.set(cache_key, result, expire=120)
-
-        return {"status": "success", "cached": False, "data": result}
-
+        capture.predict_passes(hours_ahead=request.hours_ahead)
+        capture.start_scheduler()
+        return {"success": True, "message": "Планировщик запущен"}
     except Exception as e:
-        logger.exception("Failed to get ISS next pass: %s", e)
-        raise ServiceUnavailableError("Не удалось получить данные о пролёте МКС")
+        logger.error("Ошибка запуска планировщика: %s", e)
+        raise HTTPException(status_code=500, detail=f"Ошибка: {str(e)}")
 
 
-@router.get("/iss/position")
-async def get_iss_current_position():
-    """Получает текущую позицию МКС."""
-    tracker = get_satellite_tracker()
-    if not tracker:
-        raise ServiceUnavailableError("Satellite tracker недоступен")
-
-    cache_key = "iss_position"
-    redis_cache = get_redis_cache()
-
-    if redis_cache and REDIS_AVAILABLE:
-        cached = redis_cache.get(cache_key)
-        if cached:
-            return {"status": "success", "cached": True, "data": cached}
+@router.post("/scheduler/stop", summary="Остановить планировщик")
+async def stop_scheduler(device_index: int = Query(0, ge=0, le=7)):
+    """Остановить планировщик автозахвата спутников."""
+    capture = _get_satellite_capture(device_index)
+    if not capture:
+        raise HTTPException(status_code=500, detail="Модуль захвата недоступен")
 
     try:
-        position = tracker.get_current_position("iss")
-
-        if not position:
-            raise NotFoundError("Позиция МКС недоступна")
-
-        result = {
-            "latitude": position["latitude"],
-            "longitude": position["longitude"],
-            "altitude_km": position["altitude_km"],
-            "velocity_kmh": position["velocity_kmh"],
-            "footprint_km": position["footprint_km"],
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        }
-
-        if redis_cache and REDIS_AVAILABLE:
-            redis_cache.set(cache_key, result, expire=30)
-
-        return {"status": "success", "cached": False, "data": result}
-
+        capture.stop_scheduler()
+        return {"success": True, "message": "Планировщик остановлен"}
     except Exception as e:
-        logger.exception("Failed to get ISS position: %s", e)
-        raise ServiceUnavailableError("Не удалось получить позицию МКС")
+        logger.error("Ошибка остановки планировщика: %s", e)
+        raise HTTPException(status_code=500, detail=f"Ошибка: {str(e)}")
 
 
-@router.get("/iss/visible")
-async def is_iss_visible(
-    min_elevation: float = Query(default=10.0, ge=0, le=90),
-):
-    """Проверяет видимость МКС сейчас."""
-    tracker = get_satellite_tracker()
-    if not tracker:
-        raise ServiceUnavailableError("Satellite tracker недоступен")
-
-    try:
-        visible = tracker.is_satellite_visible("iss", min_elevation)
-        position = tracker.get_current_position("iss")
-
-        elevation = 0
-        if position:
-            elevation = tracker._elevation_from_position(position, datetime.now(timezone.utc))
-
-        return {
-            "status": "success",
-            "visible": visible,
-            "elevation": elevation,
-            "message": "ISS видна" if visible else "ISS не видна",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        }
-
-    except Exception as e:
-        logger.exception("Failed to check ISS visibility: %s", e)
-        raise ServiceUnavailableError("Не удалось проверить видимость МКС")
+@router.get("/config", response_model=CaptureConfig, summary="Конфигурация захвата")
+async def get_capture_config():
+    """Получить текущую конфигурацию захвата спутников."""
+    return CaptureConfig(
+        device_index=0,
+        sample_rate=2400000,
+        output_dir="data/satellite_captures",
+        min_elevation=5.0,
+        pre_record_offset=120,
+        post_record_offset=60,
+    )
 
 
-@router.get("/satellites")
-async def get_all_satellites():
-    """Получает список всех отслеживаемых спутников."""
-    tracker = get_satellite_tracker()
-    if not tracker:
-        raise ServiceUnavailableError("Satellite tracker недоступен")
+@router.post("/config", summary="Обновить конфигурацию захвата")
+async def update_capture_config(config: CaptureConfig):
+    """Обновить конфигурацию захвата спутников."""
+    logger.info("Обновлена конфигурация захвата: device=%d", config.device_index)
+    return {"success": True, "message": "Конфигурация обновлена"}
 
-    satellites = tracker.get_all_satellites()
 
+@router.get("/supported", summary="Поддерживаемые спутники")
+async def get_supported_satellites():
+    """Получить список поддерживаемых спутников."""
+    from utils.sdr.satellite_auto_capture import SatelliteAutoCapture
+
+    satellites = SatelliteAutoCapture.SATELLITES
     return {
-        "status": "success",
-        "count": len(satellites),
-        "satellites": satellites,
+        "satellites": [
+            {"name": name, "frequency_mhz": cfg["freq"], "mode": cfg["mode"]}
+            for name, cfg in satellites.items()
+        ]
     }
 
 
-@router.get("/satellites/schedule")
-async def get_all_satellites_schedule(hours_ahead: int = 24):
-    """Получает расписание всех SSTV спутников."""
-    tracker = get_satellite_tracker()
-    if not tracker:
-        raise ServiceUnavailableError("Satellite tracker недоступен")
+@router.get("/captures", summary="Список записей")
+async def get_captures(
+    satellite: Optional[str] = Query(None),
+    limit: int = Query(20, ge=1, le=100),
+):
+    """Получить список сохранённых записей спутников."""
+    output_dir = Path("data/satellite_captures")
 
-    hours_ahead = min(hours_ahead, 72)
-
-    try:
-        schedule = await asyncio.get_event_loop().run_in_executor(
-            None, lambda: tracker.get_sstv_schedule(hours_ahead)
-        )
-
-        result = []
-        for pass_info in schedule:
-            result.append(
-                {
-                    "satellite": pass_info["satellite"],
-                    "aos": pass_info["aos"].isoformat(),
-                    "los": pass_info["los"].isoformat(),
-                    "max_elevation": pass_info["max_elevation"],
-                    "frequency_mhz": pass_info["frequency"],
-                    "duration_minutes": pass_info["duration_minutes"],
-                }
-            )
-
-        return {
-            "status": "success",
-            "count": len(result),
-            "data": result,
-        }
-
-    except Exception as e:
-        logger.exception("Failed to get satellite schedule: %s", e)
-        raise ServiceUnavailableError("Не удалось получить расписание спутников")
-
-
-@router.post("/tle/refresh")
-async def refresh_tle():
-    """Принудительное обновление TLE данных с CelesTrak."""
-    tracker = get_satellite_tracker()
-    if not tracker:
-        raise ServiceUnavailableError("Satellite tracker недоступен")
+    if not output_dir.exists():
+        return {"captures": [], "total": 0}
 
     try:
-        updated = tracker.update_tle_from_celestrak()
-        if updated > 0:
-            tracker.save_tle("data/tle_data.json")
-            from api.routes.sstv.helpers import set_app_state
+        captures = []
+        for file in output_dir.glob("*.raw"):
+            filename = file.name
+            parts = filename.replace(".raw", "").split("_")
+            if len(parts) >= 4:
+                sat_name = parts[0]
+                if satellite and sat_name != satellite:
+                    continue
+                try:
+                    timestamp = datetime.strptime(parts[1] + "_" + parts[2], "%Y%m%d_%H%M%S")
+                except (ValueError, IndexError):
+                    timestamp = datetime.fromtimestamp(file.stat().st_mtime)
 
-            set_app_state("satellite_tracker", None)
+                captures.append(
+                    {
+                        "filename": filename,
+                        "satellite": sat_name,
+                        "timestamp": timestamp.isoformat(),
+                        "size_bytes": file.stat().st_size,
+                    }
+                )
 
-        return {
-            "status": "success",
-            "updated": updated,
-            "message": f"Обновлено TLE: {updated} спутников",
-        }
+        captures.sort(key=lambda x: x["timestamp"], reverse=True)
+        return {"captures": captures[:limit], "total": len(captures)}
     except Exception as e:
-        raise ServiceUnavailableError(f"Ошибка обновления TLE: {str(e)}")
+        logger.error("Ошибка получения списка записей: %s", e)
+        raise HTTPException(status_code=500, detail=f"Ошибка: {str(e)}")
 
 
-@router.get("/tle/status")
-async def get_tle_status():
-    """Статус TLE данных (возраст, источник)."""
-    tle_file = Path("data/tle_data.json")
+@router.delete("/captures/{filename}", summary="Удалить запись")
+async def delete_capture(filename: str):
+    """Удалить запись спутника."""
+    output_dir = Path("data/satellite_captures")
+    file_path = output_dir / filename
 
-    if tle_file.exists():
-        age_hours = (time.time() - tle_file.stat().st_mtime) / 3600
-        return {
-            "status": "cached",
-            "age_hours": round(age_hours, 2),
-            "fresh": age_hours < 12,
-            "file": str(tle_file),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        }
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Файл не найден")
 
-    return {
-        "status": "builtin",
-        "age_hours": None,
-        "fresh": False,
-        "message": "Используются встроенные TLE, рекомендуется обновить",
-    }
+    try:
+        file_path.unlink()
+        return {"success": True, "message": f"Файл {filename} удалён"}
+    except Exception as e:
+        logger.error("Ошибка удаления файла: %s", e)
+        raise HTTPException(status_code=500, detail=f"Ошибка: {str(e)}")
