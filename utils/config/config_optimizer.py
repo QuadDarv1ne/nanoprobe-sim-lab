@@ -87,14 +87,14 @@ class ConfigOptimizer:
                             section: dict(config[section]) for section in config.sections()
                         }
                     else:
-                        print("Неподдерживаемый формат конфигурации")
+                        logger.error("Неподдерживаемый формат конфигурации")
                         return False
 
             self.optimized_config = copy.deepcopy(self.original_config)
             return True
 
         except Exception as e:
-            print(f"Ошибка загрузки конфигурации: {e}")
+            logger.error(f"Ошибка загрузки конфигурации: {e}")
             return False
 
     def save_config(self, config: Dict[str, Any], output_path: str = None) -> bool:
@@ -133,7 +133,7 @@ class ConfigOptimizer:
             return True
 
         except Exception as e:
-            print(f"Ошибка сохранения конфигурации: {e}")
+            logger.error(f"Ошибка сохранения конфигурации: {e}")
             return False
 
     def collect_system_metrics(self) -> Dict[str, Any]:
@@ -371,7 +371,7 @@ class ConfigOptimizer:
                 return True
 
         except Exception as e:
-            print(f"Ошибка применения оптимизации: {e}")
+            logger.error(f"Ошибка применения оптимизации: {e}")
             return False
 
     def get_optimization_report(self) -> Dict[str, Any]:
@@ -538,7 +538,7 @@ class AdaptiveConfigManager:
                 time.sleep(interval)
 
             except Exception as e:
-                print(f"Ошибка в цикле адаптивного мониторинга: {e}")
+                logger.error(f"Ошибка в цикле адаптивного мониторинга: {e}")
                 time.sleep(interval)
 
     def should_adapt(self) -> bool:
