@@ -14,7 +14,7 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** `b0f83fd` — docs: обновить TODO.md с актуальным статусом проекта и задачами
+**Last commit:** `db0d521` — test: добавить тесты для DatabaseOperations
 
 ---
 
@@ -23,18 +23,23 @@
 ### 🔴 CRITICAL
 
 #### 1. Миграция print() → logging
-- **Статус:** Исправлено ~106 из ~900 вызовов (~12%)
+- **Статус:** Исправлено ~110 из ~900 вызовов (~12%)
+- **Выполнено:**
+  - ✅ `api/main.py` — health check endpoint
+  - ✅ `utils/api/space_image_downloader.py` — полный модуль
 - **Осталось:**
-  - `utils/performance_profiler.py` — критичные 3 print() в техническом коде
+  - `utils/performance_profiler.py` — критичные print() в техническом коде
   - Тестовые блоки `if __name__ == "__main__"` — низкий приоритет
-- **Действие:** Исправить production код вне тестовых блоков
 
 #### 2. Увеличить test coverage до 40%
-- **Текущий статус:** ~20% (1276 тестов)
+- **Текущий статус:** ~20% (1300+ тестов)
+- **Выполнено:**
+  - ✅ Тесты для `ring_buffer.py` (20+ тестов)
+  - ✅ Тесты для `sdr_resource_manager.py` (17 тестов)
+  - ✅ Тесты для `DatabaseOperations` (30+ тестов)
 - **Приоритетные модули:**
   - `api/routes/sstv_advanced.py` — SDR advanced endpoints
-  - `utils/sdr/` — ring_buffer, resource_manager, hardware_health
-  - `utils/db/operations.py` — CRUD операции
+  - `utils/sdr/hardware_health.py` — мониторинг оборудования
   - `utils/ml/` — signal_classifier, defect_analyzer
 
 ---
