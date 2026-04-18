@@ -14,7 +14,19 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** `fc56481` — test: добавить тесты для DatabaseOperations (исправлено)
+**Last commit:** `b67f711` — docs: обновить TODO.md с актуальным статусом
+
+---
+
+## 📊 Статистика тестов
+
+| Модуль | Тесты | Статус |
+|--------|-------|--------|
+| ring_buffer.py | 20+ | ✅ |
+| sdr_resource_manager.py | 17 | ✅ |
+| DatabaseOperations | 30+ | ✅ |
+| sstv_advanced_api.py | 50+ | ✅ |
+| **Всего** | **1300+** | 📈 |
 
 ---
 
@@ -27,20 +39,21 @@
 - **Выполнено:**
   - ✅ `api/main.py` — health check endpoint
   - ✅ `utils/api/space_image_downloader.py` — полный модуль
+  - ✅ `utils/performance_profiler.py` — все print() заменены
 - **Осталось:**
-  - `utils/performance_profiler.py` — критичные print() в техническом коде
-  - Тестовые блоки `if __name__ == "__main__"` — низкий приоритет
+  - Тестовые блоки `if __name__ == "__main__"` — низкий приоритет (CLI утилиты)
 
-#### 2. Увеличить test coverage до 40%
+#### 2. Test coverage ~20% → 40%
 - **Текущий статус:** ~20% (1300+ тестов)
 - **Выполнено:**
   - ✅ Тесты для `ring_buffer.py` (20+ тестов)
   - ✅ Тесты для `sdr_resource_manager.py` (17 тестов)
   - ✅ Тесты для `DatabaseOperations` (30+ тестов)
+  - ✅ Тесты для `sstv_advanced_api.py` (50+ тестов)
 - **Приоритетные модули:**
-  - `api/routes/sstv_advanced.py` — SDR advanced endpoints
   - `utils/sdr/hardware_health.py` — мониторинг оборудования
-  - `utils/ml/` — signal_classifier, defect_analyzer
+  - `utils/ml/signal_classifier.py` — классификация сигналов
+  - `utils/ml/defect_analyzer.py` — анализ дефектов
 
 ---
 
