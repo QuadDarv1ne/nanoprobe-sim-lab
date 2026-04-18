@@ -1,5 +1,9 @@
 """Модуль обучения моделей машинного обучения для проекта Лаборатория моделирования нанозонда."""
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -552,12 +556,12 @@ def model_training_pipeline(func):
     def wrapper(*args, **kwargs):
         """Декоратор для пайплайна обучения модели"""
         trainer = ModelTrainer()
-        print(f"Запуск пайплайна обучения модели: {func.__name__}")
+        logger.info(f"Запуск пайплайна обучения модели: {func.__name__}")
 
         # Выполняем функцию
         result = func(trainer, *args, **kwargs)
 
-        print(f"Пайплайн обучения модели завершен: {func.__name__}")
+        logger.info(f"Пайплайн обучения модели завершен: {func.__name__}")
         return result
 
     return wrapper
