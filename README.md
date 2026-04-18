@@ -833,6 +833,13 @@ ws.onmessage = (event) => {
 };
 ```
 
+## Документация
+
+- [**RTL-SDR Troubleshooting Guide**](docs/rtl-sdr-troubleshooting.md) — Руководство по устранению неполадок RTL-SDR V4
+- [CHANGELOG.md](CHANGELOG.md) — История изменений
+- [TODO.md](TODO.md) — План разработки
+- [QUICKSTART.md](QUICKSTART.md) — Быстрый старт
+
 ## Вклад в проект
 
 Проект открыт для образовательных и научных вкладов.
