@@ -832,7 +832,7 @@ class AdvancedDefectAnalyzer:
 
 if __name__ == "__main__":
     # Тестирование
-    print("=== Тестирование AI анализа дефектов ===")
+    logger.info("=== Тестирование AI анализа дефектов ===")
 
     # Создание тестового изображения с "дефектами"
     if PIL_AVAILABLE:
@@ -851,16 +851,16 @@ if __name__ == "__main__":
         # Анализ
         result = analyze_defects(test_path)
 
-        print("\nРезультаты анализа:")
-        print(f"  Найдено дефектов: {result['defects_count']}")
-        print(f"  Резюме: {result['summary']}")
+        logger.info("\nРезультаты анализа:")
+        logger.info(f"  Найдено дефектов: {result['defects_count']}")
+        logger.info(f"  Резюме: {result['summary']}")
 
         for i, defect in enumerate(result["defects"][:5], 1):
-            print(f"\n  Дефект #{i}:")
-            print(f"    Тип: {defect['type']}")
-            print(f"    Координаты: ({defect['x']:.1f}, {defect['y']:.1f})")
-            print(f"    Размер: {defect['width']}x{defect['height']}")
-            print(f"    Достоверность: {defect['confidence']:.2%}")
+            logger.info(f"\n  Дефект #{i}:")
+            logger.info(f"    Тип: {defect['type']}")
+            logger.info(f"    Координаты: ({defect['x']:.1f}, {defect['y']:.1f})")
+            logger.info(f"    Размер: {defect['width']}x{defect['height']}")
+            logger.info(f"    Достоверность: {defect['confidence']:.2%}")
 
-        print(f"\n✓ Отчёт: {result.get('report_path', 'Не сохранён')}")
-        print(f"✓ Визуализация: {result.get('visualization_path', 'Не сохранена')}")
+        logger.info(f"\n✓ Отчёт: {result.get('report_path', 'Не сохранён')}")
+        logger.info(f"✓ Визуализация: {result.get('visualization_path', 'Не сохранена')}")
