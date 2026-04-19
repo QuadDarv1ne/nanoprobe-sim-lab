@@ -1,6 +1,5 @@
 # Nanoprobe Sim Lab — TODO
-
-**Последнее обновление:** 2026-04-18
+**Последнее обновление:** 2026-04-19
 **Текущая ветка:** `dev`
 **Целевая ветка:** `main`
 **Python:** 3.11 - 3.14
@@ -14,7 +13,7 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** `6dbb584` — fix: исправить совместимость signal_classifier с Python 3.14 и NumPy
+**Last commit:** `eb2c36e` — fix: форматирование black
 
 ---
 
@@ -24,14 +23,14 @@
 |--------|-------|--------|
 | ring_buffer.py | 20+ | ✅ |
 | sdr_resource_manager.py | 17 | ✅ |
-| DatabaseOperations | 30+ | ✅ |
+| DatabaseOperations | 24 | ✅ **FIXED** |
 | sstv_advanced_api.py | 50+ | ✅ |
 | hardware_health.py | 25+ | ✅ |
 | signal_classifier.py | 20 | ✅ **FIXED** |
 | defect_analyzer.py | 14 | ✅ |
 | satellite_auto_capture.py | 23 | ✅ |
 | rtl_sdr_auto_calibration.py | 15 | ✅ |
-| **Всего** | **1390+** | 📈 |
+| **Всего** | **1405+** | 📈 |
 
 ---
 
@@ -49,19 +48,17 @@
   - Тестовые блоки `if __name__ == "__main__"` — низкий приоритет (CLI утилиты)
 
 #### 2. Test coverage ~20% → 40%
-- **Текущий статус:** ~20% (1390+ тестов)
+- **Текущий статус:** ~20% (1405+ тестов)
 - **Выполнено:**
   - ✅ Тесты для `ring_buffer.py` (20+ тестов)
   - ✅ Тесты для `sdr_resource_manager.py` (17 тестов)
-  - ✅ Тесты для `DatabaseOperations` (30+ тестов)
+  - ✅ Тесты для `DatabaseOperations` (24 теста) — **FIXED**
   - ✅ Тесты для `sstv_advanced_api.py` (50+ тестов)
   - ✅ Тесты для `hardware_health.py` (25+ тестов)
   - ✅ **Тесты для `signal_classifier.py` (20 тестов) — FIXED Python 3.14 compatibility**
   - ✅ Тесты для `defect_analyzer.py` (14 тестов)
   - ✅ Тесты для `satellite_auto_capture.py` (23 теста)
   - ✅ Тесты для `rtl_sdr_auto_calibration.py` (15 тестов)
-- **Приоритетные модули:**
-  - `utils/ml/defect_analyzer.py` — анализ дефектов ✅ (тесты добавлены)
 
 ---
 
@@ -76,9 +73,9 @@
 - [x] PPM калибровка
 - [x] Автоматическая калибровка PPM — `rtl_sdr_auto_calibration.py`
 - [x] Автозахват спутников NOAA/METEOR — `satellite_auto_capture.py`
+- [x] **Troubleshooting guide** — `docs/rtl-sdr-troubleshooting.md`
 
 **Осталось:**
-- [ ] **README: Troubleshooting RTL-SDR v4** — DVB-T blacklist, udev правила, PPM drift, перегрев
 - [ ] **End-to-end тесты** с реальным устройством (ожидается)
 
 #### 4. Next.js Frontend v2.0
@@ -86,16 +83,16 @@
 - [x] Базовая реализация
 - [x] TypeScript + Tailwind CSS
 - [x] Zustand state management
+- [x] **WebGL водопад спектра** — `frontend/src/components/sstv/WaterfallDisplayWebGL.tsx`
+- [x] **RealtimeWaterfall компонент** — `frontend/src/components/sstv/RealtimeWaterfall.tsx`
 
 **Осталось:**
-- [ ] **WebGL/Canvas водопад спектра** — `frontend/src/components/sstv/WaterfallDisplay.tsx`
 - [ ] **Миграция всех фич** из Flask dashboard v1.0
 - [ ] **PWA оптимизация** — service worker, offline mode
 
 #### 5. PostgreSQL Migration
 **Статус:** Гайд создан, но миграция не выполнена
 **Сложность:** 10-15 часов
-
 **Действия:**
 - [ ] Установить PostgreSQL
 - [ ] Настроить alembic для PostgreSQL
@@ -119,7 +116,6 @@
 
 #### 7. Mobile Application
 **Технологии:** React Native или Flutter
-
 **Фичи:**
 - Просмотр захваченных изображений
 - Расписание пролётов спутников
@@ -164,7 +160,7 @@
 - [ ] **Backup automation** — автоматические бэкапы БД
 
 #### 12. Code Quality
-- [ ] **Pre-commit hooks** — полностью настроить
+- [x] **Pre-commit hooks** — полностью настроены
 - [ ] **Code coverage badges** — в README
 - [ ] **Dependency updates** — Dependabot или Renovate
 - [ ] **Static analysis** — SonarQube интеграция
@@ -179,7 +175,7 @@
 |---------|----------|
 | API роуты | 43 файла (+2 новых) |
 | Utils модули | 74 файла (+2 новых) |
-| Тесты | 1276 теста (+23 новых) |
+| Тесты | 1405 теста |
 | Строки кода | ~51K+ |
 
 ### Качество
@@ -238,7 +234,7 @@ git push origin feature/new-feature
 
 ## 📝 Заметки
 
-### Текущий спринт (2026-04-18)
+### Текущий спринт (2026-04-19)
 
 - ✅ **Добавлена автоматическая калибровка PPM** — `rtl_sdr_auto_calibration.py`
 - ✅ **Добавлен автозахват спутников NOAA/METEOR** — `satellite_auto_capture.py`
@@ -247,6 +243,9 @@ git push origin feature/new-feature
 - ✅ **Добавлены тесты** — 23 новых теста для новых модулей
 - ✅ **Синхронизация dev и main веток** — выполнено
 - ✅ **FIXED: signal_classifier.py совместимость с Python 3.14** — добавлены методы `_calculate_energy` и `_calculate_spectral_width`, исправлена обработка комплексных данных в FFT
+- ✅ **FIXED: DatabaseOperations** — добавлен `__init__` с `db_path` и `enable_cache`, добавлен `get_connection()` метод
+- ✅ **Добавлен WebGL водопадный дисплей** — `WaterfallDisplayWebGL.tsx`, `RealtimeWaterfall.tsx`
+- ✅ **Создан troubleshooting guide** — `docs/rtl-sdr-troubleshooting.md`
 
 ### Новые API endpoints
 
@@ -269,7 +268,7 @@ DELETE /api/v1/sstv/satellites/captures/{filename}
 ### Следующие спринты
 
 1. PostgreSQL migration
-2. Next.js WebGL waterfall
+2. Next.js Frontend фичи миграция
 3. Mobile app MVP
 4. AI/ML model training
 
@@ -286,4 +285,4 @@ DELETE /api/v1/sstv/satellites/captures/{filename}
 
 **Владелец проекта:** Дуплей Максим Игоревич
 **Лицензия:** Проприетарная (ограниченные права)
-**Последняя синхронизация:** 2026-04-18
+**Последняя синхронизация:** 2026-04-19
