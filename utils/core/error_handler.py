@@ -623,18 +623,18 @@ class SafeExecutor:
 
 def main():
     """Главная функция для демонстрации возможностей обработчика ошибок"""
-    print("=== ОБРАБОТЧИК ОШИБОК ПРОЕКТА ===")
+    logger.info("=== ОБРАБОТЧИК ОШИБОК ПРОЕКТА ===")
 
     # Создаем обработчик ошибок
     error_handler = ErrorHandler("test_error_log.json")
     recovery_manager = RecoveryManager(error_handler)
     safe_executor = SafeExecutor(error_handler)
 
-    print("✓ Обработчик ошибок инициализирован")
-    print(f"✓ Файл лога: {error_handler.log_file}")
+    logger.info("✓ Обработчик ошибок инициализирован")
+    logger.info(f"✓ Файл лога: {error_handler.log_file}")
 
     # Демонстрация логирования ошибок
-    print("\nТестирование логирования ошибок...")
+    logger.info("\nТестирование логирования ошибок...")
     try:
         # Искусственно вызываем ошибку
         result = 10 / 0
@@ -646,10 +646,10 @@ def main():
             ErrorSeverity.ERROR,
             user_context={"operation": "division", "operands": [10, 0]},
         )
-        print(f"✓ Ошибка залогирована: {error_info.message}")
+        logger.info(f"✓ Ошибка залогирована: {error_info.message}")
 
     # Демонстрация декоратора обработки исключений
-    print("\nТестирование декоратора обработки исключений...")
+    logger.info("\nТестирование декоратора обработки исключений...")
 
     @error_handler.handle_exception(component="TestFunction", fallback_return="default_value")
     def test_function():
@@ -657,10 +657,10 @@ def main():
         raise ValueError("Тестовая ошибка в функции")
 
     result = test_function()
-    print(f"✓ Функция вернула: {result} (ожидаем значение по умолчанию)")
+    logger.info(f"✓ Функция вернула: {result} (ожидаем значение по умолчанию)")
 
     # Тестирование безопасного исполнителя с повторными попытками
-    print("\nТестирование безопасного исполнителя с повторными попытками...")
+    logger.info("\nТестирование безопасного исполнителя с повторными попытками...")
 
     counter = 0
 
@@ -674,12 +674,12 @@ def main():
 
     try:
         result = safe_executor.execute_with_retry(flaky_function, max_retries=5, retry_delay=0.1)
-        print(f"✓ Функция выполнена успешно после {counter} попыток: {result}")
+        logger.info(f"✓ Функция выполнена успешно после {counter} попыток: {result}")
     except Exception as e:
-        print(f"✗ Ошибка выполнения: {e}")
+        logger.error(f"✗ Ошибка выполнения: {e}")
 
     # Тестирование безопасного исполнителя с таймаутом
-    print("\nТестирование безопасного исполнителя с таймаутом...")
+    logger.info("\nТестирование безопасного исполнителя с таймаутом...")
 
     def slow_function():
         """Медленная функция для теста таймаута."""
@@ -689,37 +689,37 @@ def main():
     result = safe_executor.execute_with_timeout(
         slow_function, timeout=1.0, fallback_return="Таймаут!"
     )
-    print(f"✓ Результат с таймаутом: {result}")
+    logger.info(f"✓ Результат с таймаутом: {result}")
 
     # Тестирование восстановления состояния
-    print("\nТестирование восстановления состояния...")
+    logger.info("\nТестирование восстановления состояния...")
 
     # Создаем резервную копию состояния
     recovery_manager.create_state_backup("test_state", {"data": "important_data", "value": 42})
-    print("✓ Создана резервная копия состояния")
+    logger.info("✓ Создана резервная копия состояния")
 
     # Восстанавливаем состояние
     restored_data = recovery_manager.restore_state("test_state")
-    print(f"✓ Восстановленные данные: {restored_data}")
+    logger.info(f"✓ Восстановленные данные: {restored_data}")
 
     # Показываем последние ошибки
-    print("\nПоследние ошибки:")
+    logger.info("\nПоследние ошибки:")
     recent_errors = error_handler.get_recent_errors(5)
     for error in recent_errors:
-        print(f"  - [{error.severity.name}] {error.component}: {error.message}")
+        logger.info(f"  - [{error.severity.name}] {error.component}: {error.message}")
 
     # Экспортируем отчет об ошибках
     report_path = error_handler.export_error_report()
-    print(f"\n✓ Отчет об ошибках экспортирован: {report_path}")
+    logger.info(f"\n✓ Отчет об ошибках экспортирован: {report_path}")
 
-    print("\nОбработчик ошибок успешно протестирован")
-    print("\nДоступные функции:")
-    print("- Логирование ошибок: log_error()")
-    print("- Декоратор обработки исключений: handle_exception()")
-    print("- Безопасное выполнение с повторами: execute_with_retry()")
-    print("- Безопасное выполнение с таймаутом: execute_with_timeout()")
-    print("- Восстановление состояния: create_state_backup(), restore_state()")
-    print("- Отчеты об ошибках: export_error_report()")
+    logger.info("\nОбработчик ошибок успешно протестирован")
+    logger.info("\nДоступные функции:")
+    logger.info("- Логирование ошибок: log_error()")
+    logger.info("- Декоратор обработки исключений: handle_exception()")
+    logger.info("- Безопасное выполнение с повторами: execute_with_retry()")
+    logger.info("- Безопасное выполнение с таймаутом: execute_with_timeout()")
+    logger.info("- Восстановление состояния: create_state_backup(), restore_state()")
+    logger.info("- Отчеты об ошибках: export_error_report()")
 
 
 if __name__ == "__main__":
