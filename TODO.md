@@ -13,7 +13,7 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** ``96e8b4b`` — docs: обновить TODO.md с WebGL водопадом
+**Last commit:** ``7fb3622`` — fix: заменить print() на logger.info() в defect_analyzer.py
 
 ---
 
