@@ -13,7 +13,7 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** ``f90c1f8`` — fix: добавить logging в config_validator.py
+**Last commit:** ``e699b61`` — fix: correct singleton pattern in ConfigManager to prevent re-initialization
 
 ---
 
