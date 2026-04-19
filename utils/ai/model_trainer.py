@@ -569,16 +569,16 @@ def model_training_pipeline(func):
 
 def main():
     """Главная функция для демонстрации возможностей тренера моделей"""
-    print("=== ТРЕНЕР МОДЕЛЕЙ МАШИННОГО ОБУЧЕНИЯ ПРОЕКТА ===")
+    logger.info("=== ТРЕНЕР МОДЕЛЕЙ МАШИННОГО ОБУЧЕНИЯ ПРОЕКТА ===")
 
     # Создаем тренер моделей
     trainer = ModelTrainer()
 
-    print("✓ Тренер моделей инициализирован")
-    print(f"✓ Директория вывода: {trainer.output_dir}")
+    logger.info("✓ Тренер моделей инициализирован")
+    logger.info(f"✓ Директория вывода: {trainer.output_dir}")
 
     # Создаем синтетические данные для демонстрации
-    print("\nСоздание синтетических данных...")
+    logger.info("\nСоздание синтетических данных...")
     np.random.seed(42)
 
     # Данные для регрессии
@@ -591,44 +591,46 @@ def main():
     X_clf = np.random.randn(n_samples, n_features)
     y_clf = (X_clf[:, 0] + X_clf[:, 1] > 0).astype(int)
 
-    print(f"  - Регрессионные данные: {X_reg.shape[0]} образцов, {X_reg.shape[1]} признаков")
-    print(f"  - Классификационные данные: {X_clf.shape[0]} образцов, {X_clf.shape[1]} признаков")
+    logger.info(f"  - Регрессионные данные: {X_reg.shape[0]} образцов, {X_reg.shape[1]} признаков")
+    logger.info(
+        f"  - Классификационные данные: {X_clf.shape[0]} образцов, {X_clf.shape[1]} признаков"
+    )
 
     # Обучаем регрессионную модель
-    print("\nОбучение регрессионной модели...")
+    logger.info("\nОбучение регрессионной модели...")
     reg_result = trainer.train_and_evaluate(
         X_reg, y_reg, model_type="random_forest", problem_type="regression"
     )
-    print(f"  - Время обучения: {reg_result.training_time:.2f} с")
-    print(f"  - R² Score: {reg_result.test_scores['r2_score']:.4f}")
-    print(f"  - RMSE: {reg_result.test_scores['rmse']:.4f}")
+    logger.info(f"  - Время обучения: {reg_result.training_time:.2f} с")
+    logger.info(f"  - R² Score: {reg_result.test_scores['r2_score']:.4f}")
+    logger.info(f"  - RMSE: {reg_result.test_scores['rmse']:.4f}")
 
     # Обучаем классификационную модель
-    print("\nОбучение классификационной модели...")
+    logger.info("\nОбучение классификационной модели...")
     clf_result = trainer.train_and_evaluate(
         X_clf, y_clf, model_type="random_forest", problem_type="classification"
     )
-    print(f"  - Время обучения: {clf_result.training_time:.2f} с")
-    print(f"  - Accuracy: {clf_result.test_scores['accuracy']:.4f}")
+    logger.info(f"  - Время обучения: {clf_result.training_time:.2f} с")
+    logger.info(f"  - Accuracy: {clf_result.test_scores['accuracy']:.4f}")
 
     # Проводим кросс-валидацию
-    print("\nКросс-валидация регрессионной модели...")
+    logger.info("\nКросс-валидация регрессионной модели...")
     cv_results = trainer.cross_validate_model(X_reg, y_reg, model_type="random_forest", cv_folds=5)
-    print(f"  - Средняя оценка: {cv_results['mean_cv_score']:.4f}")
-    print(f"  - Стандартное отклонение: {cv_results['std_cv_score']:.4f}")
+    logger.info(f"  - Средняя оценка: {cv_results['mean_cv_score']:.4f}")
+    logger.info(f"  - Стандартное отклонение: {cv_results['std_cv_score']:.4f}")
 
     # Подбираем гиперпараметры
-    print("\nПодбор гиперпараметров...")
+    logger.info("\nПодбор гиперпараметров...")
     best_model, tuning_results = trainer.hyperparameter_tuning(
         X_reg[:500], y_reg[:500], model_type="random_forest", cv_folds=3
     )
-    print(
+    logger.info(
         f"  - Лучшие параметры: {tuning_results['params'][np.argmax(tuning_results['mean_test_score'])]}"
     )
-    print(f"  - Лучший скор: {max(tuning_results['mean_test_score']):.4f}")
+    logger.info(f"  - Лучший скор: {max(tuning_results['mean_test_score']):.4f}")
 
     # Сохраняем модель
-    print("\nСохранение модели...")
+    logger.info("\nСохранение модели...")
     metadata = {
         "created_at": datetime.now(timezone.utc).isoformat(),
         "model_type": "random_forest_regression",
@@ -637,31 +639,31 @@ def main():
         "r2_score": reg_result.test_scores["r2_score"],
     }
     model_path = trainer.save_model(reg_result.model, "regression_model", metadata)
-    print(f"  - Модель сохранена: {model_path}")
+    logger.info(f"  - Модель сохранена: {model_path}")
 
     # Загружаем модель
-    print("\nЗагрузка модели...")
+    logger.info("\nЗагрузка модели...")
     loaded_model, loaded_scaler, loaded_metadata = trainer.load_model("regression_model")
-    print(f"  - Модель загружена: {loaded_model is not None}")
-    print(f"  - Метаданные: {loaded_metadata['r2_score'] if loaded_metadata else 'N/A'}")
+    logger.info(f"  - Модель загружена: {loaded_model is not None}")
+    logger.info(f"  - Метаданные: {loaded_metadata['r2_score'] if loaded_metadata else 'N/A'}")
 
     # Строим графики
-    print("\nСоздание графиков важности признаков...")
+    logger.info("\nСоздание графиков важности признаков...")
     feature_names = [f"Feature_{i}" for i in range(X_reg.shape[1])]
     importance_plot_path = trainer.plot_feature_importance(reg_result.model, feature_names, top_n=5)
-    print(f"  - График важности признаков сохранен: {importance_plot_path}")
+    logger.info(f"  - График важности признаков сохранен: {importance_plot_path}")
 
-    print("\nСоздание графика предсказанных vs фактических значений...")
+    logger.info("\nСоздание графика предсказанных vs фактических значений...")
 
     predictions_vs_actual_path = trainer.plot_predictions_vs_actual(
         y_reg[:100], reg_result.predictions[:100]
     )
-    print(
+    logger.info(
         f"  - График предсказанных vs фактических значений сохранен: {predictions_vs_actual_path}"
     )
 
     # Демонстрируем декоратор пайплайна
-    print("\nДемонстрация декоратора пайплайна обучения модели...")
+    logger.info("\nДемонстрация декоратора пайплайна обучения модели...")
 
     @model_training_pipeline
     def sample_training_pipeline(trainer_instance):
@@ -676,18 +678,18 @@ def main():
         return result
 
     pipeline_result = sample_training_pipeline()
-    print(f"  - Результат пайплайна: R² = {pipeline_result.test_scores['r2_score']:.4f}")
+    logger.info(f"  - Результат пайплайна: R² = {pipeline_result.test_scores['r2_score']:.4f}")
 
-    print("\nТренер моделей успешно протестирован")
-    print("\nДоступные функции:")
-    print("- Обучение моделей: train_and_evaluate()")
-    print("- Подбор гиперпараметров: hyperparameter_tuning()")
-    print("- Кросс-валидация: cross_validate_model()")
-    print("- Сохранение моделей: save_model()")
-    print("- Загрузка моделей: load_model()")
-    print("- Графики важности признаков: plot_feature_importance()")
-    print("- Графики предсказаний: plot_predictions_vs_actual()")
-    print("- Декоратор пайплайна: @model_training_pipeline")
+    logger.info("\nТренер моделей успешно протестирован")
+    logger.info("\nДоступные функции:")
+    logger.info("- Обучение моделей: train_and_evaluate()")
+    logger.info("- Подбор гиперпараметров: hyperparameter_tuning()")
+    logger.info("- Кросс-валидация: cross_validate_model()")
+    logger.info("- Сохранение моделей: save_model()")
+    logger.info("- Загрузка моделей: load_model()")
+    logger.info("- Графики важности признаков: plot_feature_importance()")
+    logger.info("- Графики предсказаний: plot_predictions_vs_actual()")
+    logger.info("- Декоратор пайплайна: @model_training_pipeline")
 
 
 if __name__ == "__main__":
