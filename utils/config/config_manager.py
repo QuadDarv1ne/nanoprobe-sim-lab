@@ -39,6 +39,7 @@ class ConfigManager:
         Args:
             config_file: Путь к файлу конфигурации.
         """
+        # Prevent re-initialization of singleton
         if hasattr(self, "_initialized") and self._initialized:
             return
 
