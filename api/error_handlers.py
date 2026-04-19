@@ -411,8 +411,6 @@ def track_error_metrics(error_type: str, severity: str, endpoint: Optional[str] 
         severity: Уровень важности
         endpoint: Endpoint, где произошла ошибка
     """
-    global _error_metrics
-
     _error_metrics["total_errors"] += 1
     _error_metrics["last_error_time"] = datetime.now(timezone.utc).isoformat()
 
@@ -443,7 +441,6 @@ def get_error_metrics() -> Dict[str, Any]:
     Returns:
         Dict с метриками ошибок
     """
-    global _error_metrics
     return _error_metrics.copy()
 
 
