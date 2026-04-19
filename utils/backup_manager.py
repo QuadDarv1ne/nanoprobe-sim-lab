@@ -552,22 +552,22 @@ class BackupManager:
 
 def main():
     """Главная функция для демонстрации возможностей менеджера резервного копирования"""
-    print("=== МЕНЕДЖЕР РЕЗЕРВНОГО КОПИРОВАНИЯ ПРОЕКТА ===")
+    logger.info("=== МЕНЕДЖЕР РЕЗЕРВНОГО КОПИРОВАНИЯ ПРОЕКТА ===")
 
     # Создаем менеджер резервного копирования
     backup_manager = BackupManager()
 
-    print("✓ Менеджер резервного копирования инициализирован")
-    print(f"✓ Директория резервных копий: {backup_manager.backup_dir}")
+    logger.info("✓ Менеджер резервного копирования инициализирован")
+    logger.info(f"✓ Директория резервных копий: {backup_manager.backup_dir}")
 
     # Показываем существующие резервные копии
     backups = backup_manager.list_backups()
-    print(f"Найдено резервных копий: {len(backups)}")
+    logger.info(f"Найдено резервных копий: {len(backups)}")
 
     if backups:
-        print("Последние резервные копии:")
+        logger.info("Последние резервные копии:")
         for backup in backups[:3]:  # Показываем последние 3
-            print(f"  - {backup['name']} ({backup['timestamp']}) - {backup['size']} байт")
+            logger.info(f"  - {backup['name']} ({backup['timestamp']}) - {backup['size']} байт")
 
     # Пример создания резервной копии (закомментировано для безопасности)
     # backup_path = backup_manager.create_backup(include_outputs=True, compress=True)
@@ -576,7 +576,7 @@ def main():
     # else:
     #     print("✗ Ошибка создания резервной копии")
 
-    print("Менеджер резервного копирования готов к работе")
+    logger.info("Менеджер резервного копирования готов к работе")
 
 
 if __name__ == "__main__":
