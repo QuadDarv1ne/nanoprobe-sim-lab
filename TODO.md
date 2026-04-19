@@ -13,7 +13,7 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** ``e699b61`` — fix: correct singleton pattern in ConfigManager to prevent re-initialization
+**Last commit:** ``5b86be8`` — docs: обновить последний коммит в TODO.md
 
 ---
 
