@@ -13,6 +13,26 @@ logger = logging.getLogger(__name__)
 class DatabaseOperations:
     """Mixin-style class providing CRUD operations for the database."""
 
+    def __init__(self, db_path: str = "data/nanoprobe.db", enable_cache: bool = True):
+        """
+        Initialize DatabaseOperations.
+
+        Args:
+            db_path: Path to SQLite database file
+            enable_cache: Enable query caching
+        """
+        self.db_path = db_path
+        self.enable_cache = enable_cache
+        self._query_cache: Dict[str, tuple] = {}
+        self._cache_max_size = 1000
+        self._cache_ttl = 300  # 5 minutes
+
+    def get_connection(self):
+        """Получить подключение к базе данных."""
+        import sqlite3
+
+        return sqlite3.connect(self.db_path)
+
     def _row_to_dict(self, row) -> Dict:
         """Конвертирует строку результата в словарь."""
         result = dict(row)
