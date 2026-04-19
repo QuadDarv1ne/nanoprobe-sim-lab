@@ -1,4 +1,4 @@
-# Nanoprobe Sim Lab — TODO
+﻿# Nanoprobe Sim Lab — TODO
 **Последнее обновление:** 2026-04-19
 **Текущая ветка:** `dev`
 **Целевая ветка:** `main`
@@ -13,7 +13,7 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** `9bc936b` — docs: обновить TODO.md с актуальным статусом
+**Last commit:** `ea3893b` — fix: форматирование black для test_framework.py
 
 ---
 
