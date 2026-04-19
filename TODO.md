@@ -13,7 +13,7 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** ``9defe4e`` — fix: заменить print() на logger.info() в test_framework.py
+**Last commit:** ``58b84cf`` — feat: добавить zoom/pan для WebGL водопадного дисплея
 
 ---
 
@@ -93,6 +93,9 @@
 - [x] Zustand state management
 - [x] **WebGL водопад спектра** — `frontend/src/components/sstv/WaterfallDisplayWebGL.tsx`
 - [x] **RealtimeWaterfall компонент** — `frontend/src/components/sstv/RealtimeWaterfall.tsx`
+- [x] **WebSocket streaming** — real-time спектр через `/api/v1/sstv/ws/stream`
+- [x] **Zoom/Pan функциональность** — колесо мыши, drag & drop, кнопки +/-
+- [x] **GPU оптимизация** — WebGL shaders для color mapping
 
 **Осталось:**
 - [ ] **Миграция всех фич** из Flask dashboard v1.0
@@ -261,6 +264,12 @@ git push origin feature/new-feature
   - Температурный мониторинг для V4
   - Multi-device support
   - CLI интерфейс для диагностики
+- ✅ **Завершён WebGL водопадный дисплей** — `frontend/src/components/sstv/WaterfallDisplayWebGL.tsx`
+  - WebSocket streaming для real-time данных
+  - Zoom/Pan (колесо мыши, drag & drop)
+  - GPU оптимизация через WebGL shaders
+  - Кнопки управления (+/-, Reset)
+  - Индикатор уровня zoom
 
 ### Новые API endpoints
 
