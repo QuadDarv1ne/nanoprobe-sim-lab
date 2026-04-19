@@ -13,7 +13,7 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** ``9829b3a`` — fix: добавить logging в backup_manager.py
+**Last commit:** ``df609df`` — fix: заменить print() на logger.info() в backup_manager.py
 
 ---
 
