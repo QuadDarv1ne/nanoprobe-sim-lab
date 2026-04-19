@@ -798,86 +798,86 @@ class QualityAssurance:
 
 def main():
     """Главная функция для демонстрации возможностей тестовой платформы"""
-    print("=== ТЕСТОВАЯ ПЛАТФОРМА ПРОЕКТА ===")
+    logger.info("=== ТЕСТОВАЯ ПЛАТФОРМА ПРОЕКТА ===")
 
     # Создаем тестовую платформу
     test_framework = TestFramework()
     qa_system = QualityAssurance()
 
-    print("✓ Тестовая платформа инициализирована")
-    print(f"✓ Корневая директория: {test_framework.project_root}")
+    logger.info("✓ Тестовая платформа инициализирована")
+    logger.info(f"✓ Корневая директория: {test_framework.project_root}")
 
     # Находим тесты
     test_files = test_framework.discover_tests()
-    print(f"✓ Найдено тестовых файлов: {len(test_files)}")
+    logger.info(f"✓ Найдено тестовых файлов: {len(test_files)}")
 
     if test_files:
-        print("  Список тестовых файлов:")
+        logger.info("  Список тестовых файлов:")
         for test_file in test_files[:5]:  # Показываем первые 5
-            print(f"    - {test_file}")
+            logger.info(f"    - {test_file}")
         if len(test_files) > 5:
-            print(f"    ... и еще {len(test_files) - 5} файлов")
+            logger.info(f"    ... и еще {len(test_files) - 5} файлов")
 
     # Запускаем юнит-тесты
-    print("\nЗапуск юнит-тестов...")
+    logger.info("\nЗапуск юнит-тестов...")
     unit_results = test_framework.run_unittests()
-    print(f"  - Всего тестов: {unit_results['total_tests']}")
-    print(f"  - Пройдено: {unit_results['passed']}")
-    print(f"  - Провалено: {unit_results['failures']}")
-    print(f"  - Ошибки: {unit_results['errors']}")
+    logger.info(f"  - Всего тестов: {unit_results['total_tests']}")
+    logger.info(f"  - Пройдено: {unit_results['passed']}")
+    logger.info(f"  - Провалено: {unit_results['failures']}")
+    logger.info(f"  - Ошибки: {unit_results['errors']}")
 
     # Запускаем интеграционные тесты
-    print("\nЗапуск интеграционных тестов...")
+    logger.info("\nЗапуск интеграционных тестов...")
     integration_results = test_framework.run_integration_tests()
-    print(f"  - Всего тестов: {integration_results['total_tests']}")
-    print(f"  - Пройдено: {integration_results['passed_tests']}")
-    print(f"  - Провалено: {integration_results['failed_tests']}")
+    logger.info(f"  - Всего тестов: {integration_results['total_tests']}")
+    logger.info(f"  - Пройдено: {integration_results['passed_tests']}")
+    logger.info(f"  - Провалено: {integration_results['failed_tests']}")
 
     # Измеряем покрытие кода
-    print("\nИзмерение покрытия кода...")
+    logger.info("\nИзмерение покрытия кода...")
     try:
         coverage_results = test_framework.measure_code_coverage()
-        print(f"  - Общее покрытие: {coverage_results['total_coverage_percent']:.2f}%")
-        print(f"  - Проанализировано файлов: {coverage_results['files_analyzed']}")
+        logger.info(f"  - Общее покрытие: {coverage_results['total_coverage_percent']:.2f}%")
+        logger.info(f"  - Проанализировано файлов: {coverage_results['files_analyzed']}")
     except Exception as e:
-        print(f"  - Ошибка измерения покрытия: {e}")
+        logger.error(f"  - Ошибка измерения покрытия: {e}")
 
     # Запускаем CI/CD пайплайн
-    print("\nЗапуск CI/CD пайплайна...")
+    logger.info("\nЗапуск CI/CD пайплайна...")
     ci_results = test_framework.run_continuous_integration_pipeline()
-    print(f"  - Успешно завершено: {ci_results['overall_success']}")
-    print(f"  - Длительность: {ci_results['total_duration']:.2f} сек")
+    logger.info(f"  - Успешно завершено: {ci_results['overall_success']}")
+    logger.info(f"  - Длительность: {ci_results['total_duration']:.2f} сек")
 
     # Запускаем анализ качества кода
-    print("\nАнализ качества кода...")
+    logger.info("\nАнализ качества кода...")
     try:
         pylint_result = qa_system.run_pylint_analysis()
         flake8_result = qa_system.run_flake8_analysis()
         black_result = qa_system.run_black_formatter_check()
         mypy_result = qa_system.run_mypy_analysis()
 
-        print(f"  - Pylint: {'✓' if pylint_result.get('success', False) else '✗'}")
-        print(f"  - Flake8: {'✓' if flake8_result.get('success', False) else '✗'}")
-        print(f"  - Black: {'✓' if black_result.get('success', False) else '✗'}")
-        print(f"  - MyPy: {'✓' if mypy_result.get('success', False) else '✗'}")
+        logger.info(f"  - Pylint: {'✓' if pylint_result.get('success', False) else '✗'}")
+        logger.info(f"  - Flake8: {'✓' if flake8_result.get('success', False) else '✗'}")
+        logger.info(f"  - Black: {'✓' if black_result.get('success', False) else '✗'}")
+        logger.info(f"  - MyPy: {'✓' if mypy_result.get('success', False) else '✗'}")
     except Exception as e:
-        print(f"  - Ошибка анализа качества: {e}")
+        logger.error(f"  - Ошибка анализа качества: {e}")
 
     # Генерируем отчеты
     test_report_path = test_framework.generate_test_report()
     quality_report_path = qa_system.generate_quality_report()
 
-    print(f"\n✓ Отчет о тестировании: {test_report_path}")
-    print(f"✓ Отчет о качестве кода: {quality_report_path}")
+    logger.info(f"\n✓ Отчет о тестировании: {test_report_path}")
+    logger.info(f"✓ Отчет о качестве кода: {quality_report_path}")
 
-    print("\nТестовая платформа успешно протестирована")
-    print("\nДоступные функции:")
-    print("- Поиск тестов: discover_tests()")
-    print("- Запуск юнит-тестов: run_unittests()")
-    print("- Запуск интеграционных тестов: run_integration_tests()")
-    print("- Измерение покрытия кода: measure_code_coverage()")
-    print("- Полный CI/CD пайплайн: run_continuous_integration_pipeline()")
-    print("- Анализ качества кода: run_pylint_analysis(), run_flake8_analysis() и др.")
+    logger.info("\nТестовая платформа успешно протестирована")
+    logger.info("\nДоступные функции:")
+    logger.info("- Поиск тестов: discover_tests()")
+    logger.info("- Запуск юнит-тестов: run_unittests()")
+    logger.info("- Запуск интеграционных тестов: run_integration_tests()")
+    logger.info("- Измерение покрытия кода: measure_code_coverage()")
+    logger.info("- Полный CI/CD пайплайн: run_continuous_integration_pipeline()")
+    logger.info("- Анализ качества кода: run_pylint_analysis(), run_flake8_analysis() и др.")
 
 
 if __name__ == "__main__":
