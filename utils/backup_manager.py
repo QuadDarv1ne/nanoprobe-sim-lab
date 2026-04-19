@@ -1,6 +1,7 @@
 """Модуль управления резервным копированием для проекта Лаборатория моделирования нанозонда."""
 
 import json
+import logging
 import os
 import shutil
 import tempfile
@@ -13,6 +14,8 @@ from cryptography.fernet import Fernet
 
 from utils.config.config_manager import ConfigManager
 from utils.logger import setup_project_logging
+
+logger = logging.getLogger(__name__)
 
 
 class BackupManager:
