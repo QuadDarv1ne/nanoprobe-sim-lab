@@ -1,12 +1,15 @@
 """Модуль валидации конфигурации для проекта Лаборатория моделирования нанозонда."""
 
 import json
+import logging
 import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from jsonschema import Draft7Validator
+
+logger = logging.getLogger(__name__)
 
 
 class ConfigValidator:
