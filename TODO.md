@@ -13,7 +13,7 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** ``58b84cf`` — feat: добавить zoom/pan для WebGL водопадного дисплея
+**Last commit:** ``96e8b4b`` — docs: обновить TODO.md с WebGL водопадом
 
 ---
 
