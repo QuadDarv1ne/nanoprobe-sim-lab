@@ -1,6 +1,7 @@
 """Модуль тестирования производительности для проекта Лаборатория моделирования нанозонда."""
 
 import json
+import logging
 import os
 import statistics
 import sys
@@ -23,6 +24,8 @@ from utils.performance_benchmark import PerformanceBenchmarkSuite  # noqa: E402
 from utils.performance_profiler import PerformanceProfiler  # noqa: E402
 from utils.resource_optimizer import ResourceManager  # noqa: E402
 from utils.system_health_monitor import SystemHealthMonitor  # noqa: E402
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -718,55 +721,57 @@ class PerformanceVerificationFramework:
 
 def main():
     """Главная функция для демонстрации фреймворка верификации"""
-    print("=== ФРЕЙМВОРК ВЕРИФИКАЦИИ ПРОИЗВОДИТЕЛЬНОСТИ ===")
+    logger.info("=== ФРЕЙМВОРК ВЕРИФИКАЦИИ ПРОИЗВОДИТЕЛЬНОСТИ ===")
 
     # Создаем фреймворк верификации
     verification_framework = PerformanceVerificationFramework()
 
-    print("✓ Фреймворк верификации инициализирован")
-    print(f"✓ Директория вывода: {verification_framework.output_dir}")
+    logger.info("✓ Фреймворк верификации инициализирован")
+    logger.info(f"✓ Директория вывода: {verification_framework.output_dir}")
 
     # Устанавливаем базовые метрики
-    print("\nУстановка базовых метрик...")
+    logger.info("\nУстановка базовых метрик...")
     baseline = verification_framework.establish_baseline()
-    print(f"✓ Базовые метрики установлены в {baseline['timestamp']}")
+    logger.info(f"✓ Базовые метрики установлены в {baseline['timestamp']}")
 
     # Запускаем тесты производительности
-    print("\nЗапуск тестов производительности...")
+    logger.info("\nЗапуск тестов производительности...")
     test_results = verification_framework.run_performance_tests()
-    print(f"✓ Завершено {len(test_results)} тестов")
+    logger.info(f"✓ Завершено {len(test_results)} тестов")
 
     # Верифицируем эффективность
-    print("\nВерификация эффективности оптимизаций...")
+    logger.info("\nВерификация эффективности оптимизаций...")
     verification_results = verification_framework.verify_optimization_effectiveness()
-    print(f"✓ Оценка эффективности: {verification_results['effectiveness_score']:.2f}")
-    print(f"✓ Среднее улучшение: {verification_results['average_improvement_percent']:.2f}%")
+    logger.info(f"✓ Оценка эффективности: {verification_results['effectiveness_score']:.2f}")
+    logger.info(f"✓ Среднее улучшение: {verification_results['average_improvement_percent']:.2f}%")
 
     # Запускаем регрессионные тесты
-    print("\nЗапуск регрессионных тестов...")
+    logger.info("\nЗапуск регрессионных тестов...")
     regression_results = verification_framework.run_regression_tests()
-    print(
+    logger.info(
         f"✓ Регрессионные тесты: {regression_results['tests_passed']} пройдено, "
         f"{regression_results['tests_failed']} провалено"
     )
 
     # Генерируем отчет
-    print("\nГенерация отчета о верификации...")
+    logger.info("\nГенерация отчета о верификации...")
     report_path = verification_framework.generate_verification_report()
-    print(f"✓ Отчет сохранен: {report_path}")
+    logger.info(f"✓ Отчет сохранен: {report_path}")
 
     # Выводим рекомендации
-    print("\nРекомендации по результатам верификации:")
+    logger.info("\nРекомендации по результатам верификации:")
     for i, rec in enumerate(verification_results["recommendations"], 1):
-        print(f"  {i}. {rec}")
+        logger.info(f"  {i}. {rec}")
 
-    print("\nФреймворк верификации успешно протестирован")
-    print("\nДоступные функции:")
-    print("- Установка базовых метрик: verification_framework.establish_baseline()")
-    print("- Тестирование производительности: verification_framework.run_performance_tests()")
-    print("- Верификация эффективности: verification_framework.verify_optimization_effectiveness()")
-    print("- Регрессионные тесты: verification_framework.run_regression_tests()")
-    print("- Генерация отчетов: verification_framework.generate_verification_report()")
+    logger.info("\nФреймворк верификации успешно протестирован")
+    logger.info("\nДоступные функции:")
+    logger.info("- Установка базовых метрик: verification_framework.establish_baseline()")
+    logger.info("- Тестирование производительности: verification_framework.run_performance_tests()")
+    logger.info(
+        "- Верификация эффективности: verification_framework.verify_optimization_effectiveness()"
+    )
+    logger.info("- Регрессионные тесты: verification_framework.run_regression_tests()")
+    logger.info("- Генерация отчетов: verification_framework.generate_verification_report()")
 
 
 if __name__ == "__main__":
