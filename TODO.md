@@ -39,7 +39,7 @@
 ### 🔴 CRITICAL
 
 #### 1. Миграция print() → logging
-- **Статус:** Завершено для не-тестовых блоков (~150 из ~900 вызовов заменено, остальные в __main__ — низкий приоритет)
+- **Статус:** Завершено для не-тестовых блоков (~170 из ~900 вызовов заменено, остальные в __main__ — низкий приоритет)
 - **Выполнено:**
   - ✅ `api/main.py` — health check endpoint
   - ✅ `utils/api/space_image_downloader.py` — полный модуль
@@ -54,6 +54,7 @@
   - ✅ `utils/data/data_manager.py` — замена print() на logger.info()
   - ✅ `utils/sdr/device_detector.py` — замена print() на logger.info()
   - ✅ `utils/location_manager.py` — замена print() на logger.info()
+  - ✅ `utils/config/config_validator.py` — замена print() на logger.info()
 - **Осталось:**
   - Тестовые блоки `if __name__ == "__main__"` — низкий приоритет (CLI утилиты)
 

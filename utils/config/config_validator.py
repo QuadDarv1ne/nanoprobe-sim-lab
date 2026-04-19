@@ -665,36 +665,41 @@ class OptimizationAdvisor:
 
 def main():
     """Главная функция для демонстрации возможностей валидации конфигурации"""
-    print("=== ВАЛИДАЦИЯ КОНФИГУРАЦИИ И ОПТИМИЗАЦИЯ ПРОЕКТА ===")
+    logger.info("=== ВАЛИДАЦИЯ КОНФИГУРАЦИИ И ОПТИМИЗАЦИЯ ПРОЕКТА ===")
 
     # Создаем валидатор конфигурации
     config_validator = ConfigValidator()
 
-    print("✓ Валидатор конфигурации инициализирован")
+    logger.info("✓ Валидатор конфигурации инициализирован")
 
     # Валидируем структуру проекта
     project_validation = config_validator.validate_project_structure()
-    print(
-        f"✓ Валидация структуры проекта: {'Успешна' if project_validation['valid'] else 'С ошибками'}"
+    logger.info(
+        "✓ Валидация структуры проекта: %s",
+        "Успешна" if project_validation["valid"] else "С ошибками",
     )
-    print(f"  - Найдено директорий: {len(project_validation['directories']['found'])}")
-    print(f"  - Найдено файлов: {len(project_validation['files']['found'])}")
+    logger.info("  - Найдено директорий: %d", len(project_validation["directories"]["found"]))
+    logger.info("  - Найдено файлов: %d", len(project_validation["files"]["found"]))
 
     if (
         not project_validation["directories"]["missing"]
         and not project_validation["files"]["missing"]
     ):
-        print("  - Все обязательные элементы на месте")
+        logger.info("  - Все обязательные элементы на месте")
     else:
-        print(f"  - Отсутствующие директории: {project_validation['directories']['missing']}")
-        print(f"  - Отсутствующие файлы: {project_validation['files']['missing']}")
+        logger.info(
+            "  - Отсутствующие директории: %s", project_validation["directories"]["missing"]
+        )
+        logger.info("  - Отсутствующие файлы: %s", project_validation["files"]["missing"])
 
     # Валидируем зависимости
     deps_validation = config_validator.validate_dependencies()
-    print(f"✓ Валидация зависимостей: {'Успешна' if deps_validation['valid'] else 'С ошибками'}")
-    print(f"  - Всего зависимостей: {deps_validation['total_dependencies']}")
-    print(f"  - Ошибок: {len(deps_validation['invalid_dependencies'])}")
-    print(f"  - Предупреждений: {len(deps_validation['warnings'])}")
+    logger.info(
+        "✓ Валидация зависимостей: %s", "Успешна" if deps_validation["valid"] else "С ошибками"
+    )
+    logger.info("  - Всего зависимостей: %d", deps_validation["total_dependencies"])
+    logger.info("  - Ошибок: %d", len(deps_validation["invalid_dependencies"]))
+    logger.info("  - Предупреждений: %d", len(deps_validation["warnings"]))
 
     # Создаем советника по оптимизации
     optimizer = OptimizationAdvisor()
@@ -708,19 +713,19 @@ def main():
     }
 
     recommendations = optimizer.analyze_performance_data(sample_performance)
-    print(f"✓ Анализ производительности: {len(recommendations)} рекомендаций")
+    logger.info("✓ Анализ производительности: %d рекомендаций", len(recommendations))
 
     for rec in recommendations:
-        print(f"  - [{rec['severity']}] {rec['recommendation']}")
+        logger.info("  - [%s] %s", rec["severity"], rec["recommendation"])
 
     # Генерируем отчеты
     config_report = config_validator.generate_validation_report(project_validation)
     opt_report = optimizer.generate_optimization_report(recommendations)
 
-    print(f"✓ Отчет о валидации конфигурации: {config_report}")
-    print(f"✓ Отчет по оптимизации: {opt_report}")
+    logger.info("✓ Отчет о валидации конфигурации: %s", config_report)
+    logger.info("✓ Отчет по оптимизации: %s", opt_report)
 
-    print("Валидация конфигурации и оптимизация успешно протестированы")
+    logger.info("Валидация конфигурации и оптимизация успешно протестированы")
 
 
 if __name__ == "__main__":
