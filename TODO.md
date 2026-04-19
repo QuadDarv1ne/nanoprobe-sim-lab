@@ -13,7 +13,7 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** ``3700023`` — fix: заменить print() на logger в location_manager.py
+**Last commit:** ``cd7e924`` — fix: добавить logging в config_validator.py
 
 ---
 
