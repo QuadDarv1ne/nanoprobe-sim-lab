@@ -39,11 +39,13 @@
 ### 🔴 CRITICAL
 
 #### 1. Миграция print() → logging
-- **Статус:** Исправлено ~110 из ~900 вызовов (~12%)
+- **Статус:** Исправлено ~112 из ~900 вызовов (~12.4%)
 - **Выполнено:**
   - ✅ `api/main.py` — health check endpoint
   - ✅ `utils/api/space_image_downloader.py` — полный модуль
   - ✅ `utils/performance_profiler.py` — все print() заменены
+  - ✅ `utils/test_framework.py` — замена print() на logger.info()
+  - ✅ `utils/analytics.py` — замена print() на logger.info()
 - **Осталось:**
   - Тестовые блоки `if __name__ == "__main__"` — низкий приоритет (CLI утилиты)
 

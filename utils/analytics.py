@@ -567,13 +567,13 @@ class ProjectAnalytics:
 
 def main():
     """Главная функция для демонстрации возможностей аналитического модуля"""
-    print("=== АНАЛИТИЧЕСКИЙ МОДУЛЬ ПРОЕКТА ===")
+    logger.info("=== АНАЛИТИЧЕСКИЙ МОДУЛЬ ПРОЕКТА ===")
 
     # Создаем аналитический модуль
     analytics = ProjectAnalytics()
 
     # Создаем тестовые данные
-    print("Создание тестовых данных...")
+    logger.info("Создание тестовых данных...")
 
     # Тестовые данные поверхности
     x = np.linspace(-2, 2, 50)
@@ -593,13 +593,13 @@ def main():
         surface_data=surface_data, image_data=image_data, signal_data=signal_data
     )
 
-    print("✓ Комплексный аналитический отчет сгенерирован")
-    print(f"Выполненные анализы: {report['analyses_performed']}")
+    logger.info("✓ Комплексный аналитический отчет сгенерирован")
+    logger.info(f"Выполненные анализы: {report['analyses_performed']}")
 
     # Сохраняем отчет
     analytics.save_analytics_report(report, "test_analytics_report.json")
 
-    print("Аналитический модуль успешно протестирован")
+    logger.info("Аналитический модуль успешно протестирован")
 
 
 if __name__ == "__main__":
