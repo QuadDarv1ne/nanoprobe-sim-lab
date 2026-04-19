@@ -13,7 +13,7 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** ``cd7e924`` — fix: добавить logging в config_validator.py
+**Last commit:** ``f90c1f8`` — fix: добавить logging в config_validator.py
 
 ---
 
