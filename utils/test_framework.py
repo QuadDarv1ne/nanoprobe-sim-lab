@@ -525,7 +525,7 @@ class TestFramework:
 
         try:
             # Шаг 1: Запуск юнит-тестов
-            print("Запуск юнит-тестов...")
+            logger.info("Запуск юнит-тестов...")
             unit_results = self.run_unittests()
             results["steps"]["unit_tests"] = unit_results
             results["overall_success"] &= (
@@ -533,13 +533,13 @@ class TestFramework:
             )
 
             # Шаг 2: Запуск интеграционных тестов
-            print("Запуск интеграционных тестов...")
+            logger.info("Запуск интеграционных тестов...")
             integration_results = self.run_integration_tests()
             results["steps"]["integration_tests"] = integration_results
             results["overall_success"] &= integration_results["failed_tests"] == 0
 
             # Шаг 3: Измерение покрытия кода
-            print("Измерение покрытия кода...")
+            logger.info("Измерение покрытия кода...")
             coverage_results = self.measure_code_coverage()
             results["steps"]["code_coverage"] = coverage_results
             results["overall_success"] &= (
@@ -547,11 +547,12 @@ class TestFramework:
             )  # Минимальный порог 70%
 
             # Шаг 4: Генерация отчета
-            print("Генерация отчета...")
+            logger.info("Генерация отчета...")
             report_path = self.generate_test_report()
             results["report_path"] = report_path
 
         except Exception as e:
+            logger.error(f"Ошибка в CI/CD пайплайне: {e}")
             results["overall_success"] = False
             results["error"] = str(e)
 
