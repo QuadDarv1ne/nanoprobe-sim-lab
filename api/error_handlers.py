@@ -389,3 +389,73 @@ def handle_errors(func):
             raise
 
     return wrapper
+
+
+# Глобальная статистика ошибок
+_error_metrics = {
+    "total_errors": 0,
+    "errors_by_type": {},
+    "errors_by_severity": {},
+    "errors_by_endpoint": {},
+    "first_error_time": None,
+    "last_error_time": None,
+}
+
+
+def track_error_metrics(error_type: str, severity: str, endpoint: Optional[str] = None):
+    """
+    Отслеживание метрик ошибок
+
+    Args:
+        error_type: Тип ошибки (класс исключения)
+        severity: Уровень важности
+        endpoint: Endpoint, где произошла ошибка
+    """
+    global _error_metrics
+
+    _error_metrics["total_errors"] += 1
+    _error_metrics["last_error_time"] = datetime.now(timezone.utc).isoformat()
+
+    if _error_metrics["first_error_time"] is None:
+        _error_metrics["first_error_time"] = _error_metrics["last_error_time"]
+
+    # Счётчик по типам ошибок
+    _error_metrics["errors_by_type"][error_type] = (
+        _error_metrics["errors_by_type"].get(error_type, 0) + 1
+    )
+
+    # Счётчик по уровню важности
+    _error_metrics["errors_by_severity"][severity] = (
+        _error_metrics["errors_by_severity"].get(severity, 0) + 1
+    )
+
+    # Счётчик по endpoint'ам
+    if endpoint:
+        _error_metrics["errors_by_endpoint"][endpoint] = (
+            _error_metrics["errors_by_endpoint"].get(endpoint, 0) + 1
+        )
+
+
+def get_error_metrics() -> Dict[str, Any]:
+    """
+    Получить метрики ошибок
+
+    Returns:
+        Dict с метриками ошибок
+    """
+    global _error_metrics
+    return _error_metrics.copy()
+
+
+def reset_error_metrics():
+    """Сбросить метрики ошибок"""
+    global _error_metrics
+    _error_metrics = {
+        "total_errors": 0,
+        "errors_by_type": {},
+        "errors_by_severity": {},
+        "errors_by_endpoint": {},
+        "first_error_time": None,
+        "last_error_time": None,
+    }
+    logger.info("Error metrics reset")
