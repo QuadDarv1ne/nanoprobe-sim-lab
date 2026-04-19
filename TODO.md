@@ -13,7 +13,7 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** ``df609df`` — fix: заменить print() на logger.info() в backup_manager.py
+**Last commit:** ``3700023`` — fix: заменить print() на logger в location_manager.py
 
 ---
 
