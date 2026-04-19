@@ -13,7 +13,7 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** ``7fb3622`` — fix: заменить print() на logger.info() в defect_analyzer.py
+**Last commit:** ``9829b3a`` — fix: добавить logging в backup_manager.py
 
 ---
 
