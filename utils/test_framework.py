@@ -16,7 +16,7 @@ import coverage
 logger = logging.getLogger(__name__)
 
 
-class TestRunnerFramework:
+class TestFramework:
     """
     Класс тестовой платформы
     Обеспечивает комплексное тестирование,
@@ -800,7 +800,7 @@ def main():
     print("=== ТЕСТОВАЯ ПЛАТФОРМА ПРОЕКТА ===")
 
     # Создаем тестовую платформу
-    test_framework = TestRunnerFramework()
+    test_framework = TestFramework()
     qa_system = QualityAssurance()
 
     print("✓ Тестовая платформа инициализирована")
