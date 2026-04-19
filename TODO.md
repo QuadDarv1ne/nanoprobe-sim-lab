@@ -39,7 +39,7 @@
 ### 🔴 CRITICAL
 
 #### 1. Миграция print() → logging
-- **Статус:** Исправлено ~130 из ~900 вызовов (~14.4%)
+- **Статус:** Завершено для не-тестовых блоков (~130 из ~900 вызовов заменено, остальные в __main__ — низкий приоритет)
 - **Выполнено:**
   - ✅ `api/main.py` — health check endpoint
   - ✅ `utils/api/space_image_downloader.py` — полный модуль
@@ -54,6 +54,20 @@
   - ✅ `utils/data/data_manager.py` — замена print() на logger.info()
 - **Осталось:**
   - Тестовые блоки `if __name__ == "__main__"` — низкий приоритет (CLI утилиты)
+
+#### 2. Test coverage ~20% → 40%
+- **Текущий статус:** ~20% (1405+ тестов)
+- **Выполнено:**
+  - ✅ Тесты для `ring_buffer.py` (20+ тестов)
+  - ✅ Тесты для `sdr_resource_manager.py` (17 тестов)
+  - ✅ Тесты для `DatabaseOperations` (24 теста) — **FIXED**
+  - ✅ Тесты для `sstv_advanced_api.py` (50+ тестов)
+  - ✅ Тесты для `hardware_health.py` (25+ тестов)
+  - ✅ **Тесты для `signal_classifier.py` (20 тестов) — FIXED Python 3.14 compatibility**
+  - ✅ Тесты для `defect_analyzer.py` (14 тестов)
+  - ✅ Тесты для `satellite_auto_capture.py` (23 теста)
+  - ✅ Тесты для `rtl_sdr_auto_calibration.py` (15 тестов)
+- **Осталось:** Увеличить покрытие тестами до 40%
 
 #### 2. Test coverage ~20% → 40%
 - **Текущий статус:** ~20% (1405+ тестов)
