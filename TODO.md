@@ -13,7 +13,7 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** ``61d35e8`` — fix: заменить print() на logger.info() в test_framework.py
+**Last commit:** ``9defe4e`` — fix: заменить print() на logger.info() в test_framework.py
 
 ---
 
