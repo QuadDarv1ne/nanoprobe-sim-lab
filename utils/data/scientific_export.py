@@ -388,6 +388,8 @@ class SSTVDataExporter:
 def main():
     import argparse
 
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+
     parser = argparse.ArgumentParser(description="Экспорт SSTV/SDR данных в научные форматы")
     parser.add_argument("--input", required=True, help="Входной JSON файл с данными")
     parser.add_argument(
@@ -404,7 +406,7 @@ def main():
     # Загрузка данных
     input_path = Path(args.input)
     if not input_path.exists():
-        print(f"❌ Файл не найден: {input_path}")
+        logger.error(f"Файл не найден: {input_path}")
         return
 
     with open(input_path, "r", encoding="utf-8") as f:
@@ -419,9 +421,9 @@ def main():
     )
 
     if result:
-        print(f"✅ Экспорт успешен: {result}")
+        logger.info(f"Экспорт успешен: {result}")
     else:
-        print("❌ Ошибка экспорта")
+        logger.error("Ошибка экспорта")
 
 
 if __name__ == "__main__":

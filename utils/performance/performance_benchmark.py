@@ -2,6 +2,7 @@
 
 import gc
 import json
+import logging
 import statistics
 import threading
 import time
@@ -12,6 +13,8 @@ from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -153,7 +156,7 @@ class PerformanceBenchmarkSuite:
         Returns:
             Результаты бенчмарка
         """
-        print(f"Запуск бенчмарка: {name}")
+        logger.info(f"Запуск бенчмарка: {name}")
 
         # Прогрев
         for _ in range(warmup):
@@ -253,7 +256,7 @@ class PerformanceBenchmarkSuite:
         if thread_counts is None:
             thread_counts = [1, 2, 4, 8]
 
-        print(f"Запуск бенчмарка параллелизма: {name}")
+        logger.info(f"Запуск бенчмарка параллелизма: {name}")
 
         results = {}
 
@@ -304,7 +307,7 @@ class PerformanceBenchmarkSuite:
         Returns:
             Результаты бенчмарка памяти
         """
-        print(f"Запуск бенчмарка памяти для: {func.__name__}")
+        logger.info(f"Запуск бенчмарка памяти для: {func.__name__}")
 
         # Начинаем трассировку памяти
         tracemalloc.start()
@@ -339,7 +342,7 @@ class PerformanceBenchmarkSuite:
         Returns:
             Список сравнений производительности
         """
-        print("Сравнение производительности алгоритмов...")
+        logger.info("Сравнение производительности алгоритмов...")
 
         algorithm_results = {}
 
@@ -420,7 +423,7 @@ class PerformanceBenchmarkSuite:
                     time.sleep(interval)
 
                 except Exception as e:
-                    print(f"Ошибка мониторинга системы: {e}")
+                    logger.error(f"Ошибка мониторинга системы: {e}")
                     time.sleep(interval)
 
         self.monitoring_thread = threading.Thread(target=monitor, daemon=True)
@@ -720,16 +723,17 @@ class BenchmarkDecorator:
 
 def main():
     """Главная функция для демонстрации возможностей бенчмарка"""
-    print("=== НАБОР БЕНЧМАРКОВ ПРОИЗВОДИТЕЛЬНОСТИ ===")
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+    logger.info("=== НАБОР БЕНЧМАРКОВ ПРОИЗВОДИТЕЛЬНОСТИ ===")
 
     # Создаем набор бенчмарков
     benchmark_suite = PerformanceBenchmarkSuite()
 
-    print("✓ Набор бенчмарков инициализирован")
-    print(f"✓ Директория вывода: {benchmark_suite.output_dir}")
+    logger.info("✓ Набор бенчмарков инициализирован")
+    logger.info("✓ Директория вывода: %s", benchmark_suite.output_dir)
 
     # Начинаем мониторинг системы
-    print("\nЗапуск мониторинга системы...")
+    logger.info("\nЗапуск мониторинга системы...")
     benchmark_suite.start_system_monitoring(interval=0.5)
 
     # Примеры функций для бенчмарка
@@ -752,26 +756,26 @@ def main():
         return len(processed)
 
     # Выполняем бенчмарк для медленной функции
-    print("\nБенчмарк медленной функции...")
+    logger.info("\nБенчмарк медленной функции...")
     slow_result = benchmark_suite.benchmark_function(
         slow_calculation, 10000, name="slow_calculation", iterations=50
     )
-    print(f"Среднее время: {slow_result['timing_stats']['avg_seconds']:.6f} сек")
+    logger.info("Среднее время: %.6f сек", slow_result["timing_stats"]["avg_seconds"])
 
     # Выполняем бенчмарк для быстрой функции
-    print("\nБенчмарк быстрой функции...")
+    logger.info("\nБенчмарк быстрой функции...")
     fast_result = benchmark_suite.benchmark_function(
         fast_calculation, 10000, name="fast_calculation", iterations=50
     )
-    print(f"Среднее время: {fast_result['timing_stats']['avg_seconds']:.6f} сек")
+    logger.info("Среднее время: %.6f сек", fast_result["timing_stats"]["avg_seconds"])
 
     # Бенчмарк использования памяти
-    print("\nБенчмарк использования памяти...")
+    logger.info("\nБенчмарк использования памяти...")
     memory_result = benchmark_suite.benchmark_memory_usage(memory_intensive_operation, 50000)
-    print(f"Пик использования памяти: {memory_result['peak_memory_mb']:.2f} MB")
+    logger.info("Пик использования памяти: %.2f MB", memory_result["peak_memory_mb"])
 
     # Бенчмарк параллельного выполнения
-    print("\nБенчмарк параллельного выполнения...")
+    logger.info("\nБенчмарк параллельного выполнения...")
     parallel_result = benchmark_suite.benchmark_parallel_execution(
         "parallel_processing",
         slow_calculation,
@@ -781,48 +785,52 @@ def main():
     )
 
     for threads, result in parallel_result["results"].items():
-        print(
-            f"  {threads} потоков: {result['execution_time']:.4f} сек, "
-            f"пропускная способность: {result['throughput']:.2f} ops/sec"
+        logger.info(
+            "  %d потоков: %.4f сек, пропускная способность: %.2f ops/sec",
+            threads,
+            result["execution_time"],
+            result["throughput"],
         )
 
     # Сравниваем алгоритмы
-    print("\nСравнение алгоритмов...")
+    logger.info("\nСравнение алгоритмов...")
     algorithms = {"slow": slow_calculation, "fast": fast_calculation}
 
     comparisons = benchmark_suite.compare_algorithms(algorithms, 5000, iterations=20)
-    print(f"Выполнено {len(comparisons)} сравнений")
+    logger.info("Выполнено %d сравнений", len(comparisons))
 
     for comparison in comparisons:
-        print(
-            f"  {comparison.test_name}: {comparison.improvement_percent:+.2f}% "
-            f"({'значимо' if comparison.is_significant else 'незначимо'})"
+        logger.info(
+            "  %s: %.2f%% %s",
+            comparison.test_name,
+            comparison.improvement_percent,
+            "значимо" if comparison.is_significant else "незначимо",
         )
 
     # Останавливаем мониторинг
     benchmark_suite.stop_system_monitoring()
-    print("\nМониторинг системы остановлен")
+    logger.info("\nМониторинг системы остановлен")
 
     # Генерируем отчет
-    print("\nГенерация отчета...")
+    logger.info("\nГенерация отчета...")
     report_path = benchmark_suite.generate_performance_report()
-    print(f"✓ Отчет сохранен: {report_path}")
+    logger.info("✓ Отчет сохранен: %s", report_path)
 
     # Создаем визуализацию
-    print("\nСоздание визуализации...")
+    logger.info("\nСоздание визуализации...")
     viz_path = benchmark_suite.visualize_benchmark_results()
     if viz_path:
-        print(f"✓ Визуализация сохранена: {viz_path}")
+        logger.info("✓ Визуализация сохранена: %s", viz_path)
 
     # Получаем рекомендации
-    print("\nПолучение рекомендаций по производительности...")
+    logger.info("\nПолучение рекомендаций по производительности...")
     recommendations = benchmark_suite.get_performance_recommendations()
-    print("Рекомендации:")
+    logger.info("Рекомендации:")
     for rec in recommendations:
-        print(f"  - {rec}")
+        logger.info("  - %s", rec)
 
     # Пример использования декоратора
-    print("\nПример использования декоратора бенчмарка...")
+    logger.info("\nПример использования декоратора бенчмарка...")
     benchmark_decorator = BenchmarkDecorator(benchmark_suite)
 
     @benchmark_decorator
@@ -830,19 +838,19 @@ def main():
         return x**2
 
     result = decorated_function(100)
-    print(f"Результат функции: {result}")
+    logger.info("Результат функции: %s", result)
 
-    print("\nНабор бенчмарков успешно протестирован")
-    print("\nДоступные функции:")
-    print("- Бенчмарк функций: benchmark_suite.benchmark_function()")
-    print("- Бенчмарк памяти: benchmark_suite.benchmark_memory_usage()")
-    print("- Бенчмарк параллелизма: benchmark_suite.benchmark_parallel_execution()")
-    print("- Сравнение алгоритмов: benchmark_suite.compare_algorithms()")
-    print("- Мониторинг системы: benchmark_suite.start_system_monitoring()")
-    print("- Отчеты: benchmark_suite.generate_performance_report()")
-    print("- Визуализация: benchmark_suite.visualize_benchmark_results()")
-    print("- Рекомендации: benchmark_suite.get_performance_recommendations()")
-    print("- Декоратор для функций: BenchmarkDecorator")
+    logger.info("\nНабор бенчмарков успешно протестирован")
+    logger.info("\nДоступные функции:")
+    logger.info("- Бенчмарк функций: benchmark_suite.benchmark_function()")
+    logger.info("- Бенчмарк памяти: benchmark_suite.benchmark_memory_usage()")
+    logger.info("- Бенчмарк параллелизма: benchmark_suite.benchmark_parallel_execution()")
+    logger.info("- Сравнение алгоритмов: benchmark_suite.compare_algorithms()")
+    logger.info("- Мониторинг системы: benchmark_suite.start_system_monitoring()")
+    logger.info("- Отчеты: benchmark_suite.generate_performance_report()")
+    logger.info("- Визуализация: benchmark_suite.visualize_benchmark_results()")
+    logger.info("- Рекомендации: benchmark_suite.get_performance_recommendations()")
+    logger.info("- Декоратор для функций: BenchmarkDecorator")
 
 
 if __name__ == "__main__":

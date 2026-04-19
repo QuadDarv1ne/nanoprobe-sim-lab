@@ -658,13 +658,14 @@ class AdvancedLoggerAnalyzer:
 
 def main():
     """Главная функция для демонстрации возможностей анализатора логов"""
-    print("=== ПРОДВИНУТЫЙ АНАЛИЗАТОР ЛОГОВ ===")
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+    logger.info("=== ПРОДВИНУТЫЙ АНАЛИЗАТОР ЛОГОВ ===")
 
     # Создаем анализатор логов
     analyzer = AdvancedLoggerAnalyzer()
 
-    print("✓ Анализатор логов инициализирован")
-    print(f"✓ Директория логов: {analyzer.log_directory}")
+    logger.info("✓ Анализатор логов инициализирован")
+    logger.info("✓ Директория логов: %s", analyzer.log_directory)
 
     # Создаем тестовые логи если они не существуют
     test_logs_dir = Path("logs")
@@ -682,79 +683,79 @@ def main():
                 f"[{timestamp.strftime('%Y-%m-%d %H:%M:%S')}] - {level} - {component} - {message}\n"
             )
 
-    print(f"✓ Создан тестовый лог-файл: {test_log_file}")
+    logger.info("✓ Создан тестовый лог-файл: %s", test_log_file)
 
     # Загружаем логи
-    print("\nЗагрузка логов...")
+    logger.info("\nЗагрузка логов...")
     logs = analyzer.load_all_logs()
-    print(f"✓ Загружено {len(logs)} записей логов")
+    logger.info("✓ Загружено %d записей логов", len(logs))
 
     # Анализируем логи
-    print("\nАнализ логов...")
+    logger.info("\nАнализ логов...")
     analysis_result = analyzer.analyze_logs()
-    print(f"  Всего записей: {analysis_result.total_entries}")
-    print(f"  Ошибок: {analysis_result.error_count}")
-    print(f"  Предупреждений: {analysis_result.warning_count}")
-    print(f"  Информационных: {analysis_result.info_count}")
-    print(f"  Компонентов: {len(analysis_result.unique_components)}")
+    logger.info("  Всего записей: %d", analysis_result.total_entries)
+    logger.info("  Ошибок: %d", analysis_result.error_count)
+    logger.info("  Предупреждений: %d", analysis_result.warning_count)
+    logger.info("  Информационных: %d", analysis_result.info_count)
+    logger.info("  Компонентов: %d", len(analysis_result.unique_components))
 
     # Генерируем статистику
-    print("\nГенерация статистики...")
+    logger.info("\nГенерация статистики...")
     stats = analyzer.generate_statistics()
-    print(f"  Уровни логов: {stats['level_distribution']}")
-    print(f"  Топ компонентов: {stats['top_components'][:3]}")
+    logger.info("  Уровни логов: %s", stats["level_distribution"])
+    logger.info("  Топ компонентов: %s", stats["top_components"][:3])
 
     # Обнаруживаем аномалии
-    print("\nПоиск аномалий...")
+    logger.info("\nПоиск аномалий...")
     anomalies = analyzer.detect_anomalies()
-    print(f"  Найдено аномалий: {len(anomalies)}")
+    logger.info("  Найдено аномалий: %d", len(anomalies))
     for anomaly in anomalies[:3]:  # Показываем первые 3
-        print(f"    - {anomaly['type']}: {anomaly['description']}")
+        logger.info("    - %s: %s", anomaly["type"], anomaly["description"])
 
     # Генерируем оповещения
-    print("\nГенерация оповещений...")
+    logger.info("\nГенерация оповещений...")
     alerts = analyzer.generate_alerts()
-    print(f"  Оповещений: {len(alerts)}")
+    logger.info("  Оповещений: %d", len(alerts))
     for alert in alerts[:3]:  # Показываем первые 3
-        print(f"    - {alert['type']}: {alert['message']}")
+        logger.info("    - %s: %s", alert["type"], alert["message"])
 
     # Фильтруем логи
-    print("\nФильтрация логов (только ошибки)...")
+    logger.info("\nФильтрация логов (только ошибки)...")
     error_logs = analyzer.filter_logs(level="ERROR")
-    print(f"  Найдено ошибок: {len(error_logs)}")
+    logger.info("  Найдено ошибок: %d", len(error_logs))
 
     # Визуализируем логи
-    print("\nСоздание визуализации...")
+    logger.info("\nСоздание визуализации...")
     viz_path = analyzer.visualize_logs()
     if viz_path:
-        print(f"✓ Визуализация сохранена: {viz_path}")
+        logger.info("✓ Визуализация сохранена: %s", viz_path)
 
     # Экспортируем отфильтрованные логи
-    print("\nЭкспорт отфильтрованных логов...")
+    logger.info("\nЭкспорт отфильтрованных логов...")
     export_path = analyzer.export_filtered_logs(error_logs, "filtered_errors.csv", "csv")
-    print(f"✓ Экспортировано {len(error_logs)} ошибок: {export_path}")
+    logger.info("✓ Экспортировано %d ошибок: %s", len(error_logs), export_path)
 
     # Пример фильтрации по компоненту
-    print("\nФильтрация по компоненту...")
+    logger.info("\nФильтрация по компоненту...")
     component_logs = analyzer.filter_logs(component="Component_1")
-    print(f"  Записей для Component_1: {len(component_logs)}")
+    logger.info("  Записей для Component_1: %d", len(component_logs))
 
     # Пример фильтрации по поисковому запросу
-    print("\nФильтрация по поисковому запросу...")
+    logger.info("\nФильтрация по поисковому запросу...")
     search_logs = analyzer.filter_logs(search_term="event")
-    print(f"  Записей с 'event': {len(search_logs)}")
+    logger.info("  Записей с 'event': %d", len(search_logs))
 
-    print("\nАнализатор логов успешно протестирован")
-    print("\nДоступные функции:")
-    print("- Загрузка логов: analyzer.load_all_logs()")
-    print("- Анализ логов: analyzer.analyze_logs()")
-    print("- Фильтрация: analyzer.filter_logs()")
-    print("- Статистика: analyzer.generate_statistics()")
-    print("- Обнаружение аномалий: analyzer.detect_anomalies()")
-    print("- Визуализация: analyzer.visualize_logs()")
-    print("- Экспорт: analyzer.export_filtered_logs()")
-    print("- Мониторинг в реальном времени: analyzer.start_real_time_monitoring()")
-    print("- Генерация оповещений: analyzer.generate_alerts()")
+    logger.info("\nАнализатор логов успешно протестирован")
+    logger.info("\nДоступные функции:")
+    logger.info("- Загрузка логов: analyzer.load_all_logs()")
+    logger.info("- Анализ логов: analyzer.analyze_logs()")
+    logger.info("- Фильтрация: analyzer.filter_logs()")
+    logger.info("- Статистика: analyzer.generate_statistics()")
+    logger.info("- Обнаружение аномалий: analyzer.detect_anomalies()")
+    logger.info("- Визуализация: analyzer.visualize_logs()")
+    logger.info("- Экспорт: analyzer.export_filtered_logs()")
+    logger.info("- Мониторинг в реальном времени: analyzer.start_real_time_monitoring()")
+    logger.info("- Генерация оповещений: analyzer.generate_alerts()")
 
 
 if __name__ == "__main__":

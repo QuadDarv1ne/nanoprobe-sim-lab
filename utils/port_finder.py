@@ -201,31 +201,35 @@ def find_ports(services: List[str]) -> dict:
 
 if __name__ == "__main__":
     # Демо режим при прямом запуске
-    pass
+    import logging
+
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
 
     finder = PortFinder()
 
-    print("=" * 60)
-    print("Auto Port Finder - Демо")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.info("Auto Port Finder - Демо")
+    logger.info("=" * 60)
 
     # Поиск портов для всех сервисов
     try:
         ports = finder.find_multiple_ports(["backend", "flask", "nextjs"])
-        print("\n✅ Найденные порты:")
+        logger.info("\n✅ Найденные порты:")
         for service, port in ports.items():
-            print(f"  {service:15s}: {port}")
+            logger.info(f"  {service:15s}: {port}")
     except RuntimeError as e:
-        print(f"\n❌ Ошибка: {e}")
+        logger.error(f"\n❌ Ошибка: {e}")
 
     # Статус стандартных портов
-    print("\n📊 Статус стандартных портов:")
+    logger.info("\n📊 Статус стандартных портов:")
     for service, port in finder.DEFAULT_PORTS.items():
         status = finder.get_port_status(port)
         icon = "✅" if status["available"] else "❌"
-        print(f"  {icon} {service:15s}: {port} ({'свободен' if status['available'] else 'занят'})")
+        logger.info(
+            f"  {icon} {service:15s}: {port} ({'свободен' if status['available'] else 'занят'})"
+        )
 
     # Предложения для backend
-    print("\n💡 Предложения для backend:")
+    logger.info("\n💡 Предложения для backend:")
     suggestions = finder.suggest_ports("backend", count=5)
-    print(f"  {suggestions}")
+    logger.info(f"  {suggestions}")

@@ -6,6 +6,7 @@
 
 import gc
 import json
+import logging
 import threading
 import time
 import tracemalloc
@@ -15,6 +16,8 @@ from functools import wraps
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
+logger = logging.getLogger(__name__)
+
 import matplotlib.pyplot as plt
 import psutil
 
@@ -22,7 +25,7 @@ try:
     import objgraph
 except ImportError:
     objgraph = None
-    print("Warning: objgraph not installed. Install with 'pip install objgraph'")
+    logger.warning("objgraph not installed. Install with 'pip install objgraph'")
 
 
 @dataclass

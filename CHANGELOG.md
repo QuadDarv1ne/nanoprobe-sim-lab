@@ -1,15 +1,41 @@
 # Changelog
 
 Все значимые изменения проекта Nanoprobe Sim Lab.
-
-Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
-версионирование по [Semantic Versioning](https://semver.org/lang/ru/).
+Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/), версионирование по [Semantic Versioning](https://semver.org/lang/ru/).
 
 ---
 
 ## [Unreleased]
 
+### 🎉 Added
+
+- **API Test Runner** — утилита для автоматического тестирования API endpoints:
+  - `utils/testing/api_test_runner.py` — автоматическое тестирование с валидацией
+  - `tests/testing/test_api_test_runner.py` — 19 тестов для утилиты
+  - Генерация текстовых и JSON отчётов
+  - Поддержка verbose режима и кастомных base URL
+
+- **API Performance Profiler** — утилита для профилирования производительности API:
+  - `utils/testing/api_profiler.py` — многократное тестирование с метриками
+  - `tests/testing/test_api_profiler.py` — 21 тест для утилиты
+  - Статистика: min, max, avg, median, P95 времени ответа
+  - Мониторинг success rate и статус кодов
+  - Генерация детализированных отчётов
+
+- **Testing Utilities Documentation** — `utils/testing/README.md`:
+  - Полная документация для новых утилит
+  - Примеры использования
+  - Интеграция в CI/CD
+  - Шаблоны для различных сценариев
+
+### 📊 Statistics
+
+- **New tests added:** 40 тестов
+- **Total tests:** 1444 теста (было 1404)
+- **Test coverage increase:** ~3%
+
 ### Planned
+
 - Mobile Application (React Native/Flutter)
 - External Integrations (NASA, Zenodo, Figshare upload)
 - Frontend Modernization (полная миграция на Next.js)
@@ -21,6 +47,7 @@
 ## [1.1.0] - 2026-04-10
 
 ### 🎉 Added
+
 - **FM Radio Unified** — новый универсальный модуль `fm_radio_unified.py` с 4 режимами:
   - `listen` — прослушивание FM радио в реальном времени
   - `capture` — запись аудио в WAV файл
@@ -52,6 +79,7 @@
 - **tools/README.md** — инструкция по установке внешних инструментов
 
 ### ⚡ Changed
+
 - **Python Version** — минимальная версия изменена с 3.8 на 3.11:
   - `pyproject.toml`: `requires-python = ">=3.11"`
   - `black`: target-version обновлён до py311-py314
@@ -64,6 +92,7 @@
   - Python cache (__pycache__, *.pyc, *.pyo)
 
 ### ⚠️ Deprecated
+
 - **FM Radio файлы** (5 файлов → 1 унифицированный):
   - `rtl_sdr_tools/fm_radio.py` → используйте `fm_radio_unified.py listen`
   - `rtl_sdr_tools/fm_capture_simple.py` → используйте `fm_radio_unified.py capture`
@@ -77,6 +106,7 @@
   - `scripts/sort_project.py` → используйте `scripts/project.py` (в разработке)
 
 ### 🗑️ Removed
+
 - **Unused Utils** — 7 неиспользуемых модулей архивированы в `utils/archived/`:
   - `utils/predictive_analytics_engine.py`
   - `utils/code_analyzer.py`
@@ -91,6 +121,7 @@
   - `tools/rtl-sdr-blog/`
 
 ### 🐛 Fixed
+
 - **Skipped Tests** — 4 теста в `test_api.py` больше не пропускаются:
   - `test_get_scans_empty`
   - `test_create_scan`
@@ -102,6 +133,7 @@
   - Решение: `datetime.fromtimestamp(..., tz=timezone.utc)`
 
 ### 📊 Статистика изменений
+
 | Метрика | До | После | Изменение |
 |---------|-----|-------|-----------|
 | Python версия | 3.8+ | 3.11-3.14 | ✅ Синхронизировано |
@@ -116,6 +148,7 @@
 ### 🚀 Migration Guide
 
 **Для пользователей:**
+
 ```bash
 # Обновите зависимости
 pip install -r requirements.txt --upgrade
@@ -130,6 +163,7 @@ python scripts/project.py cleanup
 ```
 
 **Для разработчиков:**
+
 ```bash
 # Минимальная версия Python теперь 3.11
 python --version  # Должно быть 3.11+
@@ -149,6 +183,7 @@ python scripts/project.py validate
 ## [1.0.0] - 2026-04-08
 
 ### Added
+
 - FastAPI REST API с JWT + 2FA TOTP аутентификацией
 - WebSocket real-time обновления
 - GraphQL API
@@ -164,12 +199,15 @@ python scripts/project.py validate
 - Docker, Kubernetes, Nginx deployment
 
 ### Security
+
 - JWT authentication с refresh token rotation
 - 2FA TOTP (Google Authenticator)
 - Rate Limiting (SlowAPI)
 - Security Headers middleware
 - CORS configuration
 - Error handlers
+
+---
 
 [Unreleased]: https://github.com/your-username/nanoprobe-sim-lab/compare/v1.1.0...HEAD
 [1.1.0]: https://github.com/your-username/nanoprobe-sim-lab/compare/v1.0.0...v1.1.0

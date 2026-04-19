@@ -1,5 +1,4 @@
-"""Testing utilities"""
+"""Testing utilities for Nanoprobe Sim Lab"""
 
-from .test_framework import TestFramework, TestResult
-
-__all__ = ["TestFramework", "TestResult"]
+# Lazy imports to avoid circular dependencies
+__all__ = []

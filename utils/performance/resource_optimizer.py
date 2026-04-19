@@ -2,6 +2,7 @@
 
 import gc
 import json
+import logging
 import os
 import sys
 import threading
@@ -11,6 +12,8 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List
 
 import psutil
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -101,7 +104,7 @@ class ResourceManager:
                 "open_files": len(self.process.open_files()),
             }
         except Exception as e:
-            print(f"Ошибка получения ресурсов: {e}")
+            logger.error(f"Ошибка получения ресурсов: {e}")
             return {}
 
     def optimize_cpu_usage(self) -> OptimizationResult:
@@ -148,7 +151,7 @@ class ResourceManager:
                 return result
 
             except Exception as e:
-                print(f"Ошибка оптимизации CPU: {e}")
+                logger.error(f"Ошибка оптимизации CPU: {e}")
                 result = OptimizationResult(
                     resource_type="cpu",
                     original_value=current_cpu,
@@ -308,7 +311,7 @@ class ResourceManager:
                     time.sleep(interval)
 
                 except Exception as e:
-                    print(f"Ошибка мониторинга ресурсов: {e}")
+                    logger.error(f"Ошибка мониторинга ресурсов: {e}")
                     time.sleep(interval)
 
         self.monitoring_thread = threading.Thread(target=monitor, daemon=True)
@@ -584,7 +587,7 @@ class AdaptiveResourceOptimizer:
                     self.adapt_resources()
                     time.sleep(interval)
                 except Exception as e:
-                    print(f"Ошибка адаптивной оптимизации: {e}")
+                    logger.error(f"Ошибка адаптивной оптимизации: {e}")
                     time.sleep(interval)
 
         adaptive_thread = threading.Thread(target=adaptive_loop, daemon=True)
@@ -609,32 +612,32 @@ class AdaptiveResourceOptimizer:
 
 def main():
     """Главная функция для демонстрации возможностей менеджера ресурсов"""
-    print("=== МЕНЕДЖЕР РЕСУРСОВ И АДАПТИВНЫЙ ОПТИМИЗАТОР ===")
+    logger.info("=== МЕНЕДЖЕР РЕСУРСОВ И АДАПТИВНЫЙ ОПТИМИЗАТОР ===")
 
     # Создаем менеджер ресурсов
     resource_manager = ResourceManager()
 
-    print("✓ Менеджер ресурсов инициализирован")
+    logger.info("✓ Менеджер ресурсов инициализирован")
 
     # Устанавливаем ограничения
     resource_manager.set_resource_limits(cpu_percent=85.0, memory_mb=1024.0)
-    print("✓ Ограничения ресурсов установлены")
+    logger.info("✓ Ограничения ресурсов установлены")
 
     # Получаем текущие ресурсы
     current_resources = resource_manager.get_current_resources()
-    print("✓ Текущее использование ресурсов получено")
-    print(f"  CPU: {current_resources.get('cpu_percent', 0):.2f}%")
-    print(f"  Память: {current_resources.get('memory_rss_mb', 0):.2f} MB")
+    logger.info("✓ Текущее использование ресурсов получено")
+    logger.info("  CPU: %.2f%%", current_resources.get("cpu_percent", 0))
+    logger.info("  Память: %.2f MB", current_resources.get("memory_rss_mb", 0))
 
     # Запускаем оптимизацию
-    print("\nЗапуск оптимизации ресурсов...")
+    logger.info("\nЗапуск оптимизации ресурсов...")
     optimization_results = resource_manager.optimize_all_resources()
 
     for resource_type, result in optimization_results.items():
-        print(f"  {resource_type}: {result.improvement_percent:.2f}% улучшение")
+        logger.info("  %s: %.2f%% улучшение", resource_type, result.improvement_percent)
 
     # Запускаем мониторинг
-    print("\nЗапуск мониторинга ресурсов...")
+    logger.info("\nЗапуск мониторинга ресурсов...")
     resource_manager.start_monitoring(interval=0.5)
 
     # Ждем немного
@@ -642,53 +645,53 @@ def main():
 
     # Останавливаем мониторинг
     resource_manager.stop_monitoring()
-    print("✓ Мониторинг остановлен")
+    logger.info("✓ Мониторинг остановлен")
 
     # Проверяем эффективность
     efficiency = resource_manager.get_resource_efficiency_score()
-    print(f"✓ Эффективность использования ресурсов: {efficiency:.2f}%")
+    logger.info("✓ Эффективность использования ресурсов: %.2f%%", efficiency)
 
     # Получаем предложения по оптимизации
     suggestions = resource_manager.suggest_optimizations()
-    print(f"\nПредложения по оптимизации ({len(suggestions)}):")
+    logger.info("\nПредложения по оптимизации (%d):", len(suggestions))
     for suggestion in suggestions:
-        print(f"  - {suggestion}")
+        logger.info("  - %s", suggestion)
 
     # Создаем адаптивный оптимизатор
-    print("\nСоздание адаптивного оптимизатора...")
+    logger.info("\nСоздание адаптивного оптимизатора...")
     adaptive_optimizer = AdaptiveResourceOptimizer()
 
-    print("✓ Адаптивный оптимизатор инициализирован")
+    logger.info("✓ Адаптивный оптимизатор инициализирован")
 
     # Устанавливаем цели производительности
     adaptive_optimizer.set_performance_goals(
         response_time_ms=150, resource_utilization_percent=70.0
     )
-    print("✓ Цели производительности установлены")
+    logger.info("✓ Цели производительности установлены")
 
     # Выполняем адаптацию
     adaptation_result = adaptive_optimizer.adapt_resources()
-    print(f"✓ Адаптация выполнена: {adaptation_result['strategy_applied']}")
+    logger.info("✓ Адаптация выполнена: %s", adaptation_result["strategy_applied"])
 
     # Получаем отчет об адаптации
     adaptation_report = adaptive_optimizer.get_adaptation_report()
-    print("✓ Отчет об адаптации получен")
-    print(f"  Текущая стратегия: {adaptation_report['current_strategy']}")
-    print(f"  История адаптаций: {adaptation_report['adaptation_history_count']}")
+    logger.info("✓ Отчет об адаптации получен")
+    logger.info("  Текущая стратегия: %s", adaptation_report["current_strategy"])
+    logger.info("  История адаптаций: %d", adaptation_report["adaptation_history_count"])
 
     # Получаем полный отчет
     report_path = resource_manager.save_report()
-    print(f"\n✓ Полный отчет сохранен: {report_path}")
+    logger.info("\n✓ Полный отчет сохранен: %s", report_path)
 
-    print("\nМенеджер ресурсов и адаптивный оптимизатор успешно протестированы")
-    print("\nДоступные функции:")
-    print("- Оптимизация CPU: resource_manager.optimize_cpu_usage()")
-    print("- Оптимизация памяти: resource_manager.optimize_memory_usage()")
-    print("- Оптимизация всех ресурсов: resource_manager.optimize_all_resources()")
-    print("- Мониторинг ресурсов: resource_manager.start_monitoring()")
-    print("- Оценка эффективности: resource_manager.get_resource_efficiency_score()")
-    print("- Адаптивная оптимизация: adaptive_optimizer.adapt_resources()")
-    print("- Отчеты: resource_manager.get_resource_report(), resource_manager.save_report()")
+    logger.info("\nМенеджер ресурсов и адаптивный оптимизатор успешно протестированы")
+    logger.info("\nДоступные функции:")
+    logger.info("- Оптимизация CPU: resource_manager.optimize_cpu_usage()")
+    logger.info("- Оптимизация памяти: resource_manager.optimize_memory_usage()")
+    logger.info("- Оптимизация всех ресурсов: resource_manager.optimize_all_resources()")
+    logger.info("- Мониторинг ресурсов: resource_manager.start_monitoring()")
+    logger.info("- Оценка эффективности: resource_manager.get_resource_efficiency_score()")
+    logger.info("- Адаптивная оптимизация: adaptive_optimizer.adapt_resources()")
+    logger.info("- Отчеты: resource_manager.get_resource_report(), resource_manager.save_report()")
 
 
 if __name__ == "__main__":

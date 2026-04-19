@@ -210,11 +210,11 @@ class PerformanceProfiler:
                 self.metrics.append(metric)
 
                 # Выводим результаты
-                print(f"\n=== Профилирование функции: {func.__name__} ===")
-                print(f"Время выполнения: {execution_time:.4f} сек")
-                print(f"Использование памяти: {memory_used:.2f} MB")
-                print(f"Пиковое использование памяти: {peak / (1024 * 1024):.2f} MB")
-                print(f"Использование CPU: {cpu_usage}%")
+                logger.info("\n=== Профилирование функции: %s ===", func.__name__)
+                logger.info("Время выполнения: %.4f сек", execution_time)
+                logger.info("Использование памяти: %.2f MB", memory_used)
+                logger.info("Пиковое использование памяти: %.2f MB", peak / (1024 * 1024))
+                logger.info("Использование CPU: %.2f%%", cpu_usage)
 
                 return result
 
@@ -358,8 +358,8 @@ class PerformanceProfiler:
         @wraps(func)
         def wrapper(*args, **kwargs):
             if memory_profiler is None:
-                print(f"\n=== Memory profiler not available for: {func.__name__} ===")
-                print(
+                logger.info("\n=== Memory profiler not available for: %s ===", func.__name__)
+                logger.info(
                     "Install memory-profiler to enable memory profiling: pip install memory-profiler"
                 )
                 return func(*args, **kwargs)
@@ -394,9 +394,9 @@ class PerformanceProfiler:
             )
             self.metrics.append(metric)
 
-            print(f"\n=== Профилирование памяти функции: {func.__name__} ===")
-            print(f"Среднее использование памяти: {avg_memory:.2f} MB")
-            print(f"Пиковое использование памяти: {peak_memory:.2f} MB")
+            logger.info("\n=== Профилирование памяти функции: %s ===", func.__name__)
+            logger.info("Среднее использование памяти: %.2f MB", avg_memory)
+            logger.info("Пиковое использование памяти: %.2f MB", peak_memory)
 
             return result
 
@@ -677,16 +677,16 @@ class PerformanceProfiler:
 
 def main():
     """Главная функция для демонстрации возможностей профилировщика производительности"""
-    print("=== ПРОФИЛИРОВЩИК ПРОИЗВОДИТЕЛЬНОСТИ ===")
+    logger.info("=== ПРОФИЛИРОВЩИК ПРОИЗВОДИТЕЛЬНОСТИ ===")
 
     # Создаем профилировщик
     profiler = PerformanceProfiler()
 
-    print("✓ Профилировщик производительности инициализирован")
-    print(f"✓ Директория вывода: {profiler.output_dir}")
+    logger.info("✓ Профилировщик производительности инициализирован")
+    logger.info("✓ Директория вывода: %s", profiler.output_dir)
 
     # Запускаем мониторинг ресурсов
-    print("\nЗапуск мониторинга ресурсов...")
+    logger.info("\nЗапуск мониторинга ресурсов...")
     profiler.start_resource_monitoring(interval=0.5)
 
     # Пример функции для профилирования
@@ -707,22 +707,22 @@ def main():
         return len(big_list)
 
     # Запускаем примеры
-    print("\nПрофилирование тяжелой функции...")
+    logger.info("\nПрофилирование тяжелой функции...")
     result1 = example_heavy_function()
-    print(f"Результат: {result1}")
+    logger.info("Результат: %s", result1)
 
-    print("\nПрофилирование функции памяти...")
+    logger.info("\nПрофилирование функции памяти...")
     result2 = example_memory_function()
-    print(f"Результат: {result2}")
+    logger.info("Результат: %s", result2)
 
     # Бенчмаркинг
-    print("\nБенчмаркинг функции...")
+    logger.info("\nБенчмаркинг функции...")
     benchmark_result = profiler.benchmark_function(example_heavy_function, iterations=10)
-    print(f"Среднее время выполнения: {benchmark_result['avg_time']:.6f} сек")
+    logger.info("Среднее время выполнения: %.6f сек", benchmark_result["avg_time"])
 
     # Пример профилирования блока кода
 
-    print("\nПрофилирование блока кода...")
+    logger.info("\nПрофилирование блока кода...")
     code_block = """
 def test_function():
     return sum(i**2 for i in range(100000))
@@ -730,40 +730,40 @@ def test_function():
 result = test_function()
 """
     code_profile_result = profiler.profile_code_block(code_block, "test_code_block")
-    print(f"Время выполнения блока кода: {code_profile_result['execution_time']:.4f} сек")
+    logger.info("Время выполнения блока кода: %.4f сек", code_profile_result["execution_time"])
 
     # Останавливаем мониторинг
-    print("\nОстановка мониторинга ресурсов...")
+    logger.info("\nОстановка мониторинга ресурсов...")
     profiler.stop_resource_monitoring()
 
     # Генерируем отчет
-    print("\nГенерация отчета о производительности...")
+    logger.info("\nГенерация отчета о производительности...")
     report_path = profiler.generate_performance_report()
-    print(f"✓ Отчет сохранен: {report_path}")
+    logger.info("✓ Отчет сохранен: %s", report_path)
 
     # Создаем визуализацию
-    print("\nСоздание визуализации производительности...")
+    logger.info("\nСоздание визуализации производительности...")
     viz_path = profiler.visualize_performance()
     if viz_path:
-        print(f"✓ Визуализация сохранена: {viz_path}")
+        logger.info("✓ Визуализация сохранена: %s", viz_path)
 
     # Получаем рекомендации
-    print("\nПолучение рекомендаций по оптимизации...")
+    logger.info("\nПолучение рекомендаций по оптимизации...")
     recommendations = profiler.get_optimization_recommendations()
-    print("Рекомендации:")
+    logger.info("Рекомендации:")
     for rec in recommendations:
-        print(f"  - {rec}")
+        logger.info("  - %s", rec)
 
-    print("\nПрофилировщик производительности успешно протестирован")
-    print("\nДоступные функции:")
-    print("- Профилирование функций: @profiler.profile_function")
-    print("- Профилирование памяти: @profiler.memory_profile_function")
-    print("- Бенчмаркинг: profiler.benchmark_function()")
-    print("- Профилирование кода: profiler.profile_code_block()")
-    print("- Мониторинг ресурсов: profiler.start_resource_monitoring()")
-    print("- Отчет о производительности: profiler.generate_performance_report()")
-    print("- Визуализация: profiler.visualize_performance()")
-    print("- Рекомендации: profiler.get_optimization_recommendations()")
+    logger.info("\nПрофилировщик производительности успешно протестирован")
+    logger.info("\nДоступные функции:")
+    logger.info("- Профилирование функций: @profiler.profile_function")
+    logger.info("- Профилирование памяти: @profiler.memory_profile_function")
+    logger.info("- Бенчмаркинг: profiler.benchmark_function()")
+    logger.info("- Профилирование кода: profiler.profile_code_block()")
+    logger.info("- Мониторинг ресурсов: profiler.start_resource_monitoring()")
+    logger.info("- Отчет о производительности: profiler.generate_performance_report()")
+    logger.info("- Визуализация: profiler.visualize_performance()")
+    logger.info("- Рекомендации: profiler.get_optimization_recommendations()")
 
 
 if __name__ == "__main__":
