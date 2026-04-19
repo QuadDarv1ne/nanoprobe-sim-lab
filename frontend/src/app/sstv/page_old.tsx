@@ -1,19 +1,23 @@
 "use client";
 
 import { DashboardLayout } from "@/components/dashboard-layout";
-import { Radio, Download, Trash2, Eye, Square, Signal, Satellite, Clock, HardDrive, Settings, Activity, Waves, Volume2, Antenna } from "lucide-react";
+import {
+  Radio, Download, Trash2, Eye, Play, Square, Signal, Satellite,
+  Clock, HardDrive, Settings, Activity, Waves, Volume2, Antenna
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { API_BASE } from "@/lib/config";
 import { format } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "@/components/ui/toaster";
-import RealtimeWaterfall from "@/components/sstv/RealtimeWaterfall";
+import { apiClient } from "@/lib/api-client";
 
 const SSTV_ISS_FREQUENCY_MHZ = 145.800;
 
@@ -57,9 +61,8 @@ export default function SSTVPage() {
   const [isRecording, setIsRecording] = useState(false);
   const [deviceStatus, setDeviceStatus] = useState<DeviceStatus | null>(null);
   const [issPasses, setIssPasses] = useState<ISSPass[]>([]);
-  const [showSettings, setShowSettings] = useState(false);
   const [sdrConfig, setSdrConfig] = useState<SDRConfig>({
-    frequency: SSTV_ISS_FREQUENCY_MHZ,
+    frequency: 145.800,
     gain: 49.6,
     sample_rate: 2400000,
     bias_tee: false,
@@ -67,6 +70,13 @@ export default function SSTVPage() {
     ppm: 0,
     mode: 'auto',
   });
+  const [showSettings, setShowSettings] = useState(false);
+
+  // Spectrum visualization
+  const [spectrumData, setSpectrumData] = useState<{ freqs: number[]; power: number[] } | null>(null);
+  const [signalStrength, setSignalStrength] = useState<number>(0);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const wsRef = useRef<WebSocket | null>(null);
 
   // ===== Device Check =====
   const checkDevice = useCallback(async () => {
@@ -109,9 +119,7 @@ export default function SSTVPage() {
         const data = await res.json();
         setIssPasses(Array.isArray(data) ? data.slice(0, 5) : (data.passes ?? []));
       }
-    } catch {
-      /* pass */
-    }
+    } catch { /* pass */ }
   }, []);
 
   // ===== Recording Controls =====
@@ -122,19 +130,13 @@ export default function SSTVPage() {
         duration: '120',
         gain: String(sdrConfig.gain),
       });
-      const res = await fetch(`${API_BASE}/api/v1/sstv/record/start?${params}`, {
-        method: 'POST',
-      });
+      const res = await fetch(`${API_BASE}/api/v1/sstv/record/start?${params}`, { method: 'POST' });
       if (res.ok) {
         setIsRecording(true);
-        toast.success('Запись начата', {
-          description: `Частота: ${sdrConfig.frequency} МГц`,
-        });
+        toast.success('Запись начата', { description: `Частота: ${sdrConfig.frequency} МГц` });
       } else {
         const err = await res.json().catch(() => null);
-        toast.error('Ошибка записи', {
-          description: err?.detail || `HTTP ${res.status}`,
-        });
+        toast.error('Ошибка записи', { description: err?.detail || `HTTP ${res.status}` });
       }
     } catch (e) {
       toast.error('Ошибка', { description: 'Не удалось начать запись' });
@@ -143,9 +145,7 @@ export default function SSTVPage() {
 
   const stopRecording = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/v1/sstv/record/stop`, {
-        method: 'POST',
-      });
+      const res = await fetch(`${API_BASE}/api/v1/sstv/record/stop`, { method: 'POST' });
       if (res.ok) {
         setIsRecording(false);
         toast.success('Запись остановлена');
@@ -178,9 +178,7 @@ export default function SSTVPage() {
 
   const decodeRecording = async (filename: string) => {
     try {
-      const res = await fetch(`${API_BASE}/api/v1/sstv/sstv/decode-recording/${filename}`, {
-        method: 'POST',
-      });
+      const res = await fetch(`${API_BASE}/api/v1/sstv/sstv/decode-recording/${filename}`, { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
         toast.success('Декодирование завершено', {
@@ -197,9 +195,7 @@ export default function SSTVPage() {
 
   const deleteRecording = async (filename: string) => {
     try {
-      const res = await fetch(`${API_BASE}/api/v1/sstv/recordings/${filename}`, {
-        method: 'DELETE',
-      });
+      const res = await fetch(`${API_BASE}/api/v1/sstv/recordings/${filename}`, { method: 'DELETE' });
       if (res.ok || res.status === 204) {
         toast.success('Запись удалена');
         fetchRecordings();
@@ -209,12 +205,98 @@ export default function SSTVPage() {
     }
   };
 
+  // ===== Spectrum Visualization =====
+  const drawSpectrum = useCallback((freqs: number[], power: number[]) => {
+    const canvas = canvasRef.current;
+    if (!canvas || freqs.length === 0) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const w = canvas.width;
+    const h = canvas.height;
+    const minP = Math.min(...power);
+    const maxP = Math.max(...power);
+    const range = maxP - minP || 1;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, w, h);
+
+    // Grid lines
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 5; i++) {
+      const y = (h / 5) * i;
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+    }
+
+    // Spectrum bars
+    const barWidth = w / freqs.length;
+    const gradient = ctx.createLinearGradient(0, h, 0, 0);
+    gradient.addColorStop(0, '#22c55e');
+    gradient.addColorStop(0.5, '#eab308');
+    gradient.addColorStop(1, '#ef4444');
+
+    for (let i = 0; i < freqs.length; i++) {
+      const normalizedPower = (power[i] - minP) / range;
+      const barH = normalizedPower * h * 0.9;
+      ctx.fillStyle = gradient;
+      ctx.fillRect(i * barWidth, h - barH, barWidth - 1, barH);
+    }
+
+    // Center frequency marker
+    const centerIdx = Math.floor(freqs.length / 2);
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(centerIdx * barWidth, 0);
+    ctx.lineTo(centerIdx * barWidth, h);
+    ctx.stroke();
+  }, []);
+
+  // ===== WebSocket for real-time data =====
+  const connectWebSocket = useCallback(() => {
+    if (wsRef.current) return;
+
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const wsUrl = `${wsProtocol}://${window.location.host.replace(':3000', ':8000')}/api/v1/sstv/ws/stream`;
+
+    try {
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
+
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === 'spectrum' && msg.frequencies && msg.power_db) {
+            setSpectrumData({ freqs: msg.frequencies, power: msg.power_db });
+            drawSpectrum(msg.frequencies, msg.power_db);
+          }
+          if (msg.type === 'signal_strength') {
+            setSignalStrength(msg.strength ?? 0);
+          }
+        } catch { /* ignore */ }
+      };
+
+      ws.onclose = () => {
+        wsRef.current = null;
+        setTimeout(connectWebSocket, 5000); // Reconnect
+      };
+
+      ws.onerror = () => { ws.close(); };
+    } catch { /* ignore */ }
+  }, [drawSpectrum]);
+
   // ===== Init =====
   useEffect(() => {
     checkDevice();
     fetchRecordings();
     fetchISSPasses();
   }, [checkDevice, fetchRecordings, fetchISSPasses]);
+
+  useEffect(() => {
+    connectWebSocket();
+    return () => { wsRef.current?.close(); wsRef.current = null; };
+  }, [connectWebSocket]);
 
   const formatSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
@@ -229,16 +311,14 @@ export default function SSTVPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">SSTV Ground Station</h1>
-            <p className="text-muted-foreground mt-1">Приём SSTV через RTL-SDR V4 с WebGL водопадом</p>
+            <p className="text-muted-foreground mt-1">Приём SSTV через RTL-SDR V4</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="icon" onClick={() => setShowSettings(!showSettings)}>
               <Settings className="h-4 w-4" />
             </Button>
-            <Button
-              onClick={isRecording ? stopRecording : startRecording}
-              variant={isRecording ? "destructive" : "default"}
-            >
+            <Button onClick={isRecording ? stopRecording : startRecording}
+              variant={isRecording ? "destructive" : "default"}>
               {isRecording ? <Square className="h-4 w-4 mr-2" /> : <Radio className="h-4 w-4 mr-2" />}
               {isRecording ? 'Остановить' : 'Начать запись'}
             </Button>
@@ -249,77 +329,48 @@ export default function SSTVPage() {
         {showSettings && (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5" /> Настройки SDR
-              </CardTitle>
+              <CardTitle className="flex items-center gap-2"><Settings className="h-5 w-5" /> Настройки SDR</CardTitle>
               <CardDescription>Параметры приёмника RTL-SDR V4</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label>Частота (МГц)</Label>
-                  <Input
-                    type="number"
-                    step="0.001"
-                    value={sdrConfig.frequency}
-                    onChange={e => setSdrConfig(p => ({
-                      ...p,
-                      frequency: parseFloat(e.target.value) || SSTV_ISS_FREQUENCY_MHZ
-                    }))}
-                  />
+                  <Input type="number" step="0.001" value={sdrConfig.frequency}
+                    onChange={e => setSdrConfig(p => ({ ...p, frequency: parseFloat(e.target.value) || 145.8 }))} />
                 </div>
                 <div>
                   <Label>Усиление (dB): {sdrConfig.gain}</Label>
-                  <Slider
-                    min={0}
-                    max={49.6}
-                    step={0.2}
-                    value={[sdrConfig.gain]}
-                    onValueChange={v => setSdrConfig(p => ({ ...p, gain: v[0] }))}
-                  />
+                  <Slider min={0} max={49.6} step={0.2} value={[sdrConfig.gain]}
+                    onValueChange={v => setSdrConfig(p => ({ ...p, gain: v[0] }))} />
                 </div>
                 <div>
                   <Label>Sample Rate (SPS)</Label>
-                  <Input
-                    type="number"
-                    value={sdrConfig.sample_rate}
-                    onChange={e => setSdrConfig(p => ({
-                      ...p,
-                      sample_rate: parseInt(e.target.value) || 2400000
-                    }))}
-                  />
+                  <Input type="number" value={sdrConfig.sample_rate}
+                    onChange={e => setSdrConfig(p => ({ ...p, sample_rate: parseInt(e.target.value) || 2400000 }))} />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="flex items-center justify-between">
                   <Label>Bias-Tee</Label>
-                  <Switch
-                    checked={sdrConfig.bias_tee}
-                    onCheckedChange={v => setSdrConfig(p => ({ ...p, bias_tee: v }))}
-                  />
+                  <Switch checked={sdrConfig.bias_tee}
+                    onCheckedChange={v => setSdrConfig(p => ({ ...p, bias_tee: v }))} />
                 </div>
                 <div className="flex items-center justify-between">
                   <Label>AGC</Label>
-                  <Switch
-                    checked={sdrConfig.agc}
-                    onCheckedChange={v => setSdrConfig(p => ({ ...p, agc: v }))}
-                  />
+                  <Switch checked={sdrConfig.agc}
+                    onCheckedChange={v => setSdrConfig(p => ({ ...p, agc: v }))} />
                 </div>
                 <div>
                   <Label>PPM коррекция</Label>
-                  <Input
-                    type="number"
-                    value={sdrConfig.ppm}
-                    onChange={e => setSdrConfig(p => ({ ...p, ppm: parseInt(e.target.value) || 0 }))}
-                  />
+                  <Input type="number" value={sdrConfig.ppm}
+                    onChange={e => setSdrConfig(p => ({ ...p, ppm: parseInt(e.target.value) || 0 }))} />
                 </div>
                 <div>
                   <Label>Режим</Label>
-                  <select
-                    className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                  <select className="w-full rounded-md border bg-background px-3 py-2 text-sm"
                     value={sdrConfig.mode}
-                    onChange={e => setSdrConfig(p => ({ ...p, mode: e.target.value }))}
-                  >
+                    onChange={e => setSdrConfig(p => ({ ...p, mode: e.target.value }))}>
                     <option value="auto">Auto</option>
                     <option value="manual">Manual</option>
                   </select>
@@ -360,8 +411,8 @@ export default function SSTVPage() {
               <div className="flex items-center gap-3">
                 <Signal className="h-5 w-5 text-yellow-500" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Режим</p>
-                  <p className="font-medium text-sm">SSTV / NOAA</p>
+                  <p className="text-sm text-muted-foreground">Сила сигнала</p>
+                  <p className="font-medium text-sm">{signalStrength > 0 ? `${signalStrength.toFixed(0)}%` : '—'}</p>
                 </div>
               </div>
             </CardContent>
@@ -379,22 +430,20 @@ export default function SSTVPage() {
           </Card>
         </div>
 
-        {/* WebGL Waterfall Spectrum Display */}
+        {/* Spectrum Visualization */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5" />
-              WebGL Водопад спектра
-            </CardTitle>
-            <CardDescription>GPU-ускорённый real-time спектр через WebSocket</CardDescription>
+            <CardTitle className="flex items-center gap-2"><Activity className="h-5 w-5" /> Спектр сигнала</CardTitle>
+            <CardDescription>Real-time спектр через WebSocket</CardDescription>
           </CardHeader>
           <CardContent>
-            <RealtimeWaterfall
-              width={800}
-              height={400}
-              frequency={sdrConfig.frequency}
-              sampleRate={sdrConfig.sample_rate}
-            />
+            <canvas ref={canvasRef} width={800} height={200}
+              className="w-full rounded-lg border border-border bg-slate-900" />
+            {!spectrumData && (
+              <p className="text-center text-muted-foreground mt-2 text-sm">
+                Подключение к WebSocket... Убедитесь что RTL-SDR подключен
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -402,10 +451,7 @@ export default function SSTVPage() {
         {issPasses.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Satellite className="h-5 w-5" />
-                Пролёты МКС
-              </CardTitle>
+              <CardTitle className="flex items-center gap-2"><Satellite className="h-5 w-5" /> Пролёты МКС</CardTitle>
               <CardDescription>Ближайшие пролёты для приёма SSTV</CardDescription>
             </CardHeader>
             <CardContent>
@@ -435,10 +481,7 @@ export default function SSTVPage() {
         {/* Recordings List */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Download className="h-5 w-5" />
-              Записи
-            </CardTitle>
+            <CardTitle className="flex items-center gap-2"><Download className="h-5 w-5" /> Записи</CardTitle>
             <CardDescription>Записанные SSTV сессии</CardDescription>
           </CardHeader>
           <CardContent>
@@ -446,9 +489,7 @@ export default function SSTVPage() {
               <div className="text-center py-8">
                 <Radio className="h-12 w-12 mx-auto mb-4 opacity-20" />
                 <p className="text-muted-foreground">Нет записей</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Нажмите "Начать запись" для приёма SSTV
-                </p>
+                <p className="text-sm text-muted-foreground mt-1">Нажмите "Начать запись" для приёма SSTV</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -464,28 +505,13 @@ export default function SSTVPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => decodeRecording(rec.filename)}
-                        title="Декодировать"
-                      >
+                      <Button variant="outline" size="icon" onClick={() => decodeRecording(rec.filename)} title="Декодировать">
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => downloadRecording(rec.filename)}
-                        title="Скачать"
-                      >
+                      <Button variant="outline" size="icon" onClick={() => downloadRecording(rec.filename)} title="Скачать">
                         <Download className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => deleteRecording(rec.filename)}
-                        title="Удалить"
-                      >
+                      <Button variant="outline" size="icon" onClick={() => deleteRecording(rec.filename)} title="Удалить">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>

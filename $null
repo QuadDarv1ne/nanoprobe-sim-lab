@@ -1,0 +1,4 @@
+Подпапка или файл tests\unit уже существует.
+Ошибка во время обработки: tests\unit.
+Подпапка или файл tests\test_ring_buffer.py уже существует.
+Ошибка во время обработки: tests\test_ring_buffer.py.
