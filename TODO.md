@@ -13,7 +13,7 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** ``becc008`` — feat: добавить улучшенный детектор RTL-SDR устройств
+**Last commit:** ``61d35e8`` — fix: заменить print() на logger.info() в test_framework.py
 
 ---
 
