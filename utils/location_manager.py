@@ -252,18 +252,18 @@ def _background_location_refresh():
 
 def force_detect_and_save() -> Optional[Dict]:
     """Принудительно определить местоположение и сохранить."""
-    print("Opredelenie mestopolozheniya po IP...")
+    logger.info("Opredelenie mestopolozheniya po IP...")
     location = detect_location_by_ip()
     if location:
         save_location_cache(location)
-        print(f"OK: {location['city']}, {location['country']}")
-        print(f"   Coords: {location['lat']:.4f}N, {location['lon']:.4f}E")
+        logger.info("OK: %s, %s", location["city"], location["country"])
+        logger.info("   Coords: %.4fN, %.4fE", location["lat"], location["lon"])
         tz = location["timezone"]
         sign = "+" if tz.utc_offset >= 0 else ""
-        print(f"   Timezone: {tz.name} (UTC{sign}{tz.utc_offset})")
+        logger.info("   Timezone: %s (UTC%s%d)", tz.name, sign, tz.utc_offset)
         return location
     else:
-        print("ERROR: ne udalos opredelit mestopolozhenie po IP")
+        logger.error("ne udalos opredelit mestopolozhenie po IP")
         return None
 
 
@@ -287,26 +287,33 @@ def refresh_msk_data() -> Optional[Dict]:
     Returns:
         Dict: Обновлённые данные местоположения или None при ошибке
     """
-    print("[MSK] Обновление данных геолокации...")
+    logger.info("[MSK] Обновление данных геолокации...")
     location = detect_location_by_ip()
     if location:
         save_location_cache(location)
-        print(f"[MSK] ✓ Местоположение обновлено: {location['city']}, {location['country']}")
-        print(f"[MSK]   Координаты: {location['lat']:.4f}°N, {location['lon']:.4f}°E")
-        print(
-            f"[MSK]   Часовой пояс: {location['timezone'].name} "
-            f"(UTC{'+' if location['timezone'].utc_offset >= 0 else ''}{location['timezone'].utc_offset})"
+        logger.info(
+            "[MSK] ✓ Местоположение обновлено: %s, %s", location["city"], location["country"]
+        )
+        logger.info("[MSK]   Координаты: %.4f°N, %.4f°E", location["lat"], location["lon"])
+        logger.info(
+            "[MSK]   Часовой пояс: %s (UTC%s%d)",
+            location["timezone"].name,
+            "+" if location["timezone"].utc_offset >= 0 else "",
+            location["timezone"].utc_offset,
         )
         return location
     else:
-        print("[MSK] ✗ Не удалось обновить местоположение по IP")
+        logger.error("[MSK] ✗ Не удалось обновить местоположение по IP")
         return None
 
 
 if __name__ == "__main__":
+    import logging
     import sys
+
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
 
     if len(sys.argv) > 1 and sys.argv[1] == "--force":
         force_detect_and_save()
     else:
-        print(get_location_info())
+        logger.info(get_location_info())

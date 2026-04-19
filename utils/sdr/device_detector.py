@@ -333,38 +333,38 @@ def main():
     """CLI интерфейс для обнаружения устройств."""
     logging.basicConfig(level=logging.INFO)
 
-    print("=== RTL-SDR Device Detector ===\n")
+    logger.info("=== RTL-SDR Device Detector ===")
 
     detector = RTLSDRDeviceDetector()
     devices = detector.detect_all()
 
     if not devices:
-        print("RTL-SDR устройства не найдены")
-        print("Убедитесь, что:")
-        print("  1. Устройство подключено к USB")
-        print("  2. Установлены драйверы (libusb, rtl-sdr)")
-        print("  3. Устройство не занято другим приложением")
+        logger.info("RTL-SDR устройства не найдены")
+        logger.info("Убедитесь, что:")
+        logger.info("  1. Устройство подключено к USB")
+        logger.info("  2. Установлены драйверы (libusb, rtl-sdr)")
+        logger.info("  3. Устройство не занято другим приложением")
         return
 
-    print(f"Найдено {len(devices)} устройство(ей):\n")
+    logger.info("Найдено %d устройство(ей):", len(devices))
 
     for device in devices:
-        print(f"Устройство {device.index}:")
-        print(f"  Производитель: {device.manufacturer}")
-        print(f"  Продукт: {device.product}")
-        print(f"  Модель: {device.model.value}")
-        print(f"  Серийный номер: {device.serial}")
-        print(f"  Доступно: {'Да' if device.available else 'Нет'}")
+        logger.info("Устройство %d:", device.index)
+        logger.info("  Производитель: %s", device.manufacturer)
+        logger.info("  Продукт: %s", device.product)
+        logger.info("  Модель: %s", device.model.value)
+        logger.info("  Серийный номер: %s", device.serial)
+        logger.info("  Доступно: %s", "Да" if device.available else "Нет")
         if device.temperature is not None:
-            print(f"  Температура: {device.temperature:.1f}°C")
+            logger.info("  Температура: %.1f°C", device.temperature)
         if device.errors:
-            print(f"  Ошибки: {', '.join(device.errors)}")
-        print()
+            logger.info("  Ошибки: %s", ", ".join(device.errors))
+        logger.info("")
 
     # Показать лучшее устройство
     best = detector.select_best_device()
     if best:
-        print(f"Рекомендуемое устройство: {best.model.value} (индекс {best.index})")
+        logger.info("Рекомендуемое устройство: %s (индекс %d)", best.model.value, best.index)
 
 
 if __name__ == "__main__":
