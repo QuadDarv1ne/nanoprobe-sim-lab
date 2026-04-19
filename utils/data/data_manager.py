@@ -339,7 +339,7 @@ class DataManager:
 
 def main():
     """Главная функция для демонстрации работы менеджера данных"""
-    print("=== МЕНЕДЖЕР ДАННЫХ ПРОЕКТА ===")
+    logger.info("=== МЕНЕДЖЕР ДАННЫХ ПРОЕКТА ===")
 
     # Создаем менеджер данных
     data_manager = DataManager()
@@ -352,7 +352,7 @@ def main():
         loaded_surface = data_manager.load_surface_data("test_surface.txt")
         if loaded_surface is not None:
             shape = loaded_surface.shape
-            print(f"✓ Данные поверхности успешно сохранены и " f"загружены. Размер: {shape}")
+            logger.info(f"✓ Данные поверхности успешно сохранены и загружены. Размер: {shape}")
 
     # Создаем тестовые результаты анализа
     test_results = {
@@ -367,13 +367,13 @@ def main():
         loaded_results = data_manager.load_image_analysis_results("test_analysis.json")
         if loaded_results:
             quality = loaded_results.get("quality_score")
-            print(f"✓ Результаты анализа успешно сохранены и " f"загружены. Качество: {quality}")
+            logger.info(f"✓ Результаты анализа успешно сохранены и загружены. Качество: {quality}")
 
     # Проверяем последние файлы
     recent_txt_files = data_manager.get_recent_files(".txt", 3)
-    print(f"Последние .txt файлы: {[f.name for f in recent_txt_files]}")
+    logger.info(f"Последние .txt файлы: {[f.name for f in recent_txt_files]}")
 
-    print("Менеджер данных успешно инициализирован")
+    logger.info("Менеджер данных успешно инициализирован")
 
 
 if __name__ == "__main__":
