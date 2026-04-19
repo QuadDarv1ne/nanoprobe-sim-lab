@@ -13,7 +13,7 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** `ea3893b` — fix: форматирование black для test_framework.py
+**Last commit:** ``becc008`` — feat: добавить улучшенный детектор RTL-SDR устройств
 
 ---
 
@@ -74,6 +74,12 @@
 - [x] Автоматическая калибровка PPM — `rtl_sdr_auto_calibration.py`
 - [x] Автозахват спутников NOAA/METEOR — `satellite_auto_capture.py`
 - [x] **Troubleshooting guide** — `docs/rtl-sdr-troubleshooting.md`
+- [x] **Улучшенный детектор устройств** — `utils/sdr/device_detector.py`
+  - Автоматическое обнаружение всех устройств
+  - Определение модели (V4/V3/V2/V1)
+  - Температурный мониторинг для V4
+  - Multi-device support
+  - CLI интерфейс для диагностики
 
 **Осталось:**
 - [ ] **End-to-end тесты** с реальным устройством (ожидается)
@@ -246,6 +252,13 @@ git push origin feature/new-feature
 - ✅ **FIXED: DatabaseOperations** — добавлен `__init__` с `db_path` и `enable_cache`, добавлен `get_connection()` метод
 - ✅ **Добавлен WebGL водопадный дисплей** — `WaterfallDisplayWebGL.tsx`, `RealtimeWaterfall.tsx`
 - ✅ **Создан troubleshooting guide** — `docs/rtl-sdr-troubleshooting.md`
+- ✅ **Исправлено предупреждение pytest** — переименован `TestFramework` → `TestRunnerFramework`
+- ✅ **Добавлен улучшенный детектор RTL-SDR устройств** — `utils/sdr/device_detector.py`
+  - Автоматическое обнаружение всех устройств
+  - Определение модели (V4/V3/V2/V1)
+  - Температурный мониторинг для V4
+  - Multi-device support
+  - CLI интерфейс для диагностики
 
 ### Новые API endpoints
 
