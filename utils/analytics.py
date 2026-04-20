@@ -267,7 +267,7 @@ class ImageAnalytics:
             "edge_density": float(edge_pixels / total_pixels),
             "texture_complexity": float(texture_measure),
             "average_edge_strength": float(np.mean(edges)),
-            "pattern_regions": self._detect_regions(gray),
+            "pattern_regions": float(self._detect_regions(gray)),
         }
 
         return patterns

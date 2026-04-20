@@ -17,10 +17,13 @@
 - Flask, Flask-SocketIO
 - FastAPI (для backend)
 """
-
-import logging
 import os
 import sys
+
+# Добавляем путь к utils
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+
+import logging
 import threading
 import time
 import webbrowser

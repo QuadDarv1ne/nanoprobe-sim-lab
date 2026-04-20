@@ -372,8 +372,10 @@ async def detailed_health_check():
                 "percent": health["memory_percent"],
                 "status": (
                     "ok"
-                    if health["memory_percent"] is None
-                    or health["memory_percent"] < MEMORY_CRITICAL
+                    if (
+                        health["memory_percent"] is None
+                        or health["memory_percent"] < MEMORY_CRITICAL
+                    )
                     else "warning"
                 ),
             },

@@ -6,23 +6,17 @@ Unified CLI Dashboard Core
 """
 
 import asyncio
-import os
-import sys
+import logging
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Dict, List, Optional
 
-# Добавляем parent directory в path для импортов
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
-
-import logging
-
-from src.cli.dashboard.widgets.activity import ActivityWidget
-from src.cli.dashboard.widgets.base import Widget, WidgetMode
-from src.cli.dashboard.widgets.component_status import ComponentStatusWidget
-from src.cli.dashboard.widgets.log_viewer import LogViewerWidget
-from src.cli.dashboard.widgets.metrics import MetricsWidget
-from src.cli.dashboard.widgets.system_monitor import SystemMonitorWidget
+from .widgets.activity import ActivityWidget
+from .widgets.base import Widget, WidgetMode
+from .widgets.component_status import ComponentStatusWidget
+from .widgets.log_viewer import LogViewerWidget
+from .widgets.metrics import MetricsWidget
+from .widgets.system_monitor import SystemMonitorWidget
 
 logger = logging.getLogger(__name__)
 
