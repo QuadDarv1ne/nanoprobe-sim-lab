@@ -702,8 +702,8 @@ def main():
     # Создаем валидатор данных
     validator = DataValidator()
 
-    print("✓ Валидатор данных инициализирован")
-    print(f"✓ Уровень валидации: {validator.validation_level.name}")
+    logger.info("✓ Валидатор данных инициализирован")
+    logger.info(f"✓ Уровень валидации: {validator.validation_level.name}")
 
     # Создаем тестовые данные
     test_data = {
@@ -778,15 +778,15 @@ def main():
     result = sample_data_processing()
     print(f"  - Функция с декоратором выполнена успешно: {type(result).__name__}")
 
-    print("\nВалидатор данных успешно протестирован")
-    print("\nДоступные функции:")
-    print("- Валидация DataFrame: validate_dataframe()")
-    print("- Валидация numpy массива: validate_numpy_array()")
-    print("- Расчет оценки качества: calculate_data_quality_score()")
-    print("- Генерация отчета: generate_data_report()")
-    print("- Проверка целостности файла: validate_file_integrity()")
-    print("- Валидация JSON схемы: validate_json_schema()")
-    print("- Декоратор валидации: @validate_data")
+    logger.info("\nВалидатор данных успешно протестирован")
+    logger.info("\nДоступные функции:")
+    logger.info("- Валидация DataFrame: validate_dataframe()")
+    logger.info("- Валидация numpy массива: validate_numpy_array()")
+    logger.info("- Расчет оценки качества: calculate_data_quality_score()")
+    logger.info("- Генерация отчета: generate_data_report()")
+    logger.info("- Проверка целостности файла: validate_file_integrity()")
+    logger.info("- Валидация JSON схемы: validate_json_schema()")
+    logger.info("- Декоратор валидации: @validate_data")
 
 
 if __name__ == "__main__":

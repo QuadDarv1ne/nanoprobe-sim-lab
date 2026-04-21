@@ -1,6 +1,7 @@
 """Модуль аналитики производительности для проекта Лаборатория моделирования нанозонда."""
 
 import json
+import logging
 import os
 import statistics
 import sys
@@ -10,6 +11,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List
+
+logger = logging.getLogger(__name__)
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -750,70 +753,70 @@ class PerformanceAnalyticsDashboard:
 
 def main():
     """Главная функция для демонстрации возможностей аналитической панели"""
-    print("=== АНАЛИТИЧЕСКАЯ ПАНЕЛЬ ПРОИЗВОДИТЕЛЬНОСТИ ===")
+    logger.info("=== АНАЛИТИЧЕСКАЯ ПАНЕЛЬ ПРОИЗВОДИТЕЛЬНОСТИ ===")
 
     # Создаем аналитическую панель
     dashboard = PerformanceAnalyticsDashboard()
 
-    print("✓ Аналитическая панель инициализирована")
-    print(f"✓ Директория вывода: {dashboard.output_dir}")
+    logger.info("✓ Аналитическая панель инициализирована")
+    logger.info(f"✓ Директория вывода: {dashboard.output_dir}")
 
     # Запускаем краткосрочный мониторинг для сбора данных
-    print("\nЗапуск мониторинга аналитики...")
+    logger.info("\nЗапуск мониторинга аналитики...")
     dashboard.start_analytics_monitoring(interval=10)  # Обновление каждые 10 секунд
 
     # Ждем немного для сбора данных
-    print("Сбор данных в течение 30 секунд...")
+    logger.info("Сбор данных в течение 30 секунд...")
     time.sleep(30)
 
     # Останавливаем мониторинг
     dashboard.stop_analytics_monitoring()
-    print("✓ Мониторинг остановлен")
+    logger.info("✓ Мониторинг остановлен")
 
     # Получаем сводку
-    print("\nПолучение сводки по производительности...")
+    logger.info("\nПолучение сводки по производительности...")
     summary = dashboard.get_performance_summary()
-    print(f"✓ Статус: {summary['current_status']}")
-    print(f"✓ Собрано точек данных: {summary['data_points_collected']}")
-    print(f"✓ Текущая эффективность: {summary['current_metrics']['efficiency_score']:.2f}%")
-    print(f"✓ Загрузка CPU: {summary['current_metrics']['cpu_percent']:.2f}%")
-    print(f"✓ Использование памяти: {summary['current_metrics']['memory_percent']:.2f}%")
+    logger.info(f"✓ Статус: {summary['current_status']}")
+    logger.info(f"✓ Собрано точек данных: {summary['data_points_collected']}")
+    logger.info(f"✓ Текущая эффективность: {summary['current_metrics']['efficiency_score']:.2f}%")
+    logger.info(f"✓ Загрузка CPU: {summary['current_metrics']['cpu_percent']:.2f}%")
+    logger.info(f"✓ Использование памяти: {summary['current_metrics']['memory_percent']:.2f}%")
 
     # Получаем инсайты
-    print("\nПолучение ключевых инсайтов...")
+    logger.info("\nПолучение ключевых инсайтов...")
     insights = dashboard.get_actionable_insights("high")
-    print(f"✓ Найдено инсайтов: {len(insights)}")
+    logger.info(f"✓ Найдено инсайтов: {len(insights)}")
     for i, insight in enumerate(insights[:3], 1):  # Показываем топ-3
-        print(f"  {i}. [{insight.severity.upper()}] {insight.title}")
-        print(f"     Рекомендация: {insight.recommendation}")
+        logger.info(f"  {i}. [{insight.severity.upper()}] {insight.title}")
+        logger.info(f"     Рекомендация: {insight.recommendation}")
 
     # Генерируем отчет
-    print("\nГенерация аналитического отчета...")
+    logger.info("\nГенерация аналитического отчета...")
     report_path = dashboard.generate_analytics_report()
-    print(f"✓ Отчет сохранен: {report_path}")
+    logger.info(f"✓ Отчет сохранен: {report_path}")
 
     # Создаем визуализацию
-    print("\nСоздание визуализации панели...")
+    logger.info("\nСоздание визуализации панели...")
     viz_path = dashboard.visualize_performance_dashboard()
     if viz_path:
-        print(f"✓ Визуализация сохранена: {viz_path}")
+        logger.info(f"✓ Визуализация сохранена: {viz_path}")
 
     # Получаем предложения по оптимизации
-    print("\nПолучение предложений по оптимизации...")
+    logger.info("\nПолучение предложений по оптимизации...")
     suggestions = dashboard.get_optimization_suggestions()
-    print("Категории предложений:")
+    logger.info("Категории предложений:")
     for category, recs in suggestions.items():
-        print(f"  {category}: {len(recs)} предложений")
+        logger.info(f"  {category}: {len(recs)} предложений")
 
-    print("\nАналитическая панель успешно протестирована")
-    print("\nДоступные функции:")
-    print("- Мониторинг: dashboard.start_analytics_monitoring()")
-    print("- Сводка: dashboard.get_performance_summary()")
-    print("- Инсайты: dashboard.get_actionable_insights()")
-    print("- Отчеты: dashboard.generate_analytics_report()")
-    print("- Визуализация: dashboard.visualize_performance_dashboard()")
-    print("- Рекомендации: dashboard.get_optimization_suggestions()")
-    print("- Тренды: dashboard.trend_analysis")
+    logger.info("\nАналитическая панель успешно протестирована")
+    logger.info("\nДоступные функции:")
+    logger.info("- Мониторинг: dashboard.start_analytics_monitoring()")
+    logger.info("- Сводка: dashboard.get_performance_summary()")
+    logger.info("- Инсайты: dashboard.get_actionable_insights()")
+    logger.info("- Отчеты: dashboard.generate_analytics_report()")
+    logger.info("- Визуализация: dashboard.visualize_performance_dashboard()")
+    logger.info("- Рекомендации: dashboard.get_optimization_suggestions()")
+    logger.info("- Тренды: dashboard.trend_analysis")
 
 
 if __name__ == "__main__":

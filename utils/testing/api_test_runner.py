@@ -313,7 +313,7 @@ class APITestRunner:
 
     def _print_report(self):
         """Вывести отчёт в консоль"""
-        print(self.report.generate_summary())
+        logger.info(self.report.generate_summary())
 
         if self.report.failed_tests > 0:
             logger.warning("%d tests failed", self.report.failed_tests)

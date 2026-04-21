@@ -968,7 +968,7 @@ def batch_process_images(
 
 if __name__ == "__main__":
     # Тестирование
-    print("=== Тестирование пакетной обработки ===")
+    logger.info("=== Тестирование пакетной обработки ===")
 
     # Создание процессора
     processor = BatchProcessor(max_workers=2, output_dir="output/batch_test")
@@ -989,19 +989,19 @@ if __name__ == "__main__":
             image_paths=[str(img) for img in images], operation="analyze"
         )
 
-        print(f"Создано задание: {job_id}")
+        logger.info(f"Создано задание: {job_id}")
 
         # Выполнение
         result = processor.run_job(job_id)
-        print(f"Статус: {result}")
+        logger.info(f"Статус: {result}")
 
         # Статистика
         stats = processor.get_statistics()
-        print("\nСтатистика:")
-        print(f"  Всего заданий: {stats['total_jobs']}")
-        print(f"  Выполнено: {stats['completed']}")
-        print(f"  Успешность: {stats['success_rate']:.1f}%")
+        logger.info("\nСтатистика:")
+        logger.info(f"  Всего заданий: {stats['total_jobs']}")
+        logger.info(f"  Выполнено: {stats['completed']}")
+        logger.info(f"  Успешность: {stats['success_rate']:.1f}%")
 
         # Статус задания
         status = processor.get_job_status(job_id)
-        print(f"\nСтатус задания: {status}")
+        logger.info(f"\nСтатус задания: {status}")

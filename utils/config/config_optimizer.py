@@ -582,59 +582,59 @@ class AdaptiveConfigManager:
 
 def main():
     """Главная функция для демонстрации возможностей оптимизатора конфигурации"""
-    print("=== ОПТИМИЗАТОР КОНФИГУРАЦИИ ПРОЕКТА ===")
+    logger.info("=== ОПТИМИЗАТОР КОНФИГУРАЦИИ ПРОЕКТА ===")
 
     # Создаем оптимизатор конфигурации
     optimizer = ConfigOptimizer()
 
-    print("✓ Оптимизатор конфигурации инициализирован")
-    print(f"✓ Путь к конфигурации: {optimizer.config_path}")
+    logger.info("✓ Оптимизатор конфигурации инициализирован")
+    logger.info(f"✓ Путь к конфигурации: {optimizer.config_path}")
 
     # Собираем метрики системы
-    print("\nСбор метрик системы...")
+    logger.info("\nСбор метрик системы...")
     metrics = optimizer.collect_system_metrics()
-    print(f"  - Загрузка CPU: {metrics['cpu_percent']}%")
-    print(f"  - Использование памяти: {metrics['memory_percent']}%")
-    print(f"  - Доступно памяти: {metrics['memory_available_gb']:.2f} GB")
-    print(f"  - Использование диска: {metrics['disk_usage_percent']}%")
-    print(f"  - Количество процессоров: {metrics['cpu_count_logical']}")
+    logger.info(f"  - Загрузка CPU: {metrics['cpu_percent']}%")
+    logger.info(f"  - Использование памяти: {metrics['memory_percent']}%")
+    logger.info(f"  - Доступно памяти: {metrics['memory_available_gb']:.2f} GB")
+    logger.info(f"  - Использование диска: {metrics['disk_usage_percent']}%")
+    logger.info(f"  - Количество процессоров: {metrics['cpu_count_logical']}")
 
     # Применяем различные стратегии оптимизации
     strategies = ["performance", "efficiency", "stability", "balanced"]
 
     for strategy in strategies:
-        print(f"\nПрименение стратегии оптимизации: {strategy}")
+        logger.info(f"\nПрименение стратегии оптимизации: {strategy}")
         report = optimizer.auto_optimize(strategy)
 
-        print(f"  - Параметров изменено: {report['changes_made']}")
-        print(f"  - Всего параметров: {report['total_parameters']}")
+        logger.info(f"  - Параметров изменено: {report['changes_made']}")
+        logger.info(f"  - Всего параметров: {report['total_parameters']}")
 
         if report["changes_made"] > 0:
-            print("  - Измененные параметры:")
+            logger.info("  - Измененные параметры:")
             for param, change in report["parameter_changes"].items():
                 if change["changed"]:
-                    print(f"    * {param}: {change['original']} → {change['optimized']}")
+                    logger.info(f"    * {param}: {change['original']} → {change['optimized']}")
 
     # Создаем адаптивный менеджер
-    print("\nСоздание адаптивного менеджера конфигурации...")
+    logger.info("\nСоздание адаптивного менеджера конфигурации...")
     adaptive_manager = AdaptiveConfigManager()
 
     # Показываем пример ручной адаптации
-    print("\nРучная проверка необходимости адаптации...")
+    logger.info("\nРучная проверка необходимости адаптации...")
     should_adapt = adaptive_manager.should_adapt()
-    print(f"  - Требуется адаптация: {should_adapt}")
+    logger.info(f"  - Требуется адаптация: {should_adapt}")
 
     # Показываем историю адаптаций
     history = adaptive_manager.get_adaptation_history()
-    print(f"  - Записей в истории адаптаций: {len(history)}")
+    logger.info(f"  - Записей в истории адаптаций: {len(history)}")
 
-    print("\nОптимизатор конфигурации успешно протестирован")
-    print("\nДоступные функции:")
-    print("- Оптимизация по стратегии: optimize_config()")
-    print("- Автоматическая оптимизация: auto_optimize()")
-    print("- Адаптивный мониторинг: start_adaptive_monitoring()")
-    print("- Отчет об оптимизации: get_optimization_report()")
-    print("- Оптимизация нескольких файлов: optimize_multiple_configs()")
+    logger.info("\nОптимизатор конфигурации успешно протестирован")
+    logger.info("\nДоступные функции:")
+    logger.info("- Оптимизация по стратегии: optimize_config()")
+    logger.info("- Автоматическая оптимизация: auto_optimize()")
+    logger.info("- Адаптивный мониторинг: start_adaptive_monitoring()")
+    logger.info("- Отчет об оптимизации: get_optimization_report()")
+    logger.info("- Оптимизация нескольких файлов: optimize_multiple_configs()")
 
 
 if __name__ == "__main__":

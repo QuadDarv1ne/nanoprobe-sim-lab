@@ -402,11 +402,11 @@ def main():
     # Тестируем проверку numpy массива
     test_array = np.random.rand(10, 10)
     array_check = checker.check_numpy_array_integrity(test_array)
-    print(f"✓ Проверка numpy массива: {'Успешна' if array_check['valid'] else 'Ошибка'}")
+    logger.info("✓ Проверка numpy массива: %s", "Успешна" if array_check["valid"] else "Ошибка")
 
     # Тестируем генерацию отпечатка данных
     fingerprint = checker.generate_data_fingerprint(test_array)
-    print(f"✓ Отпечаток данных: {fingerprint[:16]}...")
+    logger.info("✓ Отпечаток данных: %s...", fingerprint[:16])
 
     # Тестируем проверку данных симуляции
     sim_data = {
@@ -416,13 +416,13 @@ def main():
     }
 
     sim_check = checker.check_simulation_data_integrity(sim_data)
-    print(f"✓ Проверка данных симуляции: {'Успешна' if sim_check['valid'] else 'Ошибка'}")
+    logger.info("✓ Проверка данных симуляции: %s", "Успешна" if sim_check["valid"] else "Ошибка")
 
     # Генерируем отчет
     report_path = reporter.generate_integrity_report(sim_check)
-    print(f"✓ Отчет о целостности сохранен: {report_path}")
+    logger.info("✓ Отчет о целостности сохранен: %s", report_path)
 
-    print("Проверка целостности данных успешно протестирована")
+    logger.info("Проверка целостности данных успешно протестирована")
 
 
 if __name__ == "__main__":
