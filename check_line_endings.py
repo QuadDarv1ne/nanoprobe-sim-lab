@@ -2,8 +2,8 @@ with open(r"M:\GitHub\nanoprobe-sim-lab\tests\test_admin_api.py", "rb") as f:
     data = f.read()
 
 print(f"Total bytes: {len(data)}")
-print(f"First 100 bytes: {data[:100]!r}")
-print(f"Last 100 bytes: {data[-100:]!r}")
+print("First 100 bytes:", repr(data[:100]))
+print("Last 100 bytes:", repr(data[-100:]))
 
 # Count different types of line endings
 crlf_count = data.count(b"\r\n")
@@ -22,9 +22,6 @@ lines_by_split_crlf = data.split(b"\r\n")
 print(f"Lines when split by b'\\r\\n': {len(lines_by_split_crlf)}")
 
 # Let's read the file as text with different newline interpretations
-import io
-
-# Read as binary and decode
 try:
     text_utf8 = data.decode("utf-8")
     print(f"Successfully decoded as UTF-8, length: {len(text_utf8)} chars")
@@ -48,6 +45,6 @@ try:
     print(f"Lines with splitlines(True): {len(lines_universal)}")
     print("Last 5 lines with endings:")
     for i, line in enumerate(lines_universal[-5:], start=len(lines_universal) - 4):
-        print(f"  {i+len(lines_universal)-4:3}: {repr(line)}")
+        print(f"  {i + len(lines_universal) - 4:3}: {repr(line)}")
 except Exception as e:
     print(f"Failed in universal newlines approach: {e}")

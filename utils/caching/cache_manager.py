@@ -462,9 +462,8 @@ def main():
     print(f"  - Найдено директорий кэша: {len(cache_info)}")
 
     for info in cache_info:
-        print(
-            f"    * {info.path.name}: {info.file_count} файлов, {info.size_bytes / (1024 * 1024):.2f} MB"
-        )
+        size_mb = info.size_bytes / (1024 * 1024)
+        print(f"    * {info.path.name}: {info.file_count} файлов, {size_mb:.2f} MB")
 
     # Получаем статистику
     print("\nСтатистика кэша...")

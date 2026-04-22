@@ -624,9 +624,8 @@ def main():
     best_model, tuning_results = trainer.hyperparameter_tuning(
         X_reg[:500], y_reg[:500], model_type="random_forest", cv_folds=3
     )
-    logger.info(
-        f"  - Лучшие параметры: {tuning_results['params'][np.argmax(tuning_results['mean_test_score'])]}"
-    )
+    best_idx = np.argmax(tuning_results["mean_test_score"])
+    logger.info(f"  - Лучшие параметры: {tuning_results['params'][best_idx]}")
     logger.info(f"  - Лучший скор: {max(tuning_results['mean_test_score']):.4f}")
 
     # Сохраняем модель

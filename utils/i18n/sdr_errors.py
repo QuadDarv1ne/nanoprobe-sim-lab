@@ -38,25 +38,36 @@ _ERROR_MESSAGES: Dict[str, Dict[str, str]] = {
         "en": "Sample rate error. Check device capabilities and configuration.",
         "ru": "Ошибка частоты дискретизации. Проверьте возможности устройства и конфигурацию.",
         "zh": "采样率错误。请检查设备功能和配置。",
-        "es": "Error de tasa de muestreo. Verifique las capacidades y configuración del dispositivo.",
+        "es": (
+            "Error de tasa de muestreo. "
+            "Verifique las capacidades y configuración del dispositivo."
+        ),
     },
     "TUNER_ERROR": {
         "en": "Tuner error. Device may be disconnected or malfunctioning.",
-        "ru": "Ошибка тюнера. Устройство может быть отключено или неисправно.",
+        "ru": ("Ошибка тюнера. " "Устройство может быть отключено или неисправно."),
         "zh": "调谐器错误。设备可能已断开连接或出现故障。",
-        "es": "Error del sintonizador. El dispositivo puede estar desconectado o funcionar mal.",
+        "es": (
+            "Error del sintonizador. " "El dispositivo puede estar desconectado o funcionar mal."
+        ),
     },
     "EEPROM_ERROR": {
         "en": "EEPROM read/write error. Device configuration may be corrupted.",
         "ru": "Ошибка чтения/записи EEPROM. Конфигурация устройства может быть повреждена.",
         "zh": "EEPROM读写错误。设备配置可能已损坏。",
-        "es": "Error de lectura/escritura EEPROM. La configuración del dispositivo puede estar corrupta.",
+        "es": (
+            "Error de lectura/escritura EEPROM. "
+            "La configuración del dispositivo puede estar corrupta."
+        ),
     },
     "OVERHEAT": {
         "en": "Device overheating detected. Reduce gain or improve cooling.",
-        "ru": "Обнаружен перегрев устройства. Снизьте усиление или улучшите охлаждение.",
-        "zh": "检测到设备过热。请降低增益或改善散热。",
-        "es": "Sobrecalentamiento del dispositivo detectado. Reduzca la ganancia o mejore la refrigeración.",
+        "ru": ("Обнаружен перегрев устройства. " "Снизьте усиление или улучшите охлаждение."),
+        "zh": "检测到设备过热。请降低增益或 улучшить散热。",
+        "es": (
+            "Sobrecalentamiento del dispositivo detectado. "
+            "Reduzca la ganancia o mejore la refrigeración."
+        ),
     },
     "NO_SIGNAL": {
         "en": "No signal detected. Check antenna and frequency settings.",
@@ -80,7 +91,10 @@ _ERROR_MESSAGES: Dict[str, Dict[str, str]] = {
         "en": "Recording trigger failed. Check squelch settings and signal level.",
         "ru": "Запуск записи не удался. Проверьте настройки шумоподавления и уровень сигнала.",
         "zh": "录制触发失败。请检查静噪设置和信号电平。",
-        "es": "Falló el disparo de grabación. Verifique la configuración de squelch y el nivel de señal.",
+        "es": (
+            "Falló el disparo de grabación. "
+            "Verifique la configuración de squelch y el nivel de señal."
+        ),
     },
 }
 

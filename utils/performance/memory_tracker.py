@@ -551,7 +551,8 @@ class MemoryTracker:
         critical_leaks = [ld for ld in self.leak_detections if ld.severity in ["high", "critical"]]
         if critical_leaks:
             recommendations.append(
-                f"Обнаружены критические утечки памяти: {len(critical_leaks)}. Требуется немедленное вмешательство."
+                f"Обнаружены критические утечки памяти: {len(critical_leaks)}. "
+                "Требуется немедленное вмешательство."
             )
 
         if not recommendations:

@@ -79,17 +79,19 @@ def init_database_schema(conn) -> None:
     )
 
     # Индексы для ускорения поиска
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_scan_timestamp ON scan_results(timestamp)")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_scan_type ON scan_results(scan_type)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_scan_timestamp " "ON scan_results(timestamp)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_scan_type " "ON scan_results(scan_type)")
     cursor.execute(
-        "CREATE INDEX IF NOT EXISTS idx_scan_type_timestamp ON scan_results(scan_type, timestamp DESC)"
+        "CREATE INDEX IF NOT EXISTS idx_scan_type_timestamp "
+        "ON scan_results(scan_type, timestamp DESC)"
     )
     cursor.execute(
-        "CREATE INDEX IF NOT EXISTS idx_simulations_status_created ON simulations(status, created_at DESC)"
+        "CREATE INDEX IF NOT EXISTS idx_simulations_status_created "
+        "ON simulations(status, created_at DESC)"
     )
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_simulation_status ON simulations(status)")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_image_type ON images(image_type)")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_scan_file_path ON scan_results(file_path)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_simulation_status " "ON simulations(status)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_image_type " "ON images(image_type)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_scan_file_path " "ON scan_results(file_path)")
 
     # Таблица сравнения изображений поверхностей
     cursor.execute(
@@ -271,9 +273,15 @@ def init_database_schema(conn) -> None:
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_adsb_icao ON adsb_sightings(icao)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_adsb_time ON adsb_sightings(created_at DESC)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_adsb_flight ON adsb_sightings(flight)")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_fm_rec_time ON fm_recordings(created_at DESC)")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_fm_station_freq ON fm_stations(frequency_mhz)")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_fm_station_time ON fm_stations(created_at DESC)")
+    cursor.execute(
+        "CREATE INDEX IF NOT EXISTS idx_fm_rec_time " "ON fm_recordings(created_at DESC)"
+    )
+    cursor.execute(
+        "CREATE INDEX IF NOT EXISTS idx_fm_station_freq " "ON fm_stations(frequency_mhz)"
+    )
+    cursor.execute(
+        "CREATE INDEX IF NOT EXISTS idx_fm_station_time " "ON fm_stations(created_at DESC)"
+    )
 
 
 def get_database_stats(conn) -> Dict[str, Any]:
@@ -290,7 +298,11 @@ def get_database_stats(conn) -> Dict[str, Any]:
 
     indexes = {}
     cursor.execute(
-        "SELECT name, tbl_name FROM sqlite_master WHERE type='index' AND name NOT LIKE 'sqlite_%' ORDER BY tbl_name"
+        "SELECT name, tbl_name "
+        "FROM sqlite_master "
+        "WHERE type='index' "
+        "AND name NOT LIKE 'sqlite_%' "
+        "ORDER BY tbl_name"
     )
     for row in cursor.fetchall():
         table = row[1]

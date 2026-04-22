@@ -639,7 +639,8 @@ class DatabaseOperations:
             cursor = conn.cursor()
             if image_path:
                 cursor.execute(
-                    "SELECT * FROM defect_analysis WHERE image_path = ? ORDER BY created_at DESC LIMIT ?",
+                    "SELECT * FROM defect_analysis "
+                    "WHERE image_path = ? ORDER BY created_at DESC LIMIT ?",
                     (image_path, limit),
                 )
             else:
@@ -664,7 +665,13 @@ class DatabaseOperations:
             cursor = conn.cursor()
             cursor.execute(
                 """INSERT INTO pdf_reports
-                (report_path, report_type, title, source_ids, file_size_bytes, pages_count, created_at)
+                (report_path,
+                 report_type,
+                 title,
+                 source_ids,
+                 file_size_bytes,
+                 pages_count,
+                 created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?)""",
                 (
                     report_path,
@@ -683,7 +690,10 @@ class DatabaseOperations:
             cursor = conn.cursor()
             if report_type:
                 cursor.execute(
-                    "SELECT * FROM pdf_reports WHERE report_type = ? ORDER BY created_at DESC LIMIT ?",
+                    "SELECT * FROM pdf_reports "
+                    "WHERE report_type = ? "
+                    "ORDER BY created_at DESC "
+                    "LIMIT ?",
                     (report_type, limit),
                 )
             else:

@@ -261,7 +261,10 @@ class PerformanceAnalyticsDashboard:
                 PerformanceInsight(
                     category="efficiency",
                     title="Низкая эффективность использования ресурсов",
-                    description=f"Текущая эффективность составляет {efficiency:.1f}%, что ниже оптимального уровня",
+                    description=(
+                        f"Текущая эффективность составляет {efficiency:.1f}%, "
+                        "что ниже оптимального уровня"
+                    ),
                     severity="high",
                     value=efficiency,
                     recommendation="Запустите комплексную оптимизацию ресурсов через orchestrator",
@@ -273,7 +276,10 @@ class PerformanceAnalyticsDashboard:
                 PerformanceInsight(
                     category="efficiency",
                     title="Средняя эффективность использования ресурсов",
-                    description=f"Текущая эффективность составляет {efficiency:.1f}%, есть резервы для улучшения",
+                    description=(
+                        f"Текущая эффективность составляет {efficiency:.1f}%, "
+                        "есть резервы для улучшения"
+                    ),
                     severity="medium",
                     value=efficiency,
                     recommendation="Проверьте настройки оптимизации ресурсов",

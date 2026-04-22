@@ -639,7 +639,8 @@ class SystemHealthMonitor:
         # Рекомендации на основе оценки здоровья
         if self.health_score < 60:
             recommendations.append(
-                "Общее здоровье системы низкое (<60). Требуется комплексная диагностика и оптимизация."
+                "Общее здоровье системы низкое (<60). "
+                "Требуется комплексная диагностика и оптимизация."
             )
         elif self.health_score < 80:
             recommendations.append(
