@@ -37,6 +37,7 @@ from typing import List
 import requests
 from flask import Flask, jsonify, redirect, render_template, request, session, url_for
 from flask_socketio import SocketIO, emit
+from flask_wtf.csrf import CSRFProtect
 
 from utils.ai.defect_analyzer import analyze_defects as analyze_defects_util
 from utils.caching.cache_manager import CacheManager
@@ -162,6 +163,15 @@ class UnifiedWebDashboard:
         )
         self.app.config["SESSION_TYPE"] = "filesystem"
         self.app.config["PERMANENT_SESSION_LIFETIME"] = 3600  # 1 час
+        # Secure session cookie settings
+        self.app.config["SESSION_COOKIE_SECURE"] = (
+            os.getenv("FLASK_ENV", "development") == "production"
+        )
+        self.app.config["SESSION_COOKIE_HTTPONLY"] = True
+        self.app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+
+        # CSRF protection
+        self.csrf = CSRFProtect(self.app)
 
         # SocketIO
         self.socketio = SocketIO(

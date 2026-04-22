@@ -4,6 +4,11 @@ Integration tests for API Test Runner and Profiler utilities
 These tests verify that the testing utilities work correctly with a real API server.
 """
 
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+
 from unittest.mock import MagicMock
 
 import httpx
