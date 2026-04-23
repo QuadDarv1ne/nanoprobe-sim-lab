@@ -15,7 +15,7 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** ``6a7f137`` — docs: update TODO.md with latest commit, sync status, and note on completed tasks (2026-04-23)
+**Last commit:** ``4d92c9c`` — docs: update TODO.md with latest commit and sync status (2026-04-23)
 
 ---
 
