@@ -1,5 +1,5 @@
 ﻿# Nanoprobe Sim Lab — TODO
-**Последнее обновление:** 2026-04-22
+**Последнее обновление:** 2026-04-23
 **Текущая ветка:** `dev`
 **Целевая ветка:** `main`
 **Python:** 3.11 - 3.14
@@ -13,7 +13,7 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** ``e44d94c`` — Update error handlers
+**Last commit:** ``e61c6c1`` — Update various utilities and modules
 
 ---
 
@@ -300,6 +300,12 @@ git push origin feature/new-feature
   - GPU оптимизация через WebGL shaders
   - Кнопки управления (+/-, Reset)
   - Индикатор уровня zoom
+- ✅ **Обновлены утилиты и модули** (22.04.2026):
+  - `.flake8`, `check_line_endings.py`, `utils/ai/model_trainer.py`, `utils/caching/cache_manager.py`,
+  - `utils/db/operations.py`, `utils/db/schema.py`, `utils/i18n/sdr_errors.py`, `utils/logger.py`,
+  - `utils/monitoring/system_health_monitor.py`, `utils/performance/memory_tracker.py`,
+  - `utils/performance/optimization_orchestrator.py`, `utils/performance/performance_analytics_dashboard.py`,
+  - `utils/testing/api_profiler.py`, `utils/testing/api_test_runner.py`
 
 ### Новые API endpoints
 
