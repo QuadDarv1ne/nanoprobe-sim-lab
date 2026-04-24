@@ -1,0 +1,954 @@
+Metadata-Version: 2.4
+Name: nanoprobe-sim-lab
+Version: 0.1.0
+Summary: Laboratory for nanosatellite probe simulation
+Author-email: Maksim Dupley <maksim.dupley@example.com>
+License: MIT
+Project-URL: Homepage, https://github.com/yourusername/nanoprobe-sim-lab
+Project-URL: Documentation, https://github.com/yourusername/nanoprobe-sim-lab/wiki
+Project-URL: Repository, https://github.com/yourusername/nanoprobe-sim-lab
+Project-URL: Issues, https://github.com/yourusername/nanoprobe-sim-lab/issues
+Keywords: nanosatellite,simulation,sdr,sstv,iss,telemetry
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Science/Research
+Classifier: Topic :: Scientific/Engineering :: Astronomy
+Classifier: Topic :: Scientific/Engineering :: Physics
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
+Classifier: Programming Language :: Python :: 3.14
+Classifier: Operating System :: OS Independent
+Requires-Python: <3.15,>=3.11
+Description-Content-Type: text/markdown
+License-File: LICENSE
+License-File: LICENSE_RU
+Requires-Dist: numpy<2.0.0,>=1.26.0
+Requires-Dist: scipy>=1.12.0
+Requires-Dist: pandas>=2.2.0
+Requires-Dist: matplotlib>=3.8.0
+Requires-Dist: Pillow>=10.2.0
+Requires-Dist: scikit-learn>=1.4.0
+Requires-Dist: scikit-image>=0.22.0
+Requires-Dist: opencv-python>=4.9.0
+Requires-Dist: pydantic>=2.6.0
+Requires-Dist: pydantic-settings>=2.2.0
+Requires-Dist: pyyaml>=6.0.1
+Requires-Dist: jsonschema>=4.21.0
+Requires-Dist: email-validator>=2.1.0
+Requires-Dist: psutil>=5.9.8
+Requires-Dist: prometheus-client>=0.20.0
+Requires-Dist: plotly>=5.19.0
+Requires-Dist: seaborn>=0.13.2
+Requires-Dist: reportlab>=4.1.0
+Requires-Dist: schedule>=1.2.2
+Requires-Dist: fastapi>=0.110.0
+Requires-Dist: uvicorn[standard]>=0.29.0
+Requires-Dist: python-multipart>=0.0.9
+Requires-Dist: starlette>=0.37.0
+Requires-Dist: PyJWT>=2.8.0
+Requires-Dist: python-jose[cryptography]>=3.3.0
+Requires-Dist: argon2-cffi>=23.1.0
+Requires-Dist: pyotp>=2.9.0
+Requires-Dist: qrcode[pil]>=8.0
+Requires-Dist: redis>=5.0.3
+Requires-Dist: aiohttp>=3.9.3
+Requires-Dist: aiofiles>=23.2.1
+Requires-Dist: requests>=2.31.0
+Requires-Dist: httpx>=0.27.0
+Requires-Dist: slowapi>=0.1.9
+Requires-Dist: sqlalchemy>=2.0.29
+Requires-Dist: alembic>=1.13.1
+Requires-Dist: websockets>=12.0
+Requires-Dist: prometheus-fastapi-instrumentator>=7.0.0
+Requires-Dist: sentry-sdk[fastapi]>=1.43.0
+Requires-Dist: gunicorn>=21.2.0
+Provides-Extra: sdr
+Requires-Dist: skyfield>=1.47; extra == "sdr"
+Requires-Dist: pyrtlsdr>=0.3.3; extra == "sdr"
+Provides-Extra: full
+Requires-Dist: skyfield>=1.47; extra == "full"
+Requires-Dist: pyrtlsdr>=0.3.3; extra == "full"
+Requires-Dist: flask>=3.0.0; extra == "full"
+Requires-Dist: flask-socketio>=5.3.0; extra == "full"
+Requires-Dist: flask-wtf>=1.2.0; extra == "full"
+Provides-Extra: dev
+Requires-Dist: pytest>=8.1.1; extra == "dev"
+Requires-Dist: pytest-asyncio>=0.23.6; extra == "dev"
+Requires-Dist: pytest-cov>=5.0.0; extra == "dev"
+Requires-Dist: black>=24.0.0; extra == "dev"
+Requires-Dist: flake8>=7.0.0; extra == "dev"
+Requires-Dist: isort>=5.13.0; extra == "dev"
+Requires-Dist: mypy>=1.8.0; extra == "dev"
+Requires-Dist: pre-commit>=3.6.0; extra == "dev"
+Requires-Dist: bandit>=1.7.0; extra == "dev"
+Requires-Dist: safety>=2.3.0; extra == "dev"
+Provides-Extra: docs
+Requires-Dist: mkdocs>=1.5.0; extra == "docs"
+Requires-Dist: mkdocstrings[python]>=0.24.0; extra == "docs"
+Dynamic: license-file
+
+# Лаборатория моделирования нанозонда (Nanoprobe Simulation Lab)
+
+## Описание проекта
+
+**Лаборатория моделирования нанозонда** - это комплексный научно-образовательный проект, объединяющий три взаимосвязанных модуля для моделирования и анализа нанотехнологий:
+
+1. **Симулятор аппаратного обеспечения СЗМ** (C++/Python) - моделирование сканирующей зондовой микроскопии
+2. **Анализатор изображений поверхности** (Python) - обработка и анализ AFM-изображений
+3. **Наземная станция SSTV** (Python/C++) - прием и декодирование радиосигналов
+4. **FastAPI REST API** ⭐ - Полноценный REST API с JWT и WebSocket
+
+## Статус проекта
+
+✅ **Проект полностью функционален**
+
+✅ **Все модули протестированы** (33 теста, 100%)
+
+✅ **Код отформатирован и оптимизирован**
+
+✅ **REST API с JWT authentication** 🔐
+
+✅ **2FA TOTP аутентификация** (Google Authenticator) 🔑
+
+✅ **WebSocket real-time обновления** 🔄
+
+✅ **CI/CD pipeline** (security, tests, releases) 🚀
+
+✅ **Database migrations** (Alembic) 🗄️
+
+✅ **Redis integration** (token storage) 💾
+
+✅ **Централизованная обработка ошибок** ⚠️
+
+✅ **GraphQL API** 🔍
+
+✅ **AI/ML анализ дефектов** 🤖
+
+Проект прошел полную автоматическую очистку и оптимизацию. Все компоненты работают корректно, архитектура улучшена, и внедрены современные практики разработки.
+
+## Лицензирование
+
+**Владелец:** Школа программирования Maestro7IT
+**Лицензия:** Проприетарная (ограниченные права)
+**Все права защищены**
+
+### Ограниченные права:
+
+- ✅ Использование в образовательных целях
+- ✅ Использование в научных исследованиях
+- ✅ Использование в некоммерческих проектах
+- ✅ Модификация исходного кода
+- ✅ Распространение в неизменном виде
+
+### Запрещено:
+
+- ❌ Коммерческое использование
+- ❌ Распространение с удалением авторских прав
+- ❌ Использование в военных целях
+- ❌ Использование в проектах с закрытым исходным кодом
+
+## Структура проекта
+
+```
+nanoprobe-sim-lab/
+├── src/                           # Исходный код проекта
+│   ├── cli/                      # Командные интерфейсы
+│   │   ├── main.py               # Главная консольная утилита
+│   │   ├── project_manager.py    # Менеджер проекта
+│   │   └── dashboard.py          # Интерактивная панель управления
+│   ├── web/                      # Веб-интерфейсы
+│   │   └── web_dashboard.py      # Веб-панель управления
+│   └── core/                     # Ядро проекта
+├── api/                          # FastAPI REST API ⭐ НОВОЕ!
+│   ├── main.py                   # Главное приложение FastAPI
+│   ├── schemas.py                # Pydantic схемы
+│   ├── routes/                   # API роуты
+│   │   ├── auth.py               # Аутентификация (JWT)
+│   │   ├── scans.py              # CRUD сканирований
+│   │   ├── simulations.py        # CRUD симуляций
+│   │   ├── analysis.py           # AI/ML анализ
+│   │   ├── comparison.py         # Сравнение поверхностей
+│   │   └── reports.py            # PDF отчёты
+│   └── README.md                 # Документация API
+├── config/                       # Конфигурационные файлы
+│   ├── config.json               # Основная конфигурация
+│   └── cache_config.json         # Конфигурация кэша
+├── components/                   # Компоненты проекта
+│   ├── cpp-spm-hardware-sim/     # Симулятор СЗМ (C++/Python)
+│   │   ├── src/                  # Исходный код
+│   │   ├── include/              # Заголовочные файлы C++
+│   │   └── CMakeLists.txt        # Сборка C++ проекта
+│   ├── py-surface-image-analyzer/ # Анализатор изображений (Python)
+│   │   └── src/                  # Исходный код
+│   └── py-sstv-groundstation/    # Наземная станция SSTV (Python/C++)
+│       └── src/                  # Исходный код
+├── utils/                        # Утилиты проекта (43+ модулей)
+│   ├── config_manager.py         # Менеджер конфигурации
+│   ├── logger.py                 # Система логирования
+│   ├── data_manager.py           # Управление данными
+│   ├── cache_manager.py          # Управление кэшем
+│   ├── system_monitor.py         # Мониторинг системы
+│   ├── error_handler.py          # Обработка ошибок
+│   ├── performance_profiler.py   # Профилировщик производительности
+│   ├── resource_optimizer.py     # Оптимизатор ресурсов
+│   ├── advanced_logger_analyzer.py # Анализатор логов
+│   ├── memory_tracker.py         # Трекер использования памяти
+│   ├── performance_benchmark.py  # Бенчмаркинг производительности
+│   ├── optimization_orchestrator.py # Оркестратор оптимизации
+│   ├── system_health_monitor.py  # Монитор здоровья системы
+│   ├── performance_analytics_dashboard.py # Аналитическая панель
+│   ├── performance_verification_framework.py # Фреймворк верификации
+│   ├── optimization_config_manager.py # Менеджер конфигурации
+│   ├── optimization_logging_manager.py # Централизованное логирование
+│   ├── realtime_dashboard.py     # Реал-тайм дашборд
+│   ├── performance_monitoring_center.py # Центр мониторинга
+│   ├── predictive_analytics_engine.py # Предиктивная аналитика
+│   ├── automated_optimization_scheduler.py # Автоматический планировщик
+│   ├── ai_resource_optimizer.py  # ИИ-оптимизатор
+│   ├── self_healing_system.py    # Самоисцеляющаяся система
+│   └── ...                       # Другие утилиты
+├── templates/                    # Шаблоны веб-интерфейса
+│   └── dashboard.html            # Главная страница веб-панели
+├── data/                         # Данные проекта
+├── logs/                         # Логи
+├── output/                       # Выходные данные
+├── tests/                        # Тесты
+├── docs/                         # Документация
+├── scripts/                      # Вспомогательные скрипты
+│   ├── run_project.bat           # Скрипт запуска (Windows)
+│   ├── run_project.sh            # Скрипт запуска (Linux/Mac)
+│   └── install-poetry.py         # Установщик Poetry
+├── legal/                        # Лицензионные файлы
+│   ├── LICENCE                   # Лицензия
+│   └── LICENCE_RU                # Лицензия на русском
+├── build/                        # Файлы сборки
+│   └── CMakeLists.txt            # Основной CMake файл
+├── start.py                      # Главная точка входа
+├── requirements.txt              # Зависимости Python
+└── README.md                     # Этот файл
+```
+
+## Основные возможности
+
+### 🧪 Симулятор СЗМ
+
+- Моделирование сканирующей зондовой микроскопии
+- Реалистичная физика взаимодействия зонда с поверхностью
+- Поддержка различных режимов сканирования
+- Python и C++ реализации
+
+### 🔍 Анализатор изображений
+
+- Обработка AFM-изображений
+- Извлечение топографических характеристик
+- Статистический анализ поверхности
+- Генерация научных отчетов
+
+### 📡 Наземная станция SSTV
+
+- Прием SSTV-сигналов через SDR (RTL-SDR V4)
+- Декодирование изображений из радиосигналов
+- Поддержка различных SSTV-режимов
+- Интеграция с радиооборудованием
+- **Прием с МКС и метеоспутников**
+- **Сканирование диапазона частот**
+- **Автоматическое декодирование**
+
+### 🛠️ Утилиты проекта (26+ модулей)
+
+- **Конфигурация:** Управление настройками проекта
+- **Логирование:** Комплексная система логов
+- **Данные:** Управление и валидация данных
+- **Кэш:** Автоматическая очистка кэша
+- **Мониторинг:** Системные метрики
+- **Ошибки:** Обработка и восстановление
+- **Документация:** Автогенерация документации
+- **API:** RESTful интерфейсы
+- **Безопасность:** Аутентификация и шифрование
+- **Резервное копирование:** Защита данных
+- **Развертывание:** Docker и облачные платформы
+- **Тестирование:** Автоматизированные тесты
+- **Качество:** Обеспечение качества кода
+- **Анализ кода:** Статический анализ и рефакторинг
+- **Оптимизация:** Автоматическая оптимизация конфигурации
+- **Валидация:** Проверка данных и зависимостей
+- **Профилирование:** Анализ производительности
+- **Оркестрация:** Управление компонентами проекта
+
+### 🌐 Веб-панель управления
+
+- **Интерактивный дашборд:** Современный веб-интерфейс
+- **Мониторинг системы:** CPU, память, дисковое пространство
+- **Управление компонентами:** Запуск/остановка модулей проекта
+- **Аналитика:** Визуализация данных проекта
+- **Логирование:** Просмотр системных логов в реальном времени
+- **WebSocket:** Обновления в реальном времени
+
+### 🔌 FastAPI REST API ⭐ НОВОЕ!
+
+- **Полноценный REST API** для всех компонентов проекта
+- **JWT аутентификация** с refresh токенами
+- **Автодокументация** (Swagger UI, ReDoc)
+- **WebSocket** для real-time обновлений
+- **Интеграция** со всеми utils модулями
+- **CRUD операции** для сканирований, симуляций
+- **AI/ML анализ** дефектов через API
+- **PDF отчёты** для научных публикаций
+
+**Быстрый старт:**
+```bash
+# Установка зависимостей
+pip install -r requirements-api.txt
+
+# Запуск API
+python run_api.py --reload
+
+# Документация
+# http://localhost:8000/docs
+```
+
+## 🌐 Frontend Версии
+
+В проекте **две версии frontend**, которые работают параллельно:
+
+### 🔹 Flask Dashboard (v1.0 - Legacy/Stable)
+- **Порт:** http://localhost:5000
+- **Файл:** `templates/dashboard.html`
+- **Технологии:** Flask + Jinja2 + Socket.IO + Chart.js
+- **Статус:** ✅ Стабильная, проверенная версия
+
+### 🔹 Next.js Dashboard (v2.0 - Modern/Production)
+- **Порт:** http://localhost:3000
+- **Папка:** `frontend/`
+- **Технологии:** Next.js 14 + TypeScript + Tailwind CSS + Zustand
+- **Статус:** ✅ Новая, современная версия
+
+📖 **Подробное сравнение:** см. [`FRONTEND_VERSIONS.md`](FRONTEND_VERSIONS.md)
+
+## Новые системы оптимизации и улучшения
+
+### 🔍 Анализатор кода (`utils/code_analyzer.py`)
+
+- **Статический анализ:** Обнаружение потенциальных проблем в коде
+- **Метрики качества:** Сложность, поддерживаемость, индексы
+- **Проверка соглашений:** Именование, лучшие практики
+- **Безопасность:** Обнаружение потенциально опасных конструкций
+- **Производительность:** Выявление неэффективного кода
+- **Отчеты:** Детализированные отчеты в JSON формате
+
+### 📚 Генератор документации (`utils/documentation_generator.py`)
+
+- **Автоматическая документация:** Извлечение docstring из кода
+- **Множественные форматы:** Markdown, HTML, JSON
+- **Анализ структуры:** Понимание архитектуры проекта
+- **API Reference:** Полная документация API
+- **Навигация:** Удобная структура документации
+
+### 🚀 Профилировщик производительности (`utils/performance_profiler.py`)
+
+- **Детализированные метрики:** Время выполнения, использование памяти, загрузка CPU
+- **Анализ функций:** Профилирование отдельных функций и методов
+- **Генерация отчетов:** Подробные отчеты о производительности
+- **Визуализация:** Графики и диаграммы производительности
+- **Сравнение:** Анализ производительности до/после оптимизаций
+
+### ⚙️ Оптимизатор ресурсов (`utils/resource_optimizer.py`)
+
+- **Управление ресурсами:** Оптимизация использования CPU и памяти
+- **Адаптивная настройка:** Автоматическая подстройка под нагрузку
+- **Мониторинг:** Отслеживание потребления ресурсов
+- **Рекомендации:** Предложения по оптимизации производительности
+- **Планирование:** Управление приоритетами процессов
+
+### 📝 Анализатор логов (`utils/advanced_logger_analyzer.py`)
+
+- **Анализ логов:** Статистика, ошибки, предупреждения
+- **Поиск аномалий:** Обнаружение необычных паттернов
+- **Метрики производительности:** Анализ времени выполнения операций
+- **Визуализация:** Диаграммы и графики событий
+- **Отчеты:** Автоматические отчеты о состоянии системы
+
+### 💾 Трекер использования памяти (`utils/memory_tracker.py`)
+
+- **Мониторинг памяти:** Отслеживание утечек и потребления
+- **Анализ объектов:** Определение наиболее затратных объектов
+- **Уведомления:** Предупреждения о высоком потреблении памяти
+- **Отчеты:** Детализированные отчеты по использованию памяти
+- **Профилирование:** Анализ памяти в реальном времени
+
+### ⏱️ Бенчмаркинг производительности (`utils/performance_benchmark.py`)
+
+- **Сравнение алгоритмов:** Тестирование производительности разных реализаций
+- **Параллельное выполнение:** Анализ производительности многопоточных решений
+- **Использование ресурсов:** Мониторинг во время бенчмарков
+- **Генерация отчетов:** Подробные результаты тестирования
+- **Визуализация:** Графики и диаграммы сравнения производительности
+
+### Оркестратор оптимизации (`utils/optimization_orchestrator.py`)
+
+- **Комплексная оптимизация:** Координация всех инструментов оптимизации
+- **Мониторинг ресурсов:** Комплексный мониторинг во время оптимизации
+- **Анализ модулей:** Оптимизация отдельных компонентов проекта
+- **Циклы оптимизации:** Периодическая автоматическая оптимизация
+- **Генерация отчетов:** Комплексные отчеты об оптимизации
+
+### 🩺 Монитор здоровья системы (`utils/system_health_monitor.py`)
+
+- **Мониторинг метрик:** Постоянный контроль системных показателей
+- **Обнаружение аномалий:** Автоматическое обнаружение проблем
+- **Оповещения:** Уведомления о критических ситуациях
+- **Оценка здоровья:** Комплексная оценка состояния системы
+- **Рекомендации:** Автоматические предложения по улучшению
+
+### 📊 Аналитическая панель (`utils/performance_analytics_dashboard.py`)
+
+- **Аналитика производительности:** Комплексный анализ всех метрик
+- **Генерация инсайтов:** Интеллектуальный анализ данных
+- **Тренды:** Анализ изменений во времени
+- **Визуализация:** Интерактивные графики и диаграммы
+- **Рекомендации:** Комплексные предложения по оптимизации
+
+### 🔬 Фреймворк верификации (`utils/performance_verification_framework.py`)
+
+- **Тестирование производительности:** Комплексные тесты всех оптимизаций
+- **Верификация эффективности:** Проверка улучшений и эффективности
+- **Регрессионные тесты:** Проверка нарушения функциональности
+- **Отчеты о верификации:** Подробные отчеты с метриками
+- **Рекомендации:** Анализ и предложения по улучшению
+
+### ⚙️ Менеджер конфигурации (`utils/optimization_config_manager.py`)
+
+- **Управление настройками:** Централизованное управление конфигурацией
+- **Валидация параметров:** Проверка корректности настроек
+- **Динамическое обновление:** Изменение настроек во время работы
+- **Логирование конфигурации:** Отслеживание изменений
+- **Интеграция:** Совместимость со всеми инструментами оптимизации
+
+### 📝 Централизованное логирование (`utils/optimization_logging_manager.py`)
+
+- **Единая точка логирования:** Централизованное логирование всех компонентов
+- **Классификация сообщений:** По компонентам и уровням важности
+- **Статистика логов:** Анализ и метрики логирования
+- **Экспорт данных:** Сохранение логов в различные форматы
+- **Интеграция:** Поддержка всех инструментов оптимизации
+
+### 📊 Центр мониторинга (`utils/performance_monitoring_center.py`)
+
+- **Комплексный мониторинг:** Централизованное наблюдение за всеми метриками
+- **Оповещения:** Система предупреждений о проблемах производительности
+- **Анализ трендов:** Обнаружение изменений в производительности
+- **Автоматические оптимизации:** Применение улучшений на основе метрик
+- **Отчеты:** Генерация аналитических отчетов и визуализаций
+
+### 🖥️ Реал-тайм дашборд (`utils/realtime_dashboard.py`)
+
+- **Мониторинг в реальном времени:** Визуализация метрик в интерактивном режиме
+- **Веб-интерфейс:** Доступ к данным через браузер
+- **Автообновление:** Постоянное обновление информации
+- **Графики:** Интерактивные диаграммы и графики
+- **Управление:** Возможность управления оптимизациями
+
+### Предиктивная аналитика (`utils/predictive_analytics_engine.py`)
+
+- **Прогнозирование:** Предсказание будущих значений метрик производительности
+- **Обнаружение аномалий:** Автоматическое выявление отклонений
+- **Рекомендации:** Предиктивные рекомендации по оптимизации
+- **Машинное обучение:** Использование статистических моделей для прогнозирования
+- **Интеграция:** Совместимость со всеми инструментами оптимизации
+
+### ⏰ Автоматический планировщик (`utils/automated_optimization_scheduler.py`)
+
+- **Автоматизация:** Планирование и выполнение оптимизаций без вмешательства
+- **Приоритизация:** Управление заданиями на основе важности
+- **Правила:** Автоматические триггеры для оптимизаций
+- **Интеграция прогнозов:** Использование предиктивной аналитики для планирования
+- **Мониторинг:** Отслеживание выполнения заданий и результатов
+
+### 🤖 ИИ-оптимизатор (`utils/ai_resource_optimizer.py`)
+
+- **Машинное обучение:** Использование ИИ для принятия решений об оптимизации
+- **Адаптивность:** Самообучение и адаптация к изменяющимся условиям
+- **Прогнозирование:** Предсказание необходимости оптимизации
+- **Рекомендации:** Интеллектуальные рекомендации по оптимизации
+- **Автономность:** Автоматическое принятие решений
+
+### 🏥 Самоисцеляющаяся система (`utils/self_healing_system.py`)
+
+- **Обнаружение проблем:** Автоматическое обнаружение производительности
+- **Восстановление:** Автоматическое восстановление от сбоев
+- **Стратегии:** Многоуровневые стратегии восстановления
+- **Мониторинг:** Постоянный мониторинг состояния системы
+- **Профилактика:** Предотвращение проблем до их возникновения
+
+### Менеджер развертывания (`utils/deployment_manager.py`)
+
+- **Виртуальные окружения:** Создание и управление venv
+- **Docker:** Генерация Dockerfile и docker-compose
+- **Kubernetes:** Манифесты для оркестрации
+- **Systemd:** Service файлы для Linux систем
+- **Пакеты развертывания:** Полные пакеты для установки
+- **Контейнеризация:** Управление Docker контейнерами
+
+### 📊 Примеры использования новых модулей:
+
+```bash
+# Анализ кода проекта
+python utils/code_analyzer.py
+
+# Генерация документации
+python utils/documentation_generator.py
+
+# Управление развертыванием
+python utils/deployment_manager.py
+
+# Профилирование производительности
+python utils/performance_profiler.py
+
+# Оптимизация ресурсов
+python utils/resource_optimizer.py
+
+# Анализ логов
+python utils/advanced_logger_analyzer.py
+
+# Мониторинг памяти
+python utils/memory_tracker.py
+
+# Бенчмаркинг производительности
+python utils/performance_benchmark.py
+
+# Оркестратор оптимизации
+python utils/optimization_orchestrator.py
+
+# Монитор здоровья системы
+python utils/system_health_monitor.py
+
+# Аналитическая панель
+python utils/performance_analytics_dashboard.py
+
+# Фреймворк верификации
+python utils/performance_verification_framework.py
+
+# Менеджер конфигурации
+python utils/optimization_config_manager.py
+
+# Централизованное логирование
+python utils/optimization_logging_manager.py
+
+# Реал-тайм дашборд
+python utils/realtime_dashboard.py
+
+# Центр мониторинга
+python utils/performance_monitoring_center.py
+
+# Предиктивная аналитика
+python utils/predictive_analytics_engine.py
+
+# Автоматический планировщик
+python utils/automated_optimization_scheduler.py
+
+# ИИ-оптимизатор
+python utils/ai_resource_optimizer.py
+
+# Самоисцеляющаяся система
+python utils/self_healing_system.py
+
+# Все утилиты доступны через модульное API
+python -c "from utils.code_analyzer import CodeAnalyzer; analyzer = CodeAnalyzer(); analyzer.analyze_project()"
+```
+
+## Быстрый старт
+
+### Требования
+
+- Python 3.8+
+- CMake (для C++ компонентов)
+- Компилятор C++ (g++, clang++, или MSVC)
+
+### Недавние улучшения
+
+Проект прошел автоматическую очистку и оптимизацию с помощью встроенных инструментов:
+
+- **Очистка файлов**: Удалены временные файлы и устаревшие директории
+- **Форматирование кода**: Применен единый стиль кодирования ко всему проекту
+- **Организация конфигов**: Все конфигурационные файлы стандартизованы и организованы
+- **Структура проекта**: Улучшена организация директорий и файлов
+- **Отчеты**: Созданы автоматические отчеты о состоянии проекта в `reports/logs/`
+
+### Установка
+
+1. **Клонирование репозитория:**
+
+```bash
+git clone https://github.com/your-username/nanoprobe-sim-lab.git
+cd nanoprobe-sim-lab
+```
+
+2. **Установка Python зависимостей:**
+```bash
+pip install -r requirements.txt
+```
+
+3. **Сборка C++ компонентов (опционально):**
+
+```bash
+cd components/cpp-spm-hardware-sim
+mkdir build && cd build
+cmake ..
+make
+```
+
+### Запуск
+
+#### Вариант 1: Главная точка входа
+
+```bash
+python start.py cli     # Главная консоль
+python start.py manager # Менеджер проекта
+python start.py web     # Веб-панель
+python start.py help    # Справка
+```
+
+#### Вариант 2: Прямой запуск компонентов
+
+```bash
+python src/cli/main.py           # Главная консоль
+python src/cli/project_manager.py # Менеджер проекта
+python src/web/web_dashboard.py   # Веб-панель
+```
+
+#### Вариант 4: SSTV Ground Station
+
+```bash
+# Веб-интерфейс SSTV станции
+python src/web/web_dashboard.py
+# Откройте http://localhost:5000/sstv
+
+# SSTV декодирование из аудиофайла
+python components/py-sstv-groundstation/src/main.py --decode audio.wav
+
+# Расписание пролётов МКС
+python components/py-sstv-groundstation/src/main.py --schedule --sat iss
+
+# Real-time приём с RTL-SDR (когда подключено)
+python components/py-sstv-groundstation/src/main.py --realtime-sstv -f iss --gain 35
+```
+
+#### Вариант 5: Универсальный лаунчер
+
+```bash
+python start.py              # Интерактивный режим
+python start.py flask        # Flask frontend (порт 5000)
+python start.py nextjs       # Next.js frontend (порт 3000)
+python start.py api-only     # Backend API только (порт 8000)
+
+# Или синхронизированный запуск Backend + Frontend
+python start_all.py          # Backend (8000) + Frontend (5000) + Sync Manager
+```
+
+### Команды менеджера проекта
+
+```bash
+# Запустить симулятор СЗМ (Python)
+python start.py manager spm-python
+
+# Запустить симулятор СЗМ (C++)
+python start.py manager spm-cpp
+
+# Запустить анализатор изображений
+python start.py manager analyzer
+
+# Запустить наземную станцию SSTV
+python start.py manager sstv
+
+# Собрать C++ компоненты
+python start.py manager build
+
+# Очистить кэш проекта
+python start.py manager clean-cache
+
+# Показать информацию о проекте
+python start.py manager info
+```
+
+## Автоматическая очистка кэша и улучшения
+
+**Проект включает встроенную систему автоматической очистки кэша и комплексные улучшения:**
+
+### Возможности:
+
+- **Анализ кэша:** Просмотр текущего состояния кэша
+- **Автоматическая очистка:** По расписанию (ежедневно/еженедельно)
+- **Оптимизация памяти:** Освобождение системных ресурсов
+- **Настройка правил:** Конфигурация через `config/cache_config.json`
+- **Отчеты:** Генерация отчетов об очистке
+- **Автоматическая очистка при завершении:** Очистка выполняется автоматически при выходе из программы
+
+### Использование:
+
+```bash
+# Через менеджер проекта
+python start.py manager clean-cache
+
+# Через главную консоль (опция 6)
+python start.py cli
+# Выбрать "6. Очистить кэш проекта"
+
+# Программно
+from utils.cache_manager import CacheManager
+cache_mgr = CacheManager()
+cache_mgr.auto_cleanup()
+```
+
+### Автоматическая очистка при завершении:
+
+**Все основные компоненты проекта теперь автоматически очищают кэш при завершении:**
+
+- **src/cli/main.py** - Главная консоль
+- **src/cli/project_manager.py** - Менеджер проекта
+- **src/web/web_dashboard.py** - Веб-панель управления
+
+**Это обеспечивает:**
+
+- ✅ Очистку временных файлов при каждом запуске
+- ✅ Освобождение системных ресурсов
+- ✅ Поддержание оптимального состояния проекта
+- ✅ Предотвращение накопления мусора
+
+### Конфигурация кэша (`config/cache_config.json`):
+
+```json
+{
+  "cache_directories": ["temp", "cache", "__pycache__"],
+  "max_age_days": 7,
+  "max_size_mb": 100,
+  "auto_cleanup": true,
+  "cleanup_schedule": "daily"
+}
+```
+
+## Веб-панель управления
+
+### Возможности:
+
+- **Интерактивный дашборд:** Современный веб-интерфейс
+- **Мониторинг системы:** CPU, память, дисковое пространство
+- **Управление компонентами:** Запуск/остановка модулей проекта
+- **Аналитика:** Визуализация данных и метрик
+- **Логирование:** Просмотр системных логов в реальном времени
+- **Настройки:** Конфигурация панели управления
+
+### Запуск:
+
+```bash
+python start.py web
+# Автоматически откроется в браузере
+```
+
+### API эндпоинты:
+
+- `GET /api/status` - Статус системы
+- `GET /api/components` - Информация о компонентах
+- `POST /api/actions/<action>` - Выполнение действий
+- `GET /api/logs` - Системные логи
+
+### WebSocket события:
+
+- `status_update` - Обновления статуса в реальном времени
+- `connect`/`disconnect` - События подключения
+
+## Разработка
+
+### Структура кода
+
+Весь код написан с подробными русскоязычными комментариями и docstring'ами.
+
+### Тестирование
+
+```bash
+# Запуск тестов
+python -m pytest tests/
+
+# Запуск с покрытием
+python -m pytest --cov=utils tests/
+
+# Запуск конкретных тестов
+python -m pytest tests/test_api.py -v
+```
+
+### Документация
+
+```bash
+# Генерация документации
+python utils/documentation_generator.py
+```
+
+## Критические улучшения (2026-03-13)
+
+### 🔐 Безопасность JWT
+
+- **Refresh token rotation** — уникальный jti для каждого токена
+- **Усиленная валидация паролей** — 8+ символов, uppercase, lowercase, digit, special char
+- **Ревокация токенов** при logout
+- **Secure JWT_SECRET** — генерация при отсутствии
+
+### ⚠️ Централизованная обработка ошибок
+
+- **Кастомные исключения:** `APIError`, `ValidationError`, `NotFoundError`, `AuthenticationError`
+- **ErrorSeverity enum** — категоризация по важности
+- **Унифицированный формат ответов** — error_id, error_code, severity
+- **Структурированное логирование** — контекст, client_ip, path
+
+### 🗄️ Database Migration
+
+- **Alembic интеграция** — авто-применение при старте API
+- **Fallback на direct init** — если миграции не работают
+- **Migration tracking** — текущая и head ревизии
+
+### 🔄 WebSocket Real-time
+
+- **Каналы** — subscribe/unsubscribe
+- **Heartbeat** — 60s timeout
+- **Get metrics** — CPU, memory, disk по запросу
+- **Push notifications** — фоновая задача (5s interval)
+
+### 🚀 CI/CD Pipeline
+
+- **security.yml** — Bandit, Safety, pip-audit, secrets detection
+- **auto-release.yml** — релизы по тегам, changelog, Docker push to GHCR
+- **benchmark.yml** — pytest-benchmark для PR
+
+## API Endpoints
+
+### Authentication
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/auth/login` | POST | Вход (JWT token) |
+| `/api/v1/auth/2fa/verify-login` | POST | Вход с 2FA |
+| `/api/v1/auth/refresh` | POST | Обновление токена (rotation) |
+| `/api/v1/auth/logout` | POST | Выход (revocation) |
+| `/api/v1/auth/me` | GET | Текущий пользователь |
+| `/api/v1/auth/2fa/setup` | POST | Настроить 2FA |
+| `/api/v1/auth/2fa/verify` | POST | Верифицировать 2FA |
+| `/api/v1/auth/2fa/status` | GET | Статус 2FA |
+| `/api/v1/auth/2fa/disable` | POST | Отключить 2FA |
+| `/api/v1/auth/2fa/backup-codes` | POST | Резервные коды |
+
+### Health & Monitoring
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | Health check |
+| `/health/detailed` | GET | Детальный health с метриками |
+| `/metrics/realtime` | GET | Real-time метрики |
+| `/metrics` | GET | Prometheus metrics |
+| `/ws/realtime` | WebSocket | Real-time обновления |
+
+### CRUD Operations
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/scans` | GET/POST | Сканирования |
+| `/api/v1/simulations` | GET/POST/PATCH | Симуляции |
+| `/api/v1/analysis` | POST | AI/ML анализ дефектов |
+| `/api/v1/comparison` | POST/GET | Сравнение поверхностей |
+| `/api/v1/reports` | POST | PDF отчёты |
+
+### Dashboard
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/dashboard/stats` | GET | Сводная статистика |
+| `/api/v1/dashboard/actions/clean_cache` | POST | Очистка кэша |
+
+### GraphQL
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/graphql` | POST | GraphQL запросы |
+| `/api/v1/graphql/schema` | GET | Получить схему |
+
+**Пример GraphQL запроса:**
+```graphql
+query {
+    stats {
+        totalScans
+        totalSimulations
+        totalImages
+        activeSimulations
+    }
+    scans(limit: 10) {
+        id
+        scanType
+        timestamp
+    }
+}
+```
+
+### AI/ML
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/ml/analyze` | POST | Анализ изображения |
+| `/api/v1/ml/models` | GET | Список моделей |
+| `/api/v1/ml/fine-tune` | POST | Дообучение модели |
+| `/api/v1/ml/save-model` | POST | Сохранение модели |
+| `/api/v1/ml/batch-analyze` | GET | Пакетный анализ |
+
+### SSTV Ground Station 🛰️
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/sstv/iss/schedule` | GET | Расписание пролётов МКС |
+| `/api/v1/sstv/iss/next-pass` | GET | Следующий пролёт ISS |
+| `/api/v1/sstv/iss/position` | GET | Текущая позиция МКС |
+| `/api/v1/sstv/iss/visible` | GET | Видимость МКС сейчас |
+| `/api/v1/sstv/sstv/decode` | POST | Декодирование SSTV |
+| `/api/v1/sstv/sstv/modes` | GET | Список SSTV режимов |
+| `/api/v1/sstv/ws/iss` | WebSocket | Real-time позиция ISS |
+| `/api/v1/sstv/health` | GET | Health check SSTV модуля |
+
+**Пример запроса расписания МКС:**
+```bash
+curl http://localhost:8000/api/v1/sstv/iss/schedule?hours_ahead=24
+```
+
+**Пример WebSocket подключения:**
+```javascript
+const ws = new WebSocket('ws://localhost:8000/api/v1/sstv/ws/iss');
+ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    console.log('ISS Position:', data.data);
+};
+```
+
+## Документация
+
+- [**RTL-SDR Troubleshooting Guide**](docs/rtl-sdr-troubleshooting.md) — Руководство по устранению неполадок RTL-SDR V4
+- [CHANGELOG.md](CHANGELOG.md) — История изменений
+- [TODO.md](TODO.md) — План разработки
+- [QUICKSTART.md](QUICKSTART.md) — Быстрый старт
+
+## Вклад в проект
+
+Проект открыт для образовательных и научных вкладов.
+
+## Контакты
+
+**Школа программирования Maestro7IT**
+
+📧 **Email:** maksimqwe42@mail.ru
+
+🌐 **Сайт:** https://school-maestro7it.ru/
+
+## Благодарности
+
+- Благодарим всех участников образовательного сообщества
+- Проект разработан для продвижения нанотехнологий в образовании
+
+---
+
+*© 2026 Школа программирования Maestro7IT. Все права защищены.*
