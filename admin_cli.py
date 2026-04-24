@@ -6,32 +6,37 @@ CLI утилита для администратора Nanoprobe Sim Lab
 
 import argparse
 import json
+import logging
 import shutil
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+# Set up logging to output only the message
+logging.basicConfig(level=logging.INFO, format="%(message)s")
+logger = logging.getLogger(__name__)
+
 
 def print_header(text: str):
     """Вывод заголовка"""
-    print("\n" + "=" * 60)
-    print(f"  {text}")
-    print("=" * 60 + "\n")
+    logger.info("\n" + "=" * 60)
+    logger.info(f"  {text}")
+    logger.info("=" * 60 + "\n")
 
 
 def print_success(text: str):
     """Вывод успешного сообщения"""
-    print(f"✅ {text}")
+    logger.info(f"✅ {text}")
 
 
 def print_error(text: str):
     """Вывод ошибки"""
-    print(f"❌ {text}")
+    logger.error(f"❌ {text}")
 
 
 def print_info(text: str):
     """Вывод информации"""
-    print(f"ℹ️  {text}")
+    logger.info(f"ℹ️  {text}")
 
 
 # ==================== Команды ====================
@@ -48,30 +53,32 @@ def cmd_status(args):
         dir_path = Path(dir_name)
         if dir_path.exists():
             size = sum(f.stat().st_size for f in dir_path.rglob("*") if f.is_file())
-            print(f"  ✅ {dir_name}/ ({size:,} байт)")
+            print_info(f"  ✅ {dir_name}/ ({size:,} байт)")
         else:
-            print(f"  ❌ {dir_name}/ (не существует)")
+            print_info(f"  ❌ {dir_name}/ (не существует)")
 
     # Проверка БД
     print_info("\nБаза данных:")
     db_path = Path("data/nanoprobe.db")
     if db_path.exists():
-        print(f"  ✅ Файл: {db_path}")
-        print(f"  ✅ Размер: {db_path.stat().st_size:,} байт")
-        print(f"  ✅ Изменён: {datetime.fromtimestamp(db_path.stat().st_mtime, tz=timezone.utc)}")
+        print_info(f"  ✅ Файл: {db_path}")
+        print_info(f"  ✅ Размер: {db_path.stat().st_size:,} байт")
+        print_info(
+            f"  ✅ Изменён: {datetime.fromtimestamp(db_path.stat().st_mtime, tz=timezone.utc)}"
+        )
     else:
-        print(f"  ❌ {db_path} (не существует)")
+        print_info(f"  ❌ {db_path} (не существует)")
 
     # Проверка логов
     print_info("\nЛоги:")
     logs_dir = Path("logs")
     if logs_dir.exists():
         log_files = list(logs_dir.glob("*.log"))
-        print(f"  Найдено логов: {len(log_files)}")
+        print_info(f"  Найдено логов: {len(log_files)}")
         for log_file in log_files[:5]:
-            print(f"    - {log_file.name} ({log_file.stat().st_size:,} байт)")
+            print_info(f"    - {log_file.name} ({log_file.stat().st_size:,} байт)")
     else:
-        print("  ❌ Директория logs не существует")
+        print_info("  ❌ Директория logs не существует")
 
     # Проверка портов
     print_info("\nПорты:")
@@ -82,12 +89,12 @@ def cmd_status(args):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             result = sock.connect_ex(("localhost", port))
             if result == 0:
-                print(f"  🔴 Порт {port} занят")
+                print_info(f"  🔴 Порт {port} занят")
             else:
-                print(f"  🟢 Порт {port} свободен")
+                print_info(f"  🟢 Порт {port} свободен")
             sock.close()
     except Exception as e:
-        print(f"  ⚠️  Не удалось проверить порты: {e}")
+        print_info(f"  ⚠️  Не удалось проверить порты: {e}")
 
 
 def cmd_cleanup(args):
@@ -111,9 +118,9 @@ def cmd_cleanup(args):
         print_info("Режим сухой проверки (файлы не будут удалены)")
         print_info(f"Найдено файлов для удаления: {len(targets)}")
         for target in targets[:20]:
-            print(f"  - {target}")
+            print_info(f"  - {target}")
         if len(targets) > 20:
-            print(f"  ... и ещё {len(targets) - 20} файлов")
+            print_info(f"  ... и ещё {len(targets) - 20} файлов")
     else:
         deleted_count = 0
         for target in targets:
@@ -227,15 +234,15 @@ def cmd_users(args):
         from api.routes.auth import USERS_DB
 
         print_info(f"Всего пользователей: {len(USERS_DB)}")
-        print()
-        print(f"{'Username':<20} {'Role':<10} {'ID':<5} {'Created':<25}")
-        print("-" * 60)
+        print_info("")
+        print_info(f"{'Username':<20} {'Role':<10} {'ID':<5} {'Created':<25}")
+        print_info("-" * 60)
 
         for username, user_data in USERS_DB.items():
             role = user_data["role"]
             uid = user_data["id"]
             created = user_data["created_at"]
-            print(f"{username:<20} {role:<10} {uid:<5} {created:<25}")
+            print_info(f"{username:<20} {role:<10} {uid:<5} {created:<25}")
 
     elif args.action == "create":
         from api.routes.auth import USERS_DB, hash_password
@@ -290,7 +297,7 @@ def cmd_migrate(args):
 
             print_success(f"Найдено таблиц: {len(tables)}")
             for table in tables:
-                print(f"  - {table}")
+                print_info(f"  - {table}")
 
             # Проверка индексов
             cursor.execute("SELECT name FROM sqlite_master WHERE type='index'")
@@ -322,16 +329,16 @@ def cmd_info(args):
     }
 
     for key, value in info.items():
-        print(f"{key.replace('_', ' ').title():<20}: {value}")
+        print_info(f"{key.replace('_', ' ').title():<20}: {value}")
 
     # Статистика проекта
     print_info("\nСтатистика проекта:")
 
     py_files = list(Path(".").rglob("*.py"))
-    print(f"  Python файлов: {len(py_files)}")
+    print_info(f"  Python файлов: {len(py_files)}")
 
     total_lines = sum(1 for f in py_files for _ in open(f, "r", encoding="utf-8", errors="ignore"))
-    print(f"  Строк кода: {total_lines:,}")
+    print_info(f"  Строк кода: {total_lines:,}")
 
 
 # ==================== Основная функция ====================
@@ -405,7 +412,7 @@ def main():
     try:
         args.func(args)
     except KeyboardInterrupt:
-        print("\n\n⚠️  Прервано пользователем")
+        print_info("\n\n⚠️  Прервано пользователем")
         sys.exit(1)
     except Exception as e:
         print_error(f"Ошибка: {e}")

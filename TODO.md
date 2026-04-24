@@ -308,6 +308,8 @@ git push origin feature/new-feature
   - `utils/monitoring/system_health_monitor.py`, `utils/performance/memory_tracker.py`,
   - `utils/performance/optimization_orchestrator.py`, `utils/performance/performance_analytics_dashboard.py`,
   - `utils/testing/api_profiler.py`, `utils/testing/api_test_runner.py`
+- ✅ **Перенесено admin_cli.py на использование logging вместо print**
+- ✅ **Добавлены unit-тесты для admin_cli.py**
 
 ### Новые API endpoints
 
