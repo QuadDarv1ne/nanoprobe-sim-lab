@@ -1,5 +1,5 @@
 ﻿# Nanoprobe Sim Lab — TODO
-**Последнее обновление:** 2026-04-23
+**Последнее обновление:** 2026-04-24
 **Текущая ветка:** `dev`
 **Целевая ветка:** `main`
 **Python:** 3.11 - 3.14
@@ -15,7 +15,7 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** ``4d92c9c`` — docs: update TODO.md with latest commit and sync status (2026-04-23)
+**Last commit:** ``6908246`` — docs: update TODO.md with latest commit and sync status (2026-04-24)
 
 ---
 
