@@ -15,7 +15,7 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** ``6908246`` — docs: update TODO.md with latest commit and sync status (2026-04-24)
+**Last commit:** ``36616fc`` — feat: migrate admin_cli.py to logging and add unit tests
 
 ---
 
