@@ -1,5 +1,5 @@
 ﻿# Nanoprobe Sim Lab — TODO
-**Последнее обновление:** 2026-04-24
+**Последнее обновление:** 2026-04-25
 **Текущая ветка:** `dev`
 **Целевая ветка:** `main`
 **Python:** 3.11 - 3.14
@@ -277,7 +277,7 @@ git push origin feature/new-feature
 
 ## 📝 Заметки
 
-### Текущий спринт (2026-04-19)
+### Текущий спринт (2026-04-25)
 
 - ✅ **Добавлена автоматическая калибровка PPM** — `rtl_sdr_auto_calibration.py`
 - ✅ **Добавлен автозахват спутников NOAA/METEOR** — `satellite_auto_capture.py`
@@ -310,6 +310,7 @@ git push origin feature/new-feature
   - `utils/testing/api_profiler.py`, `utils/testing/api_test_runner.py`
 - ✅ **Перенесено admin_cli.py на использование logging вместо print**
 - ✅ **Добавлены unit-тесты для admin_cli.py**
+- ✅ **Обновлен TODO.md: изменена дата последнего обновления и текущего спринта**
 
 ### Новые API endpoints
 
