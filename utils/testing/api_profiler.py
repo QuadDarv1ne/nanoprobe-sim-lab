@@ -120,11 +120,11 @@ class ProfilerReport:
                     "-" * 80,
                     f"  Iterations: {stats.iterations}",
                     f"  Success Rate: {stats.success_rate:.1f}%",
-                    f"  Min Time: {stats.min_time*1000:.2f}ms",
-                    f"  Max Time: {stats.max_time*1000:.2f}ms",
-                    f"  Avg Time: {stats.avg_time*1000:.2f}ms",
-                    f"  Median: {stats.median_time*1000:.2f}ms",
-                    f"  P95: {stats.p95_time*1000:.2f}ms",
+                    f"  Min Time: {stats.min_time * 1000:.2f}ms",
+                    f"  Max Time: {stats.max_time * 1000:.2f}ms",
+                    f"  Avg Time: {stats.avg_time * 1000:.2f}ms",
+                    f"  Median: {stats.median_time * 1000:.2f}ms",
+                    f"  P95: {stats.p95_time * 1000:.2f}ms",
                 ]
             )
 

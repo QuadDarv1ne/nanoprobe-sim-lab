@@ -360,7 +360,8 @@ class PerformanceProfiler:
             if memory_profiler is None:
                 logger.info("\n=== Memory profiler not available for: %s ===", func.__name__)
                 logger.info(
-                    "Install memory-profiler to enable memory profiling: pip install memory-profiler"
+                    "Install memory-profiler to enable memory profiling: "
+                    "pip install memory-profiler"
                 )
                 return func(*args, **kwargs)
 
