@@ -1,5 +1,5 @@
 ﻿# Nanoprobe Sim Lab — TODO
-**Последнее обновление:** 2026-04-25
+**Последнее обновление:** 2026-04-26
 **Текущая ветка:** `dev`
 **Целевая ветка:** `main`
 **Python:** 3.11 - 3.14
@@ -15,7 +15,7 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** ``36616fc`` — feat: migrate admin_cli.py to logging and add unit tests
+**Last commit:** ``34f3ca8`` — docs: update TODO.md with latest date and sprint note
 
 ---
 
@@ -310,7 +310,7 @@ git push origin feature/new-feature
   - `utils/testing/api_profiler.py`, `utils/testing/api_test_runner.py`
 - ✅ **Перенесено admin_cli.py на использование logging вместо print**
 - ✅ **Добавлены unit-тесты для admin_cli.py**
-- ✅ **Обновлен TODO.md: изменена дата последнего обновления и текущего спринта**
+- ✅ **Обновлен TODO.md: изменена дата последнего обновления (2026-04-26), текущего спринта и последнего коммита**
 
 ### Новые API endpoints
 
