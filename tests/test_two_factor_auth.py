@@ -55,8 +55,12 @@ class TestTwoFactorAuthSetup:
             assert isinstance(secret, str)
             assert len(secret) > 0
             assert isinstance(uri, str)
-            assert "test@example.com" in uri
-            assert "Nanoprobe Sim Lab" in uri
+            # Decode URI to check for email and issuer
+            import urllib.parse
+
+            decoded_uri = urllib.parse.unquote(uri)
+            assert "test@example.com" in decoded_uri
+            assert "Nanoprobe Sim Lab" in decoded_uri
         print("  [PASS] Setup 2FA returns secret and URI")
 
     def test_setup_2fa_generates_unique_secrets(self):
@@ -96,13 +100,15 @@ class TestTwoFactorAuthVerification:
 
             # Настраиваем 2FA
             secret, _ = totp.setup_2fa("testuser", "test@example.com")
+            # Верифицируем настройку чтобы включить 2FA
+            totp.verify_2fa_setup("testuser", pyotp.TOTP(secret).now())
 
             # Генерируем правильный код
             totp_obj = pyotp.TOTP(secret)
             code = totp_obj.now()
 
             # Верифицируем
-            is_valid = totp.verify_2fa("testuser", code)
+            is_valid, _ = totp.verify_2fa("testuser", code)
 
             assert is_valid is True
         print("  [PASS] Verify 2FA valid code")
@@ -113,10 +119,12 @@ class TestTwoFactorAuthVerification:
             storage_path = os.path.join(tmpdir, "2fa_secrets.json")
             totp = TwoFactorAuth(storage_path)
 
-            totp.setup_2fa("testuser", "test@example.com")
+            # Настраиваем 2FA и включаем её
+            secret, _ = totp.setup_2fa("testuser", "test@example.com")
+            totp.verify_2fa_setup("testuser", pyotp.TOTP(secret).now())
 
             # Неправильный код
-            is_valid = totp.verify_2fa("testuser", "000000")
+            is_valid, _ = totp.verify_2fa("testuser", "000000")
 
             assert is_valid is False
         print("  [PASS] Verify 2FA invalid code")
@@ -127,9 +135,10 @@ class TestTwoFactorAuthVerification:
             storage_path = os.path.join(tmpdir, "2fa_secrets.json")
             totp = TwoFactorAuth(storage_path)
 
-            is_valid = totp.verify_2fa("nonexistent", "123456")
+            # Для пользователя без 2FA верификация должна проходить (2FA не настроена)
+            is_valid, _ = totp.verify_2fa("nonexistent", "123456")
 
-            assert is_valid is False
+            assert is_valid is True
         print("  [PASS] Verify 2FA nonexistent user")
 
     def test_verify_2fa_expired_code(self):
@@ -138,17 +147,19 @@ class TestTwoFactorAuthVerification:
             storage_path = os.path.join(tmpdir, "2fa_secrets.json")
             totp = TwoFactorAuth(storage_path)
 
+            # Настраиваем 2FA и включаем её
             secret, _ = totp.setup_2fa("testuser", "test@example.com")
+            totp.verify_2fa_setup("testuser", pyotp.TOTP(secret).now())
 
             # Генерируем код
             totp_obj = pyotp.TOTP(secret)
             code = totp_obj.now()
 
-            # Ждём 31 секунду (код устаревает)
-            time.sleep(31)
+            # Ждём 61 секунду (код устаревает, так как окно валидности 1 шаг = 30 секунд)
+            time.sleep(61)
 
             # Код должен быть невалидным
-            is_valid = totp.verify_2fa("testuser", code)
+            is_valid, _ = totp.verify_2fa("testuser", code)
 
             assert is_valid is False
         print("  [PASS] Verify 2FA expired code")
@@ -208,12 +219,25 @@ class TestTwoFactorAuthBackupCodes:
 
             totp.setup_2fa("testuser", "test@example.com")
             codes = totp.generate_backup_codes("testuser")
+            print(f"Generated codes: {codes}")
 
             # Первое использование - успешно
-            assert totp.verify_backup_code("testuser", codes[0]) is True
+            first_code = codes[0]
+            result1 = totp.verify_backup_code("testuser", first_code)
+            print(f"First verification result: {result1}")
+            print(
+                f"Backup codes after first verification: {totp._secrets.get('testuser', {}).get('backup_codes', [])}"
+            )
+            print(f"Codes list after first verification: {codes}")
+            assert result1 is True
 
             # Повторное использование - неудачно
-            assert totp.verify_backup_code("testuser", codes[0]) is False
+            result2 = totp.verify_backup_code("testuser", first_code)
+            print(f"Second verification result: {result2}")
+            print(
+                f"Backup codes after second verification: {totp._secrets.get('testuser', {}).get('backup_codes', [])}"
+            )
+            assert result2 is False
         print("  [PASS] Verify backup code consumed")
 
     def test_verify_backup_code_invalid(self):
@@ -240,9 +264,16 @@ class TestTwoFactorAuthDisable:
             totp = TwoFactorAuth(storage_path)
 
             totp.setup_2fa("testuser", "test@example.com")
+            # Verify setup to enable 2FA
+            secret, _ = totp.setup_2fa("testuser", "test@example.com")
+            totp.verify_2fa_setup("testuser", pyotp.TOTP(secret).now())
+
+            # Get current OTP code for disabling
+            totp_obj = pyotp.TOTP(secret)
+            otp_code = totp_obj.now()
 
             # Отключаем
-            result = totp.disable_2fa("testuser")
+            result = totp.disable_2fa("testuser", otp_code)
 
             assert result is True
             assert "testuser" not in totp._secrets
@@ -254,7 +285,8 @@ class TestTwoFactorAuthDisable:
             storage_path = os.path.join(tmpdir, "2fa_secrets.json")
             totp = TwoFactorAuth(storage_path)
 
-            result = totp.disable_2fa("nonexistent")
+            # For nonexistent user, we need to provide an OTP code (any) but it should return False
+            result = totp.disable_2fa("nonexistent", "123456")
 
             assert result is False
         print("  [PASS] Disable 2FA nonexistent user")
@@ -269,7 +301,9 @@ class TestTwoFactorAuthStatus:
             storage_path = os.path.join(tmpdir, "2fa_secrets.json")
             totp = TwoFactorAuth(storage_path)
 
-            totp.setup_2fa("testuser", "test@example.com")
+            # Настраиваем 2FA и включаем её
+            secret, _ = totp.setup_2fa("testuser", "test@example.com")
+            totp.verify_2fa_setup("testuser", pyotp.TOTP(secret).now())
 
             assert totp.is_2fa_enabled("testuser") is True
         print("  [PASS] Is 2FA enabled true")
@@ -290,6 +324,9 @@ class TestTwoFactorAuthStatus:
             totp = TwoFactorAuth(storage_path)
 
             totp.setup_2fa("testuser", "test@example.com")
+            # Verify setup to enable 2FA
+            secret, _ = totp.setup_2fa("testuser", "test@example.com")
+            totp.verify_2fa_setup("testuser", pyotp.TOTP(secret).now())
 
             status = totp.get_2fa_status("testuser")
 

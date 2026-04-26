@@ -361,14 +361,16 @@ class SQLiteToPostgresMigrator:
             logger.error(f"❌ Ошибка подключения к SQLite: {e}")
             return False
 
-        # Подключаемся к PostgreSQL
-        try:
-            pg_conn = psycopg2.connect(self.postgres_url)
-            logger.info("✓ Подключено к PostgreSQL")
-        except Exception as e:
-            logger.error(f"❌ Ошибка подключения к PostgreSQL: {e}")
-            sqlite_conn.close()
-            return False
+        # Подключаемся к PostgreSQL только если не dry-run
+        pg_conn = None
+        if not dry_run:
+            try:
+                pg_conn = psycopg2.connect(self.postgres_url)
+                logger.info("✓ Подключено к PostgreSQL")
+            except Exception as e:
+                logger.error(f"❌ Ошибка подключения к PostgreSQL: {e}")
+                sqlite_conn.close()
+                return False
 
         try:
             if dry_run:
@@ -439,7 +441,8 @@ class SQLiteToPostgresMigrator:
 
         finally:
             sqlite_conn.close()
-            pg_conn.close()
+            if pg_conn:
+                pg_conn.close()
             logger.info("✓ Соединения закрыты")
 
 

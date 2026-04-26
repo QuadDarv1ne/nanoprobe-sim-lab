@@ -8,7 +8,7 @@ import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from functools import wraps
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from fastapi import Request
 
@@ -43,11 +43,11 @@ class RateLimiter:
             return
         self.requests: Dict[str, RateLimitInfo] = defaultdict(RateLimitInfo)
         self._cleanup_lock = threading.Lock()
-        self._initialized = True
 
         # Конфигурация прогрессивной блокировки
         self.progressive_blocking = True
         self.block_multipliers = [2, 5, 15, 60]  # множители блокировки в минутах
+        self._initialized = True
 
     def is_allowed(self, key: str, max_requests: int, window_seconds: int) -> bool:
         now = time.time()
@@ -152,6 +152,15 @@ class RateLimiter:
         with self._cleanup_lock:
             if key in self.requests:
                 del self.requests[key]
+
+    def is_blocked(self, key: str) -> Tuple[bool, str]:
+        """Проверка, заблокирован ли ключ"""
+        now = time.time()
+        info = self.requests.get(key)
+        if info and info.blocked_until > now:
+            remaining = info.blocked_until - now
+            return True, f"Заблокировано на {remaining / 60:.1f} минут"
+        return False, ""
 
 
 limiter = RateLimiter()

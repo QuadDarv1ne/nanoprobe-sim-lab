@@ -23,15 +23,6 @@ class ConfigManager:
     для всех компонентов проекта.
     """
 
-    _instance: Optional["ConfigManager"] = None
-    _lock = threading.Lock()
-
-    def __new__(cls, config_file: str = "config.json") -> "ConfigManager":
-        """Singleton паттерн для ConfigManager"""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
-
     def __init__(self, config_file: str = "config.json") -> None:
         """
         Инициализирует менеджер конфигурации.
@@ -39,10 +30,6 @@ class ConfigManager:
         Args:
             config_file: Путь к файлу конфигурации.
         """
-        # Prevent re-initialization of singleton
-        if hasattr(self, "_initialized") and self._initialized:
-            return
-
         self.config_file: Path
         self.config: Dict[str, Any]
         self._last_modified: Optional[datetime] = None
@@ -68,7 +55,6 @@ class ConfigManager:
                 self.config_file = possible_paths[0]
 
         self.config = self.load_config()
-        self._initialized = True
 
     def load_config(self) -> Dict[str, Any]:
         """

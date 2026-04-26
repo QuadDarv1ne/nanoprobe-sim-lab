@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig, AxiosRequestConfig } from 'axios';
+import { indexedDB, PendingRequest } from './indexeddb';
 
 // Export API_BASE for use in other modules (single source of truth)
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -9,14 +10,17 @@ export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:800
  * - Error handling with detailed messages
  * - Request/response interceptors
  * - Retry logic for transient failures
+ * - Offline support with IndexedDB queuing
  */
 
 const DEFAULT_TIMEOUT_MS = 10000;
 const MAX_RETRIES = 2;
 const RETRY_DELAY_MS = 1000;
+const OFFLINE_QUEUE_KEY = 'offlineQueue';
 
 class APIClient {
   private client: AxiosInstance;
+  private isOnline: boolean = true;
 
   constructor() {
     this.client = axios.create({
@@ -28,6 +32,7 @@ class APIClient {
     });
 
     this.setupInterceptors();
+    this.setupNetworkListeners();
   }
 
   private setupInterceptors() {
@@ -98,6 +103,66 @@ class APIClient {
     );
   }
 
+  private setupNetworkListeners() {
+    if (typeof window !== 'undefined') {
+      // Update online status
+      const updateOnlineStatus = () => {
+        this.isOnline = navigator.onLine;
+        if (this.isOnline) {
+          // Try to process offline queue when coming online
+          this.processOfflineQueue();
+        }
+      };
+
+      window.addEventListener('online', updateOnlineStatus);
+      window.addEventListener('offline', updateOnlineStatus);
+
+      // Set initial status
+      this.isOnline = navigator.onLine;
+    }
+  }
+
+  /**
+   * Process the offline queue when connection is restored
+   */
+  private async processOfflineQueue() {
+    if (!this.isOnline) return;
+
+    try {
+      const pendingRequests = await indexedDB.getPendingRequests();
+      console.log(`[API] Processing ${pendingRequests.length} queued requests`);
+
+      for (const request of pendingRequests) {
+        try {
+          const response = await this.client.request({
+            method: request.method,
+            url: request.url,
+            data: request.data,
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+
+          // Successfully processed, remove from queue
+          await indexedDB.deletePendingRequest(request.id);
+          console.log(`[API] Successfully processed queued request ${request.id}`);
+        } catch (error) {
+          console.error(`[API] Failed to process queued request ${request.id}:`, error);
+          // Keep in queue for later retry
+        }
+      }
+    } catch (error) {
+      console.error('[API] Error processing offline queue:', error);
+    }
+  }
+
+  /**
+   * Queue a request for later processing when offline
+   */
+  private async queueRequest(request: Omit<PendingRequest, 'id'>): Promise<string> {
+    return await indexedDB.addPendingRequest(request);
+  }
+
   /**
    * Get the underlying axios instance for advanced usage
    */
@@ -106,43 +171,178 @@ class APIClient {
   }
 
   /**
-   * GET request
+   * GET request with offline support
    */
   async get<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    const response = await this.client.get<T>(url, config);
-    return response.data;
+    if (!this.isOnline) {
+      // Queue the request for later
+      const id = await this.queueRequest({
+        method: 'GET',
+        url,
+        data: undefined,
+        timestamp: Date.now(),
+        retries: 0,
+      });
+      throw new Error(`Request queued for offline processing (ID: ${id})`);
+    }
+
+    try {
+      const response = await this.client.get<T>(url, config);
+      return response.data;
+    } catch (error) {
+      // If network error, queue for later
+      if (!navigator.onLine) {
+        const id = await this.queueRequest({
+          method: 'GET',
+          url,
+          data: undefined,
+          timestamp: Date.now(),
+          retries: 0,
+        });
+        throw new Error(`Request queued for offline processing (ID: ${id})`);
+      }
+      throw error;
+    }
   }
 
   /**
-   * POST request
+   * POST request with offline support
    */
   async post<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
-    const response = await this.client.post<T>(url, data, config);
-    return response.data;
+    if (!this.isOnline) {
+      // Queue the request for later
+      const id = await this.queueRequest({
+        method: 'POST',
+        url,
+        data,
+        timestamp: Date.now(),
+        retries: 0,
+      });
+      throw new Error(`Request queued for offline processing (ID: ${id})`);
+    }
+
+    try {
+      const response = await this.client.post<T>(url, data, config);
+      return response.data;
+    } catch (error) {
+      // If network error, queue for later
+      if (!navigator.onLine) {
+        const id = await this.queueRequest({
+          method: 'POST',
+          url,
+          data,
+          timestamp: Date.now(),
+          retries: 0,
+        });
+        throw new Error(`Request queued for offline processing (ID: ${id})`);
+      }
+      throw error;
+    }
   }
 
   /**
-   * PUT request
+   * PUT request with offline support
    */
   async put<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
-    const response = await this.client.put<T>(url, data, config);
-    return response.data;
+    if (!this.isOnline) {
+      // Queue the request for later
+      const id = await this.queueRequest({
+        method: 'PUT',
+        url,
+        data,
+        timestamp: Date.now(),
+        retries: 0,
+      });
+      throw new Error(`Request queued for offline processing (ID: ${id})`);
+    }
+
+    try {
+      const response = await this.client.put<T>(url, data, config);
+      return response.data;
+    } catch (error) {
+      // If network error, queue for later
+      if (!navigator.onLine) {
+        const id = await this.queueRequest({
+          method: 'PUT',
+          url,
+          data,
+          timestamp: Date.now(),
+          retries: 0,
+        });
+        throw new Error(`Request queued for offline processing (ID: ${id})`);
+      }
+      throw error;
+    }
   }
 
   /**
-   * DELETE request
+   * DELETE request with offline support
    */
   async delete<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    const response = await this.client.delete<T>(url, config);
-    return response.data;
+    if (!this.isOnline) {
+      // Queue the request for later
+      const id = await this.queueRequest({
+        method: 'DELETE',
+        url,
+        data: undefined,
+        timestamp: Date.now(),
+        retries: 0,
+      });
+      throw new Error(`Request queued for offline processing (ID: ${id})`);
+    }
+
+    try {
+      const response = await this.client.delete<T>(url, config);
+      return response.data;
+    } catch (error) {
+      // If network error, queue for later
+      if (!navigator.onLine) {
+        const id = await this.queueRequest({
+          method: 'DELETE',
+          url,
+          data: undefined,
+          timestamp: Date.now(),
+          retries: 0,
+        });
+        throw new Error(`Request queued for offline processing (ID: ${id})`);
+      }
+      throw error;
+    }
   }
 
   /**
-   * PATCH request
+   * PATCH request with offline support
    */
   async patch<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
-    const response = await this.client.patch<T>(url, data, config);
-    return response.data;
+    if (!this.isOnline) {
+      // Queue the request for later
+      const id = await this.queueRequest({
+        method: 'PATCH',
+        url,
+        data,
+        timestamp: Date.now(),
+        retries: 0,
+      });
+      throw new Error(`Request queued for offline processing (ID: ${id})`);
+    }
+
+    try {
+      const response = await this.client.patch<T>(url, data, config);
+      return response.data;
+    } catch (error) {
+      // If network error, queue for later
+      if (!navigator.onLine) {
+        const id = await this.queueRequest({
+          method: 'PATCH',
+          url,
+          data,
+          timestamp: Date.now(),
+          retries: 0,
+        });
+        throw new Error(`Request queued for offline processing (ID: ${id})`);
+      }
+      throw error;
+    }
   }
 
   /**

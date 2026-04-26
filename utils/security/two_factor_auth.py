@@ -298,6 +298,35 @@ class TwoFactorAuth:
             return False
         return self._secrets[username].get("enabled", False)
 
+    def get_2fa_status(self, username: str) -> dict:
+        """
+        Получить полную информацию о статусе 2FA для пользователя
+
+        Args:
+            username: Имя пользователя
+
+        Returns:
+            dict: Информация о статусе 2FA
+        """
+        if username not in self._secrets:
+            return {
+                "enabled": False,
+                "configured": False,
+                "secret": None,
+                "backup_codes": [],
+                "has_backup_codes": False,
+            }
+
+        user_data = self._secrets[username]
+        return {
+            "enabled": user_data.get("enabled", False),
+            "secret": user_data.get("secret"),
+            "backup_codes": user_data.get("backup_codes", []),
+            "has_backup_codes": bool(user_data.get("backup_codes")),
+            "created_at": user_data.get("created_at"),
+            "verified_at": user_data.get("verified_at"),
+        }
+
     def disable_2fa(self, username: str, otp_code: str) -> bool:
         """
         Отключение 2FA
@@ -363,6 +392,8 @@ class TwoFactorAuth:
             return False
 
         backup_codes = self._secrets[username].get("backup_codes", [])
+        logger.debug(f"verify_backup_code: username={username}, backup_code={backup_code}")
+        logger.debug(f"verify_backup_code: backup_codes before={backup_codes}")
 
         if backup_code in backup_codes:
             # Удаление использованного кода
@@ -371,8 +402,10 @@ class TwoFactorAuth:
             self._secrets[username]["last_backup_code_used_at"] = str(datetime.now(timezone.utc))
             self._save_secrets()
             logger.info(f"Backup code used for user: {username}")
+            logger.debug(f"verify_backup_code: backup_codes after={backup_codes}")
             return True
 
+        logger.debug(f"verify_backup_code: backup_code not found")
         return False
 
     def get_qr_code_image(self, provisioning_uri: str) -> bytes:
