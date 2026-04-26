@@ -9,6 +9,7 @@ interface WaterfallDisplayProps {
   height?: number;
   frequency?: number;
   sampleRate?: number;
+  onConnectionChange?: (connected: boolean) => void;
 }
 
 /**
