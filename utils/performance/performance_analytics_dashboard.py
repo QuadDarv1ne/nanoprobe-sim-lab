@@ -294,10 +294,15 @@ class PerformanceAnalyticsDashboard:
                 PerformanceInsight(
                     category="cpu",
                     title="Высокая загрузка CPU",
-                    description=f"Загрузка CPU составляет {cpu_usage:.1f}%, что может указывать на перегрузку системы",
+                    description=(
+                        f"Загрузка CPU составляет {cpu_usage:.1f}%, "
+                        "что может указывать на перегрузку системы"
+                    ),
                     severity="high",
                     value=cpu_usage,
-                    recommendation="Оптимизируйте алгоритмы или рассмотрите распараллеливание вычислений",
+                    recommendation=(
+                        "Оптимизируйте алгоритмы или рассмотрите " "распараллеливание вычислений"
+                    ),
                     timestamp=datetime.now(timezone.utc),
                 )
             )
@@ -306,7 +311,10 @@ class PerformanceAnalyticsDashboard:
                 PerformanceInsight(
                     category="cpu",
                     title="Повышенная загрузка CPU",
-                    description=f"Загрузка CPU составляет {cpu_usage:.1f}%, следите за производительностью",
+                    description=(
+                        f"Загрузка CPU составляет {cpu_usage:.1f}%, "
+                        "следите за производительностью"
+                    ),
                     severity="medium",
                     value=cpu_usage,
                     recommendation="Мониторьте использование CPU и оптимизируйте при необходимости",
@@ -321,7 +329,10 @@ class PerformanceAnalyticsDashboard:
                 PerformanceInsight(
                     category="memory",
                     title="Высокое использование памяти",
-                    description=f"Использование памяти составляет {memory_usage:.1f}%, что может вызвать проблемы",
+                    description=(
+                        f"Использование памяти составляет {memory_usage:.1f}%, "
+                        "что может вызвать проблемы"
+                    ),
                     severity="high",
                     value=memory_usage,
                     recommendation="Проверьте утечки памяти и оптимизируйте использование",
@@ -333,7 +344,10 @@ class PerformanceAnalyticsDashboard:
                 PerformanceInsight(
                     category="memory",
                     title="Повышенное использование памяти",
-                    description=f"Использование памяти составляет {memory_usage:.1f}%, следите за потреблением",
+                    description=(
+                        f"Использование памяти составляет {memory_usage:.1f}%, "
+                        "следите за потреблением"
+                    ),
                     severity="medium",
                     value=memory_usage,
                     recommendation=(

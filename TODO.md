@@ -1,5 +1,5 @@
 ﻿# Nanoprobe Sim Lab — TODO
-**Последнее обновление:** 2026-04-24
+**Последнее обновление:** 2026-04-26
 **Текущая ветка:** `dev`
 **Целевая ветка:** `main`
 **Python:** 3.11 - 3.14
@@ -15,7 +15,7 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** ``36616fc`` — feat: migrate admin_cli.py to logging and add unit tests
+**Last commit:** ``f045f59`` — fix: resolve flake8 E501 and E226 issues in performance analytics, profiler, pdf report generator, and api profiler
 
 ---
 
@@ -277,7 +277,7 @@ git push origin feature/new-feature
 
 ## 📝 Заметки
 
-### Текущий спринт (2026-04-19)
+### Текущий спринт (2026-04-26)
 
 - ✅ **Добавлена автоматическая калибровка PPM** — `rtl_sdr_auto_calibration.py`
 - ✅ **Добавлен автозахват спутников NOAA/METEOR** — `satellite_auto_capture.py`
@@ -310,6 +310,8 @@ git push origin feature/new-feature
   - `utils/testing/api_profiler.py`, `utils/testing/api_test_runner.py`
 - ✅ **Перенесено admin_cli.py на использование logging вместо print**
 - ✅ **Добавлены unit-тесты для admin_cli.py**
+- ✅ **Исправлены замечания flake8** — E501 (line too long) и E226 (missing whitespace) в модулях производительности, профайлера, PDF-отчётов и профайлера API
+- ✅ **Обновлен TODO.md: изменена дата последнего обновления (2026-04-26), текущего спринта и последнего коммита**
 
 ### Новые API endpoints
 

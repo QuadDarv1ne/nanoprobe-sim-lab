@@ -190,9 +190,10 @@ class ScientificPDFReport:
 
         # Дата и подпись
         content.append(Spacer(1, 1 * inch))
+        date_str = datetime.now(timezone.utc).strftime("%d.%m.%Y %H:%M")
         content.append(
             Paragraph(
-                f"<i>Отчёт сгенерирован: {datetime.now(timezone.utc).strftime('%d.%m.%Y %H:%M')}</i>",
+                f"<i>Отчёт сгенерирован: {date_str}</i>",
                 self.styles["BodyText"],
             )
         )
@@ -548,9 +549,10 @@ class ScientificPDFReport:
             )
 
         content.append(Spacer(1, 0.5 * inch))
+        date_str = datetime.now(timezone.utc).strftime("%d.%m.%Y %H:%M")
         content.append(
             Paragraph(
-                f"<i>Отчёт сгенерирован: {datetime.now(timezone.utc).strftime('%d.%m.%Y %H:%M')}</i>",
+                f"<i>Отчёт сгенерирован: {date_str}</i>",
                 self.styles["BodyText"],
             )
         )
