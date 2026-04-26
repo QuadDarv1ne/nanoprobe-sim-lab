@@ -489,7 +489,7 @@ export default function SSTVPage() {
               <div className="text-center py-8">
                 <Radio className="h-12 w-12 mx-auto mb-4 opacity-20" />
                 <p className="text-muted-foreground">Нет записей</p>
-                <p className="text-sm text-muted-foreground mt-1">Нажмите "Начать запись" для приёма SSTV</p>
+                <p className="text-sm text-muted-foreground mt-1">Нажмите &quot;Начать запись&quot; для приёма SSTV</p>
               </div>
             ) : (
               <div className="space-y-2">
