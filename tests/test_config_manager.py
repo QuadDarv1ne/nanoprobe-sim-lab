@@ -30,18 +30,11 @@ class TestConfigManager(unittest.TestCase):
         with open(self.config_file, "w", encoding="utf-8") as f:
             json.dump(self.test_config, f)
 
-        # Сброс singleton для изоляции тестов
-        ConfigManager._instance = None
-        ConfigManager._initialized = False
-
     def tearDown(self):
         """Очистка после теста"""
         import shutil
 
         shutil.rmtree(self.temp_dir, ignore_errors=True)
-        # Сброс singleton после теста
-        ConfigManager._instance = None
-        ConfigManager._initialized = False
 
     def test_initialization(self):
         """Тестирует инициализацию ConfigManager"""

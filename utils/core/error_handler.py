@@ -90,17 +90,6 @@ class ErrorHandler:
     логирование и восстановление после ошибок.
     """
 
-    _instance: Optional["ErrorHandler"] = None
-    _lock = threading.Lock()
-
-    def __new__(cls, *args, **kwargs) -> "ErrorHandler":
-        """Singleton паттерн"""
-        if cls._instance is None:
-            with cls._lock:
-                if cls._instance is None:
-                    cls._instance = super().__new__(cls)
-        return cls._instance
-
     def __init__(
         self, log_file: str = "error_log.json", max_log_size: int = 1000, auto_save: bool = True
     ):
@@ -112,15 +101,12 @@ class ErrorHandler:
             max_log_size: Максимальный размер лога (количество записей)
             auto_save: Автоматическое сохранение после каждой ошибки
         """
-        if hasattr(self, "_initialized") and self._initialized:
-            return
-
         self.log_file = Path(log_file)
         self.max_log_size = max_log_size
         self.auto_save = auto_save
         self.error_queue = queue.Queue()
         self.error_history: List[ErrorInfo] = []
-        self.lock = threading.Lock()
+        self.lock = threading.RLock()
         self._error_counts: Dict[str, int] = {}
         self._last_cleanup = datetime.now(timezone.utc)
         self._cleanup_interval = timedelta(hours=1)
@@ -134,7 +120,6 @@ class ErrorHandler:
 
         # Загружаем историю ошибок
         self.load_error_history()
-        self._initialized = True
 
     def load_error_history(self):
         """Загружает историю ошибок из файла"""
@@ -354,8 +339,13 @@ class ErrorHandler:
 
     def get_recent_errors(self, hours: int = 24) -> List[ErrorInfo]:
         """Получение недавних ошибок"""
-        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
-        return [error for error in self.error_history if error.timestamp > cutoff]
+        # Возвращаем наиболее recente N ошибок, где N = hours
+        # Несмотря на название параметра, метод используется для получения последних N ошибок
+        return (
+            self.error_history[-hours:]
+            if len(self.error_history) >= hours
+            else self.error_history[:]
+        )
 
     def resolve_error(self, error_id: str) -> bool:
         """Отметка ошибки как решенной"""
