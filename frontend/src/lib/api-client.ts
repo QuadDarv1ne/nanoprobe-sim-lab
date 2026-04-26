@@ -76,6 +76,17 @@ class APIClient {
           errorMessage = error.message;
         }
 
+        // Log error for debugging (but don't expose sensitive info in production)
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[API Error]:', {
+            message: errorMessage,
+            url: originalRequest?.url,
+            method: originalRequest?.method,
+            status: error.response?.status,
+            timestamp: new Date().toISOString()
+          });
+        }
+
         // Retry logic for transient errors (5xx, network errors)
         const shouldRetry = (
           error.response?.status &&
