@@ -15,7 +15,7 @@ import httpx
 import pytest
 
 from utils.testing.api_profiler import APIProfiler, EndpointStats
-from utils.testing.api_test_runner import APITestRunner, TestReport, TestResult
+from utils.testing.api_test_runner import APITestRunner, TestResult
 
 API_BASE_URL = "http://localhost:8000"
 

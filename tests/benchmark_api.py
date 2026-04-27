@@ -89,12 +89,13 @@ def main():
         all_results.append(result)
 
         ok = f"{result['ok_rate']:.0f}%" if result["ok_rate"] < 100 else "100%"
-        print(
+        line = (
             f"{method:4s} {path:<35} "
             f"{result['avg']:6.1f} {result['median']:6.1f} "
             f"{result['p95']:6.1f} {result['p99']:6.1f} "
             f"{result['min']:6.1f} {result['max']:6.1f} {ok:>5}"
         )
+        print(line)
 
     print("-" * 80)
 
