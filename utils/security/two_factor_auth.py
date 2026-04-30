@@ -405,7 +405,7 @@ class TwoFactorAuth:
             logger.debug(f"verify_backup_code: backup_codes after={backup_codes}")
             return True
 
-        logger.debug(f"verify_backup_code: backup_code not found")
+        logger.debug("verify_backup_code: backup_code not found")
         return False
 
     def get_qr_code_image(self, provisioning_uri: str) -> bytes:
