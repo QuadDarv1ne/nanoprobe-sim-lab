@@ -15,7 +15,7 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** `6b446df` — fix: resolve flake8 F541 warning in two_factor_auth.py
+**Last commit:** `f9c64e0` — fix: remove return statements from test functions
 
 ---
 
@@ -286,6 +286,14 @@ git push origin feature/new-feature
   - Маркеры `integration` и `slow` для фильтрации тестов
   - Фильтры предупреждений для чистого вывода
 - ✅ **Исправлен alerting API** — добавлен `embed=True` для параметра `acknowledged_by` в `acknowledge_alert` endpoint
+- ✅ **Устранены PytestReturnNotNoneWarning** — удалены `return True` из тестовых функций в 7 файлах:
+  - `tests/test_error_handler.py`
+  - `tests/test_logger.py`
+  - `tests/security_test.py`
+  - `tests/test_database_async.py`
+  - `tests/test_improvements_quick.py`
+  - `tests/test_integration_api.py`
+  - `tests/test_performance_benchmark.py`
 - ✅ **Все pre-commit hooks проходят успешно** — black, isort, flake8, trim trailing whitespace, fix end of files
 - ✅ **252 теста пройдено успешно** (0 провалено!):
   - 37 тестов модуля `testing` (API Test Runner + API Profiler)
@@ -297,6 +305,7 @@ git push origin feature/new-feature
 
 ### Проблемы, выявленные при тестировании:
 - ✅ **Исправлено:** alerting API validation issue — добавлен `embed=True`
+- ✅ **Исправлено:** PytestReturnNotNoneWarning в 7 тестовых файлах
 - ⚠️ **Интеграционные тесты** — требуют запущенного API сервера (пропускаются с меткой `not integration`)
 - ⚠️ **`.env` файл** — содержит чувствительные данные, игнорируется git (правильно)
 
