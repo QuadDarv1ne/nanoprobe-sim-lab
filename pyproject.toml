@@ -186,3 +186,17 @@ warn_return_any = true
 warn_unused_configs = false
 ignore_missing_imports = true
 follow_imports = "silent"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "integration: marks tests as integration tests",
+    "slow: marks tests as slow",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
