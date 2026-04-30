@@ -45,7 +45,6 @@ def test_error_info_serialization():
     assert restored.severity == error.severity
 
     print("✓ Сериализация ErrorInfo: PASS")
-    return True
 
 
 def test_error_severity_enum():
@@ -59,7 +58,6 @@ def test_error_severity_enum():
     assert ErrorSeverity.CRITICAL.value == 50
 
     print("✓ ErrorSeverity Enum: PASS")
-    return True
 
 
 def main():
