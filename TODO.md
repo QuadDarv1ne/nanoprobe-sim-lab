@@ -1,5 +1,5 @@
 ﻿# Nanoprobe Sim Lab — TODO
-**Последнее обновление:** 2026-04-26
+**Последнее обновление:** 2026-04-30
 **Текущая ветка:** `dev`
 **Целевая ветка:** `main`
 **Python:** 3.11 - 3.14
@@ -15,7 +15,7 @@
 | `dev` | ✅ Синхронизирована | - |
 | `main` | ✅ Синхронизирована | - |
 
-**Last commit:** ``f045f59`` — fix: resolve flake8 E501 and E226 issues in performance analytics, profiler, pdf report generator, and api profiler
+**Last commit:** `6b446df` — fix: resolve flake8 F541 warning in two_factor_auth.py
 
 ---
 
@@ -277,7 +277,20 @@ git push origin feature/new-feature
 
 ## 📝 Заметки
 
-### Текущий спринт (2026-04-26)
+### Текущий спринт (2026-04-30)
+- ✅ **Исправлена проблема с кодировкой .env файла** — удалены кириллические комментарии, которые вызывали UnicodeDecodeError при загрузке через starlette.config на Windows
+- ✅ **Исправлен flake8 F541 warning** — заменён f-string без placeholders на обычную строку в `utils/security/two_factor_auth.py`
+- ✅ **Все pre-commit hooks проходят успешно** — black, isort, flake8, trim trailing whitespace, fix end of files
+- ✅ **43 API теста прошли успешно** — тесты test_api.py, test_admin_api.py, test_alerting_api.py
+
+### Проблемы, выявленные при тестировании:
+- ⚠️ **Интеграционные тесты** — требуют запущенного API сервера (пропускаются с меткой `not integration`)
+- ⚠️ **`.env` файл** — содержит чувствительные данные, игнорируется git (правильно)
+
+### Следующие шаги:
+1. Продолжить работу над приоритетными задачами из TODO.md
+2. Увеличить test coverage до 40%
+3. RTL-SDR V4 production ready (ожидается устройство)
 
 - ✅ **Добавлена автоматическая калибровка PPM** — `rtl_sdr_auto_calibration.py`
 - ✅ **Добавлен автозахват спутников NOAA/METEOR** — `satellite_auto_capture.py`
