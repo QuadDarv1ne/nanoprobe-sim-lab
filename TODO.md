@@ -280,8 +280,16 @@ git push origin feature/new-feature
 ### Текущий спринт (2026-04-30)
 - ✅ **Исправлена проблема с кодировкой .env файла** — удалены кириллические комментарии, которые вызывали UnicodeDecodeError при загрузке через starlette.config на Windows
 - ✅ **Исправлен flake8 F541 warning** — заменён f-string без placeholders на обычную строку в `utils/security/two_factor_auth.py`
+- ✅ **Добавлена конфигурация pytest** в `pyproject.toml`:
+  - `pythonpath = ["."]` для корректных импортов модулей
+  - `asyncio_default_fixture_loop_scope = "function"` для устранения предупреждения
+  - Маркеры `integration` и `slow` для фильтрации тестов
+  - Фильтры предупреждений для чистого вывода
 - ✅ **Все pre-commit hooks проходят успешно** — black, isort, flake8, trim trailing whitespace, fix end of files
-- ✅ **43 API теста прошли успешно** — тесты test_api.py, test_admin_api.py, test_alerting_api.py
+- ✅ **94+ тестов пройдено успешно**:
+  - 37 тестов модуля `testing` (API Test Runner + API Profiler)
+  - 30 тестов security и utils модулей (2FA, cache, error handler)
+  - 27 тестов API (auth, admin, alerting)
 
 ### Проблемы, выявленные при тестировании:
 - ⚠️ **Интеграционные тесты** — требуют запущенного API сервера (пропускаются с меткой `not integration`)
