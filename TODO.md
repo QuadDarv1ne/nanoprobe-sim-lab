@@ -285,13 +285,18 @@ git push origin feature/new-feature
   - `asyncio_default_fixture_loop_scope = "function"` для устранения предупреждения
   - Маркеры `integration` и `slow` для фильтрации тестов
   - Фильтры предупреждений для чистого вывода
+- ✅ **Исправлен alerting API** — добавлен `embed=True` для параметра `acknowledged_by` в `acknowledge_alert` endpoint
 - ✅ **Все pre-commit hooks проходят успешно** — black, isort, flake8, trim trailing whitespace, fix end of files
-- ✅ **94+ тестов пройдено успешно**:
+- ✅ **252 теста пройдено успешно** (0 провалено!):
   - 37 тестов модуля `testing` (API Test Runner + API Profiler)
   - 30 тестов security и utils модулей (2FA, cache, error handler)
   - 27 тестов API (auth, admin, alerting)
+  - 26 тестов SSTV Advanced API
+  - 25 тестов SDR hardware (hardware health, satellite auto capture, RTL-SDR auto calibration)
+  - 53 теста AI/ML и анализаторов (signal classifier, defect analyzer, image analyzer)
 
 ### Проблемы, выявленные при тестировании:
+- ✅ **Исправлено:** alerting API validation issue — добавлен `embed=True`
 - ⚠️ **Интеграционные тесты** — требуют запущенного API сервера (пропускаются с меткой `not integration`)
 - ⚠️ **`.env` файл** — содержит чувствительные данные, игнорируется git (правильно)
 
