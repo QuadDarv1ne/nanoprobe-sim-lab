@@ -188,7 +188,7 @@ class TestAcknowledgeAlert:
 
             response = client.post(
                 "/api/v1/alerting/acknowledge/alert_123",
-                content="admin",
+                json={"acknowledged_by": "admin"},
             )
 
             assert response.status_code == 200

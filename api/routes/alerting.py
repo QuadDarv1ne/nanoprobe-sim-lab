@@ -98,7 +98,7 @@ async def resolve_alert(
 )
 async def acknowledge_alert(
     alert_id: str,
-    acknowledged_by: str = Body(..., description="Имя пользователя"),
+    acknowledged_by: str = Body(..., description="Имя пользователя", embed=True),
     alert_manager: AlertManager = Depends(get_alert_manager),
 ):
     """Подтвердить алерт"""
