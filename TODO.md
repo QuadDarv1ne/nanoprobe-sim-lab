@@ -21,11 +21,17 @@
 - **Решение:** Добавлен `__test__ = False` во все классы
 - **Влияние:** Загрязняет вывод тестов — **исправлено**
 
+#### 2. Mypy — дублирующийся модуль api.state
+- **Статус:** ⚠️ Известная проблема
+- **Проблема:** `api/state.py` обнаруживается дважды как "state" и "api.state"
+- **Влияние:** Mypy не может проверить проект корректно
+- **Решение:** Добавить `__init__.py` или настроить `explicit-package-bases`
+
 ---
 
 ### 🟡 HIGH
 
-#### 2. Test coverage ~20% → 40%
+#### 3. Test coverage ~20% → 40%
 - **Статус:** 📈 Прогресс есть
 - **Текущее:** ~1494 теста
 - **Цель:** Увеличить покрытие критических модулей
@@ -35,7 +41,7 @@
   - `api/` — все роуты кроме auth
   - `src/` — CLI и веб-компоненты
 
-#### 3. RTL-SDR V4 Production Ready
+#### 4. RTL-SDR V4 Production Ready
 - **Статус:** ✅ Базовая функциональность готова
 - **Реализовано:**
   - Ring buffer
@@ -47,7 +53,7 @@
   - End-to-end тесты с реальным устройством
   - Документация по настройке
 
-#### 4. Next.js Frontend v2.0 → Production
+#### 5. Next.js Frontend v2.0 → Production
 - **Статус:** ⚠️ Частично готово
 - **Реализовано:**
   - WebGL водопад спектра
@@ -62,7 +68,7 @@
 
 ### 🟢 MEDIUM
 
-#### 5. PostgreSQL Migration
+#### 6. PostgreSQL Migration
 - **Статус:** 📄 Гайд создан, не выполнено
 - **Сложность:** 10-15 часов
 - **Шаги:**
@@ -72,14 +78,14 @@
   4. Обновить `.env` и конфиги
   5. Протестировать под нагрузкой
 
-#### 6. AI/ML Features Enhancement
+#### 7. AI/ML Features Enhancement
 - **Статус:** ⚠️ Базовая функциональность
 - **Осталось:**
   - Сбор датасета сигналов для обучения
   - Интеграция с внешними API (NASA, Zenodo)
   - Model versioning (MLflow)
 
-#### 7. Redis Caching — Full Implementation
+#### 8. Redis Caching — Full Implementation
 - **Статус:** ⚠️ Частично реализовано
 - **Осталось:**
   - Полная интеграция во все API endpoints
@@ -90,28 +96,28 @@
 
 ### 🔵 LOW
 
-#### 8. Code Quality Improvements
+#### 9. Code Quality Improvements
 - **Статус:** ✅ Pre-commit hooks настроены
 - **Осталось:**
   - Code coverage badges в README
   - Dependabot/Renovate для зависимостей
   - SonarQube интеграция (опционально)
 
-#### 9. Documentation
+#### 10. Documentation
 - **Статус:** ⚠️ Частично
 - **Осталось:**
   - API Reference автогенерация
   - Video tutorials
   - Changelog automation из commit messages
 
-#### 10. DevOps Improvements
+#### 11. DevOps Improvements
 - **Статус:** ✅ Docker Compose готов
 - **Осталось:**
   - Monitoring (Prometheus + Grafana)
   - Log aggregation (ELK/Loki)
   - Backup automation
 
-#### 11. Удаление временных файлов
+#### 12. Удаление временных файлов
 - **Статус:** ⚠️ Требует очистки
 - **Файлы для удаления:**
   - `0` (неизвестный файл/директория)
@@ -136,6 +142,7 @@
 | Test coverage | ~20% | 📈 |
 | GitHub Workflows | 7 | ✅ |
 | PytestCollectionWarning | 0 | ✅ **Исправлено** |
+| Mypy errors | 1 | ⚠️ api/state.py дубликат |
 
 ---
 
@@ -177,6 +184,7 @@ git push origin feature/new-feature
 - ✅ **Исправлено:** PytestReturnNotNoneWarning в 7 файлах
 - ✅ **Исправлено:** alerting API validation issue
 - ✅ **Исправлено:** PytestCollectionWarning — добавлен `__test__ = False`
+- ⚠️ **Mypy error** — дублирующийся модуль api/state.py
 - ⚠️ **Интеграционные тесты** — требуют запущенного API сервера
 - ⚠️ **print() в production** — ~210 случаев, требуется замена на logging
 
@@ -184,8 +192,9 @@ git push origin feature/new-feature
 1. Увеличить test coverage до 30%
 2. RTL-SDR V4 end-to-end тесты
 3. Миграция print() → logging
-4. PostgreSQL migration (опционально)
-5. Очистить временные файлы
+4. Исправить mypy ошибку (api/state.py)
+5. PostgreSQL migration (опционально)
+6. Очистить временные файлы
 
 ---
 
