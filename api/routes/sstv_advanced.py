@@ -1,23 +1,46 @@
 """
 Продвинутый SSTV API: спектр, сила сигнала, WebSocket стриминг
-
 Эндпоинты:
-- GET  /status            — полный статус системы
-- GET  /spectrum          — спектр сигнала
-- GET  /signal-strength   — сила сигнала
-- WS   /ws/stream         — real-time стрим спектра и сигнала
+- GET /status — полный статус системы
+- GET /spectrum — спектр сигнала
+- GET /signal-strength — сила сигнала
+- WS /ws/stream — real-time стрим спектра и сигнала
 """
-
 import asyncio
 import io
 import logging
 import os
 import struct
 import time
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from typing import AsyncIterator
 
 from fastapi import APIRouter, Query, Response, WebSocket, WebSocketDisconnect
+from api.error_handlers import ServiceUnavailableError
 
+logger = logging.getLogger(__name__)
+
+# ============================================
+# Lifespan (startup/shutdown)
+# ============================================
+@asynccontextmanager
+async def sstv_lifespan(_: APIRouter) -> AsyncIterator[None]:
+    """Lifespan context manager for SSTV Advanced API"""
+    # Startup: nothing to initialize
+    yield
+    # Shutdown: cleanup receiver
+    if RECEIVER_AVAILABLE:
+        try:
+            from api.sstv.rtl_sstv_receiver import get_receiver
+
+            receiver = get_receiver()
+            receiver.close()
+        except Exception as e:
+            logger.error(f"SSTV shutdown error: {e}")
+
+
+router = APIRouter(lifespan=sstv_lifespan)
 from api.error_handlers import ServiceUnavailableError
 
 logger = logging.getLogger(__name__)
@@ -418,19 +441,3 @@ async def get_raw_iq(
         raise ServiceUnavailableError(f"Raw IQ error: {str(e)}")
 
 
-# ============================================
-# Shutdown
-# ============================================
-
-
-@router.on_event("shutdown")
-async def shutdown_sstv():
-    if RECEIVER_AVAILABLE:
-        try:
-            from api.sstv.rtl_sstv_receiver import get_receiver
-
-            receiver = get_receiver()
-            receiver.close()
-        except Exception as e:
-            logger.error(f"SSTV shutdown error: {e}")
-    logger.info("SSTV Advanced API shutdown")
