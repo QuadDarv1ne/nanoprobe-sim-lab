@@ -4,7 +4,7 @@
 **Последнее обновление:** 2026-05-01
 **Python:** 3.14.4
 **Тесты:** 1494 collected
-**Статус:** Dev branch up to date with origin
+**Статус:** ✅ Dev и main синхронизированы
 
 ---
 
@@ -13,26 +13,19 @@
 ### 🔴 CRITICAL
 
 #### 1. PytestCollectionWarning — классы с `__init__`
-- **Статус:** ⚠️ Не исправлено
+- **Статус:** ✅ **Исправлено**
 - **Проблема:** 4 warning о классах с `__init__`, которые pytest пытается собрать как тесты
 - **Файлы:**
   - `utils/testing/api_test_runner.py` — `TestResult`, `TestReport`
   - `utils/test_framework.py` — `TestFramework`
-- **Решение:** Переименовать классы или добавить `__test__ = False`
-- **Влияние:** Загрязняет вывод тестов
-
-#### 2. Невнесенные изменения в git
-- **Статус:** ⚠️ Требует внимания
-- **Изменённые файлы:**
-  - `utils/test_framework.py` (modified)
-  - `utils/testing/api_test_runner.py` (modified)
-- **Действие:** Commit или restore changes
+- **Решение:** Добавлен `__test__ = False` во все классы
+- **Влияние:** Загрязняет вывод тестов — **исправлено**
 
 ---
 
 ### 🟡 HIGH
 
-#### 3. Test coverage ~20% → 40%
+#### 2. Test coverage ~20% → 40%
 - **Статус:** 📈 Прогресс есть
 - **Текущее:** ~1494 теста
 - **Цель:** Увеличить покрытие критических модулей
@@ -42,7 +35,7 @@
   - `api/` — все роуты кроме auth
   - `src/` — CLI и веб-компоненты
 
-#### 4. RTL-SDR V4 Production Ready
+#### 3. RTL-SDR V4 Production Ready
 - **Статус:** ✅ Базовая функциональность готова
 - **Реализовано:**
   - Ring buffer
@@ -54,7 +47,7 @@
   - End-to-end тесты с реальным устройством
   - Документация по настройке
 
-#### 5. Next.js Frontend v2.0 → Production
+#### 4. Next.js Frontend v2.0 → Production
 - **Статус:** ⚠️ Частично готово
 - **Реализовано:**
   - WebGL водопад спектра
@@ -69,7 +62,7 @@
 
 ### 🟢 MEDIUM
 
-#### 6. PostgreSQL Migration
+#### 5. PostgreSQL Migration
 - **Статус:** 📄 Гайд создан, не выполнено
 - **Сложность:** 10-15 часов
 - **Шаги:**
@@ -79,14 +72,14 @@
   4. Обновить `.env` и конфиги
   5. Протестировать под нагрузкой
 
-#### 7. AI/ML Features Enhancement
+#### 6. AI/ML Features Enhancement
 - **Статус:** ⚠️ Базовая функциональность
 - **Осталось:**
   - Сбор датасета сигналов для обучения
   - Интеграция с внешними API (NASA, Zenodo)
   - Model versioning (MLflow)
 
-#### 8. Redis Caching — Full Implementation
+#### 7. Redis Caching — Full Implementation
 - **Статус:** ⚠️ Частично реализовано
 - **Осталось:**
   - Полная интеграция во все API endpoints
@@ -97,28 +90,28 @@
 
 ### 🔵 LOW
 
-#### 9. Code Quality Improvements
+#### 8. Code Quality Improvements
 - **Статус:** ✅ Pre-commit hooks настроены
 - **Осталось:**
   - Code coverage badges в README
   - Dependabot/Renovate для зависимостей
   - SonarQube интеграция (опционально)
 
-#### 10. Documentation
+#### 9. Documentation
 - **Статус:** ⚠️ Частично
 - **Осталось:**
   - API Reference автогенерация
   - Video tutorials
   - Changelog automation из commit messages
 
-#### 11. DevOps Improvements
+#### 10. DevOps Improvements
 - **Статус:** ✅ Docker Compose готов
 - **Осталось:**
   - Monitoring (Prometheus + Grafana)
   - Log aggregation (ELK/Loki)
   - Backup automation
 
-#### 12. Удаление временных файлов
+#### 11. Удаление временных файлов
 - **Статус:** ⚠️ Требует очистки
 - **Файлы для удаления:**
   - `0` (неизвестный файл/директория)
@@ -142,6 +135,7 @@
 | print() в production | ~210 | ⚠️ |
 | Test coverage | ~20% | 📈 |
 | GitHub Workflows | 7 | ✅ |
+| PytestCollectionWarning | 0 | ✅ **Исправлено** |
 
 ---
 
@@ -182,17 +176,16 @@ git push origin feature/new-feature
 ### Выявленные проблемы
 - ✅ **Исправлено:** PytestReturnNotNoneWarning в 7 файлах
 - ✅ **Исправлено:** alerting API validation issue
+- ✅ **Исправлено:** PytestCollectionWarning — добавлен `__test__ = False`
 - ⚠️ **Интеграционные тесты** — требуют запущенного API сервера
-- ⚠️ **PytestCollectionWarning** — 4 warning о классах с `__init__`
-- ⚠️ **Невнесенные изменения** — требуют commit или discard
+- ⚠️ **print() в production** — ~210 случаев, требуется замена на logging
 
 ### Следующие шаги
-1. Исправить PytestCollectionWarning (CRITICAL)
-2. Commit невнесенных изменений
-3. Продолжить миграцию print() → logging
-4. Увеличить test coverage до 30%
-5. RTL-SDR V4 end-to-end тесты
-6. Очистить временные файлы
+1. Увеличить test coverage до 30%
+2. RTL-SDR V4 end-to-end тесты
+3. Миграция print() → logging
+4. PostgreSQL migration (опционально)
+5. Очистить временные файлы
 
 ---
 
