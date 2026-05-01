@@ -1,4 +1,4 @@
-﻿# TODO.md — Nanoprobe Sim Lab
+# TODO.md — Nanoprobe Sim Lab
 
 **Ветка:** `dev` → `main`
 **Последнее обновление:** 2026-05-01
@@ -11,30 +11,29 @@
 
 ### 🔴 CRITICAL
 
-#### 1. Исправить PytestCollectionWarning
-- **Статус:** ⚠️ В работе
+#### 1. PytestCollectionWarning — классы с `__init__`
+- **Статус:** ⚠️ Не исправлено
 - **Проблема:** 4 warning о классах с `__init__`, которые pytest пытается собрать как тесты
 - **Файлы:**
   - `utils/testing/api_test_runner.py` — `TestResult`, `TestReport`
   - `utils/test_framework.py` — `TestFramework`
 - **Решение:** Переименовать классы или добавить `__test__ = False`
-- **Влияние:** Загрязняет вывод тестов, может мешать сборке
+- **Влияние:** Загрязняет вывод тестов
 
 #### 2. print() → logging в src/
-- **Статус:** ⚠️ ~190 вызовов осталось
+- **Статус:** ⚠️ ~190 вызовов
 - **Файлы:**
-  - `src/cli/main.py` — 50+ print() в основном блоке
-  - `src/cli/dashboard.py` — 5+ print()
+  - `src/cli/main.py` — 50+ print()
+  - `src/cli/project_manager.py` — 20+ print()
   - `src/web/web_dashboard_unified.py` — 15+ print()
 - **Приоритет:** LOW (CLI output, не критично)
-- **Влияние:** Непоследовательность логирования
 
 #### 3. print() → logging в api/
-- **Статус:** ⚠️ ~20 вызовов осталось
+- **Статус:** ⚠️ ~20 вызовов (только тестовые блоки)
 - **Файлы:**
-  - `api/alerting.py` — 4 print() в тестовом блоке
-  - `api/integration.py` — 16 print() в тестовом блоке
-- **Приоритет:** LOW (только тестовые блоки `if __name__ == "__main__"`)
+  - `api/alerting.py` — 4 print() в `if __name__ == "__main__"`
+  - `api/integration.py` — 16 print() в `if __name__ == "__main__"`
+- **Приоритет:** LOW
 
 ---
 
@@ -44,7 +43,7 @@
 - **Статус:** 📈 Прогресс есть
 - **Текущее:** ~1494 теста
 - **Цель:** Увеличить покрытие критических модулей
-- **Приоритетные модули для тестирования:**
+- **Приоритетные модули:**
   - `utils/sdr/` — RTL-SDR менеджмент
   - `utils/ai/` — ML модели
   - `api/` — все роуты кроме auth
