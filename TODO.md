@@ -4,6 +4,7 @@
 **Последнее обновление:** 2026-05-01
 **Python:** 3.14.4
 **Тесты:** 1494 collected
+**Статус:** Dev branch up to date with origin
 
 ---
 
@@ -20,26 +21,18 @@
 - **Решение:** Переименовать классы или добавить `__test__ = False`
 - **Влияние:** Загрязняет вывод тестов
 
-#### 2. print() → logging в src/
-- **Статус:** ⚠️ ~190 вызовов
-- **Файлы:**
-  - `src/cli/main.py` — 50+ print()
-  - `src/cli/project_manager.py` — 20+ print()
-  - `src/web/web_dashboard_unified.py` — 15+ print()
-- **Приоритет:** LOW (CLI output, не критично)
-
-#### 3. print() → logging в api/
-- **Статус:** ⚠️ ~20 вызовов (только тестовые блоки)
-- **Файлы:**
-  - `api/alerting.py` — 4 print() в `if __name__ == "__main__"`
-  - `api/integration.py` — 16 print() в `if __name__ == "__main__"`
-- **Приоритет:** LOW
+#### 2. Невнесенные изменения в git
+- **Статус:** ⚠️ Требует внимания
+- **Изменённые файлы:**
+  - `utils/test_framework.py` (modified)
+  - `utils/testing/api_test_runner.py` (modified)
+- **Действие:** Commit или restore changes
 
 ---
 
 ### 🟡 HIGH
 
-#### 4. Test coverage ~20% → 40%
+#### 3. Test coverage ~20% → 40%
 - **Статус:** 📈 Прогресс есть
 - **Текущее:** ~1494 теста
 - **Цель:** Увеличить покрытие критических модулей
@@ -49,7 +42,7 @@
   - `api/` — все роуты кроме auth
   - `src/` — CLI и веб-компоненты
 
-#### 5. RTL-SDR V4 Production Ready
+#### 4. RTL-SDR V4 Production Ready
 - **Статус:** ✅ Базовая функциональность готова
 - **Реализовано:**
   - Ring buffer
@@ -61,7 +54,7 @@
   - End-to-end тесты с реальным устройством
   - Документация по настройке
 
-#### 6. Next.js Frontend v2.0 → Production
+#### 5. Next.js Frontend v2.0 → Production
 - **Статус:** ⚠️ Частично готово
 - **Реализовано:**
   - WebGL водопад спектра
@@ -76,7 +69,7 @@
 
 ### 🟢 MEDIUM
 
-#### 7. PostgreSQL Migration
+#### 6. PostgreSQL Migration
 - **Статус:** 📄 Гайд создан, не выполнено
 - **Сложность:** 10-15 часов
 - **Шаги:**
@@ -86,14 +79,14 @@
   4. Обновить `.env` и конфиги
   5. Протестировать под нагрузкой
 
-#### 8. AI/ML Features Enhancement
+#### 7. AI/ML Features Enhancement
 - **Статус:** ⚠️ Базовая функциональность
 - **Осталось:**
   - Сбор датасета сигналов для обучения
   - Интеграция с внешними API (NASA, Zenodo)
   - Model versioning (MLflow)
 
-#### 9. Redis Caching — Full Implementation
+#### 8. Redis Caching — Full Implementation
 - **Статус:** ⚠️ Частично реализовано
 - **Осталось:**
   - Полная интеграция во все API endpoints
@@ -104,26 +97,35 @@
 
 ### 🔵 LOW
 
-#### 10. Code Quality Improvements
+#### 9. Code Quality Improvements
 - **Статус:** ✅ Pre-commit hooks настроены
 - **Осталось:**
   - Code coverage badges в README
   - Dependabot/Renovate для зависимостей
   - SonarQube интеграция (опционально)
 
-#### 11. Documentation
+#### 10. Documentation
 - **Статус:** ⚠️ Частично
 - **Осталось:**
   - API Reference автогенерация
   - Video tutorials
   - Changelog automation из commit messages
 
-#### 12. DevOps Improvements
+#### 11. DevOps Improvements
 - **Статус:** ✅ Docker Compose готов
 - **Осталось:**
   - Monitoring (Prometheus + Grafana)
   - Log aggregation (ELK/Loki)
   - Backup automation
+
+#### 12. Удаление временных файлов
+- **Статус:** ⚠️ Требует очистки
+- **Файлы для удаления:**
+  - `0` (неизвестный файл/директория)
+  - `apply_fix.py`
+  - `fix_pytest_warnings.py`
+  - `fix_pytest_warnings2.py`
+  - `utils/testing/api_test_runner.py.tmp`
 
 ---
 
@@ -139,6 +141,7 @@
 | bare except | 0 | ✅ |
 | print() в production | ~210 | ⚠️ |
 | Test coverage | ~20% | 📈 |
+| GitHub Workflows | 7 | ✅ |
 
 ---
 
@@ -181,12 +184,15 @@ git push origin feature/new-feature
 - ✅ **Исправлено:** alerting API validation issue
 - ⚠️ **Интеграционные тесты** — требуют запущенного API сервера
 - ⚠️ **PytestCollectionWarning** — 4 warning о классах с `__init__`
+- ⚠️ **Невнесенные изменения** — требуют commit или discard
 
 ### Следующие шаги
 1. Исправить PytestCollectionWarning (CRITICAL)
-2. Продолжить миграцию print() → logging
-3. Увеличить test coverage до 30%
-4. RTL-SDR V4 end-to-end тесты
+2. Commit невнесенных изменений
+3. Продолжить миграцию print() → logging
+4. Увеличить test coverage до 30%
+5. RTL-SDR V4 end-to-end тесты
+6. Очистить временные файлы
 
 ---
 

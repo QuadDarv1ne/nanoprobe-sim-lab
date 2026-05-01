@@ -32,6 +32,8 @@ logger = logging.getLogger(__name__)
 class TestResult:
     """Результат тестирования одного endpoint"""
 
+    __test__ = False  # Prevent pytest collection
+
     endpoint: str
     method: str
     status_code: int
@@ -46,6 +48,8 @@ class TestResult:
 @dataclass
 class TestReport:
     """Отчёт о тестировании API"""
+
+    __test__ = False  # Prevent pytest collection
 
     base_url: str
     total_tests: int = 0
