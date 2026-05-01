@@ -17,6 +17,8 @@ logger = logging.getLogger(__name__)
 
 
 class TestFramework:
+    __test__ = False  # Prevent pytest collection
+
     """
     Класс тестовой платформы
     Обеспечивает комплексное тестирование,
