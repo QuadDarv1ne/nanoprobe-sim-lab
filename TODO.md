@@ -21,17 +21,24 @@
 - **Решение:** Добавлен `__test__ = False` во все классы
 - **Влияние:** Загрязняет вывод тестов — **исправлено**
 
-#### 2. Mypy — дублирующийся модуль api.state
-- **Статус:** ⚠️ Известная проблема
+#### 2. DeprecationWarning — FastAPI on_event
+- **Статус:** ✅ **Исправлено**
+- **Проблема:** `@router.on_event("shutdown")` deprecated в FastAPI 0.118+
+- **Файл:** `api/routes/sstv_advanced.py`
+- **Решение:** Заменено на `@asynccontextmanager` lifespan
+- **Влияние:** Warning при pytest collection — **исправлено**
+
+#### 3. Mypy — дублирующийся модуль api.state
+- **Статус:** ✅ **Исправлено**
 - **Проблема:** `api/state.py` обнаруживается дважды как "state" и "api.state"
 - **Влияние:** Mypy не может проверить проект корректно
-- **Решение:** Добавить `__init__.py` или настроить `explicit-package-bases`
+- **Решение:** Добавлены `__init__.py` файлы в `api/` и `src/` директории
 
 ---
 
 ### 🟡 HIGH
 
-#### 3. Test coverage ~20% → 40%
+#### 4. Test coverage ~20% → 40%
 - **Статус:** 📈 Прогресс есть
 - **Текущее:** ~1494 теста
 - **Цель:** Увеличить покрытие критических модулей
@@ -142,7 +149,7 @@
 | Test coverage | ~20% | 📈 |
 | GitHub Workflows | 7 | ✅ |
 | PytestCollectionWarning | 0 | ✅ **Исправлено** |
-| Mypy errors | 1 | ⚠️ api/state.py дубликат |
+| Mypy errors | 0 | ✅ **Исправлено** |
 
 ---
 

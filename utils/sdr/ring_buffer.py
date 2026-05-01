@@ -20,7 +20,7 @@ MAGIC = b"RING"
 VERSION = 1
 HEADER_SIZE = 32
 HEADER_FORMAT = (
-    "<4sIIqII"  # magic(4B) + version(4B) + capacity(4B) + head(8B) + tail(8B) + flags(4B)
+    "<4sIIqqI"  # magic(4B) + version(4B) + capacity(4B) + head(8B) + tail(8B) + flags(4B)
 )
 
 
@@ -139,6 +139,21 @@ class SharedRingBuffer:
 
             capacity, head, tail, flags = header
 
+            # Calculate current number of elements in buffer
+            if head == tail:
+                # When head == tail, check flags to see if buffer is empty or full
+                current_count = 0 if flags == 0 else capacity
+            elif head > tail:
+                current_count = head - tail
+            else:  # head < tail
+                current_count = capacity + head - tail
+
+            # Calculate new count after writing
+            new_count = min(capacity, current_count + n)
+
+            # Calculate how many elements we need to drop from the beginning
+            drop_count = max(0, current_count + n - capacity)
+
             if n > capacity:
                 # Overwrite entire buffer — keep only last `capacity` samples
                 data = samples[-capacity:]
@@ -156,10 +171,12 @@ class SharedRingBuffer:
                 self._data[: (len(data) - first_part) * 8] = bytes_to_write[first_part * 8 :]
 
             new_head = (head + len(data)) % capacity
-            # If we've overwritten the tail, advance it
-            if new_head <= tail:
-                tail = (new_head + 1) % capacity
-            self._write_header(capacity, new_head, tail, flags)
+            new_tail = (tail + drop_count) % capacity
+
+            # Update flags: 1 if buffer is full, 0 otherwise
+            new_flags = 1 if new_count == capacity else 0
+
+            self._write_header(capacity, new_head, new_tail, new_flags)
 
         return n
 
@@ -182,11 +199,20 @@ class SharedRingBuffer:
                 return np.array([], dtype=np.complex64)
 
             capacity, head, tail, flags = header
-            available_count = (head - tail) % capacity
-            if available_count == 0:
+
+            # Calculate current number of elements in buffer
+            if head == tail:
+                # When head == tail, check flags to see if buffer is empty or full
+                current_count = 0 if flags == 0 else capacity
+            elif head > tail:
+                current_count = head - tail
+            else:  # head < tail
+                current_count = capacity + head - tail
+
+            if current_count == 0:
                 return np.array([], dtype=np.complex64)
 
-            to_read = min(count, available_count)
+            to_read = min(count, current_count)
             result = np.empty(to_read, dtype=np.complex64)
 
             if tail + to_read <= capacity:
@@ -201,7 +227,13 @@ class SharedRingBuffer:
                 result[first_part:].view(np.float32)[:] = np.frombuffer(data2, dtype=np.float32)
 
             new_tail = (tail + to_read) % capacity
-            self._write_header(capacity, head, new_tail, flags)
+            new_head = head  # head doesn't change when reading
+
+            # Update flags: 0 if buffer is empty, 1 otherwise
+            new_count = current_count - to_read
+            new_flags = 1 if new_count > 0 else 0
+
+            self._write_header(capacity, new_head, new_tail, new_flags)
 
         return result
 
@@ -212,15 +244,23 @@ class SharedRingBuffer:
             if header is None:
                 return 0
             capacity, head, tail, flags = header
-            return (head - tail) % capacity
+
+            # Calculate current number of elements in buffer
+            if head == tail:
+                # When head == tail, check flags to see if buffer is empty or full
+                return 0 if flags == 0 else capacity
+            elif head > tail:
+                return head - tail
+            else:  # head < tail
+                return capacity + head - tail
 
     def clear(self):
         """Reset head and tail pointers."""
         with self._lock:
             header = self._read_header()
             if header is not None:
-                capacity, _, _, flags = header
-                self._write_header(capacity, 0, 0, flags)
+                capacity, _, _, _ = header
+                self._write_header(capacity, 0, 0, 0)  # Empty buffer
 
     def __del__(self):
         """Clean up shared memory resources."""

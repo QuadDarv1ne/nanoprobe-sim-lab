@@ -169,7 +169,9 @@ class TestDataManager(unittest.TestCase):
         import pandas as pd
 
         df = pd.read_csv(expected_path)
+        # При чтении из CSV имена колонок становятся строками, поэтому сравниваем значения
         expected_df = pd.DataFrame(test_data)
+        expected_df.columns = [str(i) for i in range(expected_df.shape[1])]
         pd.testing.assert_frame_equal(df, expected_df)
 
     def test_export_to_csv_dataframe(self):

@@ -6,6 +6,7 @@
 - GET /signal-strength — сила сигнала
 - WS /ws/stream — real-time стрим спектра и сигнала
 """
+
 import asyncio
 import io
 import logging
@@ -17,9 +18,21 @@ from datetime import datetime, timezone
 from typing import AsyncIterator
 
 from fastapi import APIRouter, Query, Response, WebSocket, WebSocketDisconnect
+
 from api.error_handlers import ServiceUnavailableError
 
 logger = logging.getLogger(__name__)
+
+# SSTV Receiver — быстрая проверка без блокировки
+RECEIVER_AVAILABLE = False
+try:
+    from api.sstv.rtl_sstv_receiver import RTLSDR_AVAILABLE as _RTL
+    from api.sstv.session_manager import get_session_manager
+
+    RECEIVER_AVAILABLE = _RTL
+except ImportError:
+    pass
+
 
 # ============================================
 # Lifespan (startup/shutdown)
@@ -41,21 +54,6 @@ async def sstv_lifespan(_: APIRouter) -> AsyncIterator[None]:
 
 
 router = APIRouter(lifespan=sstv_lifespan)
-from api.error_handlers import ServiceUnavailableError
-
-logger = logging.getLogger(__name__)
-
-router = APIRouter()
-
-# SSTV Receiver — быстрая проверка без блокировки
-RECEIVER_AVAILABLE = False
-try:
-    from api.sstv.rtl_sstv_receiver import RTLSDR_AVAILABLE as _RTL
-    from api.sstv.session_manager import get_session_manager
-
-    RECEIVER_AVAILABLE = _RTL
-except ImportError:
-    pass
 
 # Кэш статуса устройства (чтобы не блокироваться на каждом запросе)
 _device_cache = {
@@ -439,5 +437,3 @@ async def get_raw_iq(
         raise
     except Exception as e:
         raise ServiceUnavailableError(f"Raw IQ error: {str(e)}")
-
-

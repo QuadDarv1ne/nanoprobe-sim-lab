@@ -81,7 +81,9 @@ class TestSharedRingBufferWriteRead(unittest.TestCase):
         buffer = SharedRingBuffer(name="test_read_empty", capacity=1024)
 
         read_data = buffer.read(100)
-        self.assertIsNone(read_data)
+        # Возвращает пустой массив, а не None
+        self.assertIsInstance(read_data, np.ndarray)
+        self.assertEqual(len(read_data), 0)
 
     def test_read_more_than_available(self):
         """Тест чтения большего количества данных чем доступно."""
@@ -111,6 +113,7 @@ class TestSharedRingBufferOverflow(unittest.TestCase):
         # Должно остаться только 100 последних элементов
         read_data = buffer.read(100)
         self.assertIsNotNone(read_data)
+        # При переполнении должно остаться capacity элементов (100)
         self.assertEqual(len(read_data), 100)
 
 

@@ -1,0 +1,28 @@
+{
+  "export_timestamp": "2026-05-01T19:58:32.497972+00:00",
+  "total_errors": 2,
+  "errors": [
+    {
+      "timestamp": "2026-05-01T19:58:32.493869+00:00",
+      "severity": "ERROR",
+      "message": "Test error 1",
+      "exception_type": "Manual",
+      "exception_message": "Test error 1",
+      "component": "Test",
+      "has_user_context": false,
+      "error_id": "20260501195832_Test_0",
+      "resolved": false
+    },
+    {
+      "timestamp": "2026-05-01T19:58:32.496045+00:00",
+      "severity": "ERROR",
+      "message": "Test error 2",
+      "exception_type": "Manual",
+      "exception_message": "Test error 2",
+      "component": "Test",
+      "has_user_context": false,
+      "error_id": "20260501195832_Test_1",
+      "resolved": false
+    }
+  ]
+}
