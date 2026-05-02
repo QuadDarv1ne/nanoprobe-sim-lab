@@ -115,7 +115,9 @@ class StreamingDataBuffer:
                 "max_size": self.max_size,
                 "total_frames": self.total_items_added,
                 "fps": self.get_fps(),
-                "buffer_usage": len(self.buffer) / self.max_size * 100 if self.max_size > 0 else 0,
+                "buffer_usage": (
+                    len(self.buffer) / self.max_size * 100 if self.max_size > 0 else 0
+                ),
             }
 
 
@@ -356,7 +358,11 @@ class RealTimeSPMVisualizer:
             return self._update_display(frame)
 
         self.anim = animation.FuncAnimation(
-            self.fig, animate, interval=self.update_interval, blit=True, cache_frame_data=False
+            self.fig,
+            animate,
+            interval=self.update_interval,
+            blit=True,
+            cache_frame_data=False,
         )
 
         plt.show()
@@ -428,7 +434,10 @@ class SPMScanSimulator:
     """
 
     def __init__(
-        self, surface_generator: Callable = None, scan_speed: float = 1.0, noise_level: float = 0.01
+        self,
+        surface_generator: Callable = None,
+        scan_speed: float = 1.0,
+        noise_level: float = 0.01,
     ):
         """
         Инициализация симулятора
@@ -587,7 +596,9 @@ class WebSocketVisualizer:
 
 # Глобальные функции для быстрой визуализации
 def visualize_spm_realtime(
-    data_source: Callable = None, title: str = "СЗМ Real-time", colormap: str = "viridis"
+    data_source: Callable = None,
+    title: str = "СЗМ Real-time",
+    colormap: str = "viridis",
 ):
     """
     Быстрая визуализация СЗМ в реальном времени
