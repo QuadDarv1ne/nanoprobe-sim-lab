@@ -1,5 +1,6 @@
 """Интерактивная панель управления проектом Лаборатория моделирования нанозонда."""
 
+import logging
 import threading
 import tkinter as tk
 from datetime import datetime, timezone
@@ -15,6 +16,9 @@ from utils.data.data_manager import DataManager
 from utils.logger import NanoprobeLogger, setup_project_logging
 from utils.simulator_orchestrator import SimulationOrchestrator
 from utils.visualizer import ProjectVisualizer
+
+# Logger setup
+logger = logging.getLogger(__name__)
 
 
 class NanoprobeDashboard:
@@ -431,21 +435,21 @@ class NanoprobeDashboard:
 
 def main() -> None:
     """Главная функция запуска панели управления."""
-    print("ЗАПУСК ИНТЕРАКТИВНОЙ ПАНЕЛИ УПРАВЛЕНИЯ")
-    print("Инициализация компонентов...")
+    logger.info("ЗАПУСК ИНТЕРАКТИВНОЙ ПАНЕЛИ УПРАВЛЕНИЯ")
+    logger.info("Инициализация компонентов...")
 
     try:
         dashboard = NanoprobeDashboard()
-        print("✓ Панель управления инициализирована")
-        print("Запуск интерфейса...")
+        logger.info("✓ Панель управления инициализирована")
+        logger.info("Запуск интерфейса...")
 
         dashboard.run()
 
     except Exception as e:
-        print(f"Ошибка запуска панели управления: {e}")
+        logger.error(f"Ошибка запуска панели управления: {e}")
         import traceback
 
-        traceback.print_exc()
+        logger.error(traceback.format_exc())
 
 
 if __name__ == "__main__":

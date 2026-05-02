@@ -596,12 +596,12 @@ class AlertingMiddleware:
 
 if __name__ == "__main__":
     # Тестирование
-    print("=== Тестирование Alerting системы ===\n")
+    logger.info("=== Тестирование Alerting системы ===\n")
 
     manager = AlertManager()
 
     # Тестовый алерт
-    print("Отправка тестового алерта...")
+    logger.info("Отправка тестового алерта...")
     result = manager.send_alert(
         alert_name="TestAlert",
         severity="warning",
@@ -610,8 +610,8 @@ if __name__ == "__main__":
         channels=["webhook"],  # Только webhook для теста
     )
 
-    print(f"Результат: {result}")
+    logger.info(f"Результат: {result}")
 
     # Статистика
     stats = manager.get_alert_statistics()
-    print(f"\nСтатистика: {stats}")
+    logger.info(f"\nСтатистика: {stats}")
