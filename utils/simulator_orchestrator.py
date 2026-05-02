@@ -1,5 +1,8 @@
-"""Модуль оркестратора симуляции для проекта Лаборатория моделирования нанозонда."""
+"""
+Модуль оркестратора симуляции для проекта Лаборатория моделирования нанозонда.
+"""
 
+import logging
 import queue
 import threading
 import time
@@ -19,17 +22,20 @@ from utils.data.data_manager import DataManager
 from utils.logger import setup_project_logging
 from utils.visualizer import ProjectVisualizer
 
+logger = logging.getLogger(__name__)
+
 
 class SimulationOrchestrator:
     """
-    Класс оркестратора симуляции
-    Координирует работу всех компонентов проекта для комплексной симуляции
-    процессов, происходящих в нанозондовом микроскопе и связанных системах.
+    Класс оркестратора симуляции.
+
+    Координирует работу всех компонентов проекта для комплексной симуляции процессов,
+    происходящих в нанозондовом микроскопе и связанных системах.
     """
 
     def __init__(self, config_manager: Optional[ConfigManager] = None):
         """
-        Инициализирует оркестратор симуляции
+        Инициализирует оркестратор симуляции.
 
         Args:
             config_manager: Экземпляр менеджера конфигурации (опционально)
@@ -84,7 +90,7 @@ class SimulationOrchestrator:
 
     def create_simulation_surface(self, size: tuple = (50, 50)) -> "SurfaceModel":
         """
-        Создает поверхность для симуляции
+        Создает поверхность для симуляции.
 
         Args:
             size: Размер поверхности (ширина, высота)
@@ -93,20 +99,18 @@ class SimulationOrchestrator:
             Экземпляр модели поверхности
         """
         self.logger_manager.log_spm_event(f"Создание поверхности размером {size}", "INFO")
-
         surface = SurfaceModel(size[0], size[1])
 
         # Сохраняем поверхность
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         filename = f"simulated_surface_{timestamp}.txt"
         surface.save_to_file(filename)
-
         self.logger_manager.log_spm_event(f"Поверхность создана и сохранена как {filename}", "INFO")
         return surface
 
     def run_spm_simulation(self, surface: "SurfaceModel", duration: float = 10.0) -> Dict[str, Any]:
         """
-        Запускает симуляцию сканирования поверхности СЗМ
+        Запускает симуляцию сканирования поверхности СЗМ.
 
         Args:
             surface: Модель поверхности для сканирования
@@ -147,7 +151,7 @@ class SimulationOrchestrator:
 
     def run_image_analysis(self, image_path: str) -> Dict[str, Any]:
         """
-        Запускает анализ изображения
+        Запускает анализ изображения.
 
         Args:
             image_path: Путь к изображению для анализа
@@ -192,7 +196,7 @@ class SimulationOrchestrator:
 
     def run_sstv_decoding(self, audio_file: str) -> Dict[str, Any]:
         """
-        Запускает декодирование SSTV сигнала
+        Запускает декодирование SSTV сигнала.
 
         Args:
             audio_file: Путь к аудиофайлу с SSTV сигналом
@@ -231,7 +235,7 @@ class SimulationOrchestrator:
         self, surface_size: tuple = (50, 50)
     ) -> Dict[str, Any]:
         """
-        Координирует симуляцию с участием нескольких компонентов
+        Координирует симуляцию с участием нескольких компонентов.
 
         Args:
             surface_size: Размер поверхности для симуляции
@@ -240,7 +244,6 @@ class SimulationOrchestrator:
             Словарь с результатами комплексной симуляции
         """
         self.logger_manager.log_simulation_event("Начало комплексной симуляции", "INFO")
-
         start_time = time.time()
 
         # Создаем поверхность
@@ -256,9 +259,7 @@ class SimulationOrchestrator:
             ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             filename = f"output/comprehensive_simulation_{ts}.png"
             self.visualizer.surface_viz.plot_surface_2d(
-                sample_surface_data,
-                "Результаты комплексной симуляции",
-                filename,
+                sample_surface_data, "Результаты комплексной симуляции", filename
             )
         except Exception as e:
             self.logger_manager.log_system_event(f"Ошибка визуализации: {e}", "WARNING")
@@ -283,7 +284,7 @@ class SimulationOrchestrator:
 
     def run_continuous_simulation(self, duration_minutes: int = 10):
         """
-        Запускает непрерывную симуляцию в течение заданного времени
+        Запускает непрерывную симуляцию в течение заданного времени.
 
         Args:
             duration_minutes: Продолжительность симуляции в минутах
@@ -291,19 +292,18 @@ class SimulationOrchestrator:
         self.logger_manager.log_simulation_event(
             f"Начало непрерывной симуляции на {duration_minutes} минут", "INFO"
         )
-
         self._stop_event.clear()
+
         start_time = time.time()
         end_time = start_time + (duration_minutes * 60)
-
         cycle_count = 0
 
         while time.time() < end_time and not self._stop_event.is_set():
             try:
                 # Выполняем цикл симуляции
                 self.coordinate_multi_component_simulation()
-
                 cycle_count += 1
+
                 self.logger_manager.log_simulation_event(
                     f"Цикл симуляции #{cycle_count} завершен", "INFO"
                 )
@@ -325,7 +325,7 @@ class SimulationOrchestrator:
 
     def start_background_simulation(self, duration_minutes: int = 10):
         """
-        Запускает симуляцию в фоновом потоке
+        Запускает симуляцию в фоновом потоке.
 
         Args:
             duration_minutes: Продолжительность симуляции в минутах
@@ -345,14 +345,16 @@ class SimulationOrchestrator:
 
     def get_simulation_status(self) -> Dict[str, Any]:
         """
-        Возвращает статус текущей симуляции
+        Возвращает статус текущей симуляции.
 
         Returns:
             Словарь с информацией о статусе симуляции
         """
         return {
-            "simulation_running": self._stop_event.is_set(),
-            "thread_active": self.simulation_thread.is_alive() if self.simulation_thread else False,
+            "simulation_running": not self._stop_event.is_set(),
+            "thread_active": (
+                self.simulation_thread.is_alive() if self.simulation_thread else False
+            ),
             "results_count": len(self.simulation_results),
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
@@ -360,29 +362,27 @@ class SimulationOrchestrator:
 
 def main():
     """Главная функция для демонстрации возможностей оркестратора"""
-    print("=== ОРКЕСТРАТОР СИМУЛЯЦИИ ПРОЕКТА ===")
+    logger.info("=== ОРКЕСТРАТОР СИМУЛЯЦИИ ПРОЕКТА ===")
 
     # Создаем оркестратор
     orchestrator = SimulationOrchestrator()
 
     # Инициализируем компоненты
     orchestrator.initialize_components()
-
-    print("✓ Оркестратор симуляции инициализирован")
-    print("Тестирование основных функций...")
+    logger.info("✓ Оркестратор симуляции инициализирован")
+    logger.info("Тестирование основных функций...")
 
     # Тестируем создание поверхности
     try:
         orchestrator.create_simulation_surface((20, 20))
-        print("✓ Поверхность успешно создана")
+        logger.info("✓ Поверхность успешно создана")
     except Exception as e:
-        print(f"✗ Ошибка создания поверхности: {e}")
+        logger.error(f"✗ Ошибка создания поверхности: {e}")
 
     # Проверяем статус симуляции
     status = orchestrator.get_simulation_status()
-    print(f"Статус симуляции: {status}")
-
-    print("Оркестратор симуляции готов к работе")
+    logger.info(f"Статус симуляции: {status}")
+    logger.info("Оркестратор симуляции готов к работе")
 
 
 if __name__ == "__main__":

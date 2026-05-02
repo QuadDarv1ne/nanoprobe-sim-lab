@@ -1,4 +1,6 @@
-"""Модуль ведения логов для проекта Лаборатория моделирования нанозонда."""
+"""
+Модуль ведения логов для проекта Лаборатория моделирования нанозонда.
+"""
 
 import logging
 import threading
@@ -8,12 +10,14 @@ from typing import Any, Dict, Optional, Union
 
 from .structured_logger import HumanReadableFormatter, JSONFormatter
 
+logger = logging.getLogger(__name__)
+
 
 class LoggerSetup:
     """
-    Класс для настройки системы ведения логов
-    Обеспечивает централизованную настройку логирования для всех
-    компонентов проекта.
+    Класс для настройки системы ведения логов.
+
+    Обеспечивает централизованную настройку логирования для всех компонентов проекта.
     """
 
     def __init__(
@@ -25,7 +29,7 @@ class LoggerSetup:
         enable_json: bool = False,
     ):
         """
-        Инициализирует настройщик логов
+        Инициализирует настройщик логов.
 
         Args:
             log_dir: Директория для файлов логов
@@ -51,7 +55,7 @@ class LoggerSetup:
 
     def create_logger(self, name: str, log_file: Optional[str] = None) -> logging.Logger:
         """
-        Создает экземпляр логгера с заданными параметрами
+        Создает экземпляр логгера с заданными параметрами.
 
         Args:
             name: Имя логгера
@@ -81,12 +85,14 @@ class LoggerSetup:
         # Обработчик для файла с ротацией
         if log_file is None:
             log_file = f"{name}.log"
-
         file_path = self.log_dir / log_file
 
         # RotatingFileHandler для управления размером файлов
         file_handler = RotatingFileHandler(
-            file_path, encoding="utf-8", maxBytes=self.max_bytes, backupCount=self.backup_count
+            file_path,
+            encoding="utf-8",
+            maxBytes=self.max_bytes,
+            backupCount=self.backup_count,
         )
         file_handler.setLevel(self.log_level)
         file_handler.setFormatter(formatter)
@@ -103,7 +109,7 @@ class LoggerSetup:
 
     def update_level(self, level: Union[str, int]):
         """
-        Обновляет уровень логирования для всехManaged логгеров
+        Обновляет уровень логирования для всех Managed логгеров.
 
         Args:
             level: Новый уровень логирования (строка или константа logging)
@@ -113,7 +119,8 @@ class LoggerSetup:
 
         with self._lock:
             self.log_level = level
-            # Обновляем уровень для всехManaged логгеров и их обработчиков
+
+            # Обновляем уровень для всех Managed логгеров и их обработчиков
             for logger in self._created_loggers.values():
                 logger.setLevel(level)
                 for handler in logger.handlers:
@@ -121,17 +128,19 @@ class LoggerSetup:
 
     def update_format(self, enable_json: bool):
         """
-        Обновляет формат логов для всехManaged логгеров
+        Обновляет формат логов для всех Managed логгеров.
 
         Args:
             enable_json: Если True - использовать JSON формат, иначе человекочитаемый
         """
         with self._lock:
             self.enable_json = enable_json
-            # Обновляем форматтер для всехManaged логгеров
+
+            # Обновляем форматтер для всех Managed логгеров
             for logger in self._created_loggers.values():
                 # Очищаем существующие обработчики
                 logger.handlers.clear()
+
                 # Создаем новые обработчики с обновленным форматом
                 formatter = JSONFormatter() if enable_json else HumanReadableFormatter()
 
@@ -142,9 +151,8 @@ class LoggerSetup:
                 logger.addHandler(console_handler)
 
                 # Файловые обработчики (восстанавливаем их)
-                for handler in list(
-                    logger.handlers
-                ):  # Копируем список, так как будем модифицировать
+                for handler in list(logger.handlers):
+                    # Копируем список, так как будем модифицировать
                     if isinstance(handler, RotatingFileHandler):
                         # Оставляем файловые обработчики как есть, но обновляем форматтер
                         handler.setFormatter(formatter)
@@ -158,7 +166,7 @@ class LoggerSetup:
         backup_count: Optional[int] = None,
     ) -> bool:
         """
-        Добавляет дополнительный файловый обработчик к указанному логгеру
+        Добавляет дополнительный файловый обработчик к указанному логгеру.
 
         Args:
             logger_name: Имя логгера
@@ -187,9 +195,11 @@ class LoggerSetup:
 
             formatter = JSONFormatter() if self.enable_json else HumanReadableFormatter()
             file_path = self.log_dir / log_file
-
             file_handler = RotatingFileHandler(
-                file_path, encoding="utf-8", maxBytes=max_bytes, backupCount=backup_count
+                file_path,
+                encoding="utf-8",
+                maxBytes=max_bytes,
+                backupCount=backup_count,
             )
             file_handler.setLevel(level)
             file_handler.setFormatter(formatter)
@@ -199,7 +209,7 @@ class LoggerSetup:
 
     def remove_handlers_by_type(self, logger_name: str, handler_type: type) -> int:
         """
-        Удаляет обработчики определенного типа у указанного логгера
+        Удаляет обработчики определенного типа у указанного логгера.
 
         Args:
             logger_name: Имя логгера
@@ -215,7 +225,6 @@ class LoggerSetup:
 
             removed_count = 0
             handlers_to_remove = [h for h in logger.handlers if isinstance(h, handler_type)]
-
             for handler in handlers_to_remove:
                 logger.removeHandler(handler)
                 handler.close()
@@ -225,7 +234,7 @@ class LoggerSetup:
 
     def get_logger_names(self) -> list[str]:
         """
-        Возвращает список всехManaged имен логгеров
+        Возвращает список всех Managed имен логгеров.
 
         Returns:
             Список имен логгеров
@@ -236,9 +245,9 @@ class LoggerSetup:
 
 class NanoprobeLogger:
     """
-    Класс для централизованного ведения логов проекта
-    Предоставляет удобный интерфейс для логирования событий
-    в различных компонентах проекта.
+    Класс для централизованного ведения логов проекта.
+
+    Предоставляет удобный интерфейс для логирования событий в различных компонентах проекта.
     """
 
     def __init__(
@@ -249,7 +258,7 @@ class NanoprobeLogger:
         backup_count: int = 5,
     ):
         """
-        Инициализирует логгер проекта
+        Инициализирует логгер проекта.
 
         Args:
             config_manager: Экземпляр менеджера конфигурации (опционально)
@@ -271,13 +280,14 @@ class NanoprobeLogger:
             backup_count=backup_count,
             enable_json=enable_json,
         )
+
         self.loggers = {}
         self._context: Dict[str, Any] = {}
         self._lock = threading.Lock()
 
     def get_logger(self, name: str) -> logging.Logger:
         """
-        Получает или создает логгер с заданным именем
+        Получает или создает логгер с заданным именем.
 
         Args:
             name: Имя логгера
@@ -291,7 +301,7 @@ class NanoprobeLogger:
 
     def set_context(self, **kwargs):
         """
-        Устанавливает контекст для логирования
+        Устанавливает контекст для логирования.
 
         Args:
             **kwargs: Пары ключ-значение для контекста
@@ -326,13 +336,14 @@ class NanoprobeLogger:
                     masked_context[k] = "*****"
                 else:
                     masked_context[k] = v
+
             context_str = " | ".join(f"{k}={v}" for k, v in masked_context.items())
             return f"[{context_str}] {message}"
         return message
 
     def log_spm_event(self, message: str, level: str = "INFO"):
         """
-        Логирует событие связанное с СЗМ симулятором
+        Логирует событие связанное с СЗМ симулятором.
 
         Args:
             message: Сообщение для логирования
@@ -343,7 +354,7 @@ class NanoprobeLogger:
 
     def log_analyzer_event(self, message: str, level: str = "INFO"):
         """
-        Логирует событие связанное с анализатором изображений
+        Логирует событие связанное с анализатором изображений.
 
         Args:
             message: Сообщение для логирования
@@ -354,7 +365,7 @@ class NanoprobeLogger:
 
     def log_sstv_event(self, message: str, level: str = "INFO"):
         """
-        Логирует событие связанное с SSTV станцией
+        Логирует событие связанное с SSTV станцией.
 
         Args:
             message: Сообщение для логирования
@@ -365,7 +376,7 @@ class NanoprobeLogger:
 
     def log_system_event(self, message: str, level: str = "INFO"):
         """
-        Логирует системное событие проекта
+        Логирует системное событие проекта.
 
         Args:
             message: Сообщение для логирования
@@ -376,7 +387,7 @@ class NanoprobeLogger:
 
     def log_simulation_event(self, message: str, level: str = "INFO"):
         """
-        Логирует событие связанное с симуляцией
+        Логирует событие связанное с симуляцией.
 
         Args:
             message: Сообщение для логирования
@@ -387,7 +398,7 @@ class NanoprobeLogger:
 
     def log_api_event(self, message: str, level: str = "INFO"):
         """
-        Логирует событие API
+        Логирует событие API.
 
         Args:
             message: Сообщение для логирования
@@ -398,7 +409,7 @@ class NanoprobeLogger:
 
     def log_error(self, message: str, exc_info: Exception = None):
         """
-        Логирует ошибку
+        Логирует ошибку.
 
         Args:
             message: Сообщение об ошибке
@@ -411,7 +422,7 @@ class NanoprobeLogger:
 
     def update_global_level(self, level: Union[str, int]):
         """
-        Обновляет уровень логирования глобально для всехManaged логгеров
+        Обновляет уровень логирования глобально для всех Managed логгеров.
 
         Args:
             level: Новый уровень логирования (строка или константа logging)
@@ -420,7 +431,7 @@ class NanoprobeLogger:
 
     def update_global_format(self, enable_json: bool):
         """
-        Обновляет формат логов глобально для всехManaged логгеров
+        Обновляет формат логов глобально для всех Managed логгеров.
 
         Args:
             enable_json: Если True - использовать JSON формат, иначе человекочитаемый
@@ -435,7 +446,7 @@ class NanoprobeLogger:
         backup_count: Optional[int] = None,
     ) -> bool:
         """
-        Добавляет глобальный файловый обработчик ко всемManaged логгерам
+        Добавляет глобальный файловый обработчик ко всем Managed логгерам.
 
         Args:
             log_file: Путь к файлу лога (относительно log_dir)
@@ -457,7 +468,7 @@ class NanoprobeLogger:
 
     def get_logging_status(self) -> Dict[str, Any]:
         """
-        Возвращает текущий статус системы логирования
+        Возвращает текущий статус системы логирования.
 
         Returns:
             Словарь с информацией о текущей конфигурации логирования
@@ -474,7 +485,7 @@ class NanoprobeLogger:
 
 def setup_project_logging(config_manager=None) -> NanoprobeLogger:
     """
-    Настраивает централизованное логирование для проекта
+    Настраивает централизованное логирование для проекта.
 
     Args:
         config_manager: Экземпляр менеджера конфигурации (опционально)
@@ -487,7 +498,7 @@ def setup_project_logging(config_manager=None) -> NanoprobeLogger:
 
 def main():
     """Главная функция для демонстрации работы системы логирования"""
-    print("=== СИСТЕМА ВЕДЕНИЯ ЛОГОВ ПРОЕКТА ===")
+    logger.info("=== СИСТЕМА ВЕДЕНИЯ ЛОГОВ ПРОЕКТА ===")
 
     # Создаем логгер
     logger_manager = NanoprobeLogger()
@@ -504,7 +515,7 @@ def main():
     custom_logger.info("Сообщение от пользовательского модуля")
 
     # Демонстрация новых возможностей
-    print("\n--- Демонстрация новых возможностей ---")
+    logger.info("\n--- Демонстрация новых возможностей ---")
 
     # Изменение уровня логирования
     logger_manager.update_global_level("DEBUG")
@@ -520,10 +531,9 @@ def main():
 
     # Показ статуса
     status = logger_manager.get_logging_status()
-    print(f"Текущий статус логирования: {status}")
-
-    print("✓ Система логирования успешно настроена")
-    print(f"✓ Логи сохраняются в директорию: {logger_manager.logger_setup.log_dir}")
+    logger.info(f"Текущий статус логирования: {status}")
+    logger.info("✓ Система логирования успешно настроена")
+    logger.info(f"✓ Логи сохраняются в директорию: {logger_manager.logger_setup.log_dir}")
 
 
 if __name__ == "__main__":
