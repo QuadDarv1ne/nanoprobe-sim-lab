@@ -2,7 +2,14 @@
 
 import atexit
 import json
+import logging
 import os
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 import subprocess
 import sys
 from pathlib import Path
@@ -54,10 +61,10 @@ class ProjectManager:
             with open(self.config_file, "r", encoding="utf-8") as f:
                 return json.load(f)
         except FileNotFoundError:
-            print(f"Файл конфигурации {self.config_file} не найден")
+            logger.error(f"Файл конфигурации {self.config_file} не найден")
             return {}
         except json.JSONDecodeError:
-            print(f"Ошибка при чтении файла конфигурации {self.config_file}")
+            logger.error(f"Ошибка при чтении файла конфигурации {self.config_file}")
             return {}
 
     def run_spm_simulator(self, use_python: bool = True):
@@ -72,20 +79,20 @@ class ProjectManager:
                 project_root / self.components["spm_simulator"]["path"] / "src" / "spm_simulator.py"
             )
             if spm_path.exists():
-                print(f"Запуск симулятора СЗМ (Python): {spm_path}")
+                logger.info(f"Запуск симулятора СЗМ (Python): {spm_path}")
                 subprocess.run([sys.executable, str(spm_path)])
             else:
-                print(f"Файл симулятора СЗМ не найден: {spm_path}")
+                logger.error(f"Файл симулятора СЗМ не найден: {spm_path}")
         else:
             build_dir = project_root / self.components["spm_simulator"]["path"] / "build"
             binary_path = build_dir / "spm-simulator"
 
             if binary_path.exists():
-                print(f"Запуск симулятора СЗМ (C++): {binary_path}")
+                logger.info(f"Запуск симулятора СЗМ (C++): {binary_path}")
                 subprocess.run([str(binary_path)])
             else:
-                print("C++ версия симулятора СЗМ не найдена.")
-                print(
+                logger.error("C++ версия симулятора СЗМ не найдена.")
+                logger.info(
                     "Соберите: cd cpp-spm-hardware-sim && mkdir build && "
                     "cd build && cmake .. && make"
                 )
@@ -95,10 +102,10 @@ class ProjectManager:
         analyzer_path = project_root / self.components["image_analyzer"]["path"] / "src" / "main.py"
 
         if analyzer_path.exists():
-            print(f"Запуск анализатора изображений: {analyzer_path}")
+            logger.info(f"Запуск анализатора изображений: {analyzer_path}")
             subprocess.run([sys.executable, str(analyzer_path)])
         else:
-            print(f"Файл анализатора изображений не найден: {analyzer_path}")
+            logger.error(f"Файл анализатора изображений не найден: {analyzer_path}")
             self.create_sample_image_analyzer()
 
     def create_sample_image_analyzer(self):
@@ -132,7 +139,7 @@ if __name__ == "__main__":
         with open(main_py_path, "w", encoding="utf-8") as f:
             f.write(sample_code)
 
-        print(f"Создан пример скрипта: {main_py_path}")
+        logger.info(f"Создан пример скрипта: {main_py_path}")
 
     def run_sstv_station(self):
         """Запускает наземную станцию SSTV."""
@@ -141,10 +148,10 @@ if __name__ == "__main__":
         )
 
         if station_path.exists():
-            print(f"Запуск наземной станции SSTV: {station_path}")
+            logger.info(f"Запуск наземной станции SSTV: {station_path}")
             subprocess.run([sys.executable, str(station_path)])
         else:
-            print(f"Файл наземной станции SSTV не найден: {station_path}")
+            logger.error(f"Файл наземной станции SSTV не найден: {station_path}")
             self.create_sample_sstv_station()
 
     def create_sample_sstv_station(self):
@@ -178,11 +185,11 @@ if __name__ == "__main__":
         with open(main_py_path, "w", encoding="utf-8") as f:
             f.write(sample_code)
 
-        print(f"Создан пример скрипта: {main_py_path}")
+        logger.info(f"Создан пример скрипта: {main_py_path}")
 
     def build_cpp_components(self):
         """Собирает C++ компоненты проекта."""
-        print("Сборка C++ компонентов проекта...")
+        logger.info("Сборка C++ компонентов проекта...")
 
         spm_path = project_root / self.components["spm_simulator"]["path"]
         build_dir = spm_path / "build"
@@ -190,14 +197,14 @@ if __name__ == "__main__":
         os.makedirs(build_dir, exist_ok=True)
 
         try:
-            print("Запуск cmake...")
+            logger.info("Запуск cmake...")
             subprocess.run(["cmake", "..", "-B", str(build_dir)], cwd=str(build_dir), check=True)
-            print("Запуск make...")
+            logger.info("Запуск make...")
             subprocess.run(["make"], cwd=str(build_dir), check=True)
-            print("C++ компоненты успешно собраны!")
+            logger.info("C++ компоненты успешно собраны!")
         except subprocess.CalledProcessError as e:
-            print(f"Ошибка при сборке C++ компонентов: {e}")
-            print("Убедитесь, что установлены cmake и компилятор C++")
+            logger.error(f"Ошибка при сборке C++ компонентов: {e}")
+            logger.error("Убедитесь, что установлены cmake и компилятор C++")
 
     def clean_cache(self):
         """Очищает кэш проекта."""
@@ -206,92 +213,94 @@ if __name__ == "__main__":
 
             cache_manager = CacheManager(str(project_root))
 
-            print("Очистка кэша проекта...")
+            logger.info("Очистка кэша проекта...")
             stats = cache_manager.get_cache_statistics()
-            print(f"Текущий размер кэша: {stats['total_cache_size_mb']} MB")
+            logger.info(f"Текущий размер кэша: {stats['total_cache_size_mb']} MB")
 
             result = cache_manager.auto_cleanup()
 
             if "status" in result:
-                print(f"Результат: {result['status']}")
+                logger.info(f"Результат: {result['status']}")
             else:
-                print(f"Удалено файлов: {result['deleted_files']}")
-                print(f"Освобождено места: {result['freed_space_mb']} MB")
+                logger.info(f"Удалено файлов: {result['deleted_files']}")
+                logger.info(f"Освобождено места: {result['freed_space_mb']} MB")
 
             memory_result = cache_manager.optimize_memory_usage()
-            print(f"Освобождено памяти: {memory_result['memory_freed_mb']} MB")
+            logger.info(f"Освобождено памяти: {memory_result['memory_freed_mb']} MB")
 
             return True
 
         except ImportError:
-            print("Модуль cache_manager не найден")
+            logger.error("Модуль cache_manager не найден")
             return False
         except Exception as e:
-            print(f"Ошибка при очистке кэша: {e}")
+            logger.error(f"Ошибка при очистке кэша: {e}")
             return False
 
     def _auto_cleanup_on_exit(self):
         """Внутренняя функция автоматической очистки при завершении."""
-        print("\n" + "=" * 50)
-        print("Автоматическая очистка кэша через ProjectManager...")
+        logger.info("\n" + "=" * 50)
+        logger.info("Автоматическая очистка кэша через ProjectManager...")
         try:
             cleanup_success = self.clean_cache()
             if cleanup_success:
-                print("✓ Автоматическая очистка кэша выполнена успешно")
+                logger.info("✓ Автоматическая очистка кэша выполнена успешно")
             else:
-                print("⚠ Автоматическая очистка кэша завершена с предупреждениями")
+                logger.info("⚠ Автоматическая очистка кэша завершена с предупреждениями")
         except Exception as e:
-            print(f"❌ Ошибка при автоматической очистке кэша: {e}")
-        print("=" * 50)
+            logger.error(f"❌ Ошибка при автоматической очистке кэша: {e}")
+        logger.info("=" * 50)
 
     def show_project_info(self):
         """Показывает информацию о проекте."""
         project_info = self.config.get("project", {})
 
-        print("\n" + "=" * 60)
-        print(f"ИНФОРМАЦИЯ О ПРОЕКТЕ: " f"{project_info.get('name', 'Nanoprobe Simulation Lab')}")
-        print("=" * 60)
-        print(f"Версия: {project_info.get('version', '1.0.0')}")
-        print(f"Описание: {project_info.get('description', 'Проект не описан')}")
-        print(f"Автор: {project_info.get('author', 'Не указан')}")
-        print(f"Авторские права: {project_info.get('copyright', 'Не указаны')}")
+        logger.info("\n" + "=" * 60)
+        logger.info(
+            f"ИНФОРМАЦИЯ О ПРОЕКТЕ: " f"{project_info.get('name', 'Nanoprobe Simulation Lab')}"
+        )
+        logger.info("=" * 60)
+        logger.info(f"Версия: {project_info.get('version', '1.0.0')}")
+        logger.info(f"Описание: {project_info.get('description', 'Проект не описан')}")
+        logger.info(f"Автор: {project_info.get('author', 'Не указан')}")
+        logger.info(f"Авторские права: {project_info.get('copyright', 'Не указаны')}")
 
-        print("\nКОМПОНЕНТЫ ПРОЕКТА:")
+        logger.info("\nКОМПОНЕНТЫ ПРОЕКТА:")
         for name, info in self.components.items():
-            print(f"  - {info['name']}: {info['description']}")
-            print(f"    Путь: {info['path']}")
-            print(f"    Язык: {info['language']}")
+            logger.info(f"  - {info['name']}: {info['description']}")
+            logger.info(f"    Путь: {info['path']}")
+            logger.info(f"    Язык: {info['language']}")
 
-        print("\nЛИЦЕНЗИЯ:")
+        logger.info("\nЛИЦЕНЗИЯ:")
         license_info = self.config.get("license", {})
-        print(f"  Тип: {license_info.get('type', 'Не указана')}")
-        print(f"  Файл: {license_info.get('file', 'Не указан')}")
-        print(f"  Владелец: {license_info.get('owner', 'Не указан')}")
+        logger.info(f"  Тип: {license_info.get('type', 'Не указана')}")
+        logger.info(f"  Файл: {license_info.get('file', 'Не указан')}")
+        logger.info(f"  Владелец: {license_info.get('owner', 'Не указан')}")
 
         reserved_rights = license_info.get("reserved_rights", [])
         if reserved_rights:
-            print("  Ограниченные права:")
+            logger.info("  Ограниченные права:")
             for right in reserved_rights:
-                print(f"    - {right}")
+                logger.info(f"    - {right}")
 
-        print("=" * 60)
+        logger.info("=" * 60)
 
     def show_menu(self):
         """Отображает главное меню проекта."""
-        print("\n" + "=" * 50)
-        print("    ЛАБОРАТОРИЯ МОДЕЛИРОВАНИЯ НАНОЗОНДА")
-        print("         Менеджер проекта")
-        print("=" * 50)
-        print("ДОСТУПНЫЕ ОПЕРАЦИИ:")
-        print("  1. Запустить симулятор СЗМ (Python)")
-        print("  2. Запустить симулятор СЗМ (C++)")
-        print("  3. Запустить анализатор изображений")
-        print("  4. Запустить наземную станцию SSTV")
-        print("  5. Собрать C++ компоненты")
-        print("  6. Очистить кэш проекта")
-        print("  7. Показать информацию о проекте")
-        print("  0. Выход")
-        print("=" * 50)
+        logger.info("\n" + "=" * 50)
+        logger.info("    ЛАБОРАТОРИЯ МОДЕЛИРОВАНИЯ НАНОЗОНДА")
+        logger.info("         Менеджер проекта")
+        logger.info("=" * 50)
+        logger.info("ДОСТУПНЫЕ ОПЕРАЦИИ:")
+        logger.info("  1. Запустить симулятор СЗМ (Python)")
+        logger.info("  2. Запустить симулятор СЗМ (C++)")
+        logger.info("  3. Запустить анализатор изображений")
+        logger.info("  4. Запустить наземную станцию SSTV")
+        logger.info("  5. Собрать C++ компоненты")
+        logger.info("  6. Очистить кэш проекта")
+        logger.info("  7. Показать информацию о проекте")
+        logger.info("  0. Выход")
+        logger.info("=" * 50)
 
     def run_interactive(self):
         """Запускает интерактивный режим менеджера проекта."""
@@ -315,16 +324,16 @@ if __name__ == "__main__":
                 elif choice == "7":
                     self.show_project_info()
                 elif choice == "0":
-                    print("\nСпасибо за использование Лаборатории моделирования нанозонда!")
+                    logger.info("\nСпасибо за использование Лаборатории моделирования нанозонда!")
                     break
                 else:
-                    print("\nНеверный выбор. Пожалуйста, выберите от 0 до 7.")
+                    logger.warning("\nНеверный выбор. Пожалуйста, выберите от 0 до 7.")
 
             except KeyboardInterrupt:
-                print("\n\nРабота программы прервана пользователем.")
+                logger.warning("\n\nРабота программы прервана пользователем.")
                 break
             except Exception as e:
-                print(f"\nОшибка: {str(e)}")
+                logger.error(f"\nОшибка: {str(e)}")
 
 
 def main():
@@ -349,8 +358,8 @@ def main():
         elif command == "info":
             manager.show_project_info()
         else:
-            print(f"Неизвестная команда: {command}")
-            print(
+            logger.error(f"Неизвестная команда: {command}")
+            logger.info(
                 "Доступные команды: spm-python, spm-cpp, analyzer, sstv, "
                 "build, clean-cache, info"
             )
