@@ -523,38 +523,38 @@ def get_simulations(limit: int = 50) -> List[Dict]:
 
 if __name__ == "__main__":
     # Тестирование интеграции
-    print("=== Тестирование интеграции Flask + FastAPI ===\n")
+    logger.info("=== Тестирование интеграции Flask + FastAPI ===\n")
 
     integration = FlaskFastAPIIntegration()
 
     # Проверка здоровья
-    print("1. Проверка здоровья приложений...")
+    logger.info("1. Проверка здоровья приложений...")
     health = integration.health_check()
-    print(f"   FastAPI: {health['fastapi']['status']}")
-    print(f"   Flask: {health['flask']['status']}")
+    logger.info(f"   FastAPI: {health['fastapi']['status']}")
+    logger.info(f"   Flask: {health['flask']['status']}")
 
     # Тест аутентификации (требуется valid user)
-    print("\n2. Тест аутентификации...")
-    print("   (пропустите, если нет тестового пользователя)")
+    logger.info("\n2. Тест аутентификации...")
+    logger.info("   (пропустите, если нет тестового пользователя)")
     # tokens = integration.login("admin", "admin123")
     # if tokens:
-    #     print(f"   ✓ Токен получен: {tokens['access_token'][:50]}...")
+    #     logger.info(f"   ✓ Токен получен: {tokens['access_token'][:50]}...")
 
     # Тест получения сканирований
-    print("\n3. Тест получения сканирований...")
+    logger.info("\n3. Тест получения сканирований...")
     scans = integration.get_scans(limit=5)
-    print(f"   Получено сканирований: {len(scans)}")
+    logger.info(f"   Получено сканирований: {len(scans)}")
 
     # Тест получения симуляций
-    print("\n4. Тест получения симуляций...")
+    logger.info("\n4. Тест получения симуляций...")
     simulations = integration.get_simulations(limit=5)
-    print(f"   Получено симуляций: {len(simulations)}")
+    logger.info(f"   Получено симуляций: {len(simulations)}")
 
     # Синхронизация
-    print("\n5. Проверка синхронизации...")
+    logger.info("\n5. Проверка синхронизации...")
     sync_result = integration.sync_data()
-    print(f"   Синхронизировано: {sync_result['synced']}")
+    logger.info(f"   Синхронизировано: {sync_result['synced']}")
     if sync_result["errors"]:
-        print(f"   Ошибки: {sync_result['errors']}")
+        logger.info(f"   Ошибки: {sync_result['errors']}")
 
-    print("\n=== Тестирование завершено ===")
+    logger.info("\n=== Тестирование завершено ===")

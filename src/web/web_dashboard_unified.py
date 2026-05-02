@@ -59,7 +59,7 @@ if sys.version_info < MIN_PYTHON_VERSION or sys.version_info >= (
     MAX_PYTHON_VERSION[0],
     MAX_PYTHON_VERSION[1] + 1,
 ):
-    print(f"[ERROR] Требуется Python 3.11 - 3.14, текущая версия: {sys.version}")
+    logger.error(f"Требуется Python 3.11 - 3.14, текущая версия: {sys.version}")
     sys.exit(1)
 
 
@@ -655,14 +655,14 @@ class UnifiedWebDashboard:
             browser_thread.start()
 
         # Запуск Flask + SocketIO
-        print("=" * 70)
-        print("  Унифицированная веб-панель управления")
-        print("=" * 70)
-        print(f"  URL: http://{self.host}:{self.port}")
-        print(f"  FastAPI: {self.fastapi_url}")
-        print(f"  Reverse Proxy: {'Включён' if PROXY_AVAILABLE else 'Отключён'}")
-        print("=" * 70)
-        print()
+        logger.info("=" * 70)
+        logger.info("  Унифицированная веб-панель управления")
+        logger.info("=" * 70)
+        logger.info(f"  URL: http://{self.host}:{self.port}")
+        logger.info(f"  FastAPI: {self.fastapi_url}")
+        logger.info(f"  Reverse Proxy: {'Включён' if PROXY_AVAILABLE else 'Отключён'}")
+        logger.info("=" * 70)
+        logger.info("")
 
         self.socketio.run(
             self.app,
@@ -713,14 +713,14 @@ def main():
             port = find_port("flask", preferred_port)
 
             if port != preferred_port:
-                print(f"⚠️  Порт {preferred_port} занят, выбран: {port}")
+                logger.warning(f"⚠️  Порт {preferred_port} занят, выбран: {port}")
             else:
-                print(f"✅ Flask порт: {port}")
+                logger.info(f"✅ Flask порт: {port}")
 
             os.environ["FLASK_PORT"] = str(port)
             args.port = port
         except Exception as e:
-            print(f"⚠️  Автоопределение не удалось: {e}")
+            logger.warning(f"⚠️  Автоопределение не удалось: {e}")
             args.port = int(os.getenv("FLASK_PORT", 5000))
     elif args.port is None:
         args.port = int(os.getenv("FLASK_PORT", 5000))
