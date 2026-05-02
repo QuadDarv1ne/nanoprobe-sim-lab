@@ -934,7 +934,7 @@ class ScientificPDFReport:
 def generate_pdf_report(
     report_type: str,
     data: Dict[str, Any],
-    images: List[str] = None,
+    images: Optional[List[str]] = None,
     output_dir: str = "reports/pdf",
 ) -> str:
     """

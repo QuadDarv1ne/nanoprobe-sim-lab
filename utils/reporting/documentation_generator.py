@@ -5,7 +5,7 @@ import json
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 
 @dataclass
@@ -38,7 +38,7 @@ class DocumentationGenerator:
             project_root: Корневая директория проекта
         """
         self.project_root = Path(project_root).resolve()
-        self.doc_items: List[Dict[str, Any]] = []
+        self.doc_items: List[DocItem] = []
         self.project_info: Dict[str, Any] = {}
 
     def analyze_project_structure(self) -> Dict[str, Any]:
@@ -48,7 +48,7 @@ class DocumentationGenerator:
         Returns:
             Информация о структуре проекта
         """
-        structure = {"modules": [], "packages": [], "files": [], "directories": []}
+        structure: Dict[str, Any] = {"modules": [], "packages": [], "files": [], "directories": []}
 
         # Анализируем директории
         for item in self.project_root.iterdir():
@@ -76,7 +76,9 @@ class DocumentationGenerator:
         return structure
 
     def extract_docstrings(
-        self, include_patterns: List[str] = None, exclude_patterns: List[str] = None
+        self,
+        include_patterns: Optional[List[str]] = None,
+        exclude_patterns: Optional[List[str]] = None,
     ) -> List[DocItem]:
         """
         Извлекает docstring из проекта
