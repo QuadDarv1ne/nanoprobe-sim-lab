@@ -3,6 +3,7 @@
 """
 
 import atexit
+import logging
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -15,45 +16,52 @@ sys.path.insert(0, str(project_root))
 # Configuration paths
 CONFIG_PATH = project_root / "config" / "config.json"
 
+# Logger setup
+logger = logging.getLogger(__name__)
+
+# Configure logging if not already configured
+if not logging.getLogger().handlers:
+    logging.basicConfig(level=logging.INFO)
+
 # Активные процессы
 _active_processes = {}
 
 
 def show_header():
     """Отображает заголовок программы."""
-    print("=" * 80)
-    print("           ЛАБОРАТОРИЯ МОДЕЛИРОВАНИЯ НАНОЗОНДА")
-    print("        Nanoprobe Simulation Lab - Main Console")
-    print("=" * 80)
-    print(f"Время запуска: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}")
-    print()
+    logger.info("=" * 80)
+    logger.info("           ЛАБОРАТОРИЯ МОДЕЛИРОВАНИЯ НАНОЗОНДА")
+    logger.info("        Nanoprobe Simulation Lab - Main Console")
+    logger.info("=" * 80)
+    logger.info(f"Время запуска: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}")
+    logger.info("")
 
 
 def show_project_overview():
     """Отображает обзор проекта."""
-    print("Проект включает три взаимосвязанных модуля:")
-    print("  1. Симулятор аппаратного обеспечения СЗМ на C++")
-    print("  2. Анализатор изображений поверхности на Python")
-    print("  3. Наземная станция SSTV на Python/C++")
-    print()
+    logger.info("Проект включает три взаимосвязанных модуля:")
+    logger.info("  1. Симулятор аппаратного обеспечения СЗМ на C++")
+    logger.info("  2. Анализатор изображений поверхности на Python")
+    logger.info("  3. Наземная станция SSTV на Python/C++")
+    logger.info("")
 
 
 def show_menu():
     """Отображает главное меню."""
-    print("ДОСТУПНЫЕ ОПЕРАЦИИ:")
-    print("  1. Запустить симулятор СЗМ (C++)")
-    print("  2. Запустить анализатор изображений (Python)")
-    print("  3. Запустить наземную станцию SSTV (Python/C++)")
-    print("  4. Показать информацию о проекте")
-    print("  5. Показать текущую лицензию")
-    print("  6. Очистить кэш проекта")
-    print("  0. Выход")
-    print()
+    logger.info("ДОСТУПНЫЕ ОПЕРАЦИИ:")
+    logger.info("  1. Запустить симулятор СЗМ (C++)")
+    logger.info("  2. Запустить анализатор изображений (Python)")
+    logger.info("  3. Запустить наземную станцию SSTV (Python/C++)")
+    logger.info("  4. Показать информацию о проекте")
+    logger.info("  5. Показать текущую лицензию")
+    logger.info("  6. Очистить кэш проекта")
+    logger.info("  0. Выход")
+    logger.info("")
 
 
 def run_spm_simulator() -> bool:
     """Запускает симулятор СЗМ."""
-    print("Запуск симулятора СЗМ...")
+    logger.info("Запуск симулятора СЗМ...")
     try:
         cpp_build = project_root / "components" / "cpp-spm-hardware-sim" / "build"
         cpp_path = cpp_build / "spm-simulator"
@@ -62,132 +70,132 @@ def run_spm_simulator() -> bool:
         )
 
         if cpp_path.exists():
-            print(f"Запуск C++ версии: {cpp_path}")
+            logger.info(f"Запуск C++ версии: {cpp_path}")
             process = subprocess.Popen([str(cpp_path)], cwd=str(project_root))
             _active_processes["spm"] = process
             process.wait()
             return True
         elif python_spm.exists():
-            print(f"Запуск Python версии: {python_spm}")
+            logger.info(f"Запуск Python версии: {python_spm}")
             process = subprocess.Popen([sys.executable, str(python_spm)], cwd=str(project_root))
             _active_processes["spm"] = process
             process.wait()
             return True
         else:
-            print("Файлы симулятора СЗМ не найдены")
+            logger.error("Файлы симулятора СЗМ не найдены")
             return False
     except Exception as e:
-        print(f"Ошибка при запуске симулятора СЗМ: {e}")
+        logger.error(f"Ошибка при запуске симулятора СЗМ: {e}")
         return False
 
 
 def run_surface_analyzer() -> bool:
     """Запускает анализатор изображений."""
-    print("Запуск анализатора изображений поверхности...")
+    logger.info("Запуск анализатора изображений поверхности...")
     try:
         analyzer_path = (
             project_root / "components" / "py-surface-image-analyzer" / "src" / "main.py"
         )
         if analyzer_path.exists():
-            print(f"Запуск: {analyzer_path}")
+            logger.info(f"Запуск: {analyzer_path}")
             process = subprocess.Popen([sys.executable, str(analyzer_path)], cwd=str(project_root))
             _active_processes["analyzer"] = process
             process.wait()
             return True
         else:
-            print("Файл анализатора изображений не найден")
+            logger.error("Файл анализатора изображений не найден")
             return False
     except Exception as e:
-        print(f"Ошибка при запуске анализатора изображений: {e}")
+        logger.error(f"Ошибка при запуске анализатора изображений: {e}")
         return False
 
 
 def run_sstv_groundstation() -> bool:
     """Запускает наземную станцию SSTV."""
-    print("Запуск наземной станции SSTV...")
+    logger.info("Запуск наземной станции SSTV...")
     try:
         station_path = project_root / "components" / "py-sstv-groundstation" / "src" / "main.py"
         if station_path.exists():
-            print(f"Запуск: {station_path}")
+            logger.info(f"Запуск: {station_path}")
             process = subprocess.Popen([sys.executable, str(station_path)], cwd=str(project_root))
             _active_processes["sstv"] = process
             process.wait()
             return True
         else:
-            print("Файл наземной станции SSTV не найден")
+            logger.error("Файл наземной станции SSTV не найден")
             return False
     except Exception as e:
-        print(f"Ошибка при запуске наземной станции SSTV: {e}")
+        logger.error(f"Ошибка при запуске наземной станции SSTV: {e}")
         return False
 
 
 def show_project_info():
     """Показывает информацию о проекте."""
-    print("ИНФОРМАЦИЯ О ПРОЕКТЕ:")
-    print("-" * 40)
-    print("Название: Лаборатория моделирования нанозонда")
-    print("Версия: 1.0.0")
-    print("Описание: Комплексный проект для моделирования")
-    print("          сканирующей зондовой микроскопии")
-    print("          и обработки изображений поверхности")
-    print("Автор: Школа программирования Maestro7IT")
-    print("Лицензия: Проприетарная (ограниченные права)")
-    print("-" * 40)
+    logger.info("ИНФОРМАЦИЯ О ПРОЕКТЕ:")
+    logger.info("-" * 40)
+    logger.info("Название: Лаборатория моделирования нанозонда")
+    logger.info("Версия: 1.0.0")
+    logger.info("Описание: Комплексный проект для моделирования")
+    logger.info("          сканирующей зондовой микроскопии")
+    logger.info("          и обработки изображений поверхности")
+    logger.info("Автор: Школа программирования Maestro7IT")
+    logger.info("Лицензия: Проприетарная (ограниченные права)")
+    logger.info("-" * 40)
 
 
 def show_license():
     """Показывает информацию о лицензии."""
-    print("ИНФОРМАЦИЯ О ЛИЦЕНЗИИ:")
-    print("-" * 40)
-    print("Лицензия: Проприетарная лицензия")
-    print("Владелец: Школа программирования Maestro7IT")
-    print("Все права защищены")
-    print()
-    print("ОГРАНИЧЕННЫЕ ПРАВА:")
-    print("• Использование в образовательных целях")
-    print("• Использование в научных исследованиях")
-    print("• Использование в некоммерческих проектах")
-    print("• Модификация исходного кода")
-    print("• Распространение в неизменном виде")
-    print()
-    print("ЗАПРЕЩЕНО:")
-    print("• Коммерческое использование")
-    print("• Распространение с удалением авторских прав")
-    print("• Использование в военных целях")
-    print("• Использование в проектах с закрытым исходным кодом")
-    print("-" * 40)
+    logger.info("ИНФОРМАЦИЯ О ЛИЦЕНЗИИ:")
+    logger.info("-" * 40)
+    logger.info("Лицензия: Проприетарная лицензия")
+    logger.info("Владелец: Школа программирования Maestro7IT")
+    logger.info("Все права защищены")
+    logger.info("")
+    logger.info("ОГРАНИЧЕННЫЕ ПРАВА:")
+    logger.info("• Использование в образовательных целях")
+    logger.info("• Использование в научных исследованиях")
+    logger.info("• Использование в некоммерческих проектах")
+    logger.info("• Модификация исходного кода")
+    logger.info("• Распространение в неизменном виде")
+    logger.info("")
+    logger.info("ЗАПРЕЩЕНО:")
+    logger.info("• Коммерческое использование")
+    logger.info("• Распространение с удалением авторских прав")
+    logger.info("• Использование в военных целях")
+    logger.info("• Использование в проектах с закрытым исходным кодом")
+    logger.info("-" * 40)
 
 
 def clean_project_cache() -> bool:
     """Очищает кэш проекта."""
-    print("Очистка кэша проекта...")
+    logger.info("Очистка кэша проекта...")
     try:
         from utils.caching.cache_manager import CacheManager
 
         cache_manager = CacheManager(str(project_root))
 
         stats = cache_manager.get_cache_statistics()
-        print(f"Текущий размер кэша: {stats['total_cache_size_mb']} MB")
-        print(f"Всего файлов в кэше: {stats['total_files']}")
+        logger.info(f"Текущий размер кэша: {stats['total_cache_size_mb']} MB")
+        logger.info(f"Всего файлов в кэше: {stats['total_files']}")
 
         result = cache_manager.auto_cleanup()
 
         if "status" in result:
-            print(f"Статус: {result['status']}")
+            logger.info(f"Статус: {result['status']}")
         else:
-            print(f"Удалено файлов: {result['deleted_files']}")
-            print(f"Освобождено места: {result['freed_space_mb']} MB")
+            logger.info(f"Удалено файлов: {result['deleted_files']}")
+            logger.info(f"Освобождено места: {result['freed_space_mb']} MB")
 
         memory_result = cache_manager.optimize_memory_usage()
-        print(f"Освобождено памяти: {memory_result['memory_freed_mb']} MB")
-        print("Очистка кэша завершена успешно!")
+        logger.info(f"Освобождено памяти: {memory_result['memory_freed_mb']} MB")
+        logger.info("Очистка кэша завершена успешно!")
         return True
 
     except ImportError:
-        print("Модуль управления кэшем не найден")
+        logger.error("Модуль управления кэшем не найден")
         return False
     except Exception as e:
-        print(f"Ошибка при очистке кэша: {e}")
+        logger.error(f"Ошибка при очистке кэша: {e}")
         return False
 
 

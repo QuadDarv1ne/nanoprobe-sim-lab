@@ -17,20 +17,21 @@ Nanoprobe Sim Lab - Universal Launcher v3.0 (Unified)
     Python 3.11, 3.12, 3.13, or 3.14
 """
 
-# Проверка версии Python
+import logging
+import os
 import sys
 
+logger = logging.getLogger(__name__)
+
+# Проверка версии Python
 MIN_PYTHON_VERSION = (3, 11)
 MAX_PYTHON_VERSION = (3, 14)
 if sys.version_info < MIN_PYTHON_VERSION or sys.version_info >= (
     MAX_PYTHON_VERSION[0],
     MAX_PYTHON_VERSION[1] + 1,
 ):
-    print(f"[ERROR] Требуется Python 3.11 - 3.14, текущая версия: {sys.version}")
+    logger.error(f"Требуется Python 3.11 - 3.14, текущая версия: {sys.version}")
     sys.exit(1)
-
-import logging
-import os
 import signal
 import socket
 import subprocess
@@ -96,14 +97,14 @@ def auto_detect_ports(services: List[str] = None) -> Dict[str, int]:
     global BACKEND_PORT, FLASK_PORT, NEXTJS_PORT
 
     if not AUTO_PORT_ENABLED:
-        print("⚠️  Автоопределение портов недоступно (portFinder не импортирован)")
+        logger.warning("Автоопределение портов недоступно (portFinder не импортирован)")
         return {"backend": BACKEND_PORT, "flask": FLASK_PORT, "nextjs": NEXTJS_PORT}
 
     if services is None:
         services = ["backend", "flask", "nextjs"]
 
     try:
-        print("🔍 Автоопределение свободных портов...")
+        logger.info("Автоопределение свободных портов...")
         ports = find_ports(services)
 
         # Обновляем глобальные переменные
@@ -119,20 +120,18 @@ def auto_detect_ports(services: List[str] = None) -> Dict[str, int]:
             NEXTJS_PORT = ports["nextjs"]
             os.environ["NEXTJS_PORT"] = str(NEXTJS_PORT)
 
-        print("✅ Найденные порты:")
+        logger.info("Найденные порты:")
         for service, port in ports.items():
-            print(f"   {service:15s}: {port}")
-        print()
+            logger.info(f"   {service:15s}: {port}")
 
         return ports
 
     except Exception as e:
-        print(f"⚠️  Автоопределение не удалось: {e}")
-        print(f"📌 Используем порта по умолчанию:")
-        print(f"   backend: {BACKEND_PORT}")
-        print(f"   flask:   {FLASK_PORT}")
-        print(f"   nextjs:  {NEXTJS_PORT}")
-        print()
+        logger.warning(f"Автоопределение не удалось: {e}")
+        logger.info("Используем порта по умолчанию:")
+        logger.info(f"   backend: {BACKEND_PORT}")
+        logger.info(f"   flask:   {FLASK_PORT}")
+        logger.info(f"   nextjs:  {NEXTJS_PORT}")
 
         return {"backend": BACKEND_PORT, "flask": FLASK_PORT, "nextjs": NEXTJS_PORT}
 
@@ -202,7 +201,7 @@ def interactive_choice() -> str:
         elif choice in ["5", "dev"]:
             return "dev"
         else:
-            print("[ERROR] Неверный выбор. Попробуйте снова.")
+            logger.error("[ERROR] Неверный выбор. Попробуйте снова.")
             print()
 
 
@@ -211,20 +210,19 @@ def interactive_choice() -> str:
 
 def start_backend(reload: bool = False) -> Optional[subprocess.Popen]:
     """Запуск Backend (FastAPI)"""
-    print("Запуск Backend (FastAPI)...")
-    print(f"   Порт:    http://localhost:{BACKEND_PORT}")
-    print(f"   Swagger: http://localhost:{BACKEND_PORT}/docs")
-    print()
+    logger.info("Запуск Backend (FastAPI)...")
+    logger.info(f"   Порт:    http://localhost:{BACKEND_PORT}")
+    logger.info(f"   Swagger: http://localhost:{BACKEND_PORT}/docs")
 
     if not BACKEND_SCRIPT.exists():
-        print(f"[ERROR] {BACKEND_SCRIPT} не найден!")
+        logger.error(f"{BACKEND_SCRIPT} не найден!")
         return None
 
     # Проверка uvicorn
     import importlib.util
 
     if importlib.util.find_spec("uvicorn") is None:
-        print("[ERROR] uvicorn не установлен! Выполните: pip install uvicorn")
+        logger.error("uvicorn не установлен! Выполните: pip install uvicorn")
         return None
 
     cmd = [sys.executable, str(BACKEND_SCRIPT)]
@@ -234,29 +232,27 @@ def start_backend(reload: bool = False) -> Optional[subprocess.Popen]:
     process = subprocess.Popen(cmd, cwd=str(PROJECT_ROOT))
 
     if wait_for_port(BACKEND_PORT, timeout=15):
-        print("[OK] Backend запущен!")
-        print()
+        logger.info("[OK] Backend запущен!")
         return process
     else:
-        print("[ERROR] Не удалось запустить Backend!")
+        logger.error("[ERROR] Не удалось запустить Backend!")
         return None
 
 
 def start_flask_frontend() -> Optional[subprocess.Popen]:
     """Запуск Flask frontend"""
-    print("Запуск Flask Frontend (Unified)...")
-    print(f"   Порт: http://localhost:{FLASK_PORT}")
-    print()
+    logger.info("Запуск Flask Frontend (Unified)...")
+    logger.info(f"   Порт: http://localhost:{FLASK_PORT}")
 
     if not FLASK_SCRIPT.exists():
-        print(f"[ERROR] {FLASK_SCRIPT} не найден!")
+        logger.error(f"{FLASK_SCRIPT} не найден!")
         return None
 
     # Проверка Flask
     import importlib.util
 
     if importlib.util.find_spec("flask") is None:
-        print("[ERROR] Flask не установлен! Выполните: pip install flask flask-socketio")
+        logger.error("Flask не установлен! Выполните: pip install flask flask-socketio")
         return None
 
     process = subprocess.Popen([sys.executable, str(FLASK_SCRIPT)], cwd=str(PROJECT_ROOT))
@@ -264,48 +260,43 @@ def start_flask_frontend() -> Optional[subprocess.Popen]:
     time.sleep(3)
 
     if wait_for_port(FLASK_PORT, timeout=10):
-        print("[OK] Flask Frontend запущен!")
-        print()
+        logger.info("[OK] Flask Frontend запущен!")
         return process
     else:
-        print("[WARN] Flask запущен, но порт может быть занят")
-        print()
+        logger.warning("[WARN] Flask запущен, но порт может быть занят")
         return process
 
 
 def start_nextjs_frontend() -> Optional[subprocess.Popen]:
     """Запуск Next.js frontend"""
-    print("Запуск Next.js Frontend...")
-    print(f"   Порт: http://localhost:{NEXTJS_PORT}")
-    print()
+    logger.info("Запуск Next.js Frontend...")
+    logger.info(f"   Порт: http://localhost:{NEXTJS_PORT}")
 
     if not FRONTEND_DIR.exists():
-        print(f"[ERROR] {FRONTEND_DIR} не найдена!")
+        logger.error(f"{FRONTEND_DIR} не найдена!")
         return None
 
     # Проверка node_modules
     node_modules = FRONTEND_DIR / "node_modules"
     if not node_modules.exists():
-        print("[WARN] Установка зависимостей...")
+        logger.warning("Установка зависимостей...")
         subprocess.run(["npm", "install"], cwd=str(FRONTEND_DIR))
 
     process = subprocess.Popen(["npm", "run", "dev"], cwd=str(FRONTEND_DIR))
 
     time.sleep(5)
-    print("[OK] Next.js Frontend запущен!")
-    print()
+    logger.info("[OK] Next.js Frontend запущен!")
     return process
 
 
 def start_sync_manager() -> Optional[subprocess.Popen]:
     """Запуск Sync Manager (автоматическая синхронизация)"""
-    print("Запуск Sync Manager...")
-    print("   Автоматическая синхронизация Backend ↔ Frontend")
-    print(f"   Интервал: {SYNC_INTERVAL} секунд")
-    print()
+    logger.info("Запуск Sync Manager...")
+    logger.info("   Автоматическая синхронизация Backend ↔ Frontend")
+    logger.info(f"   Интервал: {SYNC_INTERVAL} секунд")
 
     if not SYNC_SCRIPT.exists():
-        print(f"[WARN] {SYNC_SCRIPT} не найден")
+        logger.warning(f"{SYNC_SCRIPT} не найден")
         return None
 
     process = subprocess.Popen(
@@ -315,8 +306,7 @@ def start_sync_manager() -> Optional[subprocess.Popen]:
     )
 
     time.sleep(3)
-    print("[OK] Sync Manager запущен!")
-    print()
+    logger.info("[OK] Sync Manager запущен!")
     return process
 
 
@@ -331,7 +321,7 @@ def open_browser(mode: str):
     }
 
     url = urls.get(mode, urls["api-only"])
-    print(f"Открытие браузера: {url}")
+    logger.info(f"Открытие браузера: {url}")
 
     try:
         webbrowser.open(url)
@@ -357,7 +347,7 @@ class ProcessManager:
 
     def _signal_handler(self, signum, frame):
         """Обработка сигналов для корректного завершения"""
-        print(f"\n[INFO] Получен сигнал {signum}, остановка сервисов...")
+        logger.info(f"\n[INFO] Получен сигнал {signum}, остановка сервисов...")
         self.stop_all()
         sys.exit(0)
 
@@ -373,10 +363,10 @@ class ProcessManager:
                 if proc.poll() is None:  # Только если процесс ещё работает
                     proc.wait()
         except KeyboardInterrupt:
-            print("\n\n[INFO] Остановка сервисов...")
+            logger.info("\n\n[INFO] Остановка сервисов...")
             self.stop_all()
         except Exception as e:
-            print(f"\n[ERROR] Ошибка ожидания: {e}")
+            logger.error(f"\n[ERROR] Ошибка ожидания: {e}")
             self.stop_all()
 
     def stop_all(self):
@@ -384,33 +374,35 @@ class ProcessManager:
         if not self.processes:
             return
 
-        print("[INFO] Остановка всех сервисов...")
+        logger.info("[INFO] Остановка всех сервисов...")
 
         # Фаза 1: Отправка SIGTERM
         for proc in reversed(self.processes):
             if proc.poll() is None:  # Только живые процессы
                 try:
                     proc.terminate()
-                    print(f"  → Отправлен SIGTERM процессу PID {proc.pid}")
+                    logger.info(f"  → Отправлен SIGTERM процессу PID {proc.pid}")
                 except Exception as e:
-                    print(f"  ⚠️  Ошибка terminate PID {proc.pid}: {e}")
+                    logger.warning(f"  ⚠️  Ошибка terminate PID {proc.pid}: {e}")
 
         # Фаза 2: Ожидание завершения (до 5 секунд)
         for proc in self.processes:
             if proc.poll() is None:
                 try:
                     proc.wait(timeout=5)
-                    print(f"  ✓ Процесс PID {proc.pid} завершён")
+                    logger.info(f"  ✓ Процесс PID {proc.pid} завершён")
                 except subprocess.TimeoutExpired:
-                    print(f"  ⚠️  Процесс PID {proc.pid} не завершился за 5с, отправляем SIGKILL")
+                    logger.warning(
+                        f"  ⚠️  Процесс PID {proc.pid} не завершился за 5с, отправляем SIGKILL"
+                    )
                     try:
                         proc.kill()
                         proc.wait(timeout=2)
-                        print(f"  ✓ Процесс PID {proc.pid} убит")
+                        logger.info(f"  ✓ Процесс PID {proc.pid} убит")
                     except Exception as e:
-                        print(f"  ✗ Ошибка kill PID {proc.pid}: {e}")
+                        logger.error(f"  ✗ Ошибка kill PID {proc.pid}: {e}")
                 except Exception as e:
-                    print(f"  ✗ Ошибка ожидания PID {proc.pid}: {e}")
+                    logger.error(f"  ✗ Ошибка ожидания PID {proc.pid}: {e}")
 
         # Фаза 3: Убиваем дочерние процессы (orphan cleanup)
         try:
@@ -434,9 +426,9 @@ class ProcessManager:
         except ImportError:
             pass  # psutil не установлен, пропускаем
         except Exception as e:
-            print(f"  ⚠️  Ошибка очистки дочерних процессов: {e}")
+            logger.warning(f"  ⚠️  Ошибка очистки дочерних процессов: {e}")
 
-        print("[OK] Все сервисы остановлены.")
+        logger.info("[OK] Все сервисы остановлены.")
 
 
 # ==================== Главная функция ====================
@@ -451,8 +443,8 @@ def main():
         mode = sys.argv[1].lower()
         valid_modes = ["flask", "nextjs", "api-only", "api", "full", "dev"]
         if mode not in valid_modes:
-            print(f"[ERROR] Неверный аргумент: {mode}")
-            print(f"Допустимые: {', '.join(valid_modes)}")
+            logger.error(f"Неверный аргумент: {mode}")
+            logger.error(f"Допустимые: {', '.join(valid_modes)}")
             return
     else:
         mode = interactive_choice()
@@ -478,7 +470,7 @@ def main():
     reload = mode == "dev"
     backend_process = start_backend(reload=reload)
     if not backend_process:
-        print("[ERROR] Не удалось запустить Backend. Завершение.")
+        logger.error("[ERROR] Не удалось запустить Backend. Завершение.")
         return
 
     pm.add_process(backend_process)
@@ -500,9 +492,8 @@ def main():
         open_browser("nextjs")
 
     elif mode == "api-only":
-        print("Запуск только Backend API")
-        print("   Swagger UI: http://localhost:8000/docs")
-        print()
+        logger.info("Запуск только Backend API")
+        logger.info("   Swagger UI: http://localhost:8000/docs")
         open_browser("api-only")
 
     elif mode == "full":
@@ -518,36 +509,36 @@ def main():
 
     # Вывод полезной информации
     print("=" * 70)
-    print("  [OK] Все сервисы запущены!")
+    logger.info("  [OK] Все сервисы запущены!")
     print("=" * 70)
     print()
-    print("Полезные ссылки:")
-    print(f"   - Backend API (Swagger):   http://localhost:{BACKEND_PORT}/docs")
-    print(f"   - Backend Health:          http://localhost:{BACKEND_PORT}/health")
-    print(f"   - Sync Manager Status:     http://localhost:{BACKEND_PORT}/api/v1/sync/status")
+    logger.info("Полезные ссылки:")
+    logger.info(f"   - Backend API (Swagger):   http://localhost:{BACKEND_PORT}/docs")
+    logger.info(f"   - Backend Health:          http://localhost:{BACKEND_PORT}/health")
+    logger.info(f"   - Sync Manager Status:     http://localhost:{BACKEND_PORT}/api/v1/sync/status")
 
     if mode in ["flask", "full", "dev"]:
-        print(f"   - Flask Frontend:          http://localhost:{FLASK_PORT}")
+        logger.info(f"   - Flask Frontend:          http://localhost:{FLASK_PORT}")
     elif mode == "nextjs":
-        print(f"   - Next.js Frontend:        http://localhost:{NEXTJS_PORT}")
+        logger.info(f"   - Next.js Frontend:        http://localhost:{NEXTJS_PORT}")
 
     print()
-    print("Синхронизация:")
+    logger.info("Синхронизация:")
     if mode != "api-only":
-        print("   ✅ Sync Manager запущен (автоматическая синхронизация каждые 5 сек)")
+        logger.info("   ✅ Sync Manager запущен (автоматическая синхронизация каждые 5 сек)")
     else:
-        print("   ❌ Sync Manager отключен (режим api-only)")
+        logger.info("   ❌ Sync Manager отключен (режим api-only)")
 
     print()
-    print("Порты:")
-    print(f"   Backend:  {BACKEND_PORT}")
+    logger.info("Порты:")
+    logger.info(f"   Backend:  {BACKEND_PORT}")
     if mode in ["flask", "full", "dev"]:
-        print(f"   Flask:    {FLASK_PORT}")
+        logger.info(f"   Flask:    {FLASK_PORT}")
     elif mode == "nextjs":
-        print(f"   Next.js:  {NEXTJS_PORT}")
+        logger.info(f"   Next.js:  {NEXTJS_PORT}")
 
     print()
-    print("Нажмите Ctrl+C для остановки всех сервисов")
+    logger.info("Нажмите Ctrl+C для остановки всех сервисов")
     print()
 
     # Ожидание завершения
