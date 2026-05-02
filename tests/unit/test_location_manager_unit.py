@@ -111,8 +111,8 @@ class TestLocationManager(unittest.TestCase):
         msk_time = now_msk()
         self.assertIsInstance(msk_time, datetime)
         # Проверяем, что время соответствует МСК (UTC+3)
-        utc_time = datetime.now(timezone.utc)
-        expected_msk = utc_time + timedelta(hours=3)
+        utc_time = now_utc()  # Get naive UTC time
+        expected_msk = utc_time + timedelta(hours=3)  # Expected naive MSK time
         # Допускаем погрешность в несколько секунд
         self.assertAlmostEqual(msk_time.timestamp(), expected_msk.timestamp(), delta=5)
 

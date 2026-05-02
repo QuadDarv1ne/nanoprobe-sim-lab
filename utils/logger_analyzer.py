@@ -403,15 +403,13 @@ class AdvancedLoggerAnalyzer:
 
         if time_diffs:
             avg_interval = statistics.mean(time_diffs)
-            threshold = avg_interval * 0.1  # 10% от среднего интервала
-            rapid_logs = [i for i, diff in enumerate(time_diffs) if diff < threshold and diff > 0]
-
-            if len(rapid_logs) > 10:  # Если много быстрых записей
+            # Если средний интервал меньше 0.1 секунды - считаем это быстрым логированием
+            if avg_interval < 0.1 and len(time_diffs) > 10:  # Если много записей и они частые
                 anomalies.append(
                     {
                         "type": "rapid_logging",
                         "severity": "medium",
-                        "description": f"Обнаружено {len(rapid_logs)} случаев быстрого логирования",
+                        "description": f"Обнаружено {len(time_diffs)} случаев быстрого логирования (средний интервал: {avg_interval:.3f}s)",
                         "timestamp": datetime.now(timezone.utc),
                     }
                 )

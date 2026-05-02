@@ -38,6 +38,12 @@ class TZInfo:
         """Возвращает текущее локальное время."""
         return self.to_local(datetime.now(timezone.utc))
 
+    def __eq__(self, other):
+        """Сравнивает два объекта TZInfo по их атрибутам."""
+        if not isinstance(other, TZInfo):
+            return False
+        return self.name == other.name and self.utc_offset == other.utc_offset
+
     def __repr__(self):
         return f"TZInfo({self.name}, UTC{'+' if self.utc_offset >= 0 else ''}{self.utc_offset})"
 
