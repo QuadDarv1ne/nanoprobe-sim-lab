@@ -1,4 +1,6 @@
-"""Surface image comparison module for Nanoprobe Simulation Lab"""
+"""
+Surface image comparison module for Nanoprobe Simulation Lab
+"""
 
 import json
 import logging
@@ -39,7 +41,6 @@ def _calculate_ssim(img1: np.ndarray, img2: np.ndarray, win_size: int = 7) -> fl
 
     mu1 = ndimage.uniform_filter(img1, size=win_size)
     mu2 = ndimage.uniform_filter(img2, size=win_size)
-
     mu1_sq = mu1**2
     mu2_sq = mu2**2
     mu1_mu2 = mu1 * mu2
@@ -121,6 +122,7 @@ class SurfaceComparator:
             scores.append(min(1.0, metrics["psnr"] / 40) * 0.3)
         if "pearson" in metrics:
             scores.append(((metrics["pearson"] + 1) / 2) * 0.3)
+
         metrics["similarity"] = float(np.sum(scores)) if scores else 0.0
 
         return metrics
@@ -132,7 +134,6 @@ class SurfaceComparator:
 
         img1 = Image.open(path1)
         img2 = Image.open(path2)
-
         arr1 = np.array(img1)
         arr2 = np.array(img2)
 
@@ -150,8 +151,8 @@ class SurfaceComparator:
             with open(self.output_dir / f"{cid}.json", "w", encoding="utf-8") as f:
                 json.dump(results, f, indent=2, default=str)
 
-            if MATPLOTLIB_AVAILABLE:
-                self._save_visualization(arr1, arr2, metrics, cid)
+        if MATPLOTLIB_AVAILABLE:
+            self._save_visualization(arr1, arr2, metrics, cid)
 
         return results
 
@@ -226,8 +227,22 @@ class SurfaceComparator:
 
         # Гистограммы
         ax8 = fig.add_subplot(gs[1, 3])
-        ax8.hist(img1.flatten(), bins=50, alpha=0.6, label="Image 1", color="blue", density=True)
-        ax8.hist(img2.flatten(), bins=50, alpha=0.6, label="Image 2", color="red", density=True)
+        ax8.hist(
+            img1.flatten(),
+            bins=50,
+            alpha=0.6,
+            label="Image 1",
+            color="blue",
+            density=True,
+        )
+        ax8.hist(
+            img2.flatten(),
+            bins=50,
+            alpha=0.6,
+            label="Image 2",
+            color="red",
+            density=True,
+        )
         ax8.set_title("Intensity Distribution", fontsize=10, fontweight="bold")
         ax8.legend(fontsize=8)
         ax8.grid(True, alpha=0.3)
@@ -265,7 +280,6 @@ class SurfaceComparator:
             fontweight="bold",
             y=0.98,
         )
-
         plt.savefig(self.output_dir / f"{cid}_viz.png", dpi=150, bbox_inches="tight")
         plt.close()
 
@@ -297,18 +311,16 @@ def compare_surfaces(
 
 
 if __name__ == "__main__":
-    print("=== Surface Comparator Test ===")
+    logger.info("=== Surface Comparator Test ===")
     if not PIL_AVAILABLE:
-        print("PIL not installed")
+        logger.error("PIL not installed")
     else:
         test_dir = Path("output/surface_comparisons/test")
         test_dir.mkdir(parents=True, exist_ok=True)
-
         np.random.seed(42)
         x = np.linspace(-2, 2, 256)
         X, Y = np.meshgrid(x, x)
         base = np.sin(3 * np.sqrt(X**2 + Y**2)) * np.exp(-(X**2 + Y**2) / 2)
-
         img1 = (
             (base + np.random.randn(256, 256) * 0.05 - base.min()) / (base.max() - base.min()) * 255
         ).astype(np.uint8)
@@ -317,12 +329,10 @@ if __name__ == "__main__":
             / (base.max() - base.min())
             * 255
         ).astype(np.uint8)
-
         Image.fromarray(img1).save(test_dir / "s1.png")
         Image.fromarray(img2).save(test_dir / "s2.png")
-
         r = compare_surfaces(str(test_dir / "s1.png"), str(test_dir / "s2.png"))
-        print(f"SSIM: {r.get('ssim', 0):.4f}")
-        print(f"Similarity: {r.get('similarity', 0):.4f}")
-        print(f"Mean Diff: {r.get('mean_diff', 0):.6f}")
-        print("Test completed!")
+        logger.info(f"SSIM: {r.get('ssim', 0):.4f}")
+        logger.info(f"Similarity: {r.get('similarity', 0):.4f}")
+        logger.info(f"Mean Diff: {r.get('mean_diff', 0):.6f}")
+        logger.info("Test completed!")
