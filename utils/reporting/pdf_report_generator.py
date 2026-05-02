@@ -5,7 +5,7 @@
 
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
@@ -116,7 +116,7 @@ class ScientificPDFReport:
     def generate_surface_analysis_report(
         self,
         surface_data: Dict[str, Any],
-        images: List[str] = None,
+        images: Optional[List[str]] = None,
         title: str = "Анализ поверхности",
         author: str = "Nanoprobe Simulation Lab",
         organization: str = "Школа программирования Maestro7IT",
@@ -408,7 +408,7 @@ class ScientificPDFReport:
     def generate_defect_analysis_report(
         self,
         defect_data: Dict[str, Any],
-        defect_images: List[str] = None,
+        defect_images: Optional[List[str]] = None,
         title: str = "Анализ дефектов поверхности",
         author: str = "Nanoprobe Simulation Lab",
         organization: str = "Школа программирования Maestro7IT",
@@ -563,7 +563,7 @@ class ScientificPDFReport:
     def generate_comparison_report(
         self,
         comparison_data: Dict[str, Any],
-        comparison_images: List[str] = None,
+        comparison_images: Optional[List[str]] = None,
         title: str = "Сравнение поверхностей",
         author: str = "Nanoprobe Simulation Lab",
     ) -> str:
@@ -606,7 +606,7 @@ class ScientificPDFReport:
     def generate_simulation_report(
         self,
         simulation_data: Dict[str, Any],
-        result_images: List[str] = None,
+        result_images: Optional[List[str]] = None,
         title: str = "Отчёт о симуляции",
         author: str = "Nanoprobe Simulation Lab",
     ) -> str:
@@ -854,9 +854,9 @@ class ScientificPDFReport:
         content = []
         table_data = [["Метрика", "Значение"]]
         stats = [
-            ("Время выполнения", data.get("duration", "Не указано")),
-            ("Количество точек", data.get("points_count", "Не указано")),
-            ("Объём данных", data.get("data_size", "Не указано")),
+            ["Время выполнения", data.get("duration", "Не указано")],
+            ["Количество точек", data.get("points_count", "Не указано")],
+            ["Объём данных", data.get("data_size", "Не указано")],
         ]
         table_data.extend(stats)
         table = Table(table_data, colWidths=[5 * cm, 6 * cm])
@@ -884,11 +884,11 @@ class ScientificPDFReport:
         content = []
         table_data = [["Параметр", "Значение"]]
         params = [
-            ("Всего элементов", data.get("total_items", 0)),
-            ("Обработано", data.get("processed_items", 0)),
-            ("Успешно", data.get("success_count", 0)),
-            ("Ошибки", data.get("error_count", 0)),
-            ("Время", data.get("duration", "Не указано")),
+            ["Всего элементов", data.get("total_items", 0)],
+            ["Обработано", data.get("processed_items", 0)],
+            ["Успешно", data.get("success_count", 0)],
+            ["Ошибки", data.get("error_count", 0)],
+            ["Время", data.get("duration", "Не указано")],
         ]
         table_data.extend(params)
         table = Table(table_data, colWidths=[5 * cm, 6 * cm])

@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional, Tuple
 class ValidationError(Exception):
     """Исключение валидации."""
 
-    def __init__(self, message: str, field: str = None):
+    def __init__(self, message: str, field: Optional[str] = None):
         self.message = message
         self.field = field
         super().__init__(self.message)
@@ -135,26 +135,28 @@ class ResponseBuilder:
     """Конструктор ответов API."""
 
     @staticmethod
-    def success(data: Any = None, message: str = None) -> Dict[str, Any]:
+    def success(data: Any = None, message: Optional[str] = None) -> Dict[str, Any]:
         """Создает успешный ответ."""
         response = {"status": "success", "timestamp": datetime.now(timezone.utc).isoformat()}
         if data:
             response["data"] = data
-        if message:
+        if message is not None:
             response["message"] = message
         return response
 
     @staticmethod
-    def error(message: str, error_code: str = None, details: Dict = None) -> Dict[str, Any]:
+    def error(
+        message: str, error_code: Optional[str] = None, details: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Создает ответ об ошибке."""
-        response = {
+        response: Dict[str, Any] = {
             "status": "error",
             "message": message,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
-        if error_code:
+        if error_code is not None:
             response["error_code"] = error_code
-        if details:
+        if details is not None:
             response["details"] = details
         return response
 

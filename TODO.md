@@ -125,13 +125,13 @@
   - Backup automation
 
 #### 12. Удаление временных файлов
-- **Статус:** ⚠️ Требует очистки
+- **Статус:** ✅ **Выполнено**
 - **Файлы для удаления:**
-  - `0` (неизвестный файл/директория)
-  - `apply_fix.py`
-  - `fix_pytest_warnings.py`
-  - `fix_pytest_warnings2.py`
-  - `utils/testing/api_test_runner.py.tmp`
+  - `0` (неизвестный файл/директория) - не найдено
+  - `apply_fix.py` - не найдено
+  - `fix_pytest_warnings.py` - не найдено
+  - `fix_pytest_warnings2.py` - не найдено
+  - `utils/testing/api_test_runner.py.tmp` - не найдено
 
 ---
 
@@ -198,7 +198,7 @@ git push origin feature/new-feature
 ### Следующие шаги
 1. Увеличить test coverage до 30%
 2. RTL-SDR V4 end-to-end тесты
-3. Миграция print() → logging
+3. Миграция print() → logging - Начато, обновлены main.py, src/cli/main.py, api/integration.py, src/web/web_dashboard_unified.py, api/alerting.py, src/cli/dashboard.py
 4. Исправить mypy ошибку (api/state.py)
 5. PostgreSQL migration (опционально)
 6. Очистить временные файлы

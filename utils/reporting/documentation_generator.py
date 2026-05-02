@@ -38,8 +38,8 @@ class DocumentationGenerator:
             project_root: Корневая директория проекта
         """
         self.project_root = Path(project_root).resolve()
-        self.doc_items = []
-        self.project_info = {}
+        self.doc_items: List[Dict[str, Any]] = []
+        self.project_info: Dict[str, Any] = {}
 
     def analyze_project_structure(self) -> Dict[str, Any]:
         """
