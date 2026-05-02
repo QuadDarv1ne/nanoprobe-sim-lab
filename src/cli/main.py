@@ -30,8 +30,8 @@ _active_processes = {}
 def show_header():
     """Отображает заголовок программы."""
     logger.info("=" * 80)
-    logger.info("           ЛАБОРАТОРИЯ МОДЕЛИРОВАНИЯ НАНОЗОНДА")
-    logger.info("        Nanoprobe Simulation Lab - Main Console")
+    logger.info(" ЛАБОРАТОРИЯ МОДЕЛИРОВАНИЯ НАНОЗОНДА")
+    logger.info(" Nanoprobe Simulation Lab - Main Console")
     logger.info("=" * 80)
     logger.info(f"Время запуска: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}")
     logger.info("")
@@ -40,22 +40,22 @@ def show_header():
 def show_project_overview():
     """Отображает обзор проекта."""
     logger.info("Проект включает три взаимосвязанных модуля:")
-    logger.info("  1. Симулятор аппаратного обеспечения СЗМ на C++")
-    logger.info("  2. Анализатор изображений поверхности на Python")
-    logger.info("  3. Наземная станция SSTV на Python/C++")
+    logger.info(" 1. Симулятор аппаратного обеспечения СЗМ на C++")
+    logger.info(" 2. Анализатор изображений поверхности на Python")
+    logger.info(" 3. Наземная станция SSTV на Python/C++")
     logger.info("")
 
 
 def show_menu():
     """Отображает главное меню."""
     logger.info("ДОСТУПНЫЕ ОПЕРАЦИИ:")
-    logger.info("  1. Запустить симулятор СЗМ (C++)")
-    logger.info("  2. Запустить анализатор изображений (Python)")
-    logger.info("  3. Запустить наземную станцию SSTV (Python/C++)")
-    logger.info("  4. Показать информацию о проекте")
-    logger.info("  5. Показать текущую лицензию")
-    logger.info("  6. Очистить кэш проекта")
-    logger.info("  0. Выход")
+    logger.info(" 1. Запустить симулятор СЗМ (C++)")
+    logger.info(" 2. Запустить анализатор изображений (Python)")
+    logger.info(" 3. Запустить наземную станцию SSTV (Python/C++)")
+    logger.info(" 4. Показать информацию о проекте")
+    logger.info(" 5. Показать текущую лицензию")
+    logger.info(" 6. Очистить кэш проекта")
+    logger.info(" 0. Выход")
     logger.info("")
 
 
@@ -96,6 +96,7 @@ def run_surface_analyzer() -> bool:
         analyzer_path = (
             project_root / "components" / "py-surface-image-analyzer" / "src" / "main.py"
         )
+
         if analyzer_path.exists():
             logger.info(f"Запуск: {analyzer_path}")
             process = subprocess.Popen([sys.executable, str(analyzer_path)], cwd=str(project_root))
@@ -115,6 +116,7 @@ def run_sstv_groundstation() -> bool:
     logger.info("Запуск наземной станции SSTV...")
     try:
         station_path = project_root / "components" / "py-sstv-groundstation" / "src" / "main.py"
+
         if station_path.exists():
             logger.info(f"Запуск: {station_path}")
             process = subprocess.Popen([sys.executable, str(station_path)], cwd=str(project_root))
@@ -136,8 +138,8 @@ def show_project_info():
     logger.info("Название: Лаборатория моделирования нанозонда")
     logger.info("Версия: 1.0.0")
     logger.info("Описание: Комплексный проект для моделирования")
-    logger.info("          сканирующей зондовой микроскопии")
-    logger.info("          и обработки изображений поверхности")
+    logger.info(" сканирующей зондовой микроскопии")
+    logger.info(" и обработки изображений поверхности")
     logger.info("Автор: Школа программирования Maestro7IT")
     logger.info("Лицензия: Проприетарная (ограниченные права)")
     logger.info("-" * 40)
@@ -173,13 +175,11 @@ def clean_project_cache() -> bool:
         from utils.caching.cache_manager import CacheManager
 
         cache_manager = CacheManager(str(project_root))
-
         stats = cache_manager.get_cache_statistics()
         logger.info(f"Текущий размер кэша: {stats['total_cache_size_mb']} MB")
         logger.info(f"Всего файлов в кэше: {stats['total_files']}")
 
         result = cache_manager.auto_cleanup()
-
         if "status" in result:
             logger.info(f"Статус: {result['status']}")
         else:
@@ -190,7 +190,6 @@ def clean_project_cache() -> bool:
         logger.info(f"Освобождено памяти: {memory_result['memory_freed_mb']} MB")
         logger.info("Очистка кэша завершена успешно!")
         return True
-
     except ImportError:
         logger.error("Модуль управления кэшем не найден")
         return False
@@ -206,49 +205,46 @@ def _cleanup_processes():
             if process.poll() is None:
                 process.terminate()
                 process.wait(timeout=3)
-                print(f"✓ Процесс {name} остановлен")
+                logger.info(f"✓ Процесс {name} остановлен")
         except Exception:
             try:
                 process.kill()
-                print(f"✓ Процесс {name} уничтожен")
+                logger.info(f"✓ Процесс {name} уничтожен")
             except Exception as e:
-                print(f"✗ Не удалось остановить процесс {name}: {e}")
+                logger.error(f"✗ Не удалось остановить процесс {name}: {e}")
     _active_processes.clear()
 
 
 def auto_cleanup_on_exit():
     """Автоматическая очистка кэша при завершении программы."""
-    print("\n" + "=" * 50)
-    print("Завершение работы...")
-
+    logger.info("\n" + "=" * 50)
+    logger.info("Завершение работы...")
     if _active_processes:
-        print("Остановка активных процессов...")
+        logger.info("Остановка активных процессов...")
         _cleanup_processes()
-
-    print("Автоматическая очистка кэша...")
+    logger.info("Автоматическая очистка кэша...")
     try:
         cleanup_success = clean_project_cache()
         if cleanup_success:
-            print("✓ Завершение работы выполнено успешно")
+            logger.info("✓ Завершение работы выполнено успешно")
         else:
-            print("⚠ Завершение работы завершено с предупреждениями")
+            logger.warning("⚠ Завершение работы завершено с предупреждениями")
     except Exception as e:
-        print(f"❌ Ошибка при завершении работы: {e}")
-    print("=" * 50)
+        logger.error(f"❌ Ошибка при завершении работы: {e}")
+    logger.info("=" * 50)
 
 
 def main():
     """Главная функция программы."""
     atexit.register(auto_cleanup_on_exit)
-
-    print("Инициализация проекта...")
+    logger.info("Инициализация проекта...")
     try:
         from utils.caching.cache_manager import CacheManager
 
         cache_manager = CacheManager(str(project_root))
         cache_manager.auto_cleanup()
     except Exception as e:
-        print(f"⚠ Ошибка инициализации кэша: {e}")
+        logger.warning(f"⚠ Ошибка инициализации кэша: {e}")
 
     show_header()
     show_project_overview()
@@ -271,17 +267,16 @@ def main():
             elif choice == "6":
                 clean_project_cache()
             elif choice == "0":
-                print("\nСпасибо за использование Лаборатории моделирования нанозонда")
-                print("До новых встреч :)")
+                logger.info("\nСпасибо за использование Лаборатории моделирования нанозонда")
+                logger.info("До новых встреч :)")
                 break
             else:
-                print("Неверный выбор. Пожалуйста, выберите от 0 до 6.")
-
+                logger.warning("Неверный выбор. Пожалуйста, выберите от 0 до 6.")
         except KeyboardInterrupt:
-            print("\n\nРабота программы прервана пользователем.")
+            logger.warning("\n\nРабота программы прервана пользователем.")
             break
         except Exception as e:
-            print(f"Произошла ошибка: {e}")
+            logger.error(f"Произошла ошибка: {e}")
 
 
 if __name__ == "__main__":

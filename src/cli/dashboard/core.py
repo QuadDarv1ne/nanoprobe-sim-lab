@@ -104,17 +104,16 @@ class UnifiedDashboard:
         tasks = []
         for widget in self.get_visible_widgets():
             tasks.append(widget._safe_refresh())
-
         if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
 
     def render(self):
         """Отрендерить dashboard"""
-        # Очистка экрана
+        # Очистка экрана (ANSI escape code - не логируется)
         print("\033[2J\033[H", end="")
 
         # Header
-        print(self._render_header())
+        logger.info(self._render_header())
 
         # Виджеты по строкам
         visible = self.get_visible_widgets()
@@ -130,10 +129,10 @@ class UnifiedDashboard:
         # Отрисовка каждой строки
         for row_num in sorted(rows.keys()):
             row_widgets = sorted(rows[row_num], key=lambda w: w.position[1])
-            print(self._render_row(row_widgets))
+            logger.info(self._render_row(row_widgets))
 
         # Footer
-        print(self._render_footer())
+        logger.info(self._render_footer())
 
     def _render_header(self) -> str:
         """Отрисовка заголовка"""
@@ -144,13 +143,13 @@ class UnifiedDashboard:
         if self.theme == DashboardTheme.DARK:
             header = f"""
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║  🔬 Nanoprobe Sim Lab Dashboard    │ Mode: {mode_str} │ {now}     ║
+║ 🔬 Nanoprobe Sim Lab Dashboard │ Mode: {mode_str} │ {now} ║
 ╠══════════════════════════════════════════════════════════════════════════════╣
 """
         else:
             header = f"""
 +==============================================================================+
-|  Nanoprobe Sim Lab Dashboard    | Mode: {mode_str} | {now}     |
+| Nanoprobe Sim Lab Dashboard | Mode: {mode_str} | {now} |
 +------------------------------------------------------------------------------+
 """
         return header
@@ -167,7 +166,7 @@ class UnifiedDashboard:
             # Содержимое
             content = widget.render(width=65)
             for line in content.split("\n"):
-                lines.append(f"│  {line}")
+                lines.append(f"│ {line}")
 
         return "\n".join(lines)
 
@@ -176,13 +175,13 @@ class UnifiedDashboard:
         if self.theme == DashboardTheme.DARK:
             footer = """
 ╠══════════════════════════════════════════════════════════════════════════════╣
-║  [Q] Quit  [R] Refresh  [M] Mode  [1-5] Toggle Widget  [H] Help              ║
+║ [Q] Quit [R] Refresh [M] Mode [1-5] Toggle Widget [H] Help ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 """
         else:
             footer = """
 +------------------------------------------------------------------------------+
-|  [Q] Quit  [R] Refresh  [M] Mode  [1-5] Toggle Widget  [H] Help              |
+| [Q] Quit [R] Refresh [M] Mode [1-5] Toggle Widget [H] Help |
 +------------------------------------------------------------------------------+
 """
         return footer
@@ -206,6 +205,7 @@ class UnifiedDashboard:
         """Обработка ввода пользователя (асинхронно)"""
         # Примечание: это упрощённая версия
         # Для полноценной обработки нужен curses или подобная библиотека
+        await asyncio.sleep(0)
 
     async def stop(self):
         """Остановить dashboard"""
@@ -254,11 +254,11 @@ def run_dashboard(mode: str = "enhanced", theme: str = "dark"):
     dashboard = UnifiedDashboard(mode=dashboard_mode, theme=dashboard_theme)
 
     try:
-        print(f"Starting Dashboard in {mode} mode...")
-        print("Press Ctrl+C to stop\n")
+        logger.info(f"Starting Dashboard in {mode} mode...")
+        logger.info("Press Ctrl+C to stop\n")
         asyncio.run(dashboard.start())
     except KeyboardInterrupt:
-        print("\nDashboard stopped.")
+        logger.info("\nDashboard stopped.")
     except Exception as e:
         logger.error(f"Dashboard error: {e}")
         raise
