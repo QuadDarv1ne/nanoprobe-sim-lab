@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 # ==================== Типы для аннотаций (Python 3.10+) ====================
 # Для совместимости с Python 3.8-3.9 используем typing
@@ -110,8 +110,7 @@ class ScanResponse(BaseModel):
     metadata: Optional[Dict[str, Any]]
     created_at: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ScanListResponse(BaseModel):
@@ -156,8 +155,7 @@ class SimulationResponse(BaseModel):
     results_summary: Optional[Dict[str, Any]]
     created_at: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SimulationListResponse(BaseModel):

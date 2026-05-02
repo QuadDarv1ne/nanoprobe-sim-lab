@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from utils.caching.cache_manager import CacheManager
 from utils.database import DatabaseManager
@@ -51,8 +51,7 @@ class RTL433Reading(BaseModel):
     rain_mm: Optional[float] = None
     created_at: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RTL433DeviceSummary(BaseModel):

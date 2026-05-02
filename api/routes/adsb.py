@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from utils.caching.cache_manager import CacheManager
 from utils.database import DatabaseManager
@@ -53,8 +53,7 @@ class ADSBSighting(BaseModel):
     message_count: Optional[int] = None
     created_at: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ADSBActiveAircraft(BaseModel):
@@ -70,8 +69,7 @@ class ADSBActiveAircraft(BaseModel):
     category: Optional[str] = None
     last_seen: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ADSBSightingsResponse(BaseModel):

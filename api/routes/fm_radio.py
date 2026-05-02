@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from utils.caching.cache_manager import CacheManager
 from utils.database import DatabaseManager
@@ -46,8 +46,7 @@ class FMRecording(BaseModel):
     duration_sec: Optional[float] = None
     created_at: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class FMStation(BaseModel):
@@ -59,8 +58,7 @@ class FMStation(BaseModel):
     signal_power: Optional[float] = None
     last_seen: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class FMRecordingsResponse(BaseModel):
