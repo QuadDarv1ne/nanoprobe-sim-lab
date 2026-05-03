@@ -1,7 +1,7 @@
 # TODO.md — Nanoprobe Sim Lab
 
-**Ветка:** `dev` → `main`
-**Последнее обновление:** 2026-05-03
+**Ветка:** `dev` -> `main`
+**Последнее обновление:** 2026-5-3
 **Python:** 3.14.4
 **Тесты:** 1494 collected
 **Статус:** ✅ Dev и main синхронизированы
@@ -149,7 +149,7 @@
 | Test coverage | ~20% | 📈 |
 | GitHub Workflows | 7 | ✅ |
 | PytestCollectionWarning | 0 | ✅ **Исправлено** |
-| Mypy errors | 0 | ✅ **Исправлено** |
+| Mypy errors | 771 | ⚠️ Требуется внимание |
 
 ---
 
