@@ -206,34 +206,34 @@ def _cleanup_processes():
             if process.poll() is None:
                 process.terminate()
                 process.wait(timeout=3)
-                print(f"✓ Процесс {name} остановлен")
+                logger.info(f"✓ Процесс {name} остановлен")
         except Exception:
             try:
                 process.kill()
-                print(f"✓ Процесс {name} уничтожен")
+                logger.info(f"✓ Процесс {name} уничтожен")
             except Exception as e:
-                print(f"✗ Не удалось остановить процесс {name}: {e}")
+                logger.info(f"✗ Не удалось остановить процесс {name}: {e}")
     _active_processes.clear()
 
 
 def auto_cleanup_on_exit():
     """Автоматическая очистка кэша при завершении программы."""
     print("\n" + "=" * 50)
-    print("Завершение работы...")
+    logger.info("Завершение работы...")
 
     if _active_processes:
-        print("Остановка активных процессов...")
+        logger.info("Остановка активных процессов...")
         _cleanup_processes()
 
-    print("Автоматическая очистка кэша...")
+    logger.info("Автоматическая очистка кэша...")
     try:
         cleanup_success = clean_project_cache()
         if cleanup_success:
-            print("✓ Завершение работы выполнено успешно")
+            logger.info("✓ Завершение работы выполнено успешно")
         else:
-            print("⚠ Завершение работы завершено с предупреждениями")
+            logger.info("⚠ Завершение работы завершено с предупреждениями")
     except Exception as e:
-        print(f"❌ Ошибка при завершении работы: {e}")
+        logger.info(f"❌ Ошибка при завершении работы: {e}")
     print("=" * 50)
 
 
@@ -241,14 +241,14 @@ def main():
     """Главная функция программы."""
     atexit.register(auto_cleanup_on_exit)
 
-    print("Инициализация проекта...")
+    logger.info("Инициализация проекта...")
     try:
         from utils.caching.cache_manager import CacheManager
 
         cache_manager = CacheManager(str(project_root))
         cache_manager.auto_cleanup()
     except Exception as e:
-        print(f"⚠ Ошибка инициализации кэша: {e}")
+        logger.info(f"⚠ Ошибка инициализации кэша: {e}")
 
     show_header()
     show_project_overview()
@@ -271,17 +271,17 @@ def main():
             elif choice == "6":
                 clean_project_cache()
             elif choice == "0":
-                print("\nСпасибо за использование Лаборатории моделирования нанозонда")
-                print("До новых встреч :)")
+                logger.info("\nСпасибо за использование Лаборатории моделирования нанозонда")
+                logger.info("До новых встреч :)")
                 break
             else:
-                print("Неверный выбор. Пожалуйста, выберите от 0 до 6.")
+                logger.info("Неверный выбор. Пожалуйста, выберите от 0 до 6.")
 
         except KeyboardInterrupt:
-            print("\n\nРабота программы прервана пользователем.")
+            logger.info("\n\nРабота программы прервана пользователем.")
             break
         except Exception as e:
-            print(f"Произошла ошибка: {e}")
+            logger.info(f"Произошла ошибка: {e}")
 
 
 if __name__ == "__main__":

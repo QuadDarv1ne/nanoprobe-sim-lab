@@ -4,7 +4,7 @@
 **Последнее обновление:** 2026-05-04
 **Python:** 3.14.4
 **Тесты:** 1494 collected
-**Статус:** ⚠️ Dev впереди main на 1 коммит
+**Статус:** ✅ Dev и main синхронизированы
 
 ---
 
@@ -12,15 +12,7 @@
 
 ### 🔴 CRITICAL
 
-#### 1. Синхронизация dev и main
-- **Статус:** ⚠️ **Требует внимания**
-- **Проблема:** dev впереди main на 1 коммит
-- **Незакоммиченные изменения:**
-  - `main.py` — замена print() на logger
-  - `src/cli/main.py` — замена print() на logger
-- **Действие:** commit + push + merge в main
-
-#### 2. Mypy errors — 771 ошибка
+#### 1. Mypy errors — 771 ошибка
 - **Статус:** ⚠️ **Требует внимания**
 - **Проблема:** Высокое количество mypy ошибок
 - **Влияние:** Статическая типизация не работает корректно
@@ -30,7 +22,7 @@
 
 ### 🟡 HIGH
 
-#### 3. Test coverage ~20% → 40%
+#### 2. Test coverage ~20% → 40%
 - **Статус:** 📈 Прогресс есть
 - **Текущее:** 1494 теста
 - **Цель:** Увеличить покрытие критических модулей
@@ -40,7 +32,7 @@
   - `api/` — все роуты кроме auth
   - `src/` — CLI и веб-компоненты
 
-#### 4. RTL-SDR V4 Production Ready
+#### 3. RTL-SDR V4 Production Ready
 - **Статус:** ✅ Базовая функциональность готова
 - **Реализовано:**
   - Ring buffer
@@ -52,7 +44,7 @@
   - End-to-end тесты с реальным устройством
   - Документация по настройке
 
-#### 5. Next.js Frontend v2.0 → Production
+#### 4. Next.js Frontend v2.0 → Production
 - **Статус:** ⚠️ Частично готово
 - **Реализовано:**
   - WebGL водопад спектра
@@ -67,7 +59,7 @@
 
 ### 🟢 MEDIUM
 
-#### 6. PostgreSQL Migration
+#### 5. PostgreSQL Migration
 - **Статус:** 📄 Гайд создан, не выполнено
 - **Сложность:** 10-15 часов
 - **Шаги:**
@@ -77,49 +69,46 @@
   4. Обновить `.env` и конфиги
   5. Протестировать под нагрузкой
 
-#### 7. AI/ML Features Enhancement
+#### 6. AI/ML Features Enhancement
 - **Статус:** ⚠️ Базовая функциональность
 - **Осталось:**
   - Сбор датасета сигналов для обучения
   - Интеграция с внешними API (NASA, Zenodo)
   - Model versioning (MLflow)
 
-#### 8. Redis Caching — Full Implementation
+#### 7. Redis Caching — Full Implementation
 - **Статус:** ⚠️ Частично реализовано
 - **Осталось:**
   - Полная интеграция во все API endpoints
   - Cache invalidation strategies
   - Redis pub/sub для WebSocket scaling
 
-#### 9. Миграция print() → logging
+#### 8. Миграция print() → logging
 - **Статус:** 📈 **Прогресс**
 - **Было:** ~210 случаев
-- **Текущее:** ~128 случаев
-- **Успех:** -82 замены (39% прогресс)
-- **Осталось:** 128 случаев в production коде
-- **Последние изменения:**
-  - `main.py` — print_banner(), print_versions()
-  - `src/cli/main.py` — _cleanup_processes()
+- **Текущее:** ~118 случаев
+- **Успех:** -92 замены (44% прогресс)
+- **Осталось:** 118 случаев в production коде
 
 ---
 
 ### 🔵 LOW
 
-#### 10. Code Quality Improvements
+#### 9. Code Quality Improvements
 - **Статус:** ✅ Pre-commit hooks настроены
 - **Осталось:**
   - Code coverage badges в README
   - Dependabot/Renovate для зависимостей
   - SonarQube интеграция (опционально)
 
-#### 11. Documentation
+#### 10. Documentation
 - **Статус:** ⚠️ Частично
 - **Осталось:**
   - API Reference автогенерация
   - Video tutorials
   - Changelog automation из commit messages
 
-#### 12. DevOps Improvements
+#### 11. DevOps Improvements
 - **Статус:** ✅ Docker Compose готов
 - **Осталось:**
   - Monitoring (Prometheus + Grafana)
@@ -138,12 +127,12 @@
 | Строки кода | ~51K+ | - |
 | Flake8 критические | 0 | ✅ |
 | bare except | 0 | ✅ |
-| print() в production | ~128 | 📈 **-82** |
+| print() в production | ~118 | 📈 **-92** |
 | Test coverage | ~20% | 📈 |
 | GitHub Workflows | 7 | ✅ |
 | PytestCollectionWarning | 0 | ✅ |
 | Mypy errors | 771 | ⚠️ Требуется внимание |
-| Dev vs Main | +1 коммит | ⚠️ **Несинхронизировано** |
+| Dev vs Main | синхронизированы | ✅ |
 
 ---
 
@@ -183,25 +172,27 @@ git push origin feature/new-feature
 
 ## 📝 Заметки по текущему спринту
 
-### Выявленные проблемы
+### Выполнено
 
 - ✅ **Исправлено:** PytestReturnNotNoneWarning в 7 файлах
 - ✅ **Исправлено:** alerting API validation issue
 - ✅ **Исправлено:** PytestCollectionWarning — добавлен `__test__ = False`
+- ✅ **Миграция print() → logging:** -92 замены (main.py, src/cli/main.py)
+- ✅ **Dev/Main синхронизация:** полностью синхронизированы
+
+### Выявленные проблемы
+
 - ⚠️ **Mypy error** — 771 ошибка требует внимания
 - ⚠️ **Интеграционные тесты** — требуют запущенного API сервера
-- ⚠️ **print() в production** — ~128 случаев (прогресс: -82)
-- ⚠️ **Dev/Main синхронизация** — dev впереди на 1 коммит
+- ⚠️ **print() в production** — ~118 случаев (прогресс: -92)
 
 ### Следующие шаги
 
-1. **Срочно:** Commit и push незакоммиченных изменений
-2. Merge dev в main после проверки
-3. Увеличить test coverage до 30%
-4. RTL-SDR V4 end-to-end тесты
-5. Продолжить миграцию print() → logging (цель: 0 print в production)
-6. Исправить mypy ошибки (приоритет: критические type errors)
-7. PostgreSQL migration (опционально)
+1. Увеличить test coverage до 30%
+2. RTL-SDR V4 end-to-end тесты
+3. Продолжить миграцию print() → logging (цель: 0 print в production)
+4. Исправить mypy ошибки (приоритет: критические type errors)
+5. PostgreSQL migration (опционально)
 
 ---
 
