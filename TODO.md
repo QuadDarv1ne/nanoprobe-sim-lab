@@ -1,10 +1,10 @@
 # TODO.md — Nanoprobe Sim Lab
 
 **Ветка:** `dev` -> `main`
-**Последнее обновление:** 2026-5-3
+**Последнее обновление:** 2026-05-04
 **Python:** 3.14.4
 **Тесты:** 1494 collected
-**Статус:** ✅ Dev и main синхронизированы
+**Статус:** ⚠️ Dev впереди main на 1 коммит
 
 ---
 
@@ -12,35 +12,27 @@
 
 ### 🔴 CRITICAL
 
-#### 1. PytestCollectionWarning — классы с `__init__`
-- **Статус:** ✅ **Исправлено**
-- **Проблема:** 4 warning о классах с `__init__`, которые pytest пытается собрать как тесты
-- **Файлы:**
-  - `utils/testing/api_test_runner.py` — `TestResult`, `TestReport`
-  - `utils/test_framework.py` — `TestFramework`
-- **Решение:** Добавлен `__test__ = False` во все классы
-- **Влияние:** Загрязняет вывод тестов — **исправлено**
+#### 1. Синхронизация dev и main
+- **Статус:** ⚠️ **Требует внимания**
+- **Проблема:** dev впереди main на 1 коммит
+- **Незакоммиченные изменения:**
+  - `main.py` — замена print() на logger
+  - `src/cli/main.py` — замена print() на logger
+- **Действие:** commit + push + merge в main
 
-#### 2. DeprecationWarning — FastAPI on_event
-- **Статус:** ✅ **Исправлено**
-- **Проблема:** `@router.on_event("shutdown")` deprecated в FastAPI 0.118+
-- **Файл:** `api/routes/sstv_advanced.py`
-- **Решение:** Заменено на `@asynccontextmanager` lifespan
-- **Влияние:** Warning при pytest collection — **исправлено**
-
-#### 3. Mypy — дублирующийся модуль api.state
-- **Статус:** ✅ **Исправлено**
-- **Проблема:** `api/state.py` обнаруживается дважды как "state" и "api.state"
-- **Влияние:** Mypy не может проверить проект корректно
-- **Решение:** Добавлены `__init__.py` файлы в `api/` и `src/` директории
+#### 2. Mypy errors — 771 ошибка
+- **Статус:** ⚠️ **Требует внимания**
+- **Проблема:** Высокое количество mypy ошибок
+- **Влияние:** Статическая типизация не работает корректно
+- **Приоритет:** Исправить критические type errors
 
 ---
 
 ### 🟡 HIGH
 
-#### 4. Test coverage ~20% → 40%
+#### 3. Test coverage ~20% → 40%
 - **Статус:** 📈 Прогресс есть
-- **Текущее:** ~1494 теста
+- **Текущее:** 1494 теста
 - **Цель:** Увеличить покрытие критических модулей
 - **Приоритетные модули:**
   - `utils/sdr/` — RTL-SDR менеджмент
@@ -99,39 +91,40 @@
   - Cache invalidation strategies
   - Redis pub/sub для WebSocket scaling
 
+#### 9. Миграция print() → logging
+- **Статус:** 📈 **Прогресс**
+- **Было:** ~210 случаев
+- **Текущее:** ~128 случаев
+- **Успех:** -82 замены (39% прогресс)
+- **Осталось:** 128 случаев в production коде
+- **Последние изменения:**
+  - `main.py` — print_banner(), print_versions()
+  - `src/cli/main.py` — _cleanup_processes()
+
 ---
 
 ### 🔵 LOW
 
-#### 9. Code Quality Improvements
+#### 10. Code Quality Improvements
 - **Статус:** ✅ Pre-commit hooks настроены
 - **Осталось:**
   - Code coverage badges в README
   - Dependabot/Renovate для зависимостей
   - SonarQube интеграция (опционально)
 
-#### 10. Documentation
+#### 11. Documentation
 - **Статус:** ⚠️ Частично
 - **Осталось:**
   - API Reference автогенерация
   - Video tutorials
   - Changelog automation из commit messages
 
-#### 11. DevOps Improvements
+#### 12. DevOps Improvements
 - **Статус:** ✅ Docker Compose готов
 - **Осталось:**
   - Monitoring (Prometheus + Grafana)
   - Log aggregation (ELK/Loki)
   - Backup automation
-
-#### 12. Удаление временных файлов
-- **Статус:** ✅ **Выполнено**
-- **Файлы для удаления:**
-  - `0` (неизвестный файл/директория) - не найдено
-  - `apply_fix.py` - не найдено
-  - `fix_pytest_warnings.py` - не найдено
-  - `fix_pytest_warnings2.py` - не найдено
-  - `utils/testing/api_test_runner.py.tmp` - не найдено
 
 ---
 
@@ -145,17 +138,19 @@
 | Строки кода | ~51K+ | - |
 | Flake8 критические | 0 | ✅ |
 | bare except | 0 | ✅ |
-| print() в production | ~210 | ⚠️ |
+| print() в production | ~128 | 📈 **-82** |
 | Test coverage | ~20% | 📈 |
 | GitHub Workflows | 7 | ✅ |
-| PytestCollectionWarning | 0 | ✅ **Исправлено** |
+| PytestCollectionWarning | 0 | ✅ |
 | Mypy errors | 771 | ⚠️ Требуется внимание |
+| Dev vs Main | +1 коммит | ⚠️ **Несинхронизировано** |
 
 ---
 
 ## 🔄 Workflow
 
 ### Правила
+
 1. **Работать в `dev`** — все изменения сначала в dev
 2. **Проверки перед merge** — tests + lint + mypy
 3. **Merge в `main`** — только после успешных проверок
@@ -163,6 +158,7 @@
 5. **Качество важнее количества** — фокус на реальные проблемы
 
 ### Git workflow
+
 ```bash
 # Создать ветку для фичи
 git checkout dev
@@ -188,21 +184,24 @@ git push origin feature/new-feature
 ## 📝 Заметки по текущему спринту
 
 ### Выявленные проблемы
+
 - ✅ **Исправлено:** PytestReturnNotNoneWarning в 7 файлах
 - ✅ **Исправлено:** alerting API validation issue
 - ✅ **Исправлено:** PytestCollectionWarning — добавлен `__test__ = False`
-- ⚠️ **Mypy error** — дублирующийся модуль api/state.py
+- ⚠️ **Mypy error** — 771 ошибка требует внимания
 - ⚠️ **Интеграционные тесты** — требуют запущенного API сервера
-- ⚠️ **print() в production** — ~210 случаев, требуется замена на logging
+- ⚠️ **print() в production** — ~128 случаев (прогресс: -82)
+- ⚠️ **Dev/Main синхронизация** — dev впереди на 1 коммит
 
 ### Следующие шаги
-1. Увеличить test coverage до 30%
-2. RTL-SDR V4 end-to-end тесты
-3. Миграция print() → logging - Начато, обновлены main.py, src/cli/main.py, api/integration.py, src/web/web_dashboard_unified.py, api/alerting.py, src/cli/dashboard.py
-4. Исправить mypy ошибку (api/state.py)
-5. Исправить flake8 предупреждения (E501 в utils/logger_analyzer.py)
-6. PostgreSQL migration (опционально)
-7. Очистить временные файлы
+
+1. **Срочно:** Commit и push незакоммиченных изменений
+2. Merge dev в main после проверки
+3. Увеличить test coverage до 30%
+4. RTL-SDR V4 end-to-end тесты
+5. Продолжить миграцию print() → logging (цель: 0 print в production)
+6. Исправить mypy ошибки (приоритет: критические type errors)
+7. PostgreSQL migration (опционально)
 
 ---
 

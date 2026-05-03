@@ -160,28 +160,28 @@ def wait_for_port(port: int, timeout: int = 30) -> bool:
 
 def print_banner():
     """Вывод баннера"""
-    print()
+    logger.info("")
     print("=" * 70)
     print("  Nanoprobe Sim Lab - Universal Launcher v3.0 (Unified)")
     print("=" * 70)
-    print()
+    logger.info("")
 
 
 def print_versions():
     """Вывод доступных режимов"""
     print("Доступные режимы запуска:")
-    print()
+    logger.info("")
     print("  1. flask      - Flask + FastAPI + Auto Sync ✅")
     print("  2. nextjs     - Next.js + FastAPI + Auto Sync ✅")
     print("  3. api-only   - Только Backend API")
     print("  4. full       - Full Stack (Flask + FastAPI + Sync Manager)")
     print("  5. dev        - Development mode (Flask + reload)")
-    print()
+    logger.info("")
     print("=" * 70)
     print("  💡 Sync Manager запускается автоматически (кроме api-only)")
     print("  🔍 Автоопределение портов включено")
     print("=" * 70)
-    print()
+    logger.info("")
 
 
 def interactive_choice() -> str:
@@ -202,7 +202,7 @@ def interactive_choice() -> str:
             return "dev"
         else:
             logger.error("[ERROR] Неверный выбор. Попробуйте снова.")
-            print()
+            logger.info("")
 
 
 # ==================== Запуск сервисов ====================
@@ -449,11 +449,11 @@ def main():
     else:
         mode = interactive_choice()
 
-    print()
+    logger.info("")
     print("=" * 70)
     print(f"  Режим запуска: {mode.upper()}")
     print("=" * 70)
-    print()
+    logger.info("")
 
     # Автоматическое определение портов
     if mode == "api-only":
@@ -511,7 +511,7 @@ def main():
     print("=" * 70)
     logger.info("  [OK] Все сервисы запущены!")
     print("=" * 70)
-    print()
+    logger.info("")
     logger.info("Полезные ссылки:")
     logger.info(f"   - Backend API (Swagger):   http://localhost:{BACKEND_PORT}/docs")
     logger.info(f"   - Backend Health:          http://localhost:{BACKEND_PORT}/health")
@@ -522,7 +522,7 @@ def main():
     elif mode == "nextjs":
         logger.info(f"   - Next.js Frontend:        http://localhost:{NEXTJS_PORT}")
 
-    print()
+    logger.info("")
     logger.info("Синхронизация:")
     if mode != "api-only":
         logger.info("   ✅ Sync Manager запущен (автоматическая синхронизация каждые 5 сек)")
