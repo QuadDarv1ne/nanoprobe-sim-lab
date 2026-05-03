@@ -200,8 +200,9 @@ git push origin feature/new-feature
 2. RTL-SDR V4 end-to-end тесты
 3. Миграция print() → logging - Начато, обновлены main.py, src/cli/main.py, api/integration.py, src/web/web_dashboard_unified.py, api/alerting.py, src/cli/dashboard.py
 4. Исправить mypy ошибку (api/state.py)
-5. PostgreSQL migration (опционально)
-6. Очистить временные файлы
+5. Исправить flake8 предупреждения (E501 в utils/logger_analyzer.py)
+6. PostgreSQL migration (опционально)
+7. Очистить временные файлы
 
 ---
 

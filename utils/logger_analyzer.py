@@ -409,7 +409,8 @@ class AdvancedLoggerAnalyzer:
                     {
                         "type": "rapid_logging",
                         "severity": "medium",
-                        "description": f"Обнаружено {len(time_diffs)} случаев быстрого логирования (средний интервал: {avg_interval:.3f}s)",
+                        "description": f"Обнаружено {len(time_diffs)} случаев быстрого логирования "
+                        f"(средний интервал: {avg_interval:.3f}s)",
                         "timestamp": datetime.now(timezone.utc),
                     }
                 )
