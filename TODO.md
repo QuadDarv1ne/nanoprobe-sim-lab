@@ -86,9 +86,9 @@
 #### 8. Миграция print() → logging
 - **Статус:** 📈 **Прогресс**
 - **Было:** ~210 случаев
-- **Текущее:** ~118 случаев
-- **Успех:** -92 замены (44% прогресс)
-- **Осталось:** 118 случаев в production коде
+- **Текущее:** ~25 случаев
+- **Успех:** -185 замен (88% прогресс)
+- **Осталось:** ~25 случаев (в основном CLI интерфейсы и sample_code)
 
 ---
 
@@ -127,7 +127,7 @@
 | Строки кода | ~51K+ | - |
 | Flake8 критические | 0 | ✅ |
 | bare except | 0 | ✅ |
-| print() в production | ~118 | 📈 **-92** |
+| print() в production | ~25 | 📈 **-185** |
 | Test coverage | ~20% | 📈 |
 | GitHub Workflows | 7 | ✅ |
 | PytestCollectionWarning | 0 | ✅ |
@@ -177,20 +177,20 @@ git push origin feature/new-feature
 - ✅ **Исправлено:** PytestReturnNotNoneWarning в 7 файлах
 - ✅ **Исправлено:** alerting API validation issue
 - ✅ **Исправлено:** PytestCollectionWarning — добавлен `__test__ = False`
-- ✅ **Миграция print() → logging:** -92 замены (main.py, src/cli/main.py)
+- ✅ **Миграция print() → logging:** -185 замен (main.py, src/cli/main.py, project_manager.py, rtlsdr_control_panel.py)
 - ✅ **Dev/Main синхронизация:** полностью синхронизированы
 
 ### Выявленные проблемы
 
 - ⚠️ **Mypy error** — 771 ошибка требует внимания
 - ⚠️ **Интеграционные тесты** — требуют запущенного API сервера
-- ⚠️ **print() в production** — ~118 случаев (прогресс: -92)
+- ⚠️ **print() в production** — ~25 случаев (прогресс: -185, 88%)
 
 ### Следующие шаги
 
 1. Увеличить test coverage до 30%
 2. RTL-SDR V4 end-to-end тесты
-3. Продолжить миграцию print() → logging (цель: 0 print в production)
+3. Завершить миграцию print() → logging (цель: 0 print в production, кроме CLI интерфейсов)
 4. Исправить mypy ошибки (приоритет: критические type errors)
 5. PostgreSQL migration (опционально)
 
