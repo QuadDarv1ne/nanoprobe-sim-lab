@@ -323,7 +323,8 @@ class DatabaseOperations:
             cursor = conn.cursor()
             cursor.execute(
                 """INSERT INTO simulation_results
-                (timestamp, simulation_type, parameters, results_summary, metrics, file_path, created_at)
+                (timestamp, simulation_type, parameters, results_summary,
+                 metrics, file_path, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?)""",
                 (
                     now,

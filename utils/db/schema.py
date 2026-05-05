@@ -1,10 +1,8 @@
 """Database schema and utilities for Nanoprobe Sim Lab."""
 
-import json
 import sqlite3
-from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 
 class DBSchema:
