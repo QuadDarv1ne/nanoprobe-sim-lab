@@ -3,7 +3,7 @@
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 from PIL import Image
@@ -37,11 +37,11 @@ class SSTVDecoder:
         Args:
             mode: Режим декодирования ('auto' или название режима)
         """
-        self.decoded_image = None
-        self.signal_data = None
+        self.decoded_image: Optional[Image.Image] = None
+        self.signal_data: Optional[np.ndarray] = None
         self.mode = mode
         self.decoded_images: List[Image.Image] = []
-        self.metadata: Dict = {}
+        self.metadata: Dict[str, Any] = {}
 
     def decode_from_audio(self, audio_file: str) -> Optional[Image.Image]:
         """
@@ -194,10 +194,10 @@ class SSTVDecoder:
         """
         self.rt_sample_rate = sample_rate
         self.rt_callback = callback
-        self.rt_buffer = []
+        self.rt_buffer: List[np.ndarray] = []
         self.rt_max_buffer = int(sample_rate * 30)  # 30 секунд
         self.rt_is_decoding = False
-        self.rt_image = None
+        self.rt_image: Optional[Image.Image] = None
         print(f"Real-time декодер инициализирован: {sample_rate} Гц")
 
     def decode_realtime_push(self, samples: np.ndarray) -> Optional[Image.Image]:
@@ -288,7 +288,7 @@ class SSTVDecoder:
 
             image = pysstv_decode(audio_file, mode)
             if image is not None and image.size[0] > 0 and image.size[1] > 0:
-                return image
+                return image  # type: ignore[no-any-return]
             return None
         except Exception as e:
             print(f"  Mode {mode} failed: {e}")
@@ -349,7 +349,7 @@ class SSTVDecoder:
 
             path.parent.mkdir(parents=True, exist_ok=True)
 
-            save_kwargs = {}
+            save_kwargs: Dict[str, Any] = {}
             if path.suffix.lower() in [".jpg", ".jpeg"]:
                 if not (1 <= quality <= 100):
                     print(f"Качество должно быть от 1 до 100, установлено {quality}")

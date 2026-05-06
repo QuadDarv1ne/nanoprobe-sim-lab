@@ -273,7 +273,7 @@ class DocumentationGenerator:
                 param_parts.append("*")
             for i, arg in enumerate(args.kwonlyargs):
                 param_str = arg.arg
-                if arg.annotation:
+                if arg.annotation is not None:
                     param_str += f": {ast.unparse(arg.annotation)}"
                 if i < len(args.kw_defaults) and args.kw_defaults[i] is not None:
                     default_val = ast.unparse(args.kw_defaults[i])
@@ -283,7 +283,7 @@ class DocumentationGenerator:
         # **kwargs
         if args.kwarg:
             kwargs_str = f"**{args.kwarg.arg}"
-            if args.kwarg.annotation:
+            if args.kwarg.annotation is not None:
                 kwargs_str += f": {ast.unparse(args.kwarg.annotation)}"
             param_parts.append(kwargs_str)
 
@@ -307,7 +307,7 @@ class DocumentationGenerator:
             Путь к сгенерированному файлу
         """
         # Группируем элементы по файлам
-        items_by_file = {}
+        items_by_file: dict[str, list[DocItem]] = {}
         for item in self.doc_items:
             if item.file_path not in items_by_file:
                 items_by_file[item.file_path] = []

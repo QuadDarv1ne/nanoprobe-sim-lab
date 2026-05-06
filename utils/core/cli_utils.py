@@ -3,6 +3,7 @@
 import sys
 import threading
 import time
+from typing import Any, Optional
 
 
 class Colors:
@@ -82,7 +83,7 @@ class ProgressBar:
         self.show_eta = show_eta
         self.color = color
         self.current = 0
-        self.start_time = None
+        self.start_time: float | None = None
         self._enabled = sys.stdout.isatty()
 
     def _format_time(self, seconds: float) -> str:
