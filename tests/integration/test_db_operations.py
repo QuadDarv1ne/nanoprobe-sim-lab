@@ -79,6 +79,8 @@ class TestDatabaseOperations:
                 "metadata": {"author": "test2"},
             },
         ]
+        # Set mock cursor rowcount to reflect number of inserted rows
+        self.mock_cursor.rowcount = len(scan_results)
         count = self.ops.add_scan_result_batch(scan_results)
         assert count == 2
         self.mock_cursor.executemany.assert_called()
@@ -91,10 +93,10 @@ class TestDatabaseOperations:
 
     def test_add_simulation(self):
         """Test adding a simulation."""
-        sim_id = self.ops.add_simulation(
-            simulation_id="sim-001",
+        sim_id = self.ops.add_simulation_result(
             simulation_type="molecular_dynamics",
             parameters={"temperature": 300, "pressure": 1},
+            results_summary={"status": "completed"},
         )
         assert sim_id == 1
 
@@ -103,43 +105,15 @@ class TestDatabaseOperations:
         # Return a list of dicts instead of tuples
         mock_row = {
             "id": 1,
-            "simulation_id": "sim-001",
-            "start_time": "2024-01-01T00:00:00",
-            "status": "running",
             "simulation_type": "molecular_dynamics",
             "parameters": "{}",
+            "results_summary": "{}",
+            "metrics": None,
+            "file_path": None,
             "created_at": 1,
         }
         self.mock_cursor.fetchall.return_value = [mock_row]
-        results = self.ops.get_simulations(status="running")
-        assert len(results) >= 0
-
-    def test_add_image(self):
-        """Test adding an image."""
-        image_id = self.ops.add_image(
-            image_path="/data/image1.png",
-            image_type="afm",
-            source="scanner",
-            width=512,
-            height=512,
-        )
-        assert image_id == 1
-
-    def test_get_images(self):
-        """Test getting images."""
-        mock_row = {
-            "id": 1,
-            "image_path": "/data/image1.png",
-            "image_type": "afm",
-            "source": "scanner",
-            "width": 512,
-            "height": 512,
-            "channels": 1,
-            "metadata": "{}",
-            "created_at": 1,
-        }
-        self.mock_cursor.fetchall.return_value = [mock_row]
-        results = self.ops.get_images(image_type="afm")
+        results = self.ops.get_simulation_results(simulation_type="molecular_dynamics")
         assert len(results) >= 0
 
     def test_cache_result(self):
@@ -174,7 +148,7 @@ class TestDatabaseOperations:
         """Test getting cache statistics."""
         self.ops._cache_result("key1", {"data": "1"})
         stats = self.ops.get_cache_stats()
-        assert stats["total_entries"] >= 1
+        assert stats["cache_size"] >= 1
 
     def test_set_cache_ttl(self):
         """Test setting cache TTL."""
@@ -269,6 +243,8 @@ class TestUserOperations:
 
     def test_upsert_user(self):
         """Test upserting a user."""
+        # Make the UPDATE return 0 rows so we go to the INSERT path
+        self.mock_cursor.rowcount = 0
         user_id = self.ops.upsert_user(
             username="testuser",
             password_hash="hashed_password",

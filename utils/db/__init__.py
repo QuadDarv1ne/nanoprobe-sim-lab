@@ -139,6 +139,10 @@ class DatabaseManager(DatabaseOperations):
         with self.get_connection() as conn:
             return get_database_stats(conn)
 
+    def get_statistics(self) -> Dict[str, Any]:
+        """Alias for get_database_stats for backward compatibility."""
+        return self.get_database_stats()
+
     def _init_database(self):
         with self.get_connection() as conn:
             init_database_schema(conn)
